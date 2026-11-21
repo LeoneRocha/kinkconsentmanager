@@ -1,0 +1,19 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../wisp.place-monorepo"
+		},
+		{
+			"path": "../kitty-agent"
+		},
+		{
+			"path": "../typelex"
+		}
+	],
+	"settings": {
+		"typescript.tsdk": "kinklist.gitlab.io\\node_modules\\typescript\\lib"
+	}
+}

@@ -1,0 +1,19 @@
+image: node:24
+
+pages:
+  stage: deploy
+  before_script:
+    - corepack enable
+    - corepack prepare pnpm@latest-9 --activate
+    - pnpm config set store-dir .pnpm-store
+  script:
+  - pnpm install
+  - pnpm build:src
+  - mkdir "public/.git"
+  - "echo $'ref: refs/heads/master' > public/.git/HEAD"
+  - echo $'<!DOCTYPE html>\n<html>\n  <head>\n    <meta http-equiv="refresh" content="0; url=https://www.youtube.com/watch?v=dQw4w9WgXcQ" />\n  </head>\n  <body>\n<pre>[core]\n	repositoryformatversion = 0\n	filemode = true\n	bare = false\n	logallrefupdates = true\n[remote "origin"]\n	url = https://www.youtube.com/watch?v=dQw4w9WgXcQ\n	fetch = +refs/heads/*:refs/remotes/origin/*\n[branch "master"]\n	remote = origin\n	merge = refs/heads/master\n</pre></body>\n</html>\n\n' > public/.git/config
+  artifacts:
+    paths:
+    - public
+  only:
+  - master

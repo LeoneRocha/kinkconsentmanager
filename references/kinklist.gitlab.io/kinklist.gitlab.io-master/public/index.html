@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Kink list</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.4/css/bulma.css">
+    <meta property="og:title" content="Kink list" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://kinklist.gitlab.io/" />
+    <meta property="og:image" content="https://kinklist.gitlab.io/kinklistlogo.png" />
+    <meta property="og:image:type" content="image/png">
+    <meta property="og:image:width" content="512">
+    <meta property="og:image:height" content="512">
+    <meta property="og:image:alt" content="Kink list logo">
+    <meta property="og:description" content="Generate a list of your sexual preferences and kinks, then export and share your list!">
+
+    <!--<link rel="stylesheet" href="https://unpkg.com/bulma-prefers-dark@0.1.0-beta.0/css/bulma-prefers-dark.css">-->
+    <link rel="stylesheet" href="https://unpkg.com/tippy.js@6/dist/tippy.css">
+    <script>
+        // https://stackoverflow.com/a/56550819
+        // determines if the user has a set theme
+        function detectColorScheme() {
+            let theme = 'light'; // default to light
+
+            // local storage is used to override OS theme settings
+            if (localStorage.getItem('theme')) {
+                if (localStorage.getItem('theme') === 'dark') {
+                    theme = 'dark';
+                }
+            } else if (!window.matchMedia) {
+                // matchMedia method not supported
+                theme = 'light';
+            } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                // OS theme setting detected as dark
+                theme = 'dark';
+            }
+
+            // dark theme preferred, set document with a `data-theme` attribute
+            if (theme === 'dark') {
+                document.documentElement.classList.add('theme-dark');
+            }
+        }
+        detectColorScheme();
+    </script>
+
+    <link rel="stylesheet" href="/style.css">
+</head>
+
+<body>
+    <div id="root"></div>
+
+    <!-- defer is used here so that DOMTools is loaded in time as it's async -->
+    <script src="/kinklist.js"></script>
+</body>
+
+</html>

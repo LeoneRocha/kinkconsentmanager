@@ -1,0 +1,12 @@
+{
+    "client_id": "https://kinklist.gitlab.io/client-metadata5.json",
+    "client_name": "atpaste",
+    "client_uri": "https://kinklist.gitlab.io/",
+    "redirect_uris": ["https://kinklist.wisp.place/oauth-redirect.html", "https://kinklist.gitlab.io/oauth-redirect.html", "https://sites.wisp.place/did:plc:nmc77zslrwafxn75j66mep6o/kinklist/oauth-redirect.html"],
+    "scope": "atproto repo:io.gitlab.kinklist.kinklist.profile rpc:app.bsky.actor.getProfile?aud=* rpc:app.bsky.graph.getFollowers?aud=* rpc:app.bsky.graph.getFollows?aud=* repo:io.gitlab.kinklist.kinklist.list",
+    "grant_types": ["authorization_code", "refresh_token"],
+    "response_types": ["code"],
+    "token_endpoint_auth_method": "none",
+    "application_type": "web",
+    "dpop_bound_access_tokens": true
+}

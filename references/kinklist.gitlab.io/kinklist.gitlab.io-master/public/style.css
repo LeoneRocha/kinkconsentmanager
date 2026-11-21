@@ -1,0 +1,399 @@
+/* Fix bulma-prefers-dark table cells not fitting vanilla bulma layout */
+/* @media (prefers-color-scheme: dark) { */
+/*     .table td, .table th { */
+/*         border-width: 0 0 1px; */
+/*     } */
+/* } */
+html.theme-dark .table td,
+html.theme-dark .table th {
+    border-width: 0 0 1px;
+}
+
+/* Display table vertically. Matches Bulma's threshold for stacking columns vertically. */
+@media screen and (max-width: 1023px) {
+    .kinks-table tr {
+        display: flex;
+        float: left;
+        width: 100%;
+        flex-flow: column;
+    }
+
+    .kinks-table td {
+        display: block;
+    }
+
+    /* Had th, see below for what we actually do */
+
+    /* Size choice button as a square that takes up the whole space */
+    .choice {
+        width: 100%;
+    }
+
+    .choice:after {
+        content: "";
+        display: block;
+        padding-bottom: 100%;
+    }
+
+    .kinks-legend .choice {
+        width: 32px;
+        height: 32px;
+    }
+
+    .kinks-table td:last-child {
+        /* Place the kink label before the options */
+        order: -1;
+        /* Hide the border for the kink label */
+        border-bottom: none !important;
+    }
+
+    /* Due to the display:block above the table headers will not match the vertical layout. So we put them side-by-side (and then make them look pretty) */
+    .kinks-table th {
+        display: inline-block;
+    }
+
+    /* They're side-by-side, but we still need to remove the padding to make it seem as one single element */
+    .kinks-table th:not(:first-child) {
+        padding-left: 0;
+    }
+
+    .kinks-table th:not(:last-child) {
+        padding-right: 0;
+    }
+
+    /* Then, we add a comma separating them. */
+    .kinks-table th:not(:last-child)::after {
+        content: ', ';
+        white-space: pre;
+    }
+
+    /* Now we have to add the Self/Partner text to each set of choices so the reader doesn't get confused. */
+    /* This is only applied when there is more than one choice. */
+    /* https://stackoverflow.com/a/12198561 */
+    .kinks-table:not([data-num-participants="1"]) td::before {
+        /* We have to set this manually for every table. */
+        color: #363636;
+        font-style: italic;
+        content: attr(data-choice-type);
+        /* We have to set this manually for every td. */
+    }
+}
+
+@media screen and (min-width: 1024px) {
+    .choice {
+        width: 16px;
+        height: 16px;
+    }
+
+    /* Make the table stretch out to the entire available width for the outer masonry element. This may be a hack. */
+    .kinks-table td:last-child {
+        width: 100%;
+        /* Stretches out the last column as far as possible, which the browser limits to the masonry's width */
+    }
+
+    .kinks-table {
+        margin-right: 1rem;
+        /* Adds a small margin to the table so they don't all touch each other */
+    }
+}
+
+.column {
+    margin-right: 1% !important;
+}
+
+kinks {
+    display: none !important;
+}
+
+/* Margin in between choices */
+.choices .columns.is-gapless .column:not(:last-child) {
+    margin-right: 3px !important;
+}
+
+.inline-choice {
+    width: 16px;
+    height: 16px;
+    display: inline-block;
+}
+
+.choice, .inline-choice {
+    padding: 0;
+    font-size: 0;
+    outline: none;
+    border: 1px solid black;
+    border-radius: 50%;
+    transition: opacity 0.3s ease-in-out;
+    vertical-align: middle;
+    opacity: 0.35;
+    cursor: pointer;
+}
+
+.choice:not([disabled]):hover, .inline-choice:not([disabled]):hover {
+    opacity: 0.7;
+}
+
+.choice[disabled], .inline-choice[disabled] {
+    cursor: inherit;
+}
+
+.choice.selected, .inline-choice.selected {
+    opacity: 1;
+    border-width: 2px;
+}
+
+.choice.not-entered, .inline-choice.not-entered {
+    background-color: #FFFFFF;
+}
+
+.choice.favorite, .inline-choice.favorite {
+    background-color: #6DB5FE;
+}
+
+.choice.like, .inline-choice.like {
+    background-color: #23FD22;
+}
+
+.choice.okay, .inline-choice.okay {
+    background-color: #FDFD6B;
+}
+
+.choice.maybe, .inline-choice.maybe {
+    background-color: #DB6C00;
+}
+
+.choice.no, .inline-choice.no {
+    background-color: #920000;
+}
+
+.choice.want-to-try, .inline-choice.want-to-try {
+    background-color: white;
+    background-image: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHdpZHRoPScxNScgaGVpZ2h0PScxNSc+CiAgPHJlY3Qgd2lkdGg9JzE1JyBoZWlnaHQ9JzE1JyBmaWxsPSd3aGl0ZScvPgogIDxwYXRoIGQ9J00tMSwxIGwyLC0yCiAgICAgICAgICAgTTAsNSBsMTUsLTE1CiAgICAgICAgICAgTTAsMTAgbDE1LC0xNQogICAgICAgICAgIE0wLDE1IGwxNSwtMTUKICAgICAgICAgICBNMCwyMCBsMTUsLTE1CiAgICAgICAgICAgTTAsMjUgbDE1LC0xNQogICAgICAgICAgIE0xNCwxNiBsMiwtMicgc3Ryb2tlPSdibGFjaycgc3Ryb2tlLXdpZHRoPScxJy8+Cjwvc3ZnPgo=);
+    background-repeat: repeat;
+}
+
+.kinks-subtitle {
+    margin-top: 1.5rem;
+    margin-bottom: 0 !important;
+}
+
+.kinks-section {
+    padding-top: 0;
+}
+
+/* Legend: Bulma's Level does not come with margins by default. We pad the inner element instead. */
+.kinks-legend {
+    padding-left: 12px;
+}
+
+/* Margin between the choice button reference and the text that describes it */
+.kinks-legend .choice {
+    margin-right: 4px;
+}
+
+/* Increases margin between elements, matching Bulma's behavior to only do anything when not displaying vertically */
+@media screen and (min-width: 769px) {
+    .kinks-legend>.level-item {
+        margin-right: 1rem !important;
+    }
+}
+
+.has-description {
+    text-decoration: underline;
+    text-decoration-style: dotted;
+}
+
+.has-subtitle-description {
+    font-size: 70%;
+
+
+    background-image: linear-gradient(to right, black 33%, rgba(255, 255, 255, 0) 0%);
+    background-position: bottom;
+    background-size: 3px 1px;
+    background-repeat: repeat-x;
+}
+
+/* Use white-colored border for choice buttons when dark theme is enabled */
+html.theme-dark .choice, html.theme-dark .inline-choice {
+    border-color: white;
+}
+
+/* Quiz mode */
+
+#InputOverlay {
+    text-align: center;
+    white-space: nowrap;
+}
+#InputOverlay:before {
+    content: '';
+    display: inline-block;
+    height: 100%;
+    vertical-align: middle;
+    margin-right: -0.25em;
+}
+#InputOverlay .widthWrapper {
+    display: inline-block;
+    vertical-align: middle;
+    width: 400px;
+    text-align: left;
+    max-width: 100%;
+}
+#InputOverlay .widthWrapper #InputCurrent {
+    border-radius: 5px;
+}
+#InputPrevious .kink-simple {
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+}
+#InputNext .kink-simple {
+    border-bottom-left-radius: 5px;
+    border-bottom-right-radius: 5px;
+}
+#InputOverlay .widthWrapper #InputCurrent, #InputOverlay .widthWrapper .kink-simple {
+    display: block;
+    box-sizing: border-box;
+    padding: 10px;
+    background-color: var(--bulma-background);
+}
+#InputOverlay .widthWrapper .kink-simple {
+    position: relative;
+    height: 40px;
+    line-height: 20px;
+    cursor: pointer;
+}
+#InputOverlay .widthWrapper .kink-simple .inline-choice {
+    margin-right: 5px;
+}
+#InputOverlay .widthWrapper .kink-simple .txt-category {
+    position: absolute;
+    right: 10px;
+    top: 10px;
+    font-size: 90%;
+    font-weight: bold;
+    opacity: 0.6;
+    line-height: 1em;
+}
+#InputOverlay .widthWrapper .kink-simple .txt-field, #InputOverlay .widthWrapper .kink-simple .txt-kink {
+    vertical-align: middle;
+}
+#InputOverlay .widthWrapper .kink-simple .txt-field:empty {
+    display: none;
+}
+#InputOverlay .widthWrapper .kink-simple .txt-field:before, #InputField .participant:before {
+    content: '(';
+}
+#InputOverlay .widthWrapper .kink-simple .txt-field:after, #InputField .participant:after {
+    content: ') ';
+}
+
+#InputOverlay .widthWrapper #InputPrevious .kink-simple:first-child,
+#InputOverlay .widthWrapper #InputNext .kink-simple:nth-child(3) {
+    background-color: hsl(var(--bulma-scheme-h), var(--bulma-scheme-s), 82%);
+    font-size: 10px;
+    margin-left: 12px;
+    margin-right: 12px;
+    height: 33px;
+}
+#InputOverlay .widthWrapper #InputPrevious .kink-simple:nth-child(2),
+#InputOverlay .widthWrapper #InputNext .kink-simple:nth-child(2) {
+    background-color: hsl(var(--bulma-scheme-h), var(--bulma-scheme-s), 86%);
+    font-size: 11px;
+    margin-left: 6px;
+    margin-right: 6px;
+    height: 37px;
+}
+#InputOverlay .widthWrapper #InputPrevious .kink-simple:nth-child(3),
+#InputOverlay .widthWrapper #InputNext .kink-simple:first-child {
+    background-color: hsl(var(--bulma-scheme-h), var(--bulma-scheme-s), 90%);
+    margin-left: 3px;
+    margin-right: 3px;
+}
+
+html.theme-dark #InputOverlay .widthWrapper #InputPrevious .kink-simple:first-child,
+html.theme-dark #InputOverlay .widthWrapper #InputNext .kink-simple:nth-child(3) {
+    background-color: hsl(var(--bulma-scheme-h), var(--bulma-scheme-s), 3%);
+}
+html.theme-dark #InputOverlay .widthWrapper #InputPrevious .kink-simple:nth-child(2),
+html.theme-dark #InputOverlay .widthWrapper #InputNext .kink-simple:nth-child(2) {
+    background-color: hsl(var(--bulma-scheme-h), var(--bulma-scheme-s), 6%);
+}
+html.theme-dark #InputOverlay .widthWrapper #InputPrevious .kink-simple:nth-child(3),
+html.theme-dark #InputOverlay .widthWrapper #InputNext .kink-simple:first-child {
+    background-color: hsl(var(--bulma-scheme-h), var(--bulma-scheme-s), 9%);
+}
+
+#InputOverlay .widthWrapper #InputPrevious .kink-simple:first-child {
+    padding-bottom: 4px;
+    padding-top: 7px;
+}
+#InputOverlay .widthWrapper #InputNext .kink-simple:nth-child(3) {
+    padding-top: 4px;
+}
+#InputOverlay .widthWrapper #InputPrevious .kink-simple:nth-child(2) {
+    padding-bottom: 7px;
+    padding-top: 9px;
+}
+#InputOverlay .widthWrapper #InputNext .kink-simple:nth-child(2) {
+    padding-top: 7px;
+}
+
+#InputOverlay .widthWrapper #InputCurrent {
+    position: relative;
+}
+#InputOverlay .widthWrapper #InputCurrent .closePopup {
+    position: absolute;
+    top: 0;
+    right: 5px;
+    border-style: none;
+    background-color: transparent;
+    font-size: 30px;
+    cursor: pointer;
+    outline-style: none!important;
+    opacity: 0.65;
+}
+#InputOverlay .widthWrapper #InputCurrent .closePopup:hover {
+    opacity: 1;
+}
+#InputOverlay .widthWrapper #InputCurrent h2 {
+    opacity: 0.6;
+    margin: 0;
+}
+#InputOverlay .widthWrapper #InputCurrent h3 {
+    margin-top: 3px;
+    margin-bottom: 0;
+    font-size: 14px;
+}
+#InputOverlay .widthWrapper #InputCurrent #InputValues .big-choice {
+    padding: 10px;
+    background-color: var(--bulma-background-active);
+    border-radius: 4px;
+    margin-top: 5px;
+    cursor: pointer;
+}
+#InputOverlay .widthWrapper #InputCurrent #InputValues .big-choice.selected {
+    font-weight: bold;
+}
+#InputOverlay .widthWrapper #InputCurrent #InputValues .big-choice.selected .inline-choice {
+    opacity: 1;
+}
+#InputOverlay .widthWrapper #InputCurrent #InputValues .big-choice:hover {
+    padding: 8px;
+    border: solid #999 2px;
+    background-color: var(--bulma-background-hover);
+}
+#InputOverlay .widthWrapper #InputCurrent #InputValues .big-choice .btn-num-text {
+    float: right;
+    display: inline-block;
+    border: solid #CCC 1px;
+    text-align: center;
+    width: 16px;
+    border-radius: 3px;
+}
+
+.legend-text {
+    line-height: 25px;
+    vertical-align: middle;
+}
+/*
+.big-choice .inline-choice {
+    margin-top: calc((25px - 16px) / 4);
+} */
