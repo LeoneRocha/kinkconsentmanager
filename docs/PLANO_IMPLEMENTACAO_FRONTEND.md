@@ -1,334 +1,278 @@
 # Plano de Implementação Front-end
-**Projeto:** Plataforma de Gestão de Limites, Consentimento e Práticas Consensuais (BDSM / D/s)  
-**Documento:** Plano de Arquitetura e Implementação Front-end (Angular 18+ / PrimeNG)  
-**Versão:** 1.0  
+**Projeto:** KinkConsentManager — Plataforma de Checklists de Limites e Consentimento (BDSM / D/s)  
+**Documento:** Arquitetura Modular, Estratégia de Execução Paralela Multi-Agente e Especificação de Testes Unitários  
+**Versão:** 2.0 (Modularidade Estrita, TDD & Escopo Exclusivo V1 Checklist)  
 **Data:** 21 de Novembro de 2026  
 
 ---
 
-## 1. Visão Geral e Princípios Arquiteturais
+## 1. Diretrizes de Engenharia: Modularidade, Manutenibilidade e Paralelismo
 
-Este documento define a estratégia detalhada de implementação front-end da aplicação, orientando a construção de um sistema robusto, modular, escalável e de fácil manutenção.
+Para permitir que **múltiplos agentes desenvolvam e testem em paralelo** sem conflitos de arquivos, e para garantir que **correções futuras de bugs ou evolução de recursos sejam pontuais e seguras**, a base de código segue 5 regras arquiteturais inegociáveis:
 
-### 1.1. Pilares Arquiteturais Estritos
-1. **Padrão Angular Standalone:** Componentes, diretivas e pipes autônomos (`standalone: true`), eliminando o uso de `NgModule`.
-2. **Separação Estrita de Arquivos (Regra dos 4 Arquivos):** Nenhum componente conterá templates inline ou estilos inline. Todo componente terá obrigatoriamente:
-   * `<nome>.component.ts` (lógica e injeção de dependências)
-   * `<nome>.component.html` (marcação semântica e acessível)
-   * `<nome>.component.scss` (estilos escopados e responsivos)
-   * `<nome>.component.spec.ts` (testes unitários com Jasmine/Karma ou Vitest)
-3. **Reatividade com Angular Signals:** Gerenciamento de estado previsível através de `signal()`, `computed()` e `effect()`, evitando sobrecarga com RxJS desnecessário e proporcionando reatividade atômica sem ciclos de detecção de mudanças globais.
-4. **Padrão Repository & Serviços Genéricos:**
-   * Desacoplamento entre a camada de dados e a interface.
-   * Na versão 1, os schemas e traduções são lidos de arquivos estáticos (`assets/`).
-   * A transição futura para APIs em Node.js (v2) será feita via injeção de dependência (`HttpApiSchemaRepository`), sem alterar uma única linha de código dos componentes.
-5. **Mobile-First & Acessibilidade (a11y):**
-   * Prioridade absoluta para usabilidade em telas estreitas (smartphones).
-   * Contraste cromático adequado (WCAG 2.1 AA) e navegação completa por teclado.
+### 1.1. Regra de Isolamento Estrito (4+1 Arquivos por Unidade)
+Todo componente Angular **DEVE** ser `standalone: true` com `changeDetection: ChangeDetectionStrategy.OnPush` e residir em diretório próprio com 5 arquivos separados (proibido `template` ou `styles` inline):
+* `<nome>.component.ts` — apenas inputs, outputs, signals locais e orquestração enxuta.
+* `<nome>.component.html` — template declarativo usando `@if` / `@for` nativos do Angular.
+* `<nome>.component.scss` — estilos encapsulados usando tokens SCSS globais.
+* `<nome>.component.spec.ts` — suíte de testes unitários isolados.
+* `index.ts` — *barrel file* exportando apenas a API pública do componente.
 
----
+### 1.2. Padrão Smart (Container) vs. Dumb (Presentational)
+* **Dumb Components (`shared/components/*`):** Recebem 100% dos dados via `input()` / `input.required()` e comunicam ações exclusivamente via `output()`. **Proibido** injetar `ChecklistStateService` ou `HttpClient` dentro de `shared/`. Isso garante que qualquer bug visual possa ser reproduzido e corrigido em isolamento total no `.spec.ts` sem montar metade da aplicação.
+* **Smart Components (`features/*/pages/*`):** Apenas as páginas (`ChecklistPageComponent` e `ExportPageComponent`) injetam os serviços de estado, repositórios e exportação, conectando os Signals aos Dumb Components.
 
-## 2. Estrutura de Diretórios do Projeto
+### 1.3. Arquitetura Orientada a Contratos (Contract-First)
+O **Gate 0** cria exclusivamente os modelos e interfaces em `src/app/core/models/`. Nenhuma trilha de agente pode alterar contratos unilateralmente durante a execução paralela — garantindo estabilidade entre as fronteiras dos módulos.
 
-```text
-src/
-├── app/
-│   ├── core/
-│   │   ├── models/                           # Contratos e Interfaces TypeScript (DTOs)
-│   │   │   ├── checklist-schema.model.ts
-│   │   │   ├── checklist-answer.model.ts
-│   │   │   └── export-config.model.ts
-│   │   ├── repositories/                     # Padrão Repository para Schemas
-│   │   │   ├── schema.repository.interface.ts
-│   │   │   └── static-json-schema.repository.ts
-│   │   └── services/                         # Serviços Base, Estado e Utilidades Core
-│   │       ├── base-state.service.ts         # Classe abstrata genérica com Signals
-│   │       ├── base-data.service.ts          # Classe abstrata para operações de dados
-│   │       ├── i18n.service.ts               # Serviço reativo de tradução bilíngue
-│   │       └── checklist-state.service.ts    # Estado centralizado das respostas e navegação
-│   ├── shared/
-│   │   ├── components/                       # UI Kit Reutilizável (4 arquivos cada)
-│   │   │   ├── scale-selector/               # Seletor visual das escalas de consentimento
-│   │   │   ├── dynamic-question-item/        # Renderizador dinâmico dos 5 tipos de entrada
-│   │   │   ├── coming-soon-badge/            # Badge e modal de aviso de roadmap v2
-│   │   │   ├── progress-indicator/           # Barra de progresso reativa de preenchimento
-│   │   │   └── full-grid-preview/            # Grid vertical otimizado para exportação
-│   │   ├── pipes/                            # Pipes de formatação e resolução
-│   │   │   └── schema-translate.pipe.ts      # Pipe para resolver IDs no i18n
-│   │   └── directives/                       # Diretivas utilitárias de acessibilidade/foco
-│   ├── features/
-│   │   ├── checklist/                        # Módulo de Preenchimento Interativo
-│   │   │   ├── pages/
-│   │   │   │   └── checklist-page/           # Página mestre (/checklist)
-│   │   │   └── components/
-│   │   │       ├── checklist-header/         # Seletor de idioma, visão e progresso
-│   │   │       ├── category-accordion/       # Navegação passo a passo com botão Next
-│   │   │       └── full-view-container/      # Visão completa expandida
-│   │   ├── export/                           # Módulo de Visualização e Exportação
-│   │   │   ├── pages/
-│   │   │   │   └── export-page/              # Página de conferência e download (/export)
-│   │   │   ├── services/                     # Motores de exportação 100% Client-Side
-│   │   │   │   ├── png-export.service.ts     # Geração de PNG com html-to-image
-│   │   │   │   ├── pdf-export.service.ts     # Geração de PDF formal com pdfmake
-│   │   │   │   ├── json-draft.service.ts     # Download e upload de JSON rascunho
-│   │   │   │   └── csv-export.service.ts     # Planilha tabular UTF-8 BOM
-│   │   │   └── components/
-│   │   │       └── export-actions-toolbar/   # Barra com botões de ação e status
-│   │   └── roadmap-placeholders/             # Telas de Roadmap da v2
-│   │       ├── pages/
-│   │       │   ├── contracts-placeholder/    # /contract (Contratos D/s)
-│   │       │   ├── custom-builder-placeholder/ # /custom-builder
-│   │       │   └── partners-placeholder/     # /partners (Gestão de parceiros)
-│   │       └── components/
-│   │           └── placeholder-card/         # Card com escopo futuro e formulário de interesse
-│   ├── app.routes.ts                         # Rotas da aplicação com Lazy Loading
-│   ├── app.config.ts                         # Provedores da aplicação (PrimeNG, i18n, etc.)
-│   └── app.component.*                       # Componente raiz da aplicação (4 arquivos)
-├── assets/
-│   ├── schemas/
-│   │   └── checklist-v1.json                 # Estrutura lógica neutra pura por IDs
-│   └── i18n/
-│       ├── pt-BR.json                        # Traduções em Português do Brasil
-│       └── en-US.json                        # Traduções em Inglês dos EUA
-└── styles/
-    ├── _variables.scss                       # Cores das escalas, breakpoints, tipografia
-    ├── _mixins.scss                          # Mixins para responsividade e layout flex/grid
-    └── styles.scss                           # Estilos globais e tema PrimeNG customizado
-```
+### 1.4. Escopo Fechado na V1 (Somente Checklist)
+A arquitetura da V1 contém **exclusivamente** as features `checklist` e `export` (do próprio checklist). Rotas de v2 (Contratos D/s, Custom Builder, Play Partners, Excel `.xlsx` e Backend Node.js) **não são implementadas nem empacotadas** na V1, evitando código morto.
 
 ---
 
-## 3. Especificação Detalhada das Camadas
+## 2. Topologia de Execução Paralela (Workstreams Multi-Agente)
 
-### 3.1. Camada de Estado e Serviços Genéricos (`core/services/`)
+Após a conclusão rápida do **Gate 0 (Setup & Contratos)**, **5 Agentes trabalham 100% simultaneamente** em diretórios disjuntos:
 
-#### 3.1.1. Classe Base Genérica de Estado (`BaseStateService<T>`)
-```typescript
-import { signal, computed, Signal, WritableSignal } from '@angular/core';
-
-export abstract class BaseStateService<T> {
-  // Sinal protegido que armazena o estado imutável
-  protected readonly stateSignal: WritableSignal<T>;
-
-  constructor(initialState: T) {
-    this.stateSignal = signal<T>(initialState);
-  }
-
-  // Leitura pública em modo somente-leitura
-  public select<K extends keyof T>(key: K): Signal<T[K]> {
-    return computed(() => this.stateSignal()[key]);
-  }
-
-  // Atualização atômica do estado
-  protected setState(partialState: Partial<T>): void {
-    this.stateSignal.update((current) => ({
-      ...current,
-      ...partialState
-    }));
-  }
-
-  // Reset para estado inicial
-  protected resetState(initialState: T): void {
-    this.stateSignal.set(initialState);
-  }
-}
-```
-
-#### 3.1.2. Gerenciador de Estado do Checklist (`ChecklistStateService`)
-* Gerencia o estado central da aplicação:
-  * Respostas ativas mapeadas por `itemId`: `Record<string, ItemResponseValue>`.
-  * Modo de visualização ativo: `'accordion'` ou `'full'`.
-  * Índice da categoria ativa no modo accordion (`activeCategoryIndex: number`).
-  * Total de itens respondidos e percentual calculado (`progressPercentage: Signal<number>`).
-* Métodos essenciais:
-  * `setAnswer(itemId: string, answer: Partial<ItemResponseValue>): void`
-  * `getAnswer(itemId: string): Signal<ItemResponseValue | undefined>`
-  * `toggleViewMode(): void`
-  * `goToNextCategory(): void`
-  * `goToCategory(index: number): void`
-  * `loadDraft(draft: ChecklistDraft): void`
-  * `resetAllAnswers(): void`
-
-#### 3.1.3. Serviço de Internacionalização (`I18nService`)
-* Encapsula a biblioteca `@ngx-translate/core`.
-* Mantém um Signal reativo com o idioma ativo: `currentLang = signal<'pt-BR' | 'en-US'>('pt-BR')`.
-* Expõe método para troca dinâmica de idioma: `switchLanguage(lang: 'pt-BR' | 'en-US'): void`.
-* Expõe método para resolver caminhos de tradução estruturados por IDs:
-  * `getScaleLabel(scaleId: string): string`
-  * `getGroupTitle(groupId: string): string`
-  * `getGroupDescription(groupId: string): string`
-  * `getItemLabel(itemId: string): string`
-  * `getItemTooltip(itemId: string): string`
-  * `getOptionLabel(optionId: string): string`
-
----
-
-### 3.2. Camada de Repositórios e Abstração de Dados (`core/repositories/`)
-
-#### 3.2.1. Contrato da Interface (`ISchemaRepository`)
-```typescript
-import { Observable } from 'rxjs';
-import { ChecklistSchema } from '../models/checklist-schema.model';
-
-export interface ISchemaRepository {
-  getChecklistSchema(version?: string): Observable<ChecklistSchema>;
-}
-```
-
-#### 3.2.2. Implementação Estática da v1 (`StaticJsonSchemaRepository`)
-* Injeta o `HttpClient` do Angular e consome o arquivo estático `assets/schemas/checklist-v1.json`.
-* Adiciona validação de integridade e cache em memória para que o JSON não seja recarregado a cada navegação de rota.
-* **Preparação para a v2:** No futuro, bastará fornecer `provide: SCHEMA_REPOSITORY_TOKEN, useClass: HttpApiSchemaRepository` sem qualquer modificação nas páginas e componentes consumidores.
-
----
-
-### 3.3. Componentes Compartilhados (Shared UI Kit)
-
-Todos os componentes abaixo seguem rigorosamente a convenção de 4 arquivos separados:
-
-#### 3.3.1. `ScaleSelectorComponent`
-* **Arquivos:**
-  * `scale-selector.component.ts`
-  * `scale-selector.component.html`
-  * `scale-selector.component.scss`
-  * `scale-selector.component.spec.ts`
-* **Responsabilidade:** Renderizar os círculos/botões de seleção para a escala de 5 pontos (*Hard Limit*, *Soft Limit*, *Curious*, *Enjoy*, *Favorite*).
-* **Inputs:**
-  * `roleLabel`: Título do papel ('Dar / Aplicar', 'Receber / Sentir' ou 'Geral').
-  * `scales`: Lista de opções de escala com cores e ícones.
-  * `selectedValue`: ID da opção atualmente selecionada.
-  * `disabled`: Indicador de desabilitação.
-* **Outputs:**
-  * `valueChange`: Emite o `scaleId` selecionado.
-* **Acessibilidade:** Suporte a teclas de seta, `aria-checked`, `role="radiogroup"` e ícones visíveis dentro ou sobrepostos aos círculos para que pessoas daltônicas não dependam exclusivamente da cor.
-
-#### 3.3.2. `DynamicQuestionItemComponent`
-* **Arquivos:**
-  * `dynamic-question-item.component.ts`
-  * `dynamic-question-item.component.html`
-  * `dynamic-question-item.component.scss`
-  * `dynamic-question-item.component.spec.ts`
-* **Responsabilidade:** Inspecionar o `item.type` e renderizar a interface correspondente:
-  1. `scale_matrix`: Renderiza uma linha com o nome do item, tooltip explicativo e um ou dois `ScaleSelectorComponent` (conforme `dualRole`).
-  2. `single_choice`: Renderiza grupo de botões de rádio (`p-radioButton`).
-  3. `multiple_choice`: Renderiza lista de caixas de seleção (`p-checkbox`).
-  4. `allowOtherOption`: Se marcado no item, anexa um checkbox "Outro (especifique)" que, quando selecionado, exibe um `input` de texto com placeholder amigável.
-  5. `restricted_text`: Renderiza um `p-inputMask` ou `textarea` limitado a `maxLength` com contador de caracteres restantes regressivo.
-
-#### 3.3.3. `FullGridPreviewComponent`
-* **Arquivos:**
-  * `full-grid-preview.component.ts`
-  * `full-grid-preview.component.html`
-  * `full-grid-preview.component.scss`
-  * `full-grid-preview.component.spec.ts`
-* **Responsabilidade:** Renderizar todo o checklist em formato **Full Grid Vertical**.
-* **Design e Layout:**
-  * Cada grupo ocupa 100% da largura útil.
-  * Cabeçalho de categoria com cor de destaque suave.
-  * Itens dispostos em linhas claras com contraste preto no branco para máxima legibilidade.
-  * Não utiliza múltiplas colunas laterais estreitas que forcem o texto a quebrar letras ou palavras.
-  * Componente reutilizado diretamente na tela de `/export` para conferência do usuário e como elemento de captura pelo `PngExportService`.
-
-#### 3.3.4. `ComingSoonBadgeComponent`
-* **Arquivos:**
-  * `coming-soon-badge.component.ts`
-  * `coming-soon-badge.component.html`
-  * `coming-soon-badge.component.scss`
-  * `coming-soon-badge.component.spec.ts`
-* **Responsabilidade:** Exibir uma tag visual elegante (`p-tag` do PrimeNG) com o texto "Em Breve" e acionar um modal comemorativo e informativo detalhando as novidades planejadas para a versão 2.
-
----
-
-## 4. Motores de Exportação 100% Client-Side (`features/export/services/`)
-
-### 4.1. `PngExportService` (`html-to-image`)
-* **Mecanismo:** Captura o nó do DOM do `FullGridPreviewComponent` configurado com dimensões fixas (largura padrão de 1200px) e renderiza em Canvas com escalonamento de densidade de pixels (`pixelRatio: 2` para tela Retina/alta resolução).
-* **Fluxo:**
-  1. Oculta botões de ação e elementos interativos antes da captura.
-  2. Executa a conversão para Data URL (`image/png`).
-  3. Cria um link de download dinâmico temporário `<a>` com atributo `download="checklist-consentimento-[data].png"` e aciona o clique do usuário.
-  4. Nenhuma informação transita por nenhum servidor remoto.
-
-### 4.2. `PdfExportService` (`pdfmake`)
-* **Mecanismo:** Monta programaticamente a árvore de definição do documento PDF (`TDocumentDefinitions`) a partir das respostas do `ChecklistStateService` e das traduções ativas do `I18nService`.
-* **Conteúdo do PDF:**
-  * Cabeçalho: Título "Checklist de Limites e Consentimento", versão do documento, idioma e timestamp.
-  * Bloco de Legenda: Tabela com os círculos e os significados da escala.
-  * Seções por Categoria: Tabelas limpas com colunas formatadas (`Prática / Item`, `Dar / Aplicar`, `Receber / Sentir`, `Notas`).
-  * Propriedades `dontBreakRows: true` para garantir que nenhuma pergunta seja dividida entre duas páginas.
-  * Rodapé com numeração dinâmica de páginas ("Página X de Y").
-
-### 4.3. `JsonDraftService`
-* **Mecanismo:** Serialização simples e higienizada das respostas.
-* **Exportação:**
-  * Cria payload contendo apenas `{ schemaVersion: "1.0.0", exportedAt: new Date().toISOString(), language: "pt-BR", answers: { ... } }`.
-  * Converte em `Blob` do tipo `application/json` e efetua download local imediato (`checklist-rascunho-[data].json`).
-* **Importação:**
-  * `FileReader` no navegador lê o arquivo selecionado pelo usuário.
-  * Valida se o campo `schemaVersion` é compatível com o schema ativo.
-  * Injeta os dados no `ChecklistStateService.loadDraft()`, preenchendo todos os campos automaticamente.
-
-### 4.4. `CsvExportService`
-* **Mecanismo:** Gera arquivo `.csv` utilizando delimitador de ponto e vírgula (`;`) ou vírgula (`,`) com cabeçalho tabular.
-* **Preservação de Acentuação:** Insere o caractere Byte Order Mark UTF-8 (`\uFEFF`) no início do fluxo binário para garantir que acentos em português abram perfeitamente sem erros de codificação no Microsoft Excel e LibreOffice Calc.
-
----
-
-## 5. Fluxo de Navegação e UX Mobile-First
-
-### 5.1. Rota `/checklist` — Preenchimento Interativo
 ```mermaid
 flowchart TD
-    Start([Acesso a /checklist]) --> LoadSchema[Carrega Schema JSON v1]
-    LoadSchema --> CheckLang[Resolve Idioma pt-BR ou en-US]
-    CheckLang --> RenderHeader[Renderiza Barra: Idioma, Progresso, Modo de Visão]
-    RenderHeader --> ChooseMode{Modo Ativo?}
+    G0["Gate 0: Angular Setup + Core Models/Contracts + Styles Tokens"]
     
-    ChooseMode -->|Accordion Padrão Mobile| AccordionView[Exibe Categoria 1 Aberta]
-    AccordionView --> UserAnswer1[Usuário Preenche Respostas da Categoria]
-    UserAnswer1 --> ClickNext[Usuário Clica em 'Próxima Categoria']
-    ClickNext --> AutoAdvance[Fecha Categoria Atual e Expande a Próxima]
-    AutoAdvance --> CheckMore{Mais Categorias?}
-    CheckMore -->|Sim| UserAnswer1
-    CheckMore -->|Não / Finalizado| FinishPrompt[Exibe Botão 'Revisar e Exportar']
+    G0 --> A1["Agente 1: Data & i18n\n(assets/schemas + assets/i18n)"]
+    G0 --> A2["Agente 2: Core Services & Repository\n(core/repositories + core/services + shared/pipes)"]
+    G0 --> A3["Agente 3: Shared Atomic UI Kit\n(shared/components/*)"]
+    G0 --> A4["Agente 4: Feature Checklist\n(features/checklist/*)"]
+    G0 --> A5["Agente 5: Feature Export Client-Side\n(features/export/*)"]
     
-    ChooseMode -->|View Full| FullView[Expande Todas as Categorias]
-    FullView --> UserAnswerFull[Usuário Navega Livremente]
-    UserAnswerFull --> FinishPrompt
-    
-    FinishPrompt --> NavigateExport[Navega para /export]
+    A1 --> INT["Gate Final: Integração app.routes / app.config + Build + QA / Cobertura"]
+    A2 --> INT
+    A3 --> INT
+    A4 --> INT
+    A5 --> INT
 ```
 
-### 5.2. Rota `/export` — Visualização e Ações
-* O usuário chega à rota `/export` com o progresso preservado.
-* Uma barra de ação no topo oferece os botões:
-  * **[ Baixar Imagem PNG ]**
-  * **[ Baixar Documento PDF ]**
-  * **[ Exportar Rascunho JSON ]**
-  * **[ Importar Rascunho JSON ]**
-  * **[ Exportar Planilha CSV ]**
-  * **[ Exportar Excel (.xlsx) ]** com tag *Em Breve*
-* Abaixo da barra de botões, uma pré-visualização completa em **Full Grid Vertical** permite conferir cada resposta dada antes de salvar.
+### Matriz de Propriedade Exclusiva de Arquivos (Zero-Conflict Boundary)
+
+| Trilha / Agente | Diretórios de Escrita Exclusiva | Dependências de Leitura | Comandos de Verificação Independente |
+| :--- | :--- | :--- | :--- |
+| **Gate 0 (Foundation)** | `package.json`, `angular.json`, `tsconfig.json`, `src/styles/*`, `src/app/core/models/*` | `Bueprint.md`, docs | `npx tsc --noEmit` |
+| **Agente 1 (Data & i18n)** | `src/assets/schemas/*`, `src/assets/i18n/*`, `src/app/core/models/__tests__/schema-integrity.spec.ts` | `core/models/*` | `ng test --include=**/schema-integrity.spec.ts` |
+| **Agente 2 (Core & State)** | `src/app/core/repositories/*`, `src/app/core/services/*`, `src/app/shared/pipes/*` | `core/models/*` | `ng test --include=**/core/**/*.spec.ts` |
+| **Agente 3 (Shared UI Kit)** | `src/app/shared/components/*` | `core/models/*`, `styles/*` | `ng test --include=**/shared/components/**/*.spec.ts` |
+| **Agente 4 (Feature Checklist)** | `src/app/features/checklist/*` | `core/models/*`, assinaturas de `Core` e `Shared` | `ng test --include=**/features/checklist/**/*.spec.ts` |
+| **Agente 5 (Feature Export)** | `src/app/features/export/*` | `core/models/*`, assinaturas de `Core` e `Shared` | `ng test --include=**/features/export/**/*.spec.ts` |
+| **Gate Final (Integração)** | `src/app/app.config.ts`, `src/app/app.routes.ts`, `src/app/app.component.*` | Todas as trilhas | `ng test --code-coverage && ng build` |
+
+> **Nota sobre Agentes 4 e 5 em paralelo com Agentes 2 e 3:** Como as assinaturas públicas dos serviços (`ChecklistStateService`, `I18nService`) e dos componentes `shared/` estão congeladas na Seção 3 deste plano, os Agentes 4 e 5 escrevem seus testes unitários usando **Stubs/Mocks tipados** desses contratos, rodando `ng test` de forma independente antes mesmo da fusão final.
 
 ---
 
-## 6. Configuração e Theming (PrimeNG + SCSS)
+## 3. Especificação Técnica Detalhada por Módulo e Suíte de Testes Unitários
 
-### 6.1. Paleta de Cores e Escalas Institucionais
-As cores das escalas foram padronizadas para manter alto contraste e fácil memorização:
-* **Hard Limit (Limite Rígido):** Vermelho vibrante (`#D32F2F`) — Ícone `pi pi-ban`
-* **Soft Limit (Limite Flexível):** Laranja escuro (`#F57C00`) — Ícone `pi pi-exclamation-triangle`
-* **Curious (Curiosidade / A testar):** Amarelo âmbar (`#FBC02D`) — Ícone `pi pi-question-circle`
-* **Enjoy (Gosto / Autorizado):** Verde institucional (`#388E3C`) — Ícone `pi pi-check-circle`
-* **Favorite (Favorito / Alta preferência):** Roxo profundo (`#7B1FA2`) — Ícone `pi pi-heart-fill`
-* **Not Entered (Não respondido):** Cinza neutro suave (`#E0E0E0`)
+### 3.1. Trilha Agente 1 — Dados Neutros e Internacionalização (`src/assets/`)
 
-### 6.2. Breakpoints Responsivos
-* **Mobile (< 768px):** Accordion ativo por padrão, botões de ação empilhados verticalmente, fontes ajustadas para telas de 360px a 430px.
-* **Tablet (768px - 1024px):** Layout intermediário com botões em pares.
-* **Desktop (> 1024px):** Opção de alternar livremente para View Full, toolbar horizontal ampla, prévia de exportação em largura integral.
+#### Arquivos e Responsabilidades
+* `src/assets/schemas/checklist-v1.json`: Contém `schemaVersion: "1.0.0"`, as 5 escalas (`hard_limit`, `soft_limit`, `curious`, `enjoy`, `favorite`) com cores/ícones acessíveis e os 8 grupos taxonômicos com seus respectivos itens e tipos.
+* `src/assets/i18n/pt-BR.json` e `src/assets/i18n/en-US.json`: Dicionários estruturados contendo seções `ui` (botões, cabeçalhos, mensagens de erro), `roles` (`giving_receiving`, `dominant_submissive`, `self_partner`, `general`), `scales`, `groups`, `items` e `options`.
+
+#### Testes Unitários Obrigatórios (`schema-integrity.spec.ts`)
+1. `should validate checklist-v1.json conforms to ChecklistSchema structure and semver`: Verifica `schemaVersion`, `scales.length === 5` e ordem única de escalas e grupos.
+2. `should ensure every item has valid QuestionType and required properties`: Garante que `single_choice`/`multiple_choice` possuam `options.length > 0` e `restricted_text` possua `maxLength > 0`.
+3. `should guarantee 100% key parity between pt-BR.json and en-US.json`: Compara recursivamente todas as chaves dos dois idiomas para garantir ausência de traduções faltantes.
+4. `should verify every ID in checklist-v1.json exists in both pt-BR.json and en-US.json`: Valida que nenhum grupo, item, opção ou escala fique sem tradução em qualquer idioma.
 
 ---
 
-## 7. Próximos Passos
-Com este plano técnico estruturado, a equipe de engenharia dispõe de todas as especificações de componentes, contratos de interface e arquitetura de serviços necessárias para iniciar a codificação do projeto de maneira uniforme e padronizada.
+### 3.2. Trilha Agente 2 — Core Repositories, Services e Pipes
+
+#### 3.2.1. Repositório de Schemas (`core/repositories/`)
+* `schema.repository.ts`:
+  ```typescript
+  export interface ISchemaRepository {
+    getChecklistSchema(version?: string): Observable<ChecklistSchema>;
+  }
+  export const SCHEMA_REPOSITORY_TOKEN = new InjectionToken<ISchemaRepository>('ISchemaRepository');
+  ```
+* `static-json-schema.repository.ts`: Implementa `ISchemaRepository` consumindo `assets/schemas/checklist-v1.json` via `HttpClient` com `shareReplay(1)` (cache em memória) e validação básica de payload.
+* **Testes Obrigatórios (`static-json-schema.repository.spec.ts`):**
+  * `should fetch checklist-v1.json via HttpTestingController and return parsed schema`;
+  * `should cache schema response on subsequent calls (single HTTP request)`;
+  * `should throw descriptive error if schema payload is malformed or missing groups`.
+
+#### 3.2.2. Persistência Local Isolada (`local-storage-persistence.service.ts`)
+* Encapsula acesso seguro ao `window.localStorage` (com `try/catch` para modo anônimo/quota excedida ou ambiente SSR/testes) sob a chave versionada `kcm_checklist_state_v1`.
+* **Testes Obrigatórios (`local-storage-persistence.service.spec.ts`):**
+  * `should save and load serialized state accurately`;
+  * `should return null without throwing when stored JSON is corrupted`;
+  * `should handle QuotaExceededError gracefully without crashing`;
+  * `should clear stored key when clear() is called`.
+
+#### 3.2.3. Estado Genérico e Estado do Checklist (`base-state.service.ts` & `checklist-state.service.ts`)
+* **`BaseStateService<T>`:** Classe abstrata baseada em `WritableSignal<T>`, `select<K>(key)` retornando `Signal<T[K]>`, `setState(partial)` e `resetState()`.
+* **`ChecklistStateService`:**
+  * Signals computados expostos:
+    * `schema: Signal<ChecklistSchema | null>`
+    * `answers: Signal<Readonly<Record<string, ItemResponseValue>>>`
+    * `viewMode: Signal<ChecklistViewMode>` (`'accordion'` | `'full'`)
+    * `activeCategoryIndex: Signal<number>`
+    * `totalItemsCount: Signal<number>`
+    * `answeredItemsCount: Signal<number>`
+    * `progressPercentage: Signal<number>` (0 a 100)
+    * `filteredGroups: Signal<readonly GroupDefinition[]>` (aplica `searchQuery` e `onlyUnanswered`)
+  * Métodos públicos:
+    * `initializeSchema(schema: ChecklistSchema): void`
+    * `setItemAnswer(itemId: string, patch: Partial<ItemResponseValue>): void`
+    * `clearItemAnswer(itemId: string): void`
+    * `setViewMode(mode: ChecklistViewMode): void`
+    * `setActiveCategory(index: number): void`
+    * `nextCategory(): boolean` (avança se não for a última; retorna `false` se chegou ao fim)
+    * `setSearchQuery(query: string): void`
+    * `setOnlyUnanswered(enabled: boolean): void`
+    * `importDraft(draft: ChecklistDraft): void`
+    * `exportDraftSnapshot(lang: SupportedLanguage): ChecklistDraft`
+    * `resetAllAnswers(): void`
+* **Testes Obrigatórios (`base-state.service.spec.ts` & `checklist-state.service.spec.ts`):**
+  * `should calculate answeredItemsCount and progressPercentage accurately across dual-role and single-role items`;
+  * `should update primaryScale without overwriting secondaryScale in dual-role mode`;
+  * `should consider item answered only when meaningful value exists (empty string/empty array counts as unanswered)`;
+  * `should filter groups by searchQuery and onlyUnanswered simultaneously`;
+  * `should advance activeCategoryIndex via nextCategory() and return false at the last group`;
+  * `should restore state on importDraft() and trigger auto-save via LocalStoragePersistenceService`.
+
+#### 3.2.4. Serviço de Tradução (`i18n.service.ts`) e Pipe (`schema-translate.pipe.ts`)
+* **`I18nService`:** Encapsula `TranslateService` (`@ngx-translate/core`). Expõe `currentLang = signal<SupportedLanguage>('pt-BR')`, `setLanguage(lang)`, `translateUi(key, params?)`, `getScaleLabel(id)`, `getRoleLabels(pairId)`, `getGroupTitle(id)`, `getGroupDescription(id)`, `getItemLabel(id)`, `getItemTooltip(id)`, `getOptionLabel(id)`.
+* **`SchemaTranslatePipe`:** Pipe puro impuro-reativo ou conectado ao signal `currentLang()` para resolução direta em templates sem boilerplate.
+* **Testes Obrigatórios (`i18n.service.spec.ts` & `schema-translate.pipe.spec.ts`):**
+  * `should switch language signal and invoke TranslateService.use()`;
+  * `should fallback gracefully to key ID if translation entry is missing`;
+  * `should resolve dual-role labels for giving_receiving, dominant_submissive and self_partner`;
+  * `should NOT modify or reset ChecklistStateService answers when language changes`.
+
+---
+
+### 3.3. Trilha Agente 3 — Shared Atomic UI Kit (`src/app/shared/components/`)
+
+Todos são **Dumb Components** (`OnPush`, sem injeção de serviços globais de estado):
+
+#### 3.3.1. `ScaleSelectorComponent`
+* **Inputs:** `scales = input.required<readonly ScaleOption[]>()`, `scaleLabels = input.required<Record<string, string>>()`, `roleTitle = input<string>('')`, `selectedScale = input<ScaleId | undefined>(undefined)`, `disabled = input<boolean>(false)`, `compact = input<boolean>(false)`.
+* **Outputs:** `scaleChange = output<ScaleId | undefined>()` (clicar na opção já selecionada permite desmarcar para *Not Entered*).
+* **Acessibilidade:** `role="radiogroup"`, cada opção com `role="radio"`, `[attr.aria-checked]`, `[attr.aria-label]`, ícone PrimeIcons visível dentro do botão circular para independência de daltonismo.
+* **Testes Obrigatórios (`scale-selector.component.spec.ts`):**
+  * `should render one button per ScaleOption with matching icon and aria-label`;
+  * `should emit selected ScaleId when clicked`;
+  * `should emit undefined (deselect) when clicking an already active scale`;
+  * `should not emit when disabled input is true`;
+  * `should apply active styling and aria-checked="true" only to selectedScale`.
+
+#### 3.3.2. `DynamicQuestionItemComponent`
+* **Inputs:** `item = input.required<ItemDefinition>()`, `scales = input.required<readonly ScaleOption[]>()`, `isDualRole = input.required<boolean>()`, `roleLabels = input.required<{ primary: string; secondary?: string }>()`, `itemLabel = input.required<string>()`, `itemTooltip = input<string>('')`, `scaleLabels = input.required<Record<string, string>>()`, `optionLabels = input.required<Record<string, string>>()`, `answer = input<ItemResponseValue | undefined>(undefined)`.
+* **Outputs:** `answerChange = output<Partial<ItemResponseValue>>()`.
+* **Comportamento:** Switch limpo no template por `item().type`:
+  1. `scale_matrix` + `isDualRole()`: dois `ScaleSelectorComponent` lado a lado (empilhados em mobile `< 576px`).
+  2. `scale_matrix` + `!isDualRole()`: um único `ScaleSelectorComponent`.
+  3. `single_choice`: lista de `p-radioButton` + opção condicional `allowOtherOption` revelando input de texto.
+  4. `multiple_choice`: lista de `p-checkbox` + opção condicional `allowOtherOption`.
+  5. `restricted_text`: `<textarea pInputTextarea>` com contador dinâmico `{{ currentLength }} / {{ maxLength }}`.
+* **Testes Obrigatórios (`dynamic-question-item.component.spec.ts`):**
+  * `should render two ScaleSelectorComponent instances when type is scale_matrix and isDualRole is true`;
+  * `should render single ScaleSelectorComponent when isDualRole is false`;
+  * `should render p-radioButton list for single_choice and emit selectedOption`;
+  * `should render p-checkbox list for multiple_choice and toggle options in selectedOptions array`;
+  * `should show and emit otherText input only when allowOtherOption is enabled and "other" is active`;
+  * `should enforce maxLength and update character counter for restricted_text`;
+  * `should display tooltip icon only when itemTooltip is non-empty`.
+
+#### 3.3.3. `LegendBarComponent` & `ProgressIndicatorComponent`
+* **`LegendBarComponent`:** Exibe barra horizontal responsiva (sticky no topo opcional) com os 5 níveis da escala (cor + ícone + texto).
+* **`ProgressIndicatorComponent`:** Recebe `answered`, `total` e `percentage`, exibindo `p-progressBar` e texto `{{ answered }}/{{ total }}`.
+* **Testes Obrigatórios:** Renderização exata das 5 escalas na legenda; clamping de 0% a 100% e formato de contagem no progresso.
+
+#### 3.3.4. `FullGridPreviewComponent`
+* **Inputs:** `schema = input.required<ChecklistSchema>()`, `answers = input.required<Readonly<Record<string, ItemResponseValue>>>()`, `resolvedTexts = input.required<ResolvedPreviewTexts>()` (títulos/labels já traduzidos para manter o componente 100% puro e testável sem I18nService), `printMode = input<boolean>(false)`.
+* **Responsabilidade:** Layout **Full Grid Vertical** (cada grupo em bloco único 100% de largura, alto contraste preto/branco, tipografia nítida). Usado tanto na tela `/export` quanto como nó alvo do `PngExportService` em `1200px`.
+* **Testes Obrigatórios (`full-grid-preview.component.spec.ts`):**
+  * `should render all groups stacked vertically with full width`;
+  * `should display dual-role badges/columns only for dual-role items`;
+  * `should format multiple_choice, otherText and restricted_text answers legibly`;
+  * `should render "Não respondido / Not entered" placeholder for empty answers`.
+
+---
+
+### 3.4. Trilha Agente 4 — Feature Checklist (`src/app/features/checklist/`)
+
+#### Componentes da Trilha
+1. **`ChecklistHeaderComponent`:** Barra superior responsiva com seletor de idioma (`pt-BR` | `en-US`), alternador `Accordion` vs `View Full`, botão para abrir `QuickFillWizardModal`, campo de busca textual, toggle "Apenas não respondidos", botão "Limpar" e `ProgressIndicatorComponent` + `LegendBarComponent`.
+2. **`CategoryAccordionComponent`:** Utiliza `p-accordion` do PrimeNG controlado por `activeCategoryIndex`. Cada painel exibe descrição da categoria, lista de `DynamicQuestionItemComponent` e, no rodapé do painel, botão **`Próxima Categoria (Next)`** (ou **`Finalizar e Exportar`** na última categoria).
+3. **`FullViewContainerComponent`:** Renderiza todos os grupos abertos em sequência vertical com índice rápido lateral/superior em desktop.
+4. **`QuickFillWizardModalComponent`:** Inspirado no `#InputOverlay` do `Goctionni/v1.0.2.html`. Dialog PrimeNG (`p-dialog`) focado para preenchimento ultrarrápido de itens `scale_matrix`, exibindo item atual, contexto `(Grupo • Papel)`, fila de 3 anteriores/3 próximos, botões grandes acessíveis e suporte a teclado (`0` para limpar, `1`–`5` para selecionar escala e avançar automaticamente, `ArrowUp`/`ArrowDown` para navegar).
+5. **`ChecklistPageComponent` (Smart Container):** Conecta `ISchemaRepository`, `ChecklistStateService`, `I18nService` e `Router`, gerenciando estados de loading (`p-skeleton`), erro de carga e diálogo de confirmação (`p-confirmDialog`) ao resetar respostas.
+
+#### Testes Obrigatórios da Feature Checklist
+* **`checklist-header.component.spec.ts`:** Emissão de eventos de troca de idioma, troca de `viewMode`, digitação de busca e clique em limpar.
+* **`category-accordion.component.spec.ts`:** Renderização dos painéis por grupo, sincronia com `activeIndex`, emissão de `nextCategoryClick` e texto alternativo do botão na última categoria.
+* **`quick-fill-wizard-modal.component.spec.ts`:** Mapeamento de teclas `1-5` para escalas, tecla `0` para limpar, `ArrowDown`/`ArrowUp` para navegar e avanço automático ao escolher opção.
+* **`checklist-page.component.spec.ts`:** Carga inicial via mock de `ISchemaRepository`, propagação de alteração de resposta para `ChecklistStateService`, troca de idioma preservando respostas no DOM, transição de rota para `/export`.
+
+---
+
+### 3.5. Trilha Agente 5 — Feature Export Client-Side (`src/app/features/export/`)
+
+Todos os serviços de exportação são **100% client-side** e recebem dados via parâmetros ou abstração de download testável (`FileDownloadHelper` injetável para evitar download real durante os testes unitários).
+
+#### 3.5.1. Serviços Exportadores
+1. **`ChecklistFlattenService` (Helper compartilhado da feature):** Transforma `(ChecklistSchema, answers, I18nService)` em `FlattenedChecklistRow[]` normalizados, reutilizado igualmente por `PdfExportService` e `CsvExportService` (evitando duplicação de lógica!).
+2. **`PngExportService`:** Recebe `HTMLElement` do `FullGridPreviewComponent` (em container de largura fixa `1200px`), invoca wrapper injetável de `html-to-image` (`toPng(element, { pixelRatio: 2, backgroundColor: '#ffffff' })`) e aciona download local.
+3. **`PdfExportService`:** Monta `TDocumentDefinitions` para o `pdfmake`: cabeçalho institucional, metadados (`schemaVersion`, data ISO, idioma), bloco de legenda com badges vetoriais de cor, e tabelas por categoria com `dontBreakRows: true` e rodapé paginado.
+4. **`JsonDraftService`:**
+   * `exportDraft(draft: ChecklistDraft): ExportResult`: Gera `Blob` JSON formatado e dispara download `kink-checklist-draft-YYYY-MM-DD.json`.
+   * `parseAndValidateDraft(fileContent: string, expectedSchemaVersion: string): DraftValidationResult`: Faz `JSON.parse` seguro, valida campos obrigatórios (`schemaVersion`, `answers` como objeto não-nulo), compara versão major do schema e retorna resultado estruturado sem lançar exceções não tratadas.
+5. **`CsvExportService`:** Recebe `FlattenedChecklistRow[]`, gera string RFC-4180 escapando aspas duplas (`""`), prefixa UTF-8 BOM `\uFEFF` e dispara download `.csv`.
+
+#### 3.5.2. Componentes da Feature Export
+* **`ExportActionsToolbarComponent` (Dumb):** Botões de ação (`Baixar PNG`, `Baixar PDF`, `Exportar Rascunho JSON`, `Importar Rascunho JSON` via input file oculto, `Exportar CSV` e `Voltar ao Checklist`) com indicadores individuais de `loading` por botão.
+* **`ExportPageComponent` (Smart):** Conecta estado + `I18nService` + todos os serviços de exportação, exibe `p-toast` para feedback de sucesso/erro (ex.: JSON inválido ao importar) e renderiza o `FullGridPreviewComponent` abaixo da toolbar.
+
+#### Testes Obrigatórios da Feature Export
+* **`checklist-flatten.service.spec.ts`:** Achatamento correto de `dualRole: true`, `dualRole: false`, `multiple_choice`, `allowOtherOption` e `restricted_text`.
+* **`png-export.service.spec.ts`:** Chamada ao wrapper `toPng` com `pixelRatio: 2`, disparo de download e tratamento gracioso de falha na geração do Canvas.
+* **`pdf-export.service.spec.ts`:** Verificação da estrutura gerada (`content`, legenda, tabelas com `dontBreakRows: true`, header/footer) e invocação do `pdfMake.createPdf`.
+* **`json-draft.service.spec.ts`:**
+  * Exportação correta do payload;
+  * Rejeição com mensagem clara para JSON sintaticamente inválido, payload sem `answers`, ou `schemaVersion` incompatível;
+  * Aceitação e retorno fiel de `ChecklistDraft` válido.
+* **`csv-export.service.spec.ts`:**
+  * Presença obrigatória do UTF-8 BOM `\uFEFF` no primeiro caractere;
+  * Escape correto de valores contendo vírgula, ponto e vírgula, aspas duplas e quebras de linha;
+  * Colunas exatas no cabeçalho CSV.
+* **`export-page.component.spec.ts`:** Disparo de cada ação da toolbar, exibição de toast de erro ao importar rascunho inválido e atualização imediata do `FullGridPreviewComponent` após importação bem-sucedida.
+
+---
+
+## 4. Preparação Arquitetural para Decisões Futuras (Fora do Escopo V1)
+
+Embora a V1 implemente **estritamente o Checklist**, a arquitetura foi desenhada com pontos de acoplamento mínimo para viabilizar qualquer decisão futura com custo próximo de zero:
+
+| Possível Evolução Futura (Pós-V1) | Como a Arquitetura V1 Facilita a Expansão Sem Refatoração |
+| :--- | :--- |
+| **Backend Node.js / Banco de Dados** | Basta criar `HttpApiSchemaRepository implements ISchemaRepository` e registrá-lo no `SCHEMA_REPOSITORY_TOKEN` em `app.config.ts`. Nenhum componente de UI precisa mudar. |
+| **Custom Builder (Editor de Perguntas)** | Como todos os itens são renderizados dinamicamente a partir de `ChecklistSchema`, qualquer schema customizado gerado no futuro funcionará automaticamente nos mesmos componentes `DynamicQuestionItem` e exportadores. |
+| **Partner Match / Diff (Comparação)** | `JsonDraftService` exporta respostas indexadas por `itemId` neutro. Um futuro serviço de Diff precisará apenas cruzar dois objetos `ChecklistDraft.answers`. |
+| **Motor de Contratos D/s** | Um futuro módulo lazy-loaded `/contract` pode ler o `ChecklistStateService.answers()` e traduzir `enjoy`/`favorite`/`hard_limit` em cláusulas sem alterar o módulo `/checklist`. |
+| **Exportação Excel (`.xlsx`)** | O `ChecklistFlattenService` já produz a estrutura tabular normalizada pronta para alimentar uma futura biblioteca de planilhas sem duplicar regras de parsing. |
+
+---
+
+## 5. Convenções de Qualidade, Linting e Estilos Mobile-First
+
+* **Variáveis de Escala (`src/styles/_variables.scss`):**
+  * `$scale-hard-limit: #D32F2F;`
+  * `$scale-soft-limit: #F57C00;`
+  * `$scale-curious: #FBC02D;`
+  * `$scale-enjoy: #388E3C;`
+  * `$scale-favorite: #7B1FA2;`
+  * `$scale-empty: #E0E0E0;`
+* **Breakpoints Mobile-First:**
+  * Base: `0px – 575px` (empilhamento vertical, alvos de toque mínimos `44x44px` conforme WCAG/Apple HIG).
+  * Tablet (`@media (min-width: 768px)`): exibição de papéis Dual-Role lado a lado e barra de ferramentas horizontal.
+  * Desktop (`@media (min-width: 1024px)`): container centralizado (`max-width: 1120px`), índice de navegação rápida lateral no modo `View Full`.

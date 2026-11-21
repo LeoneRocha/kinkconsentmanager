@@ -1,228 +1,247 @@
 # Checklist de Implementação, Etapas e Progresso
-**Projeto:** Plataforma de Gestão de Limites, Consentimento e Práticas Consensuais (BDSM / D/s)  
-**Documento:** Plano de Trabalho, Matriz de Tarefas, Critérios de Aceite e Acompanhamento de Progresso  
-**Versão:** 1.0  
+**Projeto:** KinkConsentManager — Plataforma de Checklists de Limites e Consentimento (BDSM / D/s)  
+**Documento:** Orquestração Multi-Agente, Matriz de Tarefas Modulares, Testes Unitários e Controle de Escopo V1  
+**Versão:** 2.0 (Paralelismo Multi-Agente, TDD & Foco 100% Checklist na V1)  
 **Data:** 21 de Novembro de 2026  
 
 ---
 
-## 1. Visão Geral das Fases de Entrega
+## 1. Estratégia de Orquestração em Paralelo (Multi-Agent Execution Plan)
 
-O plano de execução está estruturado em **8 Fases Incrementais**, garantindo que cada bloco entregue forneça valor testável e mantenha a estrita conformidade arquitetural definida no Blueprint:
+Para acelerar o desenvolvimento com máxima segurança e zero conflito de edição de arquivos, a execução é dividida em **3 Ondas (Gates)**:
+1. **Onda 0 (Gate de Fundação — Sequencial Rápido):** Prepara o workspace Angular e congela os contratos TypeScript (`core/models/`).
+2. **Onda 1 (Execução Massiva em Paralelo — 5 Agentes Simultâneos):** Cada agente atua exclusivamente no seu conjunto isolado de diretórios e escreve código + testes unitários (`.spec.ts`).
+3. **Onda 2 (Gate de Integração, QA e Build Final):** Conecta as rotas em `app.routes.ts` / `app.config.ts`, executa toda a suíte de testes com cobertura, audita acessibilidade e valida o build de produção.
 
 ```mermaid
-flowchart LR
-    F1[Fase 1: Setup & Fundação] --> F2[Fase 2: Schemas & i18n]
-    F2 --> F3[Fase 3: Estado & Repositórios]
-    F3 --> F4[Fase 4: Shared UI Kit]
-    F4 --> F5[Fase 5: Feature Checklist]
-    F5 --> F6[Fase 6: Feature Export]
-    F6 --> F7[Fase 7: Roadmap v2 Placeholders]
-    F7 --> F8[Fase 8: QA, a11y & Testes]
+flowchart TB
+    subgraph WAVE0 ["Onda 0: Gate de Fundação (1 Agente)"]
+        T0["T0.1 a T0.4: Setup Angular + PrimeNG + Tokens SCSS + Contratos TypeScript Imutáveis"]
+    end
+
+    subgraph WAVE1 ["Onda 1: 5 Agentes Rodando 100% em Paralelo (Zero Colisão de Arquivos)"]
+        direction LR
+        AG1["Agente 1: Data & i18n\n(assets/schemas + i18n)"]
+        AG2["Agente 2: Core & State\n(repositories + services + pipes)"]
+        AG3["Agente 3: Shared UI Kit\n(components atômicos dumb)"]
+        AG4["Agente 4: Feature Checklist\n(accordion + wizard + view full)"]
+        AG5["Agente 5: Feature Export\n(png + pdf + json + csv)"]
+    end
+
+    subgraph WAVE2 ["Onda 2: Gate de Integração & QA"]
+        INT["INT.1 a INT.5: App Shell + Rotas Lazy + Cobertura >=85% + a11y + Prod Build"]
+    end
+
+    WAVE0 --> AG1 & AG2 & AG3 & AG4 & AG5
+    AG1 & AG2 & AG3 & AG4 & AG5 --> WAVE2
 ```
 
 ---
 
-## 2. Resumo de Progresso Global
+## 2. Painel de Progresso por Trilha de Agente
 
-| Fase | Descrição | Itens Totais | Concluídos | Em Progresso | Pendentes | Status |
+| Trilha / Agente | Escopo Exclusivo | Tarefas | Concluídas | Specs Verificados | Cobertura Meta | Status Geral |
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: |
-| **Fase 1** | Setup do Projeto e Fundação Arquitetural | 5 | 0 | 0 | 5 | 🔴 Não iniciado |
-| **Fase 2** | Schemas de Dados e Internacionalização | 4 | 0 | 0 | 4 | 🔴 Não iniciado |
-| **Fase 3** | Camada de Estado e Serviços Core | 5 | 0 | 0 | 5 | 🔴 Não iniciado |
-| **Fase 4** | Shared UI Kit e Componentes Atômicos | 5 | 0 | 0 | 5 | 🔴 Não iniciado |
-| **Fase 5** | Feature Checklist (Preenchimento Interativo) | 6 | 0 | 0 | 6 | 🔴 Não iniciado |
-| **Fase 6** | Feature Export (Motores Gráficos Client-Side) | 6 | 0 | 0 | 6 | 🔴 Não iniciado |
-| **Fase 7** | Telas de Roadmap v2 (Placeholders) | 4 | 0 | 0 | 4 | 🔴 Não iniciado |
-| **Fase 8** | Testes Unitários, Acessibilidade e Build | 5 | 0 | 0 | 5 | 🔴 Não iniciado |
-| **TOTAL** | **Consolidado do Projeto** | **40** | **0** | **0** | **40** | **0%** |
+| **Onda 0 — Gate Fundação** | Setup, SCSS & Contratos | 4 | 0 | 0 / 1 | N/A | 🔴 Pendente |
+| **Agente 1 — Data & i18n** | Schemas JSON & Traduções | 4 | 0 | 0 / 1 | 100% integridade | 🔴 Pendente |
+| **Agente 2 — Core & State** | Repositories, Signals & I18n | 6 | 0 | 0 / 6 | >= 90% | 🔴 Pendente |
+| **Agente 3 — Shared UI Kit** | Componentes Dumb Atômicos | 5 | 0 | 0 / 5 | >= 85% | 🔴 Pendente |
+| **Agente 4 — Feature Checklist** | UX Mobile-First & Wizard | 5 | 0 | 0 / 5 | >= 85% | 🔴 Pendente |
+| **Agente 5 — Feature Export** | Motores PNG, PDF, JSON, CSV | 6 | 0 | 0 / 6 | >= 90% | 🔴 Pendente |
+| **Onda 2 — Integração & QA** | Rotas, E2E/QA, a11y & Build | 5 | 0 | 0 / 2 | >= 85% Global | 🔴 Pendente |
+| **TOTAL V1 (Checklist)** | **100% Escopo V1** | **35** | **0** | **0 / 26** | **>= 85%** | **0%** |
 
-*Legenda de Status: `[ ] Pendente`, `[/] Em Progresso`, `[x] Concluído`, `[!] Bloqueado`*
-
----
-
-## 3. Detalhamento das Tarefas e Critérios de Aceite
-
-### Fase 1: Setup do Projeto e Fundação Arquitetural
-*Objetivo:* Configurar a base do projeto Angular com TypeScript estrito, PrimeNG, PrimeIcons e suporte a SCSS.
-
-- [ ] **TASK-1.1: Inicialização do Workspace Angular 18+/19+**
-  - **Arquivos:** `package.json`, `angular.json`, `tsconfig.json`
-  - **Critério de Aceite:** Aplicação criada com modo standalone ativo, compilação estrita (`strict: true`) e roteamento habilitado.
-- [ ] **TASK-1.2: Instalação e Configuração de Dependências de UI**
-  - **Arquivos:** `package.json`, `angular.json`, `src/styles.scss`
-  - **Dependências:** `primeng`, `primeicons`, `@ngx-translate/core`, `@ngx-translate/http-loader`, `html-to-image`, `pdfmake`
-  - **Critério de Aceite:** PrimeNG e ícones carregando estilos sem erros no console.
-- [ ] **TASK-1.3: Estruturação dos Diretórios Globais**
-  - **Diretórios:** `src/app/core`, `src/app/shared`, `src/app/features`, `src/assets/schemas`, `src/assets/i18n`
-  - **Critério de Aceite:** Árvore de pastas criada de acordo com o padrão do documento arquitetural.
-- [ ] **TASK-1.4: Configuração de Variáveis Globais de Estilo e Breakpoints**
-  - **Arquivos:** `src/styles/_variables.scss`, `src/styles/_mixins.scss`
-  - **Critério de Aceite:** Cores das escalas padronizadas e mixins mobile-first disponíveis para importação.
-- [ ] **TASK-1.5: Configuração do Roteamento Base e Lazy Loading**
-  - **Arquivos:** `src/app/app.routes.ts`, `src/app/app.config.ts`
-  - **Critério de Aceite:** Rotas `/checklist`, `/export`, `/contract`, `/custom-builder` e `/partners` mapeadas com lazy loading.
+*Legenda de Status:* `[ ] Pendente` · `[/] Em Progresso` · `[x] Concluído` · `[!] Bloqueado`
 
 ---
 
-### Fase 2: Schemas de Dados e Internacionalização (i18n)
-*Objetivo:* Estruturar a inteligência de domínio em arquivos neutros orientados a IDs e suas respectivas traduções.
+## 3. Checklist Granular de Implementação e Testes Unitários
 
-- [ ] **TASK-2.1: Criação do Schema Estrutural v1**
-  - **Arquivos:** `src/assets/schemas/checklist-v1.json`
-  - **Critério de Aceite:** Schema JSON contendo `schemaVersion`, escalas oficiais de 5 pontos e grupos com categorias essenciais (Impact Play, Restritivo, Dominação, Cuidados Médicos, etc.) contendo flags `defaultDualRole`.
-- [ ] **TASK-2.2: Criação do Arquivo de Tradução em Português**
-  - **Arquivos:** `src/assets/i18n/pt-BR.json`
-  - **Critério de Aceite:** Todas as chaves de IDs do schema mapeadas para termos consagrados da cena BDSM/D-s brasileira, com títulos, descrições e tooltips completos.
-- [ ] **TASK-2.3: Criação do Arquivo de Tradução em Inglês**
-  - **Arquivos:** `src/assets/i18n/en-US.json`
-  - **Critério de Aceite:** Todas as chaves equivalentes perfeitamente traduzidas e revisadas em inglês internacional.
-- [ ] **TASK-2.4: Validação de Paridade de Chaves de Tradução**
-  - **Arquivos:** Script ou teste de validação de paridade
-  - **Critério de Aceite:** Garantir que não existam chaves presentes em `pt-BR.json` ausentes em `en-US.json` e vice-versa.
+### Onda 0: Gate de Fundação e Contratos (Bloqueante para Onda 1)
 
----
-
-### Fase 3: Camada de Estado e Serviços Core
-*Objetivo:* Criar a arquitetura reativa com Signals e a abstração de dados (Padrão Repository).
-
-- [ ] **TASK-3.1: Modelos e Interfaces TypeScript (DTOs)**
-  - **Arquivos:** `src/app/core/models/checklist-schema.model.ts`, `checklist-answer.model.ts`, `export-config.model.ts`
-  - **Critério de Aceite:** Interfaces tipadas para escalas, itens, grupos, respostas individuais e rascunhos.
-- [ ] **TASK-3.2: Classe Abstrata Base de Estado (`BaseStateService<T>`)**
-  - **Arquivos:** `src/app/core/services/base-state.service.ts`
-  - **Critério de Aceite:** Implementação de classe base genérica usando `signal()`, `computed()` e método `setState()`.
-- [ ] **TASK-3.3: Repositório de Schemas e Interface (`ISchemaRepository`)**
-  - **Arquivos:** `src/app/core/repositories/schema.repository.interface.ts`, `static-json-schema.repository.ts`
-  - **Critério de Aceite:** Leitura assíncrona do JSON estático com cache e tratamento de erros, permitindo futura troca para Node.js na v2.
-- [ ] **TASK-3.4: Serviço Central de Estado (`ChecklistStateService`)**
-  - **Arquivos:** `src/app/core/services/checklist-state.service.ts`
-  - **Critério de Aceite:** Métodos para atualizar respostas por item, alternar visualização (accordion/full), computar progresso e carregar rascunhos.
-- [ ] **TASK-3.5: Serviço de Internacionalização (`I18nService`)**
-  - **Arquivos:** `src/app/core/services/i18n.service.ts`
-  - **Critério de Aceite:** Troca de idioma reativa mantendo o estado do checklist intacto.
+- [ ] **T0.1 — Inicializar Workspace Angular Standalone com TypeScript Estrito**
+  - **Agente:** `Gate-0` | **Dependência:** Nenhuma
+  - **Arquivos:** `package.json`, `angular.json`, `tsconfig.json`, `tsconfig.app.json`, `tsconfig.spec.json`
+  - **DoD:** Projeto Angular 18+/19+ criado com `strict: true`, `strictTemplates: true`, `noImplicitOverride: true`, estilo SCSS e `standalone: true` padrão.
+- [ ] **T0.2 — Instalar e Configurar Dependências Oficiais da V1**
+  - **Agente:** `Gate-0` | **Dependência:** `T0.1`
+  - **Dependências:** `primeng`, `primeicons`, `@ngx-translate/core`, `@ngx-translate/http-loader`, `html-to-image`, `pdfmake`, `@types/pdfmake`
+  - **DoD:** Instalação limpa sem conflitos de peer dependencies; fontes PrimeIcons configuradas no `angular.json`.
+- [ ] **T0.3 — Criar Sistema de Tokens SCSS e Mixins Responsivos**
+  - **Agente:** `Gate-0` | **Dependência:** `T0.1`
+  - **Arquivos:** `src/styles/_variables.scss`, `src/styles/_mixins.scss`, `src/styles.scss`
+  - **DoD:** Cores das 5 escalas (`hard_limit` a `favorite`), cores de contraste e breakpoints mobile-first definidos.
+- [ ] **T0.4 — Congelar Contratos TypeScript Compartilhados (`core/models/`)**
+  - **Agente:** `Gate-0` | **Dependência:** `T0.1`
+  - **Arquivos:** `src/app/core/models/checklist-schema.model.ts`, `checklist-answer.model.ts`, `export-config.model.ts`, `index.ts`
+  - **Verificação:** `npx tsc --noEmit` passa com 0 erros.
 
 ---
 
-### Fase 4: Shared UI Kit e Componentes Atômicos
-*Objetivo:* Construir componentes de interface reutilizáveis seguindo estritamente a regra dos 4 arquivos separados.
+### Onda 1 — Trilha Agente 1: Dados Neutros e Internacionalização (`assets/`)
 
-- [ ] **TASK-4.1: Componente Seletor de Escalas (`ScaleSelectorComponent`)**
-  - **Arquivos:** `scale-selector.component.{ts,html,scss,spec.ts}`
-  - **Critério de Aceite:** Círculos estilizados com cores e ícones PrimeIcons, acessíveis via teclado, com estados hover e selecionado.
-- [ ] **TASK-4.2: Componente Dinâmico de Pergunta (`DynamicQuestionItemComponent`)**
-  - **Arquivos:** `dynamic-question-item.component.{ts,html,scss,spec.ts}`
-  - **Critério de Aceite:** Suporte a `scale_matrix` (com dual-role ou papel único), `single_choice`, `multiple_choice`, flag `allowOtherOption` (com input de texto) e `restricted_text` com limite de caracteres.
-- [ ] **TASK-4.3: Componente de Barra de Progresso (`ProgressIndicatorComponent`)**
-  - **Arquivos:** `progress-indicator.component.{ts,html,scss,spec.ts}`
-  - **Critério de Aceite:** Barra de progresso reativa conectada ao Signal do `ChecklistStateService`.
-- [ ] **TASK-4.4: Componente de Visualização do Grid Completo (`FullGridPreviewComponent`)**
-  - **Arquivos:** `full-grid-preview.component.{ts,html,scss,spec.ts}`
-  - **Critério de Aceite:** Renderização em **Full Grid Vertical** com alta legibilidade e contraste, preparado para captura de imagem e impressão.
-- [ ] **TASK-4.5: Componente Badge e Modal de Roadmap (`ComingSoonBadgeComponent`)**
-  - **Arquivos:** `coming-soon-badge.component.{ts,html,scss,spec.ts}`
-  - **Critério de Aceite:** Tag visual "Em Breve" com abertura de modal informativo ao clicar.
-
----
-
-### Fase 5: Feature Checklist (Preenchimento Interativo)
-*Objetivo:* Construir a página principal `/checklist` com fluxo guiado mobile-first e alternância para visão completa.
-
-- [ ] **TASK-5.1: Barra Superior do Checklist (`ChecklistHeaderComponent`)**
-  - **Arquivos:** `checklist-header.component.{ts,html,scss,spec.ts}`
-  - **Critério de Aceite:** Controles de idioma (pt-BR / en-US), botão de alternância (Modo Guiado Accordion vs. View Full) e barra de progresso.
-- [ ] **TASK-5.2: Navegação Sanfonada com Botão Next (`CategoryAccordionComponent`)**
-  - **Arquivos:** `category-accordion.component.{ts,html,scss,spec.ts}`
-  - **Critério de Aceite:** Renderização de cada categoria em painel sanfonado (`p-accordion`). Ao final de cada categoria, botão **`Próxima Categoria`** fecha a atual e abre a seguinte.
-- [ ] **TASK-5.3: Container de Visão Completa (`FullViewContainerComponent`)**
-  - **Arquivos:** `full-view-container.component.{ts,html,scss,spec.ts}`
-  - **Critério de Aceite:** Renderização contínua de todas as categorias expandidas simultaneamente para revisão rápida em desktop.
-- [ ] **TASK-5.4: Página Principal do Checklist (`ChecklistPageComponent`)**
-  - **Arquivos:** `checklist-page.component.{ts,html,scss,spec.ts}`
-  - **Critério de Aceite:** Orquestração dos componentes acima, carregamento do schema via repositório e tratamento de estados de carregamento.
-- [ ] **TASK-5.5: Persistência Local Automática de Rascunho (Auto-Save LocalStorage)**
-  - **Arquivos:** `src/app/core/services/checklist-state.service.ts`
-  - **Critério de Aceite:** Respostas salvas silenciosamente no `localStorage` do navegador para evitar perda acidental de dados ao recarregar a aba.
-- [ ] **TASK-5.6: Ação de Conclusão e Navegação para Exportação**
-  - **Arquivos:** `category-accordion.component.html`, `checklist-page.component.ts`
-  - **Critério de Aceite:** Na última categoria, o botão avança para a rota `/export` com todos os dados mantidos.
+- [ ] **A1.1 — Construir `checklist-v1.json` Orientado a IDs**
+  - **Agente:** `Agent-Data` | **Dependência:** `T0.4`
+  - **Arquivo:** `src/assets/schemas/checklist-v1.json`
+  - **DoD:** Contém `schemaVersion: "1.0.0"`, 5 escalas com cores/ícones e os 8 grupos taxonômicos (Segurança/Saúde, Afeto/Geral, Bondage, Impact Play, Sensação/Dor, Dominação D/s, Roleplay/Gear, Edge/Breathplay) usando todos os 5 `QuestionType` e `allowOtherOption`.
+- [ ] **A1.2 — Construir Dicionário `pt-BR.json`**
+  - **Agente:** `Agent-Data` | **Dependência:** `A1.1`
+  - **Arquivo:** `src/assets/i18n/pt-BR.json`
+  - **DoD:** Traduções completas com terminologia natural brasileira para `ui`, `roles`, `scales`, `groups`, `items` (label + tooltip) e `options`.
+- [ ] **A1.3 — Construir Dicionário `en-US.json`**
+  - **Agente:** `Agent-Data` | **Dependência:** `A1.1`
+  - **Arquivo:** `src/assets/i18n/en-US.json`
+  - **DoD:** Traduções completas em inglês alinhadas aos termos de referência (Goctionni / Kinklist.gitlab.io).
+- [ ] **A1.4 — Criar Teste Automatizado de Integridade e Paridade Schema ↔ i18n**
+  - **Agente:** `Agent-Data` | **Dependência:** `A1.1`, `A1.2`, `A1.3`
+  - **Arquivo:** `src/app/core/models/__tests__/schema-integrity.spec.ts`
+  - **Verificação:** `ng test --include=**/schema-integrity.spec.ts` garante 100% de paridade de chaves entre `pt-BR.json`, `en-US.json` e todos os IDs de `checklist-v1.json`.
 
 ---
 
-### Fase 6: Feature Export e Motores Gráficos Client-Side
-*Objetivo:* Implementar a página de exportação `/export` com motores de geração 100% no navegador.
+### Onda 1 — Trilha Agente 2: Core Repositories, Services & Pipes (`core/` + `shared/pipes/`)
 
-- [ ] **TASK-6.1: Serviço de Exportação em Imagem PNG (`PngExportService`)**
-  - **Arquivos:** `src/app/features/export/services/png-export.service.ts`
-  - **Critério de Aceite:** Download de imagem PNG de alta resolução (Full Grid Vertical de 1200px) sem enviar dados para a internet.
-- [ ] **TASK-6.2: Serviço de Exportação em Documento PDF (`PdfExportService`)**
-  - **Arquivos:** `src/app/features/export/services/pdf-export.service.ts`
-  - **Critério de Aceite:** Download de PDF diagramado via `pdfmake` com legenda de cores, cabeçalho e sem quebras de linha em meio aos itens.
-- [ ] **TASK-6.3: Serviço de Rascunho Portátil JSON (`JsonDraftService`)**
-  - **Arquivos:** `src/app/features/export/services/json-draft.service.ts`
-  - **Critério de Aceite:** Exportação de JSON leve e importação funcional restaurando todas as respostas na tela.
-- [ ] **TASK-6.4: Serviço de Exportação Tabular CSV (`CsvExportService`)**
-  - **Arquivos:** `src/app/features/export/services/csv-export.service.ts`
-  - **Critério de Aceite:** Geração de arquivo CSV estruturado com codificação UTF-8 BOM, garantindo abertura correta no Excel.
-- [ ] **TASK-6.5: Toolbar de Ações de Exportação (`ExportActionsToolbarComponent`)**
-  - **Arquivos:** `export-actions-toolbar.component.{ts,html,scss,spec.ts}`
-  - **Critério de Aceite:** Botões para PNG, PDF, JSON e CSV, com status de loading individual durante o processamento do arquivo.
-- [ ] **TASK-6.6: Página de Exportação (`ExportPageComponent`)**
-  - **Arquivos:** `export-page.component.{ts,html,scss,spec.ts}`
-  - **Critério de Aceite:** Exibição da toolbar de exportação e pré-visualização completa dos dados através do `FullGridPreviewComponent`.
-
----
-
-### Fase 7: Telas de Roadmap da Versão 2 (Placeholders)
-*Objetivo:* Fornecer telas informativas e polidas para as funcionalidades futuras mapeadas no Blueprint.
-
-- [ ] **TASK-7.1: Página de Motor de Contratos D/s (`ContractsPlaceholderComponent`)**
-  - **Arquivos:** `contracts-placeholder.component.{ts,html,scss,spec.ts}`
-  - **Critério de Aceite:** Apresentação da funcionalidade futura de conversão de respostas em cláusulas de contrato consensual.
-- [ ] **TASK-7.2: Página de Custom Builder (`CustomBuilderPlaceholderComponent`)**
-  - **Arquivos:** `custom-builder-placeholder.component.{ts,html,scss,spec.ts}`
-  - **Critério de Aceite:** Apresentação do editor visual planejado para criação de grupos e itens customizados.
-- [ ] **TASK-7.3: Página de Gestão de Play Partners (`PartnersPlaceholderComponent`)**
-  - **Arquivos:** `partners-placeholder.component.{ts,html,scss,spec.ts}`
-  - **Critério de Aceite:** Apresentação da funcionalidade futura de comparação cruzada de limites (*Partner Match/Diff*).
-- [ ] **TASK-7.4: Botão de Exportação Excel (.xlsx) com Badge Coming Soon**
-  - **Arquivos:** `export-actions-toolbar.component.html`
-  - **Critério de Aceite:** Botão estilizado com badge do PrimeNG disparando o modal explicativo da v2.
+- [ ] **A2.1 — Implementar `ISchemaRepository`, Token e `StaticJsonSchemaRepository` + Spec**
+  - **Agente:** `Agent-Core` | **Dependência:** `T0.4`
+  - **Arquivos:** `src/app/core/repositories/schema.repository.ts`, `static-json-schema.repository.ts`, `static-json-schema.repository.spec.ts`, `index.ts`
+  - **Testes:** Mock HTTP via `HttpTestingController`, verificação de cache (`shareReplay`), erro em schema malformado.
+- [ ] **A2.2 — Implementar `LocalStoragePersistenceService` + Spec**
+  - **Agente:** `Agent-Core` | **Dependência:** `T0.4`
+  - **Arquivos:** `src/app/core/services/local-storage-persistence.service.ts`, `local-storage-persistence.service.spec.ts`
+  - **Testes:** Gravação/leitura segura, tolerância a JSON corrompido, tratamento de `QuotaExceededError`.
+- [ ] **A2.3 — Implementar `BaseStateService<T>` + Spec**
+  - **Agente:** `Agent-Core` | **Dependência:** `T0.4`
+  - **Arquivos:** `src/app/core/services/base-state.service.ts`, `base-state.service.spec.ts`
+  - **Testes:** `select()`, atualização parcial imutável `setState()`, `resetState()`.
+- [ ] **A2.4 — Implementar `ChecklistStateService` + Spec**
+  - **Agente:** `Agent-Core` | **Dependência:** `A2.2`, `A2.3`
+  - **Arquivos:** `src/app/core/services/checklist-state.service.ts`, `checklist-state.service.spec.ts`
+  - **Testes:** Cálculo de progresso dual/single-role, preservação independente de `primaryScale`/`secondaryScale`, filtros combinados (`searchQuery` + `onlyUnanswered`), navegação `nextCategory()`, `importDraft()`, `resetAllAnswers()`.
+- [ ] **A2.5 — Implementar `I18nService` + Spec**
+  - **Agente:** `Agent-Core` | **Dependência:** `T0.4`
+  - **Arquivos:** `src/app/core/services/i18n.service.ts`, `i18n.service.spec.ts`
+  - **Testes:** Troca reativa `pt-BR` ↔ `en-US`, fallback para ID se chave ausente, resolução dos 4 `RolePairId`, garantia de não mutação das respostas ao trocar idioma.
+- [ ] **A2.6 — Implementar `SchemaTranslatePipe` + Spec**
+  - **Agente:** `Agent-Core` | **Dependência:** `A2.5`
+  - **Arquivos:** `src/app/shared/pipes/schema-translate.pipe.ts`, `schema-translate.pipe.spec.ts`, `index.ts`
+  - **Testes:** Atualização automática do output quando o signal `currentLang` muda.
 
 ---
 
-### Fase 8: Testes Unitários, Acessibilidade (a11y) e Build
-*Objetivo:* Garantir qualidade estrita, conformidade com padrões de acessibilidade e empacotamento otimizado.
+### Onda 1 — Trilha Agente 3: Shared Atomic UI Kit (`shared/components/`)
 
-- [ ] **TASK-8.1: Testes Unitários dos Serviços Core**
-  - **Arquivos:** `base-state.service.spec.ts`, `checklist-state.service.spec.ts`, `i18n.service.spec.ts`, `static-json-schema.repository.spec.ts`
-  - **Critério de Aceite:** Cobertura de testes unitários superior a 85% na camada de estado e lógica de negócio.
-- [ ] **TASK-8.2: Testes Unitários dos Componentes Shared**
-  - **Arquivos:** `scale-selector.component.spec.ts`, `dynamic-question-item.component.spec.ts`, etc.
-  - **Critério de Aceite:** Verificação de renderização condicional por tipo e emissão correta de eventos.
-- [ ] **TASK-8.3: Auditoria de Acessibilidade (WCAG 2.1 AA)**
-  - **Critério de Aceite:** Ausência de erros críticos de acessibilidade no Lighthouse/axe-core (contraste de cores, aria-labels nas escalas, navegação por teclado).
-- [ ] **TASK-8.4: Teste de Responsividade Cross-Device**
-  - **Critério de Aceite:** Funcionamento e fluidez comprovados em telas mobile (360px a 430px), tablets (768px) e desktops (1080p+).
-- [ ] **TASK-8.5: Build de Produção e Otimização de Bundles**
+*Regra estrita:* Cada componente com 5 arquivos (`.component.ts`, `.component.html`, `.component.scss`, `.component.spec.ts`, `index.ts`), `OnPush` e zero dependência de `ChecklistStateService`.
+
+- [ ] **A3.1 — Implementar `ScaleSelectorComponent` + Spec**
+  - **Agente:** `Agent-UI` | **Dependência:** `T0.3`, `T0.4`
+  - **Arquivos:** `src/app/shared/components/scale-selector/*`
+  - **Testes:** Renderização de opções com ícone+cor, emissão de `scaleChange`, deseleção ao clicar no item ativo, atributos `role="radiogroup"`/`aria-checked`, estado `disabled`.
+- [ ] **A3.2 — Implementar `DynamicQuestionItemComponent` + Spec**
+  - **Agente:** `Agent-UI` | **Dependência:** `A3.1`
+  - **Arquivos:** `src/app/shared/components/dynamic-question-item/*`
+  - **Testes:** Renderização correta de todos os 5 tipos (`scale_matrix` dual e single, `single_choice`, `multiple_choice`, `allowOtherOption` condicional, `restricted_text` com contador `maxLength`), exibição condicional de tooltip.
+- [ ] **A3.3 — Implementar `LegendBarComponent` + Spec**
+  - **Agente:** `Agent-UI` | **Dependência:** `T0.3`, `T0.4`
+  - **Arquivos:** `src/app/shared/components/legend-bar/*`
+  - **Testes:** Renderização ordenada das 5 escalas com ícone, cor e label traduzido.
+- [ ] **A3.4 — Implementar `ProgressIndicatorComponent` + Spec**
+  - **Agente:** `Agent-UI` | **Dependência:** `T0.3`, `T0.4`
+  - **Arquivos:** `src/app/shared/components/progress-indicator/*`
+  - **Testes:** Exibição exata `answered / total`, clamping de porcentagem entre `0` e `100`.
+- [ ] **A3.5 — Implementar `FullGridPreviewComponent` + Spec**
+  - **Agente:** `Agent-UI` | **Dependência:** `T0.3`, `T0.4`
+  - **Arquivos:** `src/app/shared/components/full-grid-preview/*`
+  - **Testes:** Renderização vertical em largura total, formatação de respostas dual-role, single-role, múltiplas escolhas e texto restrito, além de modo impressão (`printMode`).
+
+---
+
+### Onda 1 — Trilha Agente 4: Feature Checklist (`features/checklist/`)
+
+*Regra estrita:* Cada componente com 5 arquivos + testes unitários com stubs tipados dos contratos.
+
+- [ ] **A4.1 — Implementar `ChecklistHeaderComponent` + Spec**
+  - **Agente:** `Agent-Checklist` | **Dependência:** `T0.4`
+  - **Arquivos:** `src/app/features/checklist/components/checklist-header/*`
+  - **Testes:** Eventos de idioma, troca de `viewMode`, filtro de busca, toggle `onlyUnanswered`, botão abrir Quick-Fill e botão limpar.
+- [ ] **A4.2 — Implementar `CategoryAccordionComponent` + Spec**
+  - **Agente:** `Agent-Checklist` | **Dependência:** `T0.4`
+  - **Arquivos:** `src/app/features/checklist/components/category-accordion/*`
+  - **Testes:** Sincronização de `activeIndex`, disparo de `nextCategory` ao clicar em "Próxima Categoria", alteração de label do botão no último grupo para "Finalizar e Exportar".
+- [ ] **A4.3 — Implementar `FullViewContainerComponent` + Spec**
+  - **Agente:** `Agent-Checklist` | **Dependência:** `T0.4`
+  - **Arquivos:** `src/app/features/checklist/components/full-view-container/*`
+  - **Testes:** Renderização simultânea de todas as categorias filtradas, estado vazio amigável quando busca não encontra itens.
+- [ ] **A4.4 — Implementar `QuickFillWizardModalComponent` + Spec**
+  - **Agente:** `Agent-Checklist` | **Dependência:** `T0.4`
+  - **Arquivos:** `src/app/features/checklist/components/quick-fill-wizard-modal/*`
+  - **Testes:** Achatamento exclusivo de itens `scale_matrix` (separando papéis dual-role), captura de atalhos `1-5` e `0` (teclado + numpad), navegação por `ArrowUp`/`ArrowDown` e avanço automático.
+- [ ] **A4.5 — Implementar `ChecklistPageComponent` (Smart Container) + Spec**
+  - **Agente:** `Agent-Checklist` | **Dependência:** `A4.1` a `A4.4`
+  - **Arquivos:** `src/app/features/checklist/pages/checklist-page/*`, `src/app/features/checklist/checklist.routes.ts`
+  - **Testes:** Carregamento inicial via mock de `ISchemaRepository`, estado de erro/retry, confirmação antes de limpar respostas, manutenção de respostas na troca de idioma.
+
+---
+
+### Onda 1 — Trilha Agente 5: Feature Export Client-Side (`features/export/`)
+
+- [ ] **A5.1 — Implementar `FileDownloadService` e `ChecklistFlattenService` + Specs**
+  - **Agente:** `Agent-Export` | **Dependência:** `T0.4`
+  - **Arquivos:** `src/app/features/export/services/file-download.service.ts`, `checklist-flatten.service.ts` + `.spec.ts`
+  - **Testes:** Transformação fiel de dual-role, single-role, múltiplas escolhas e `otherText` em `FlattenedChecklistRow[]`.
+- [ ] **A5.2 — Implementar `PngExportService` + Spec**
+  - **Agente:** `Agent-Export` | **Dependência:** `A5.1`
+  - **Arquivos:** `src/app/features/export/services/png-export.service.ts`, `.spec.ts`
+  - **Testes:** Chamada ao wrapper `html-to-image` com `pixelRatio: 2`, acionamento do `FileDownloadService`, tratamento de rejeição de Canvas.
+- [ ] **A5.3 — Implementar `PdfExportService` + Spec**
+  - **Agente:** `Agent-Export` | **Dependência:** `A5.1`
+  - **Arquivos:** `src/app/features/export/services/pdf-export.service.ts`, `.spec.ts`
+  - **Testes:** Validação estrutural do `docDefinition` (cabeçalho, legenda, tabelas com `dontBreakRows: true`, paginação), invocação do wrapper `pdfmake`.
+- [ ] **A5.4 — Implementar `JsonDraftService` + Spec**
+  - **Agente:** `Agent-Export` | **Dependência:** `A5.1`
+  - **Arquivos:** `src/app/features/export/services/json-draft.service.ts`, `.spec.ts`
+  - **Testes:** Exportação do JSON draft; validação de importação rejeitando JSON corrompido, ausência de `answers` ou `schemaVersion` incompatível.
+- [ ] **A5.5 — Implementar `CsvExportService` + Spec**
+  - **Agente:** `Agent-Export` | **Dependência:** `A5.1`
+  - **Arquivos:** `src/app/features/export/services/csv-export.service.ts`, `.spec.ts`
+  - **Testes:** Presença obrigatória de `\uFEFF` (UTF-8 BOM) no início, cabeçalho correto, escape de aspas duplas, vírgulas e quebras de linha.
+- [ ] **A5.6 — Implementar `ExportActionsToolbarComponent` e `ExportPageComponent` + Specs**
+  - **Agente:** `Agent-Export` | **Dependência:** `A5.2` a `A5.5`
+  - **Arquivos:** `src/app/features/export/components/export-actions-toolbar/*`, `src/app/features/export/pages/export-page/*`, `src/app/features/export/export.routes.ts`
+  - **Testes:** Estados de loading por botão, disparo de cada formato, fluxo de importação JSON com feedback via `MessageService` (toast) e atualização da prévia.
+
+---
+
+### Onda 2: Gate Final — Integração, Qualidade e Build de Produção
+
+- [ ] **INT.1 — Configurar `app.config.ts`, `app.routes.ts` e `AppComponent`**
+  - **Agente:** `Agent-QA` | **Dependência:** Onda 1 Completa
+  - **DoD:** Registro de `SCHEMA_REPOSITORY_TOKEN` (`StaticJsonSchemaRepository`), configuração `TranslateModule`, rotas lazy-loaded `/checklist` (default redirect) e `/export` (wildcard `**` redireciona para `/checklist`).
+- [ ] **INT.2 — Executar Suíte Completa de Testes Unitários e Cobertura**
+  - **Agente:** `Agent-QA` | **Dependência:** `INT.1`
+  - **Comando:** `ng test --watch=false --code-coverage`
+  - **DoD:** 100% dos 26 arquivos `.spec.ts` passando sem testes ignorados (`xit`/`fit`); cobertura global `>= 85%` (e `>= 90%` em `core/` e `export/services/`).
+- [ ] **INT.3 — Auditoria de Acessibilidade (WCAG 2.1 AA) e Teclado**
+  - **Agente:** `Agent-QA` | **Dependência:** `INT.1`
+  - **DoD:** Fluxo completo navegável apenas por teclado (`Tab`, `Enter`, `Space`, `0-5`, setas); zero violações críticas de contraste ou `aria-label` ausente no axe/Lighthouse.
+- [ ] **INT.4 — Validação Responsiva & Fluxo Ponta-a-Ponta (Mobile 360px / Desktop 1280px)**
+  - **Agente:** `Agent-QA` | **Dependência:** `INT.1`
+  - **DoD:** Accordion + botão Next funcional em viewport `360x740`; View Full + Quick-Fill funcional em desktop; downloads reais validados para PNG, PDF, JSON (export + re-import) e CSV (abertura com acentos preservados).
+- [ ] **INT.5 — Build de Produção Otimizado**
+  - **Agente:** `Agent-QA` | **Dependência:** `INT.2`, `INT.3`, `INT.4`
   - **Comando:** `ng build --configuration production`
-  - **Critério de Aceite:** Build gerado sem warnings críticos, com tree-shaking ativo e orçamentos de tamanho de bundle respeitados.
+  - **DoD:** Build concluído com 0 erros e orçamentos de bundle respeitados.
 
 ---
 
-## 4. Gestão de Riscos e Mitigações Técnicas
+## 4. Backlog Fora de Escopo na V1 (Decisão Posterior)
 
-| Risco Identificado | Impacto | Probabilidade | Estratégia de Mitigação |
-| :--- | :---: | :---: | :--- |
-| **Lentidão na geração de PNG em listas muito extensas** | Médio | Média | Renderizar o `FullGridPreviewComponent` com layout em bloco único vertical otimizado e utilizar `pixelRatio: 2` de forma assíncrona com spinner de carregamento. |
-| **Quebra de páginas no PDF separando perguntas** | Alto | Baixa | Configurar a propriedade `dontBreakRows: true` nas tabelas do `pdfmake` e pré-calcular a altura dos blocos de categoria. |
-| **Acentos quebrados no CSV aberto no Excel** | Médio | Alta | Incluir obrigatoriamente o prefixo UTF-8 BOM (`\uFEFF`) antes da geração do `Blob` no `CsvExportService`. |
-| **Perda de respostas ao trocar de idioma** | Crítico | Baixa | O `ChecklistStateService` armazena respostas estritamente indexadas por `itemId` neutro. O `I18nService` atua exclusivamente na camada de apresentação visual, sem alterar o estado. |
+Os itens abaixo estão intencionalmente **excluídos da implementação V1** e não possuem tarefas ativas no checklist acima. Caso seja decidido implementá-los após a estabilização da V1, deverão originar um novo ciclo de levantamento e plano específico:
 
----
-
-## 5. Histórico de Atualizações do Documento
-
-| Data | Versão | Autor | Descrição das Alterações |
-| :---: | :---: | :---: | :--- |
-| 21/11/2026 | 1.0 | Antigravity AI Team | Criação inicial do plano de trabalho, tarefas detalhadas e critérios de aceite. |
+| ID Futuro | Módulo / Capacidade | Status na V1 |
+| :--- | :--- | :--- |
+| **FUT-01** | Motor de Geração de Contratos D/s | `[FORA DE ESCOPO V1 - DECIDIR DEPOIS]` |
+| **FUT-02** | Custom Builder Visual de Schemas | `[FORA DE ESCOPO V1 - DECIDIR DEPOIS]` |
+| **FUT-03** | Gestão de Play Partners & Comparação (Match/Diff) | `[FORA DE ESCOPO V1 - DECIDIR DEPOIS]` |
+| **FUT-04** | Exportação Nativa em Excel (`.xlsx`) Multi-abas | `[FORA DE ESCOPO V1 - DECIDIR DEPOIS]` |
+| **FUT-05** | Backend API Node.js & Persistência Remota | `[FORA DE ESCOPO V1 - DECIDIR DEPOIS]` |
+| **FUT-06** | Integração ATProto / Bluesky ou Compartilhamento Público | `[FORA DE ESCOPO V1 - DECIDIR DEPOIS]` |
