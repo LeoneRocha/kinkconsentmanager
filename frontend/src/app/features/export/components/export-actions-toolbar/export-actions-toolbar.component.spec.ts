@@ -82,7 +82,7 @@ describe('ExportActionsToolbarComponent', () => {
   it('should trigger hidden file input on import click, emit selected File, and reset input value', () => {
     const hostEl = fixture.nativeElement as HTMLElement;
     const fileInput = hostEl.querySelector<HTMLInputElement>('input[type="file"]')!;
-    const clickSpy = vi.spyOn(fileInput, 'click').mockImplementation(() => {});
+    const clickSpy = jest.spyOn(fileInput, 'click').mockImplementation(() => {});
 
     expect(fileInput.accept).toBe('.json,application/json');
 

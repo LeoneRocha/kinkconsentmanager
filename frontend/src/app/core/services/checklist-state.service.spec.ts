@@ -93,7 +93,7 @@ describe('ChecklistStateService', () => {
   });
 
   afterEach(() => {
-    vi.restoreAllMocks();
+    jest.restoreAllMocks();
     localStorage.clear();
   });
 
@@ -206,7 +206,7 @@ describe('ChecklistStateService', () => {
     service.clearItemAnswer('cuffs');
     expect(service.answers()['cuffs']).toBeUndefined();
 
-    const saveSpy = vi.spyOn(persistence, 'save');
+    const saveSpy = jest.spyOn(persistence, 'save');
     service.clearItemAnswer('nonexistent_item');
     expect(saveSpy).not.toHaveBeenCalled();
   });

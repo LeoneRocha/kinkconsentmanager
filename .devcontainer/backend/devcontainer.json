@@ -1,0 +1,53 @@
+// Dev Container preparado para o futuro Backend Node.js / TypeScript (Roadmap V2+)
+// Para detalhes do formato: https://aka.ms/devcontainer.json
+{
+  "name": "KinkConsentManager Backend Container (V2 Node.js)",
+  "dockerComposeFile": "../docker-compose.yml",
+  "service": "backend-container",
+  // Quando a pasta backend/ da V2 for criada, altere para "/workspaces/backend"
+  "workspaceFolder": "/workspaces",
+  "shutdownAction": "none",
+  "remoteUser": "node",
+  "containerUser": "node",
+  "remoteEnv": {
+    "NODE_ENV": "development"
+  },
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "EditorConfig.EditorConfig",
+        "ms-azuretools.vscode-docker",
+        "eamodio.gitlens",
+        "streetsidesoftware.code-spell-checker"
+      ],
+      "settings": {
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.codeActionsOnSave": {
+          "source.fixAll.eslint": "explicit"
+        },
+        "terminal.integrated.defaultProfile.linux": "bash",
+        "files.exclude": {
+          "**/dist": true,
+          "**/node_modules": true
+        }
+      }
+    }
+  },
+  "forwardPorts": [3000, 9229],
+  "portsAttributes": {
+    "3000": {
+      "label": "API Node.js (V2)"
+    },
+    "9229": {
+      "label": "Node Inspector"
+    }
+  },
+  "postCreateCommand": "if [ -f /workspaces/backend/package.json ]; then cd /workspaces/backend && (if [ -f package-lock.json ]; then npm ci; else npm install; fi); else echo 'Backend V2 ainda nao inicializado (V1 e 100% client-side).'; fi",
+  "postStartCommand": "git config --global --add safe.directory /workspaces"
+}

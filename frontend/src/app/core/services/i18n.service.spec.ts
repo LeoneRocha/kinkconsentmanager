@@ -158,7 +158,7 @@ describe('I18nService', () => {
   });
 
   afterEach(() => {
-    vi.restoreAllMocks();
+    jest.restoreAllMocks();
     localStorage.clear();
   });
 
@@ -166,7 +166,7 @@ describe('I18nService', () => {
     expect(service.currentLang()).toBe('pt-BR');
     expect(service.translateUi('greeting', { name: 'Alex' })).toBe('Olá, Alex');
 
-    const useSpy = vi.spyOn(translateService, 'use');
+    const useSpy = jest.spyOn(translateService, 'use');
     service.setLanguage('en-US');
 
     expect(useSpy).toHaveBeenCalledWith('en-US');

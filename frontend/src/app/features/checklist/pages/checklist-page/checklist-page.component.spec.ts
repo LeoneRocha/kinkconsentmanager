@@ -182,13 +182,13 @@ describe('ChecklistPageComponent', () => {
   let checklistState: ChecklistStateService;
   let i18nService: I18nService;
   let router: Router;
-  let getChecklistSchemaMock: ReturnType<typeof vi.fn<(version?: string) => Observable<ChecklistSchema>>>;
+  let getChecklistSchemaMock: jest.Mock<Observable<ChecklistSchema>, [version?: string]>;
 
   const createTestModule = async (
     schemaFactory: () => Observable<ChecklistSchema>,
   ): Promise<void> => {
     localStorage.clear();
-    getChecklistSchemaMock = vi.fn(schemaFactory);
+    getChecklistSchemaMock = jest.fn(schemaFactory);
     const repoMock: ISchemaRepository = {
       getChecklistSchema: getChecklistSchemaMock,
     };
@@ -216,7 +216,7 @@ describe('ChecklistPageComponent', () => {
     fixture?.destroy();
     TestBed.resetTestingModule();
     localStorage.clear();
-    vi.restoreAllMocks();
+    jest.restoreAllMocks();
   });
 
   it('should show p-skeleton while schema is loading and render checklist once resolved', async () => {
@@ -322,7 +322,7 @@ describe('ChecklistPageComponent', () => {
     await createTestModule(() => of(MOCK_SCHEMA));
     await fixture.whenStable();
 
-    const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+    const navigateSpy = jest.spyOn(router, 'navigate').mockResolvedValue(true);
     const hostEl = fixture.nativeElement as HTMLElement;
 
     expect(checklistState.activeCategoryIndex()).toBe(0);
@@ -355,7 +355,7 @@ describe('ChecklistPageComponent', () => {
     await fixture.whenStable();
 
     const confirmationService = fixture.debugElement.injector.get(ConfirmationService);
-    const confirmSpy = vi.spyOn(confirmationService, 'confirm');
+    const confirmSpy = jest.spyOn(confirmationService, 'confirm');
 
     const hostEl = fixture.nativeElement as HTMLElement;
     const clearBtn = hostEl.querySelector<HTMLButtonElement>('.checklist-header__clear-btn');

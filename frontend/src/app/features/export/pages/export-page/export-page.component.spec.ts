@@ -2,9 +2,9 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { provideTranslateService, TranslateService } from '@ngx-translate/core';
 import { MessageService } from 'primeng/api';
-import { of, throwError } from 'rxjs';
+import { Observable, of, throwError } from 'rxjs';
 import { ChecklistSchema } from '../../../../core/models';
-import { ISchemaRepository, SCHEMA_REPOSITORY_TOKEN } from '../../../../core/repositories';
+import { SCHEMA_REPOSITORY_TOKEN } from '../../../../core/repositories';
 import { ChecklistStateService } from '../../../../core/services';
 import {
   FileDownloadService,
@@ -91,12 +91,10 @@ const PT_BR_TRANSLATIONS = {
 
 function createFileWithText(content: string, filename: string): File {
   const file = new File([content], filename, { type: 'application/json' });
-  if (typeof file.text !== 'function') {
-    Object.defineProperty(file, 'text', {
-      value: () => Promise.resolve(content),
-      configurable: true,
-    });
-  }
+  Object.defineProperty(file, 'text', {
+    value: () => Promise.resolve(content),
+    configurable: true,
+  });
   return file;
 }
 
@@ -106,29 +104,29 @@ describe('ExportPageComponent', () => {
   let messageService: MessageService;
   let router: Router;
 
-  let schemaRepoMock: { getChecklistSchema: ReturnType<typeof vi.fn<ISchemaRepository['getChecklistSchema']>> };
-  let fileDownloadMock: { downloadBlob: ReturnType<typeof vi.fn>; downloadDataUrl: ReturnType<typeof vi.fn> };
-  let pngRendererMock: ReturnType<typeof vi.fn<(el: HTMLElement) => Promise<string>>>;
-  let pdfDownloadMock: ReturnType<typeof vi.fn<(name?: string) => Promise<void>>>;
-  let pdfLoaderMock: ReturnType<typeof vi.fn<() => Promise<PdfMakerInstance>>>;
+  let schemaRepoMock: { getChecklistSchema: jest.Mock<Observable<ChecklistSchema>, [version?: string]> };
+  let fileDownloadMock: { downloadBlob: jest.Mock; downloadDataUrl: jest.Mock };
+  let pngRendererMock: jest.Mock<Promise<string>, [HTMLElement]>;
+  let pdfDownloadMock: jest.Mock<Promise<void>, [string?]>;
+  let pdfLoaderMock: jest.Mock<Promise<PdfMakerInstance>, []>;
 
   beforeEach(async () => {
     localStorage.clear();
 
     schemaRepoMock = {
-      getChecklistSchema: vi.fn<ISchemaRepository['getChecklistSchema']>().mockReturnValue(
+      getChecklistSchema: jest.fn<Observable<ChecklistSchema>, [string?]>().mockReturnValue(
         of(MOCK_SCHEMA),
       ),
     };
     fileDownloadMock = {
-      downloadBlob: vi.fn(),
-      downloadDataUrl: vi.fn(),
+      downloadBlob: jest.fn(),
+      downloadDataUrl: jest.fn(),
     };
-    pngRendererMock = vi
-      .fn<(el: HTMLElement) => Promise<string>>()
+    pngRendererMock = jest
+      .fn<Promise<string>, [HTMLElement]>()
       .mockResolvedValue('data:image/png;base64,EXPORTED');
-    pdfDownloadMock = vi.fn<(name?: string) => Promise<void>>().mockResolvedValue(undefined);
-    pdfLoaderMock = vi.fn<() => Promise<PdfMakerInstance>>().mockResolvedValue({
+    pdfDownloadMock = jest.fn<Promise<void>, [string?]>().mockResolvedValue(undefined);
+    pdfLoaderMock = jest.fn<Promise<PdfMakerInstance>, []>().mockResolvedValue({
       createPdf: () => ({ download: pdfDownloadMock }),
     });
 
@@ -155,7 +153,7 @@ describe('ExportPageComponent', () => {
   });
 
   afterEach(() => {
-    vi.restoreAllMocks();
+    jest.restoreAllMocks();
     localStorage.clear();
   });
 
@@ -207,7 +205,7 @@ describe('ExportPageComponent', () => {
   });
 
   it('should navigate back to /checklist when Back button is clicked', async () => {
-    const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+    const navigateSpy = jest.spyOn(router, 'navigate').mockResolvedValue(true);
     await createPage();
 
     const hostEl = fixture.nativeElement as HTMLElement;
@@ -217,7 +215,7 @@ describe('ExportPageComponent', () => {
   });
 
   it('should capture the offscreen 1200px container for PNG export and display a success toast', async () => {
-    const messageAddSpy = vi.spyOn(messageService, 'add');
+    const messageAddSpy = jest.spyOn(messageService, 'add');
     await createPage();
 
     const hostEl = fixture.nativeElement as HTMLElement;
@@ -241,7 +239,7 @@ describe('ExportPageComponent', () => {
 
   it('should show an error toast when PNG export fails', async () => {
     pngRendererMock.mockRejectedValueOnce(new Error('PNG render crashed'));
-    const messageAddSpy = vi.spyOn(messageService, 'add');
+    const messageAddSpy = jest.spyOn(messageService, 'add');
     await createPage();
 
     const hostEl = fixture.nativeElement as HTMLElement;
@@ -257,7 +255,7 @@ describe('ExportPageComponent', () => {
   });
 
   it('should export PDF, JSON draft, and CSV with success toasts', async () => {
-    const messageAddSpy = vi.spyOn(messageService, 'add');
+    const messageAddSpy = jest.spyOn(messageService, 'add');
     checklistState.setItemAnswer('item_rope', { primaryScale: 'enjoy' });
     await createPage();
 
@@ -286,7 +284,7 @@ describe('ExportPageComponent', () => {
   });
 
   it('should import a valid JSON draft file, update ChecklistStateService, and show success toast', async () => {
-    const messageAddSpy = vi.spyOn(messageService, 'add');
+    const messageAddSpy = jest.spyOn(messageService, 'add');
     await createPage();
 
     const payload = JSON.stringify({
@@ -324,7 +322,7 @@ describe('ExportPageComponent', () => {
 
   it('should show specific error toasts for invalid JSON syntax vs incompatible schema version on import', async () => {
     checklistState.setItemAnswer('item_rope', { primaryScale: 'enjoy' });
-    const messageAddSpy = vi.spyOn(messageService, 'add');
+    const messageAddSpy = jest.spyOn(messageService, 'add');
     await createPage();
 
     const hostEl = fixture.nativeElement as HTMLElement;

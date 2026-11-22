@@ -4,16 +4,16 @@ import { PNG_RENDERER, PngExportService } from './png-export.service';
 
 describe('PngExportService', () => {
   let service: PngExportService;
-  let rendererMock: ReturnType<typeof vi.fn<(element: HTMLElement) => Promise<string>>>;
-  let fileDownloadMock: { downloadDataUrl: ReturnType<typeof vi.fn>; downloadBlob: ReturnType<typeof vi.fn> };
+  let rendererMock: jest.Mock<Promise<string>, [HTMLElement]>;
+  let fileDownloadMock: { downloadDataUrl: jest.Mock; downloadBlob: jest.Mock };
 
   beforeEach(() => {
-    rendererMock = vi.fn<(element: HTMLElement) => Promise<string>>().mockResolvedValue(
+    rendererMock = jest.fn<Promise<string>, [HTMLElement]>().mockResolvedValue(
       'data:image/png;base64,MOCKPNG',
     );
     fileDownloadMock = {
-      downloadDataUrl: vi.fn(),
-      downloadBlob: vi.fn(),
+      downloadDataUrl: jest.fn(),
+      downloadBlob: jest.fn(),
     };
 
     TestBed.configureTestingModule({

@@ -13,19 +13,19 @@ describe('FileDownloadService', () => {
   });
 
   afterEach(() => {
-    vi.restoreAllMocks();
+    jest.restoreAllMocks();
   });
 
   it('should create an object URL, click a temporary anchor, remove it, and revoke the URL for downloadBlob', () => {
     const mockUrl = 'blob:http://localhost/mock-123';
-    const createObjectUrlSpy = vi.spyOn(URL, 'createObjectURL').mockReturnValue(mockUrl);
-    const revokeObjectUrlSpy = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
+    const createObjectUrlSpy = jest.spyOn(URL, 'createObjectURL').mockReturnValue(mockUrl);
+    const revokeObjectUrlSpy = jest.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
 
     const anchor = doc.createElement('a');
-    const clickSpy = vi.spyOn(anchor, 'click').mockImplementation(() => {});
-    const removeSpy = vi.spyOn(anchor, 'remove');
-    const createElementSpy = vi.spyOn(doc, 'createElement').mockReturnValue(anchor);
-    const appendSpy = vi.spyOn(doc.body, 'appendChild');
+    const clickSpy = jest.spyOn(anchor, 'click').mockImplementation(() => {});
+    const removeSpy = jest.spyOn(anchor, 'remove');
+    const createElementSpy = jest.spyOn(doc, 'createElement').mockReturnValue(anchor);
+    const appendSpy = jest.spyOn(doc.body, 'appendChild');
 
     const blob = new Blob(['{"ok":true}'], { type: 'application/json' });
     service.downloadBlob(blob, 'draft.json');
@@ -42,15 +42,15 @@ describe('FileDownloadService', () => {
 
   it('should still clean up anchor and revoke object URL even if anchor.click throws', () => {
     const mockUrl = 'blob:http://localhost/fail-456';
-    vi.spyOn(URL, 'createObjectURL').mockReturnValue(mockUrl);
-    const revokeObjectUrlSpy = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
+    jest.spyOn(URL, 'createObjectURL').mockReturnValue(mockUrl);
+    const revokeObjectUrlSpy = jest.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
 
     const anchor = doc.createElement('a');
-    vi.spyOn(anchor, 'click').mockImplementation(() => {
+    jest.spyOn(anchor, 'click').mockImplementation(() => {
       throw new Error('Click blocked');
     });
-    const removeSpy = vi.spyOn(anchor, 'remove');
-    vi.spyOn(doc, 'createElement').mockReturnValue(anchor);
+    const removeSpy = jest.spyOn(anchor, 'remove');
+    jest.spyOn(doc, 'createElement').mockReturnValue(anchor);
 
     const blob = new Blob(['hello'], { type: 'text/plain' });
     expect(() => service.downloadBlob(blob, 'test.txt')).toThrow('Click blocked');
@@ -59,11 +59,11 @@ describe('FileDownloadService', () => {
   });
 
   it('should download a Data URL directly via temporary anchor without calling createObjectURL', () => {
-    const createObjectUrlSpy = vi.spyOn(URL, 'createObjectURL');
+    const createObjectUrlSpy = jest.spyOn(URL, 'createObjectURL');
     const anchor = doc.createElement('a');
-    const clickSpy = vi.spyOn(anchor, 'click').mockImplementation(() => {});
-    const removeSpy = vi.spyOn(anchor, 'remove');
-    vi.spyOn(doc, 'createElement').mockReturnValue(anchor);
+    const clickSpy = jest.spyOn(anchor, 'click').mockImplementation(() => {});
+    const removeSpy = jest.spyOn(anchor, 'remove');
+    jest.spyOn(doc, 'createElement').mockReturnValue(anchor);
 
     const dataUrl = 'data:image/png;base64,AAAA';
     service.downloadDataUrl(dataUrl, 'preview.png');

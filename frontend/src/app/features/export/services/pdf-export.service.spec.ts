@@ -122,16 +122,16 @@ const MOCK_ROWS: readonly FlattenedChecklistRow[] = [
 
 describe('PdfExportService', () => {
   let service: PdfExportService;
-  let downloadMock: ReturnType<typeof vi.fn<(fileName?: string) => Promise<void>>>;
-  let createPdfMock: ReturnType<typeof vi.fn<(docDef: TDocumentDefinitions) => { download: typeof downloadMock }>>;
-  let loaderMock: ReturnType<typeof vi.fn<() => Promise<PdfMakerInstance>>>;
+  let downloadMock: jest.Mock<Promise<void>, [string?]>;
+  let createPdfMock: jest.Mock<{ download: typeof downloadMock }, [TDocumentDefinitions]>;
+  let loaderMock: jest.Mock<Promise<PdfMakerInstance>, []>;
 
   beforeEach(() => {
-    downloadMock = vi.fn<(fileName?: string) => Promise<void>>().mockResolvedValue(undefined);
-    createPdfMock = vi
-      .fn<(docDef: TDocumentDefinitions) => { download: typeof downloadMock }>()
+    downloadMock = jest.fn<Promise<void>, [string?]>().mockResolvedValue(undefined);
+    createPdfMock = jest
+      .fn<{ download: typeof downloadMock }, [TDocumentDefinitions]>()
       .mockReturnValue({ download: downloadMock });
-    loaderMock = vi.fn<() => Promise<PdfMakerInstance>>().mockResolvedValue({
+    loaderMock = jest.fn<Promise<PdfMakerInstance>, []>().mockResolvedValue({
       createPdf: createPdfMock,
     });
 

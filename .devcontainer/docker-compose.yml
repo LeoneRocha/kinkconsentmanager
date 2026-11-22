@@ -1,0 +1,23 @@
+services:
+  frontend-container:
+    container_name: kinkconsentmanager-frontend-container
+    image: mcr.microsoft.com/devcontainers/typescript-node:1-24-bookworm
+    volumes:
+      - ..:/workspaces:cached
+    command: sleep infinity
+    networks:
+      - kinkconsentmanager-net
+
+  # Container preparado para o Backend Node.js/TypeScript (Roadmap V2+)
+  backend-container:
+    container_name: kinkconsentmanager-backend-container
+    image: mcr.microsoft.com/devcontainers/typescript-node:1-24-bookworm
+    volumes:
+      - ..:/workspaces:cached
+    command: sleep infinity
+    networks:
+      - kinkconsentmanager-net
+
+networks:
+  kinkconsentmanager-net:
+    driver: bridge

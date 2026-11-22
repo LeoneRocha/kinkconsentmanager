@@ -86,7 +86,7 @@ describe('ScaleSelectorComponent', () => {
   });
 
   it('should emit selected ScaleId when an unselected option is clicked', () => {
-    const emitSpy = vi.fn<(value: ScaleId | undefined) => void>();
+    const emitSpy = jest.fn<void, [ScaleId | undefined]>();
     component.scaleChange.subscribe(emitSpy);
 
     const buttons = (fixture.nativeElement as HTMLElement).querySelectorAll<HTMLButtonElement>(
@@ -102,7 +102,7 @@ describe('ScaleSelectorComponent', () => {
     fixture.componentRef.setInput('selectedScale', 'curious');
     await fixture.whenStable();
 
-    const emitSpy = vi.fn<(value: ScaleId | undefined) => void>();
+    const emitSpy = jest.fn<void, [ScaleId | undefined]>();
     component.scaleChange.subscribe(emitSpy);
 
     const buttons = (fixture.nativeElement as HTMLElement).querySelectorAll<HTMLButtonElement>(
@@ -118,7 +118,7 @@ describe('ScaleSelectorComponent', () => {
     fixture.componentRef.setInput('disabled', true);
     await fixture.whenStable();
 
-    const emitSpy = vi.fn<(value: ScaleId | undefined) => void>();
+    const emitSpy = jest.fn<void, [ScaleId | undefined]>();
     component.scaleChange.subscribe(emitSpy);
 
     const buttons = (fixture.nativeElement as HTMLElement).querySelectorAll<HTMLButtonElement>(

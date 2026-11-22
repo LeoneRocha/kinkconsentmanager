@@ -41,15 +41,15 @@ class SampleCrudService extends BaseCrudService<SampleItem, string> {
 describe('BaseCrudService', () => {
   it('should delegate CRUD methods to source and apply lifecycle hooks', () => {
     const source: ICrudOperations<SampleItem, string> = {
-      getAll: vi.fn().mockReturnValue(of([{ id: '1', label: 'alpha' }])),
-      getPage: vi.fn().mockReturnValue(
+      getAll: jest.fn().mockReturnValue(of([{ id: '1', label: 'alpha' }])),
+      getPage: jest.fn().mockReturnValue(
         of({ items: [{ id: '1', label: 'alpha' }], total: 1, page: 1, pageSize: 10 }),
       ),
-      getById: vi.fn().mockReturnValue(of({ id: '1', label: 'alpha' })),
-      create: vi.fn((payload) => of({ id: '2', label: payload.label ?? '' })),
-      update: vi.fn((id, payload) => of({ id, label: payload.label ?? '' })),
-      patch: vi.fn((id, payload) => of({ id, label: payload.label ?? '' })),
-      delete: vi.fn().mockReturnValue(of(void 0)),
+      getById: jest.fn().mockReturnValue(of({ id: '1', label: 'alpha' })),
+      create: jest.fn((payload) => of({ id: '2', label: payload.label ?? '' })),
+      update: jest.fn((id, payload) => of({ id, label: payload.label ?? '' })),
+      patch: jest.fn((id, payload) => of({ id, label: payload.label ?? '' })),
+      delete: jest.fn().mockReturnValue(of(void 0)),
     };
 
     const service = new SampleCrudService(source);
@@ -88,18 +88,18 @@ describe('BaseCrudService', () => {
 
   it('should fallback to client-side pagination over getAll when source.getPage is omitted', () => {
     const source: ICrudOperations<SampleItem, string> = {
-      getAll: vi.fn().mockReturnValue(
+      getAll: jest.fn().mockReturnValue(
         of([
           { id: '1', label: 'one' },
           { id: '2', label: 'two' },
           { id: '3', label: 'three' },
         ]),
       ),
-      getById: vi.fn(),
-      create: vi.fn(),
-      update: vi.fn(),
-      patch: vi.fn(),
-      delete: vi.fn(),
+      getById: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
+      patch: jest.fn(),
+      delete: jest.fn(),
     };
 
     const service = new SampleCrudService(source);

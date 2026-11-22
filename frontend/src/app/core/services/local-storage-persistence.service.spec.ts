@@ -14,7 +14,7 @@ describe('LocalStoragePersistenceService', () => {
   });
 
   afterEach(() => {
-    vi.restoreAllMocks();
+    jest.restoreAllMocks();
     localStorage.clear();
   });
 
@@ -44,7 +44,7 @@ describe('LocalStoragePersistenceService', () => {
   });
 
   it('should handle QuotaExceededError gracefully and return false', () => {
-    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+    jest.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
       throw new DOMException('Quota exceeded', 'QuotaExceededError');
     });
 
@@ -62,7 +62,7 @@ describe('LocalStoragePersistenceService', () => {
   });
 
   it('should handle inaccessible localStorage safely across all operations', () => {
-    vi.spyOn(globalThis, 'localStorage', 'get').mockImplementation(() => {
+    jest.spyOn(globalThis, 'localStorage', 'get').mockImplementation(() => {
       throw new DOMException('Access denied', 'SecurityError');
     });
 

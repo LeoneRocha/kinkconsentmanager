@@ -5,12 +5,12 @@ import { JsonDraftService } from './json-draft.service';
 
 describe('JsonDraftService', () => {
   let service: JsonDraftService;
-  let fileDownloadMock: { downloadBlob: ReturnType<typeof vi.fn>; downloadDataUrl: ReturnType<typeof vi.fn> };
+  let fileDownloadMock: { downloadBlob: ReturnType<typeof jest.fn>; downloadDataUrl: ReturnType<typeof jest.fn> };
 
   beforeEach(() => {
     fileDownloadMock = {
-      downloadBlob: vi.fn(),
-      downloadDataUrl: vi.fn(),
+      downloadBlob: jest.fn(),
+      downloadDataUrl: jest.fn(),
     };
 
     TestBed.configureTestingModule({

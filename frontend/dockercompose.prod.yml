@@ -1,0 +1,20 @@
+name: kinkconsentmanager-ui
+
+# Uso em producao: docker compose -f dockercompose.prod.yml up -d --build
+services:
+  kinkconsentmanager-ui:
+    image: leonecr/kinkconsentmanager-ui:latest
+    container_name: kinkconsentmanager_ui_prod
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    ports:
+      - "80:80"
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://127.0.0.1:80/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    restart: always

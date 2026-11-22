@@ -136,7 +136,7 @@ describe('CategoryAccordionComponent', () => {
   });
 
   it('should render nextCategory button on non-last panel and emit nextCategory on click', async () => {
-    const nextSpy = vi.fn<() => void>();
+    const nextSpy = jest.fn<void, []>();
     component.nextCategory.subscribe(nextSpy);
 
     const hostEl = fixture.nativeElement as HTMLElement;
@@ -156,7 +156,7 @@ describe('CategoryAccordionComponent', () => {
   it('should render finish button on last panel and emit finishChecklist on click', async () => {
     await setBaseInputs({ activeIndex: 1 });
 
-    const finishSpy = vi.fn<() => void>();
+    const finishSpy = jest.fn<void, []>();
     component.finishChecklist.subscribe(finishSpy);
 
     const hostEl = fixture.nativeElement as HTMLElement;

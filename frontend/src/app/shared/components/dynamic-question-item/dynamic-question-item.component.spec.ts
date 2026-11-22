@@ -126,7 +126,7 @@ describe('DynamicQuestionItemComponent', () => {
     const selectors = hostEl.querySelectorAll('app-scale-selector');
     expect(selectors.length).toBe(1);
 
-    const emitSpy = vi.fn<(val: Partial<ItemResponseValue>) => void>();
+    const emitSpy = jest.fn<void, [Partial<ItemResponseValue>]>();
     component.answerChange.subscribe(emitSpy);
 
     const buttons = selectors[0].querySelectorAll<HTMLButtonElement>('button[role="radio"]');
@@ -147,7 +147,7 @@ describe('DynamicQuestionItemComponent', () => {
     const radios = hostEl.querySelectorAll<HTMLInputElement>('p-radiobutton input[type="radio"]');
     expect(radios.length).toBe(2);
 
-    const emitSpy = vi.fn<(val: Partial<ItemResponseValue>) => void>();
+    const emitSpy = jest.fn<void, [Partial<ItemResponseValue>]>();
     component.answerChange.subscribe(emitSpy);
 
     radios[1].click();

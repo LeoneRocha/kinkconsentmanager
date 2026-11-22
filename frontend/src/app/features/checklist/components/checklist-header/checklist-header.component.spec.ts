@@ -156,9 +156,9 @@ describe('ChecklistHeaderComponent', () => {
   });
 
   it('should emit openQuickFill, clearAll, and goToExport on action button clicks', async () => {
-    const quickFillSpy = vi.fn<() => void>();
-    const clearAllSpy = vi.fn<() => void>();
-    const exportSpy = vi.fn<() => void>();
+    const quickFillSpy = jest.fn<void, []>();
+    const clearAllSpy = jest.fn<void, []>();
+    const exportSpy = jest.fn<void, []>();
 
     component.openQuickFill.subscribe(quickFillSpy);
     component.clearAll.subscribe(clearAllSpy);

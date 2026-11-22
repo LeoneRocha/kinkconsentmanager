@@ -342,36 +342,30 @@ describe('Checklist Schema & i18n Integrity', () => {
         { lang: 'en-US', dict: enUs },
       ];
 
-    for (const { lang, dict } of dictionaries) {
+    for (const { dict } of dictionaries) {
       for (const scale of schema.scales) {
-        expect(
-          dict.scales[scale.id]?.trim().length ?? 0,
-          `Missing or empty scale translation "${scale.id}" in ${lang}`,
-        ).toBeGreaterThan(0);
+        expect(dict.scales[scale.id]?.trim().length ?? 0).toBeGreaterThan(0);
       }
 
       for (const rolePairId of VALID_ROLE_PAIR_IDS) {
         const roleEntry = dict.roles[rolePairId];
-        expect(roleEntry, `Missing role translation "${rolePairId}" in ${lang}`).toBeDefined();
+        expect(roleEntry).toBeDefined();
         expect(roleEntry?.primary.trim().length ?? 0).toBeGreaterThan(0);
 
         if (DUAL_ROLE_PAIR_IDS.includes(rolePairId)) {
-          expect(
-            roleEntry?.secondary?.trim().length ?? 0,
-            `Missing secondary role translation for "${rolePairId}" in ${lang}`,
-          ).toBeGreaterThan(0);
+          expect(roleEntry?.secondary?.trim().length ?? 0).toBeGreaterThan(0);
         }
       }
 
       for (const group of schema.groups) {
         const groupEntry = dict.groups[group.id];
-        expect(groupEntry, `Missing group translation "${group.id}" in ${lang}`).toBeDefined();
+        expect(groupEntry).toBeDefined();
         expect(groupEntry?.title.trim().length ?? 0).toBeGreaterThan(0);
         expect(groupEntry?.description.trim().length ?? 0).toBeGreaterThan(0);
 
         for (const item of group.items) {
           const itemEntry = dict.items[item.id];
-          expect(itemEntry, `Missing item translation "${item.id}" in ${lang}`).toBeDefined();
+          expect(itemEntry).toBeDefined();
           expect(itemEntry?.label.trim().length ?? 0).toBeGreaterThan(0);
           expect(itemEntry?.tooltip.trim().length ?? 0).toBeGreaterThan(0);
 
@@ -380,10 +374,7 @@ describe('Checklist Schema & i18n Integrity', () => {
           }
 
           for (const optionId of item.options ?? []) {
-            expect(
-              dict.options[optionId]?.trim().length ?? 0,
-              `Missing option translation "${optionId}" in ${lang}`,
-            ).toBeGreaterThan(0);
+            expect(dict.options[optionId]?.trim().length ?? 0).toBeGreaterThan(0);
           }
         }
       }

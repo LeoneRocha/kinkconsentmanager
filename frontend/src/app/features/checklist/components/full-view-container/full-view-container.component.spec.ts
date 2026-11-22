@@ -141,7 +141,7 @@ describe('FullViewContainerComponent', () => {
   });
 
   it('should emit finishChecklist when finish CTA button is clicked', async () => {
-    const finishSpy = vi.fn<() => void>();
+    const finishSpy = jest.fn<void, []>();
     component.finishChecklist.subscribe(finishSpy);
 
     const hostEl = fixture.nativeElement as HTMLElement;
@@ -156,10 +156,10 @@ describe('FullViewContainerComponent', () => {
   it('should scroll smoothly to target group section when clicking a quick jump pill', () => {
     const hostEl = fixture.nativeElement as HTMLElement;
     const targetSection = hostEl.querySelector('#checklist-group-grp_bondage') as HTMLElement;
-    const scrollIntoViewMock = vi.fn();
+    const scrollIntoViewMock = jest.fn();
     targetSection.scrollIntoView = scrollIntoViewMock;
 
-    vi.spyOn(document, 'getElementById').mockReturnValue(targetSection);
+    jest.spyOn(document, 'getElementById').mockReturnValue(targetSection);
 
     const pills = hostEl.querySelectorAll<HTMLButtonElement>('.full-view__pill');
     pills[1].click();

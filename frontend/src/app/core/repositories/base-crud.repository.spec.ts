@@ -41,19 +41,19 @@ describe('BaseCrudRepository', () => {
 
   it('should delegate CRUD operations to the underlying service and apply caching & invalidation', () => {
     const service: ICrudOperations<DemoEntity, string> = {
-      getAll: vi
+      getAll: jest
         .fn()
         .mockReturnValueOnce(of([{ id: '1', name: 'first' }]))
         .mockReturnValueOnce(of([{ id: '1', name: 'filtered' }]))
         .mockReturnValueOnce(of([{ id: '1', name: 'refreshed' }])),
-      getById: vi
+      getById: jest
         .fn()
         .mockReturnValueOnce(of({ id: '1', name: 'first' }))
         .mockReturnValueOnce(of({ id: '1', name: 'after-update' })),
-      create: vi.fn((payload) => of({ id: '2', name: payload.name ?? '' })),
-      update: vi.fn((id, payload) => of({ id, name: payload.name ?? '' })),
-      patch: vi.fn((id, payload) => of({ id, name: payload.name ?? '' })),
-      delete: vi.fn().mockReturnValue(of(void 0)),
+      create: jest.fn((payload) => of({ id: '2', name: payload.name ?? '' })),
+      update: jest.fn((id, payload) => of({ id, name: payload.name ?? '' })),
+      patch: jest.fn((id, payload) => of({ id, name: payload.name ?? '' })),
+      delete: jest.fn().mockReturnValue(of(void 0)),
     };
 
     const repo = new CachedDemoRepository(service);
@@ -107,18 +107,18 @@ describe('BaseCrudRepository', () => {
 
   it('should evict failed getById and getAll observables from cache so callers can retry', () => {
     const service: ICrudOperations<DemoEntity, string> = {
-      getAll: vi
+      getAll: jest
         .fn()
         .mockReturnValueOnce(throwError(() => new Error('Network down')))
         .mockReturnValueOnce(of([{ id: '1', name: 'recovered' }])),
-      getById: vi
+      getById: jest
         .fn()
         .mockReturnValueOnce(throwError(() => new Error('Timeout')))
         .mockReturnValueOnce(of({ id: '1', name: 'recovered-item' })),
-      create: vi.fn(),
-      update: vi.fn(),
-      patch: vi.fn(),
-      delete: vi.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
+      patch: jest.fn(),
+      delete: jest.fn(),
     };
 
     const repo = new CachedDemoRepository(service);
@@ -141,15 +141,15 @@ describe('BaseCrudRepository', () => {
 
   it('should delegate getPage when implemented on service or fallback to paginated getAll', () => {
     const serviceWithPage: ICrudOperations<DemoEntity, string> = {
-      getAll: vi.fn(),
-      getPage: vi.fn().mockReturnValue(
+      getAll: jest.fn(),
+      getPage: jest.fn().mockReturnValue(
         of({ items: [{ id: '1', name: 'paged' }], total: 10, page: 2, pageSize: 1 }),
       ),
-      getById: vi.fn(),
-      create: vi.fn(),
-      update: vi.fn(),
-      patch: vi.fn(),
-      delete: vi.fn(),
+      getById: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
+      patch: jest.fn(),
+      delete: jest.fn(),
     };
 
     const repoWithPage = new CachedDemoRepository(serviceWithPage);
@@ -159,18 +159,18 @@ describe('BaseCrudRepository', () => {
     expect(page?.items).toEqual([{ id: '1', name: 'PAGED' }]);
 
     const serviceWithoutPage: ICrudOperations<DemoEntity, string> = {
-      getAll: vi.fn().mockReturnValue(
+      getAll: jest.fn().mockReturnValue(
         of([
           { id: '1', name: 'a' },
           { id: '2', name: 'b' },
           { id: '3', name: 'c' },
         ]),
       ),
-      getById: vi.fn(),
-      create: vi.fn(),
-      update: vi.fn(),
-      patch: vi.fn(),
-      delete: vi.fn(),
+      getById: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
+      patch: jest.fn(),
+      delete: jest.fn(),
     };
 
     const repoWithoutPage = new CachedDemoRepository(serviceWithoutPage);

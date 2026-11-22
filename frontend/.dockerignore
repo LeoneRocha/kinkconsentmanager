@@ -1,0 +1,14 @@
+node_modules
+dist
+.angular
+.jest-cache
+coverage
+.vscode
+.git
+*.log
+tmp
+temp
+Dockerfile*
+docker-compose*.yml
+dockercompose*.yml
+README.md
