@@ -49,15 +49,15 @@ it('should preserve all recorded answers when switching language from pt-BR to e
 
 ---
 
-### 2.3 Estrutura Arrange / Act / Assert (AAA) — Vitest / Jest
+### 2.3 Estrutura Arrange / Act / Assert (AAA) — Jest / Vitest
 
 ```typescript
 // Cenário: Tentativa de exportação quando o serviço subjacente retorna erro.
 // Objetivo: Validar que a notificação de erro seja acionada e o estado de loading seja desligado.
 it('should show error toast and reset busy state when export fails', async () => {
   // Arrange
-  const toastSpy = vi.spyOn(messageService, 'add'); // ou jest.spyOn(...)
-  vi.spyOn(pngExportService, 'exportElementAsPng').mockRejectedValue(new Error('Canvas error'));
+  const toastSpy = jest.spyOn(messageService, 'add'); // ou vi.spyOn(...)
+  jest.spyOn(pngExportService, 'exportElementAsPng').mockRejectedValue(new Error('Canvas error'));
 
   // Act
   await component.onExportPng();
@@ -113,14 +113,14 @@ Arquivos que **não contêm lógica testável** devem ser configurados em `sonar
 ```powershell
 # 1. Executar suíte completa de testes sem watch
 npm.cmd run test:ci
-# ou: ng.cmd test --watch=false
+# ou: npx.cmd jest --ci
 
-# 2. Executar suíte com relatório de cobertura V8 / LCOV
+# 2. Executar suíte com relatório de cobertura (Istanbul / V8 / LCOV)
 npm.cmd run test:coverage
-# ou: ng.cmd test --watch=false --coverage
 
-# 3. Executar testes filtrando por diretório ou arquivo específico (Vitest / Angular CLI)
-ng.cmd test --watch=false --include=src/app/core/services
+# 3. Executar testes filtrando por diretório ou arquivo específico (Jest / Vitest / Angular CLI)
+npx.cmd jest src/app/core/services
+# ou (Vitest / Angular CLI): ng.cmd test --watch=false --include=src/app/core/services
 ```
 
 ---
@@ -130,7 +130,7 @@ ng.cmd test --watch=false --include=src/app/core/services
 - [ ] Nome do teste claro em inglês cobrindo comportamento e cenário.
 - [ ] Comentários em português `// Cenário:` e `// Objetivo:` presentes nos cenários críticos.
 - [ ] Padrão AAA respeitado.
-- [ ] Mocks e spies limpos ao término de cada teste (`afterEach(() => vi.restoreAllMocks())` ou `jest.clearAllMocks()`).
+- [ ] Mocks e spies limpos ao término de cada teste (`afterEach(() => jest.restoreAllMocks())` ou `vi.restoreAllMocks()`).
 - [ ] Cobertura de ramos (*branch coverage*) validando ambos os caminhos de condições booleanas e casos de erro.
 - [ ] Zero dependência de chamadas de rede reais (100% dos fluxos HTTP mockados via `HttpTestingController` ou tokens).
 - [ ] **Operações Git Preservadas:** Nenhuma operação de `commit`, `push`, criação de `branch` ou abertura de `PR` realizada de forma autônoma.

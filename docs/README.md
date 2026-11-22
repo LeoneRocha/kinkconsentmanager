@@ -1,208 +1,150 @@
-# Documentação do SmartCoreHub
+# Documentação — KinkConsentManager
 
-Índice central para onboarding, arquitetura, APIs, SDKs, operação e histórico técnico. Comece pelo percurso abaixo e use as especificações OpenAPI em execução como fonte atual dos endpoints.
+Índice central para onboarding, arquitetura, diretrizes de código, especificação V1, testes Jest, qualidade estática, containers e atualização de pacotes do **KinkConsentManager**.
 
-Comentários de código ficam em português. Validações, logs, exceções e mensagens de retorno da API ficam em inglês ([diretrizes](PROJECT_GUIDELINES.md#14-principios-gerais)).
+- **Escopo atual (V1):** SPA **100% client-side** para Checklist de Limites e Consentimento (`/checklist`) e Prévia/Exportação segura (`/export`), sem envio de dados a servidor.
+- **Backend:** **Coming Soon (Roadmap V2+)** — o servidor/API ainda não existe neste repositório na V1; veja a seção [Backend (Coming Soon)](#backend-coming-soon).
 
-## Stack e recursos
+Documentação e comentários de contexto ficam em **português**; código, símbolos e nomes de testes (`describe`/`it`) ficam em **inglês**; textos de UI residem nos dicionários `assets/i18n/` ([PROJECT_GUIDELINES.md](./PROJECT_GUIDELINES.md#13-princípios-gerais)).
 
-O catálogo com versões está em [Arquitetura — catálogo](ARCHITECTURE.md#catálogo-de-tecnologias-e-recursos) e na [stack de referência](PROJECT_GUIDELINES.md#26-stack-de-referencia). Resumo lido em 23/10/2026:
+---
 
-| Área | O que o repositório usa |
-|---|---|
-| Backend | .NET SDK 10.0.300, ASP.NET Core 10.0.13, EF Core 9.0.20 (Pomelo MySQL 9 ainda não acompanha o EF 10) |
-| Dados | MySQL padrão, SQL Server, PostgreSQL, InMemory, SQLite e Dapper |
-| Aplicação | CQRS por `IApplicationDispatcher`, MediatR 12.5.0 só no adapter, FluentValidation 12.2, AutoMapper 16.2 atrás de `ISmartCoreHubMapper` |
-| Segurança | JWT Bearer, API Key `X-Auth-Token`, MFA, BCrypt |
-| Cultura da API | `X-Locale` vence `Accept-Language`; culturas funcionais `en-US`, `pt-BR` e `es-ES` |
-| Painel | Angular 22.2, Material, PrimeNG 21, ngx-translate 17, TypeScript 6, Jest 30 |
-| Idiomas da tela | `pt-BR`, `en-US`, `es-ES`, `fr-FR`, `de-DE`, `ja-JP`, `zh-CN` |
-| Outras superfícies | Landing React 19 + Vite, SDK .NET, SDK TypeScript, extensões VS Code/Cursor, servidores MCP |
-| Nuvem e cache | Azure Blob, Queue, Table, Cosmos, Redis, MongoDB |
-| Observabilidade | Serilog, Application Insights, OpenTelemetry |
-| Orquestração | Aspire Hosting 13.6.2, opt-in. Produção continua no Azure App Service |
-| OpenAPI | Swagger, Scalar, ReDoc, RapiDoc |
+## Stack e Recursos (Baseline `2026-11-22`)
 
-Recursos da API principal: autenticação e MFA, usuários, perfis e escopos, tenants, aplicações, configuração, tokens e telemetria, métricas de uso, planos, assinaturas e cobrança, nuvem, localização, templates de notificação e auditoria. O detalhe está em [PROJECT_GUIDELINES.md — recursos](PROJECT_GUIDELINES.md#27-recursos-da-plataforma).
+As versões vivas constam em [frontend/package.json](../frontend/package.json), [Arquitetura — catálogo](./ARCHITECTURE.md#10-catálogo-de-tecnologias-e-recursos) e [Conjunto Homologado Frontend](./Frontend/UpdatePackages/2026-11-22-ConjuntoHomologado-Frontend.md).
 
-Em 23/10/2026 a suíte do backend passou **6.808** testes e a do painel passou **3.119** testes em **230** suítes. Esses totais não são meta fixa.
+| Área | O que o repositório usa hoje |
+| ---- | ---------------------------- |
+| Frontend (V1 ativo) | Angular `^22.1.0` (Standalone, Signals, **zoneless**, `OnPush`), TypeScript `~6.0.2`, RxJS `~7.8.0` |
+| Design System & UI | PrimeNG `^22.1.5`, `@primeuix/themes` `^3.1.1` (Aura), PrimeIcons `^8.0.2`, `@angular/cdk` `^22.3.0` |
+| Internacionalização | `@ngx-translate/core` `^18.1.0` e `@ngx-translate/http-loader` `^18.1.0` (`pt-BR`, `en-US`) |
+| Schema & Persistência Local | Schema declarativo `checklist-v1.json` via `ISchemaRepository` + `localStorage` protegido (`LocalStoragePersistenceService`) |
+| Exportação Client-Side | PNG (`html-to-image` `^1.11.13`, `1200px`), PDF (`pdfmake` `^0.3.15` em *chunk lazy*), JSON Draft (export/import) e CSV UTF-8 BOM |
+| Camada Genérica CRUD | `ICrudOperations`, `BaseDataService`, `BaseCrudService`, `ICrudRepository`, `BaseCrudRepository`, `API_BASE_URL` |
+| Testes & Cobertura | **Jest** `^30.5.2`, `jest-preset-angular` `^17.0.3`, `jest-environment-jsdom` `^30.5.2`, `jsdom` `^28.0.0` |
+| Qualidade & Reporters | Prettier `^3.8.1`, SonarCloud (`sonar-project.properties`), `jest-junit`, `jest-sonar`, `jest-stare`, `jest-html-reporter`, `jest-html-reporters` |
+| Infraestrutura & Containers | Docker multi-stage ([Dockerfile](../frontend/Dockerfile)), Nginx Alpine com CSP e `/health` ([nginx.conf](../frontend/nginx.conf)), Compose e DevContainers |
+| **Backend** | **Coming Soon (Roadmap V2+)** — sem implementação na V1; contrato preparatório genérico documentado |
 
-## Estrutura desta pasta
+**Baseline verificado da V1 (`2026-11-22`):** **29 arquivos `.spec.ts`** / **150 testes unitários aprovados (100%)**, cobertura global Jest de **92,18% Statements** / **91,84% Lines**, `build:prod` limpo e **0 vulnerabilidades** em `npm.cmd audit --omit=dev`.
 
-| Pasta / arquivo | Conteúdo |
-|---|---|
-| [`PROJECT_GUIDELINES.md`](PROJECT_GUIDELINES.md) | Diretrizes transversais de implementação |
-| [`ARCHITECTURE.md`](ARCHITECTURE.md) | Arquitetura em camadas |
-| [`CQRS/`](CQRS/) | Visão CQRS e guia de implementação |
-| [`ASPIRE/`](ASPIRE/) | Guias operacionais do AppHost Aspire |
-| [`General/Outros/`](General/Outros/) | Guias de onboarding, Docker, EF, frontend, releases |
-| [`Features/`](Features/) | Specs ativas (`Pendding/`, `In Progress/`) e [`Done/`](Features/Done/) (histórico) |
-| [`COVERAGE AND TEST/`](COVERAGE AND TEST/) | Cobertura e testes |
-| [`Ressources/`](Ressources/), [`result/`](result/), [`TXT/`](TXT/) | Material auxiliar / histórico |
+---
 
-## Percurso recomendado
+## Estrutura desta Pasta (`docs/`)
 
-1. Leia a [visão geral e o início rápido](../README.md).
-2. Consulte as [diretrizes do projeto](PROJECT_GUIDELINES.md).
-3. Prepare o ambiente com o [Guia do Desenvolvedor](General/Outros/DEVELOPER-GUIDE.md).
-4. Entenda as camadas em [Arquitetura](ARCHITECTURE.md).
-5. Execute uma API e abra uma das [UIs de documentação](Features/FEITOS/API-DOCUMENTATION-UI.md).
-6. Consulte os READMEs da [API principal](../backend/APIs/SmartCoreHub.API/README.md), da [API de localização](../backend/APIs/SmartCoreHub.Localization.API/README.md) ou do SDK relevante.
+| Pasta / Arquivo | Conteúdo |
+| --------------- | -------- |
+| [`PROJECT_GUIDELINES.md`](./PROJECT_GUIDELINES.md) | Diretrizes normativas transversais, padrões 4+1, Jest, Git (`R-GOV-GIT`) e Backend genérico |
+| [`ARCHITECTURE.md`](./ARCHITECTURE.md) | Arquitetura em camadas, diagramas Mermaid, fluxos, exemplos e catálogo técnico |
+| [`Bueprint.md`](./Bueprint.md) | Blueprint conceitual do produto e visão de roadmap futuro (pós-V1) |
+| [`Features/`](./Features/) | Levantamento funcional/técnico, plano modular de implementação e checklist da V1 |
+| [`Frontend/COVERAGE AND TEST/`](./Frontend/COVERAGE%20AND%20TEST/) | Diretrizes de cobertura Jest/Vitest, metas por camada e saneamento de Code Smells |
+| [`Frontend/UpdatePackages/`](./Frontend/UpdatePackages/) | Guias de governança/atualização de pacotes npm e conjunto homologado atual |
 
-## Guias principais
+---
+
+## Percurso Recomendado de Onboarding
+
+1. Entenda a visão geral do produto e o recorte entre V1 e futuro em [Bueprint.md](./Bueprint.md).
+2. Leia as regras obrigatórias em [PROJECT_GUIDELINES.md](./PROJECT_GUIDELINES.md).
+3. Explore as camadas e fluxos do código em [ARCHITECTURE.md](./ARCHITECTURE.md).
+4. Revise o escopo e a arquitetura detalhada da V1 em [LEVANTAMENTO_FUNCIONAL_TECNICO.md](./Features/LEVANTAMENTO_FUNCIONAL_TECNICO.md) e [PLANO_IMPLEMENTACAO_FRONTEND.md](./Features/PLANO_IMPLEMENTACAO_FRONTEND.md).
+5. Confira os padrões de execução local em [frontend/README.md](../frontend/README.md), [Diretrizes de Cobertura](./Frontend/COVERAGE%20AND%20TEST/Diretrizes-Coverage-Frontend-KinkConsentManager.md) e [Guia de Atualização de Pacotes](./Frontend/UpdatePackages/GuiaAtualizacaoPacotes-KinkConsentManagerUI.md).
+
+---
+
+## Índice Completo de Guias
+
+### Documentos Core & Roadmap
 
 | Tema | Documento |
-|---|---|
-| Diretrizes do projeto | [PROJECT_GUIDELINES.md](PROJECT_GUIDELINES.md) |
-| Recursos implementados e releases | [General/Outros/FEATURES-AND-RELEASES.md](General/Outros/FEATURES-AND-RELEASES.md) |
-| Desenvolvimento local | [General/Outros/DEVELOPER-GUIDE.md](General/Outros/DEVELOPER-GUIDE.md) |
-| Arquitetura | [ARCHITECTURE.md](ARCHITECTURE.md) |
-| Infraestrutura das APIs | [General/Outros/API-Infrastructure.md](General/Outros/API-Infrastructure.md) |
-| API REST | [General/Outros/api-README.md](General/Outros/api-README.md) |
-| Swagger, Scalar, ReDoc, RapiDoc e OpenAPI | [Features/FEITOS/API-DOCUMENTATION-UI.md](Features/FEITOS/API-DOCUMENTATION-UI.md) |
-| Extração Service → Core.SDK | [Features/FEITOS/SmartCoreHub.Core.SDK/SmartCoreHub.Core.SDK-Service-Extracao.md](Features/FEITOS/SmartCoreHub.Core.SDK/SmartCoreHub.Core.SDK-Service-Extracao.md) |
-| Core.SDK — Extensões IDE (requisitos) | [Features/SmartCoreHub.Core.SDK-Extensões-IDE/SmartCoreHub.Core.SDK-Extensões-IDE-Requisitos.md](Features/SmartCoreHub.Core.SDK-Extensões-IDE/SmartCoreHub.Core.SDK-Extensões-IDE-Requisitos.md) |
-| Renovação de Tokens CI/CD (Extensões e Pacotes) | [GUIA-RENOVACAO-TOKENS-PUBLICACAO.md](GUIA-RENOVACAO-TOKENS-PUBLICACAO.md) |
-| Refatoração DI/pipeline | [Features/FEITOS/WEBAPPLICATION-DI-REFACTOR-SURVEY.md](Features/FEITOS/WEBAPPLICATION-DI-REFACTOR-SURVEY.md) |
-| Docker e Compose | [General/Outros/DOCKER-AND-COMPOSE-GUIDE.md](General/Outros/DOCKER-AND-COMPOSE-GUIDE.md) |
-| Migrações EF Core (multi-provider + trocar para PostgreSQL) | [General/Outros/EF-MIGRATIONS-HOWTO.md](General/Outros/EF-MIGRATIONS-HOWTO.md) |
-| Frontend Angular | [General/Outros/frontend-README.md](General/Outros/frontend-README.md) |
-| Referência Jest | [General/Outros/JEST-REFERENCE.md](General/Outros/JEST-REFERENCE.md) |
-| Cobertura e testes | [COVERAGE AND TEST/coverage.md](COVERAGE AND TEST/coverage.md) |
-| CQRS — visão do fluxo | [CQRS/CQRS.md](CQRS/CQRS.md) |
-| CQRS — como implementar | [CQRS/CQRS-Como-Implementar-Dicas.md](CQRS/CQRS-Como-Implementar-Dicas.md) |
-| Mensagens funcionais da API | [Features/Pendding/PADRONIZACAO-IDIOMA-I18N-E-CENTRALIZACAO-MENSAGENS/04-GUIA-DE-USO-E-IMPLEMENTACAO.md](Features/Pendding/PADRONIZACAO-IDIOMA-I18N-E-CENTRALIZACAO-MENSAGENS/04-GUIA-DE-USO-E-IMPLEMENTACAO.md) |
-| MFA | [Features/Done/MULTI-FACTOR AUTHENTICATION/01-LEVANTAMENTO-FUNCIONAL-E-TECNICO.md](Features/Done/MULTI-FACTOR%20AUTHENTICATION/01-LEVANTAMENTO-FUNCIONAL-E-TECNICO.md) |
-| Aspire — várias APIs no AppHost | [ASPIRE/MULTIPLE-APIS.md](ASPIRE/MULTIPLE-APIS.md) |
-| Aspire + CQRS (requisitos) | [Features/SmartCoreHub-Aspire-CQRS-MediatR/SmartCoreHub-Aspire-CQRS-MediatR-Requisitos.md](Features/SmartCoreHub-Aspire-CQRS-MediatR/SmartCoreHub-Aspire-CQRS-MediatR-Requisitos.md) |
+| ---- | --------- |
+| Visão Conceitual e Roadmap Futuro | [Bueprint.md](./Bueprint.md) |
+| Arquitetura em Camadas e Decisões Técnicas | [ARCHITECTURE.md](./ARCHITECTURE.md) |
+| Diretrizes Normativas do Projeto | [PROJECT_GUIDELINES.md](./PROJECT_GUIDELINES.md) |
 
-## APIs
+### Especificação, Planejamento e Progresso V1
 
-- [SmartCoreHub.API — execução, configuração, documentação e testes](../backend/APIs/SmartCoreHub.API/README.md)
-- [SmartCoreHub.Localization.API — execução, configuração, documentação e testes](../backend/APIs/SmartCoreHub.Localization.API/README.md)
-- [Requisitos da Localization API](General/Outros/SmartCoreHub.Localization.API-Requisitos.md)
+| Tema | Documento |
+| ---- | --------- |
+| Levantamento Funcional e Técnico (V1 Checklist) | [LEVANTAMENTO_FUNCIONAL_TECNICO.md](./Features/LEVANTAMENTO_FUNCIONAL_TECNICO.md) |
+| Plano de Implementação Frontend | [PLANO_IMPLEMENTACAO_FRONTEND.md](./Features/PLANO_IMPLEMENTACAO_FRONTEND.md) |
+| Checklist de Implementação, Etapas e Progresso | [CHECKLIST_IMPLEMENTACAO_PROGRESSO.md](./Features/CHECKLIST_IMPLEMENTACAO_PROGRESSO.md) |
 
-### Bases por contexto
+### Frontend — Testes, Cobertura e Code Smells (`docs/Frontend/COVERAGE AND TEST/`)
 
-| Contexto | SmartCoreHub.API | SmartCoreHub.Localization.API |
-|---|---|---|
-| Local HTTPS (`dotnet run`) | `https://localhost:53814` | `https://localhost:61115` |
-| Local HTTP (`dotnet run`) | `http://localhost:53815` | `http://localhost:61116` |
-| `backend/docker-compose.yml` | `http://localhost:80` | `http://localhost:8081` |
-| `docker-compose.yml`, perfil `production` | `http://localhost:5000` | não incluída |
-| Produção | `https://smartcorehubapi-grajbyfdaggxefgj.brazilsouth-01.azurewebsites.net` | `https://smartcorehublocalizationapi-e3c2esbdcxdfb5gu.brazilsouth-01.azurewebsites.net` |
+| Tema | Documento |
+| ---- | --------- |
+| Cobertura de Testes Frontend (Guia Genérico) | [Diretrizes-Coverage-Frontend-Generico.md](./Frontend/COVERAGE%20AND%20TEST/Diretrizes-Coverage-Frontend-Generico.md) |
+| Cobertura e Testes Jest (KinkConsentManager V1) | [Diretrizes-Coverage-Frontend-KinkConsentManager.md](./Frontend/COVERAGE%20AND%20TEST/Diretrizes-Coverage-Frontend-KinkConsentManager.md) |
+| Ajuste de Code Smells Frontend (Guia Genérico) | [Diretrizes-CodeSmell-Frontend-Generico.md](./Frontend/COVERAGE%20AND%20TEST/Diretrizes-CodeSmell-Frontend-Generico.md) |
+| Ajuste de Code Smells (KinkConsentManager UI) | [Diretrizes-CodeSmell-KinkConsentManagerUI.md](./Frontend/COVERAGE%20AND%20TEST/Diretrizes-CodeSmell-KinkConsentManagerUI.md) |
 
-### Rotas compartilhadas de documentação e saúde
+### Frontend — Pacotes e Baseline Homologado (`docs/Frontend/UpdatePackages/`)
 
-Implementação reutilizável: [`SmartCoreHub.Core.SDK.Service.API.DI.*`](../backend/Core/SmartCoreHub.Core.SDK/README.md). Composição e branding SmartCoreHub: [`SmartCoreHub.Service`](../backend/Implementations/SmartCoreHub.Service/README.md).
+| Tema | Documento |
+| ---- | --------- |
+| Atualização de Pacotes Frontend (Guia Genérico) | [GuiaGenericoAtualizacaoPacotesFrontend.md](./Frontend/UpdatePackages/GuiaGenericoAtualizacaoPacotesFrontend.md) |
+| Atualização de Pacotes (KinkConsentManager UI) | [GuiaAtualizacaoPacotes-KinkConsentManagerUI.md](./Frontend/UpdatePackages/GuiaAtualizacaoPacotes-KinkConsentManagerUI.md) |
+| Conjunto Homologado Frontend (`2026-11-22`) | [2026-11-22-ConjuntoHomologado-Frontend.md](./Frontend/UpdatePackages/2026-11-22-ConjuntoHomologado-Frontend.md) |
 
-Acrescente a rota à base desejada:
+### Infraestrutura, Testes e Qualidade (`frontend/` e `.devcontainer/`)
 
-| Recurso | Rota |
-|---|---|
-| Raiz, redireciona para Swagger UI | `/` |
-| Compatibilidade, redireciona para Swagger UI | `/index.html` |
-| Swagger UI | `/swagger` ou `/swagger/index.html` |
-| JSON Swashbuckle | `/swagger/v1/swagger.json` |
-| JSON OpenAPI nativo do ASP.NET | `/openapi/v1.json` |
-| Atalho, redireciona para Scalar | `/openapi` |
-| Scalar | `/scalar/v1` |
-| ReDoc | `/redoc` |
-| RapiDoc | `/rapidoc` |
-| Liveness | `/health` |
-| Readiness | `/ready` |
-| Alias de readiness (somente Localization API) | `/health/ready` |
+| Recurso | Arquivo |
+| ------- | ------- |
+| Manifesto npm e Scripts | [frontend/package.json](../frontend/package.json) |
+| Guia Angular CLI do Frontend | [frontend/README.md](../frontend/README.md) |
+| Configuração Jest 30 + Reporters | [frontend/jest.config.js](../frontend/jest.config.js) |
+| Setup Zoneless + Polyfills `jsdom` | [frontend/src/setup-jest.ts](../frontend/src/setup-jest.ts) |
+| Configuração SonarCloud | [frontend/sonar-project.properties](../frontend/sonar-project.properties) |
+| Dockerfile Multi-Stage & Nginx CSP | [Dockerfile](../frontend/Dockerfile) · [nginx.conf](../frontend/nginx.conf) |
+| Docker Compose (Dev/Local & Prod) | [docker-compose.yml](../frontend/docker-compose.yml) · [dockercompose.prod.yml](../frontend/dockercompose.prod.yml) |
+| DevContainers (Frontend + Backend Placeholder) | [.devcontainer/docker-compose.yml](../.devcontainer/docker-compose.yml) |
 
-### Links diretos locais
+---
 
-| API e protocolo | Swagger | Scalar | ReDoc | RapiDoc | OpenAPI nativo | Swagger JSON |
-|---|---|---|---|---|---|---|
-| Principal HTTPS | [Swagger](https://localhost:53814/swagger/index.html) | [Scalar](https://localhost:53814/scalar/v1) | [ReDoc](https://localhost:53814/redoc) | [RapiDoc](https://localhost:53814/rapidoc) | [JSON](https://localhost:53814/openapi/v1.json) | [JSON](https://localhost:53814/swagger/v1/swagger.json) |
-| Principal HTTP | [Swagger](http://localhost:53815/swagger/index.html) | [Scalar](http://localhost:53815/scalar/v1) | [ReDoc](http://localhost:53815/redoc) | [RapiDoc](http://localhost:53815/rapidoc) | [JSON](http://localhost:53815/openapi/v1.json) | [JSON](http://localhost:53815/swagger/v1/swagger.json) |
-| Localização HTTPS | [Swagger](https://localhost:61115/swagger/index.html) | [Scalar](https://localhost:61115/scalar/v1) | [ReDoc](https://localhost:61115/redoc) | [RapiDoc](https://localhost:61115/rapidoc) | [JSON](https://localhost:61115/openapi/v1.json) | [JSON](https://localhost:61115/swagger/v1/swagger.json) |
-| Localização HTTP | [Swagger](http://localhost:61116/swagger/index.html) | [Scalar](http://localhost:61116/scalar/v1) | [ReDoc](http://localhost:61116/redoc) | [RapiDoc](http://localhost:61116/rapidoc) | [JSON](http://localhost:61116/openapi/v1.json) | [JSON](http://localhost:61116/swagger/v1/swagger.json) |
+## Execução Local e Containers (URLs e Rotas Atuais)
 
-### Links diretos Docker
+### Rotas da Aplicação SPA
 
-| Contexto | Swagger | Scalar | ReDoc | RapiDoc | OpenAPI nativo | Swagger JSON |
-|---|---|---|---|---|---|---|
-| Principal, `backend/docker-compose.yml` | [Swagger](http://localhost:80/swagger/index.html) | [Scalar](http://localhost:80/scalar/v1) | [ReDoc](http://localhost:80/redoc) | [RapiDoc](http://localhost:80/rapidoc) | [JSON](http://localhost:80/openapi/v1.json) | [JSON](http://localhost:80/swagger/v1/swagger.json) |
-| Localização, `backend/docker-compose.yml` | [Swagger](http://localhost:8081/swagger/index.html) | [Scalar](http://localhost:8081/scalar/v1) | [ReDoc](http://localhost:8081/redoc) | [RapiDoc](http://localhost:8081/rapidoc) | [JSON](http://localhost:8081/openapi/v1.json) | [JSON](http://localhost:8081/swagger/v1/swagger.json) |
-| Principal, Compose raiz `production` | [Swagger](http://localhost:5000/swagger/index.html) | [Scalar](http://localhost:5000/scalar/v1) | [ReDoc](http://localhost:5000/redoc) | [RapiDoc](http://localhost:5000/rapidoc) | [JSON](http://localhost:5000/openapi/v1.json) | [JSON](http://localhost:5000/swagger/v1/swagger.json) |
+| Recurso | Caminho / URL | Descrição |
+| ------- | ------------- | --------- |
+| Checklist Interativo (Rota padrão) | `/checklist` | Preenchimento em Accordion + *Próxima Categoria*, *View Full* e *Quick-Fill Wizard* |
+| Prévia e Exportação | `/export` | Prévia *Full Grid* (`1200px`), PNG, PDF, JSON Draft (export/import) e CSV BOM |
+| Healthcheck Nginx (Docker) | `/health` | Resposta `200 OK` de disponibilidade do container frontend |
 
-### Links diretos de produção
+### Portas por Contexto
 
-A disponibilidade pode depender da política do deployment, proxy ou gateway.
+| Contexto | Base URL | Como Iniciar (em `frontend/`) |
+| -------- | -------- | ----------------------------- |
+| Angular Dev Server | `http://localhost:4200` | `npm.cmd start` |
+| Docker Compose Local (Nginx) | `http://localhost:8082` | `docker compose up --build` |
+| Docker Compose Dev Profile | `http://localhost:4200` | `docker compose --profile dev up` |
+| Docker Compose Produção | `http://localhost:80` | `docker compose -f dockercompose.prod.yml up -d --build` |
 
-| API | Swagger | Scalar | ReDoc | RapiDoc | OpenAPI nativo | Swagger JSON |
-|---|---|---|---|---|---|---|
-| Principal | [Swagger](https://smartcorehubapi-grajbyfdaggxefgj.brazilsouth-01.azurewebsites.net/swagger/index.html) | [Scalar](https://smartcorehubapi-grajbyfdaggxefgj.brazilsouth-01.azurewebsites.net/scalar/v1) | [ReDoc](https://smartcorehubapi-grajbyfdaggxefgj.brazilsouth-01.azurewebsites.net/redoc) | [RapiDoc](https://smartcorehubapi-grajbyfdaggxefgj.brazilsouth-01.azurewebsites.net/rapidoc) | [JSON](https://smartcorehubapi-grajbyfdaggxefgj.brazilsouth-01.azurewebsites.net/openapi/v1.json) | [JSON](https://smartcorehubapi-grajbyfdaggxefgj.brazilsouth-01.azurewebsites.net/swagger/v1/swagger.json) |
-| Localização | [Swagger](https://smartcorehublocalizationapi-e3c2esbdcxdfb5gu.brazilsouth-01.azurewebsites.net/swagger/index.html) | [Scalar](https://smartcorehublocalizationapi-e3c2esbdcxdfb5gu.brazilsouth-01.azurewebsites.net/scalar/v1) | [ReDoc](https://smartcorehublocalizationapi-e3c2esbdcxdfb5gu.brazilsouth-01.azurewebsites.net/redoc) | [RapiDoc](https://smartcorehublocalizationapi-e3c2esbdcxdfb5gu.brazilsouth-01.azurewebsites.net/rapidoc) | [JSON](https://smartcorehublocalizationapi-e3c2esbdcxdfb5gu.brazilsouth-01.azurewebsites.net/openapi/v1.json) | [JSON](https://smartcorehublocalizationapi-e3c2esbdcxdfb5gu.brazilsouth-01.azurewebsites.net/swagger/v1/swagger.json) |
+### Relatórios de Testes e Cobertura Gerados pelo Jest (`npm.cmd run test:coverage`)
 
-## SDKs e pacotes
+- LCOV para Sonar/IDE: `frontend/coverage/lcov.info`
+- Sonar Generic Test Execution: `frontend/coverage/sonar/sonar-report.xml`
+- JUnit XML (CI/CD): `frontend/coverage/junit/test-results.xml`
+- Relatórios HTML: `frontend/coverage/index.html`, `frontend/coverage/html/test-report.html`, `frontend/coverage/jest-stare/index.html` e `frontend/coverage/jest-html-reporters/test-report.html`
 
-- [SmartCoreHub.Core.SDK — catálogo detalhado](../backend/Core/SmartCoreHub.Core.SDK/README.md)
-- [SmartCoreHub.Service — composição do host](../backend/Implementations/SmartCoreHub.Service/README.md)
-- [Refatoração DI/pipeline — implementação e validação](Features/FEITOS/WEBAPPLICATION-DI-REFACTOR-SURVEY.md)
-- [SmartCoreHub.Localization.SDK](../backend/SDKs/SmartCoreHub.Localization.SDK/README.md)
-- [Extração Service → Core](Features/FEITOS/SmartCoreHub.Core.SDK/SmartCoreHub.Core.SDK-Service-Extracao.md)
-- [Remoção de shims Core.SDK](Features/FEITOS/SmartCoreHub.Core.SDK/SmartCoreHub.Core.SDK-Remocao-Shims.md)
-- [Isolamento Localization.SDK](Features/FEITOS/SmartCoreHub.Core.SDK/SmartCoreHub.Localization.SDK-Isolamento-Core.md)
-- [Unificar CloudClientSDK → Core.SDK Client.Cloud (requisitos)](Features/SmartCoreHub.Core.SDK-ClientCloud/SmartCoreHub.Core.SDK-ClientCloud-Requisitos.md)
-- [Unificar CloudClientSDK → Core.SDK Client.Cloud (plano)](Features/SmartCoreHub.Core.SDK-ClientCloud/SmartCoreHub.Core.SDK-ClientCloud-PlanoImplementacao.md)
-- [Publicação do Localization SDK](Features/FEITOS/NUGET-SDK-LOCALIZATION.md)
-- [Roadmap de multitarget dos SDKs](Features/FEITOS/SDK-MULTITARGET-ROADMAP.md)
-- [Publicação NuGet com PowerShell](Features/FEITOS/NUGET-PUBLISH-POWERSHELL-ONLY.md)
-- [Publicação por pipeline clássico](Features/FEITOS/NUGET-CLASSIC-PIPELINE-PUBLISH-ONLY.md)
+---
 
-## Operação, pipeline e configuração
+## Backend (Coming Soon)
 
-- [Checklist de pipeline da Localization API](Features/FEITOS/AZURE-PIPELINE-LOCALIZATION-CHECKLIST.md)
-- [Migração de secrets por ambiente](Features/FEATURE-ENV-SECRETS-MIGRATION-SPEC.md)
-- [Guia genérico de atualização de pacotes Backend (CPM)](Backend/UpdatePackages/GuiaGenericoAtualizacaoPacotes.md)
-- [Guia específico de atualização de pacotes Backend (SmartCoreHub)](Backend/UpdatePackages/GuiaAtualizacaoPacotes-SmartCoreHub.md)
-- [Conjunto homologado de pacotes Backend (2026-08)](Backend/UpdatePackages/2026-08-ConjuntoHomologado.md)
-- [Guia genérico de atualização de pacotes Frontend (npm)](FrontEnd/UpdatePackages/GuiaGenericoAtualizacaoPacotesFrontend.md)
-- [Guia específico de atualização de pacotes Frontend (SmartCoreHub UI)](FrontEnd/UpdatePackages/GuiaAtualizacaoPacotes-SmartCoreHubUI.md)
-- [Conjunto homologado de pacotes Frontend (2026-08)](FrontEnd/UpdatePackages/2026-08-ConjuntoHomologado-Frontend.md)
-- [AppHost Aspire unificado](../infra/aspire/smartcorehub-api/README.md)
+> **Status Atual:** **Coming Soon (Roadmap V2+)** — Não há backend, banco de dados ou API implementados neste repositório durante a V1.
 
-## Features, decisões e histórico
+Apesar de a V1 executar 100% no navegador, a arquitetura frontend já mantém prontos os pontos genéricos de extensão para integração futura:
 
-- [`Features/`](Features/) contém especificações em andamento e iniciativas técnicas.
-- [`Features/Done/UserAccess/FEATURE-USER-ACCESS-MELHORIAS-E-EVOLUCAO.md`](Features/Done/UserAccess/FEATURE-USER-ACCESS-MELHORIAS-E-EVOLUCAO.md) — **melhorias de processo, segurança (Read vs Write) e arquitetura multi-banco** (documento de evolução e auditoria).
-- [`Features/Done/UserAccess/FEATURE-USER-ACCESS-HOW-TO-IMPLEMENT.md`](Features/Done/UserAccess/FEATURE-USER-ACCESS-HOW-TO-IMPLEMENT.md) — **como implementar** AuthZ / escopos / membership (guia exclusivo).
-- [`Features/Done/UserAccess/FEATURE-USER-MANAGEMENT-SCOPES-AND-PERMISSIONS-SPEC.md`](Features/Done/UserAccess/FEATURE-USER-MANAGEMENT-SCOPES-AND-PERMISSIONS-SPEC.md) — requisitos IAM (usuários, perfis, escopos).
-- [`Features/Done/UserAccess/FEATURE-USER-ACCESS-AUTHZ-FLUENT-VS-ATTRIBUTE.md`](Features/Done/UserAccess/FEATURE-USER-ACCESS-AUTHZ-FLUENT-VS-ATTRIBUTE.md) — guia AuthZ XOR (Fluent vs Attribute) + mapa de exemplos.
-- [`Features/Done/UserAccess/FEATURE-USER-MANAGEMENT-SCOPES-AND-PERMISSIONS-PROGRESSO.md`](Features/Done/UserAccess/FEATURE-USER-MANAGEMENT-SCOPES-AND-PERMISSIONS-PROGRESSO.md) — progresso e etapas (rastreabilidade).
-- [`Features/Done/UserAccess/FEATURE-USER-MANAGEMENT-SCOPES-AND-PERMISSIONS-PlanoImplementacao.md`](Features/Done/UserAccess/FEATURE-USER-MANAGEMENT-SCOPES-AND-PERMISSIONS-PlanoImplementacao.md) — plano geral + Backend / Frontend / Validação CRUD.
-- [`Features/Done/UserAccess/FEATURE-USER-MANAGEMENT-SCOPES-AND-PERMISSIONS-PlanoImplementacao-Frontend.md`](Features/Done/UserAccess/FEATURE-USER-MANAGEMENT-SCOPES-AND-PERMISSIONS-PlanoImplementacao-Frontend.md) — plano de implementação Frontend (guards, diretivas e UX de permissões).
-- [`Features/Done/`](Features/Done/) registra especificações e implementações concluídas (ex.: [`UserAccess/`](Features/Done/UserAccess/)).
-- [`Features/Pendding/`](Features/Pendding/) contém specs ainda em andamento.
-- [`Features/Pendding/PADRONIZACAO-IDIOMA-I18N-E-CENTRALIZACAO-MENSAGENS/04-GUIA-DE-USO-E-IMPLEMENTACAO.md`](Features/Pendding/PADRONIZACAO-IDIOMA-I18N-E-CENTRALIZACAO-MENSAGENS/04-GUIA-DE-USO-E-IMPLEMENTACAO.md) — **como usar** a mensagem funcional da API (`WithMessageKey`, `X-Locale` e os dois planos de localização).
-- [`Features/MCP/`](Features/MCP/) reúne documentação de integração MCP.
-- [`Features/SmartCoreHub-Aspire-CQRS-MediatR/`](Features/SmartCoreHub-Aspire-CQRS-MediatR/) requisitos e plano Aspire + CQRS.
-- [`Features/SmartCoreHub.Core.SDK-ClientCloud/`](Features/SmartCoreHub.Core.SDK-ClientCloud/) unificação CloudClientSDK → `Client/Cloud` no Core.SDK.
-- **Qualidade, Testes e Cobertura:**
-  - [`Backend/COVERAGE AND TEST/`](Backend/COVERAGE%20AND%20TEST/) — Diretrizes de cobertura e saneamento de Code Smells .NET. A suíte de 23/10/2026 passou 6.808 testes.
-    - [Guia Genérico de Cobertura Backend](Backend/COVERAGE%20AND%20TEST/Diretrizes-Coverage-Backend-Generico.md)
-    - [Guia Específico de Cobertura Backend (SmartCoreHub)](Backend/COVERAGE%20AND%20TEST/Diretrizes-Coverage-Backend-SmartCoreHub.md)
-    - [Guia Genérico de Code Smells Backend](Backend/COVERAGE%20AND%20TEST/Diretrizes-CodeSmell-Backend-Generico.md)
-    - [Guia Específico de Code Smells Backend (SmartCoreHub)](Backend/COVERAGE%20AND%20TEST/Diretrizes-CodeSmell-Backend-SmartCoreHub.md)
-  - [`FrontEnd/COVERAGE AND TEST/`](FrontEnd/COVERAGE%20AND%20TEST/) — Diretrizes de cobertura e saneamento de Code Smells TypeScript/Angular/React. A suíte Jest do painel em 23/10/2026 passou 3.119 testes.
-    - [Guia Genérico de Cobertura Frontend](FrontEnd/COVERAGE%20AND%20TEST/Diretrizes-Coverage-Frontend-Generico.md)
-    - [Guia Específico de Cobertura Frontend (SmartCoreHub)](FrontEnd/COVERAGE%20AND%20TEST/Diretrizes-Coverage-Frontend-SmartCoreHub.md)
-    - [Guia Genérico de Code Smells Frontend](FrontEnd/COVERAGE%20AND%20TEST/Diretrizes-CodeSmell-Frontend-Generico.md)
-    - [Guia Específico de Code Smells (SmartCoreHub UI)](FrontEnd/COVERAGE%20AND%20TEST/Diretrizes-CodeSmell-SmartCoreHubUI.md)
-    - [Guia Específico de Code Smells (Localization SDK)](FrontEnd/COVERAGE%20AND%20TEST/Diretrizes-CodeSmell-LocalizationSdkTypeScript.md)
-    - [Guia Específico de Code Smells (Landing Page React)](FrontEnd/COVERAGE%20AND%20TEST/Diretrizes-CodeSmell-LandingPage-React.md)
-    - [Guia Específico de Code Smells (Exemplo Angular)](FrontEnd/COVERAGE%20AND%20TEST/Diretrizes-CodeSmell-FrontendSdkExample-Angular.md)
-- [`General/Outros/`](General/Outros/) contém guias operacionais e material auxiliar; confirme a atualidade antes de usá-lo como instrução normativa (para regras, prefira `PROJECT_GUIDELINES.md`).
+- **Schema Repository Abstraction:** `ISchemaRepository` e token `SCHEMA_REPOSITORY_TOKEN` (hoje servidos por `StaticJsonSchemaRepository`, substituíveis por provedor HTTP sem alterar a UI).
+- **Generic CRUD Layer:** `ICrudOperations`, `PageRequest`, `PageResult<T>`, `API_BASE_URL`, `BaseDataService`, `BaseCrudService`, `BaseCrudRepository` e `createCrudRepositoryToken`.
+- **Workspace Container Reservado:** o arquivo [.devcontainer/docker-compose.yml](../.devcontainer/docker-compose.yml) já declara `backend-container` marcado como *Roadmap V2+*, além da definição em [.devcontainer/backend/devcontainer.json](../.devcontainer/backend/devcontainer.json).
 
-## Segurança
+---
 
-Não coloque secrets, connection strings reais, tokens, certificados ou credenciais em Markdown, `appsettings*.json` versionado ou arquivos Compose. Use User Secrets no desenvolvimento e configuração protegida no ambiente de deployment.
+## Segurança, Privacidade e Governança Git
 
-## Licença
-
-Os componentes podem possuir licenças próprias. Consulte o arquivo `LICENSE` do projeto que será usado, em especial [SmartCoreHub.API/LICENSE](../backend/APIs/SmartCoreHub.API/LICENSE) e [SmartCoreHub.Localization.API/LICENSE](../backend/APIs/SmartCoreHub.Localization.API/LICENSE).
+- **Zero-Knowledge Local (V1):** respostas ficam exclusivamente no navegador ou em arquivos exportados sob controle do usuário; nenhum `[innerHTML]` bruto é utilizado nos templates e o Nginx aplica CSP restrita em produção.
+- **Segredos:** nunca registrar senhas, tokens, certificados ou strings de conexão reais em Markdown, JSON ou Docker Compose.
+- **Governança Git (`R-GOV-GIT`):** alterações em código ou documentação devem permanecer locais no *working directory* para revisão do desenvolvedor; é proibido executar `git commit`, `git push`, criar/alternar `branch` ou abrir `PR` de forma autônoma.

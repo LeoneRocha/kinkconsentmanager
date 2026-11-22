@@ -34,7 +34,7 @@ Este guia define as diretrizes universais. As versões concretas aplicadas em ca
 | **Internacionalização (i18n)** | Atualizar `@ngx-translate/*`, `i18next`, `react-i18next`. |
 | **Exportação e Utilitários Client-Side** | Atualizar bibliotecas de geração de documentos e mídia (`pdfmake`, `html-to-image`) validando APIs ESM/CJS e bundle sizes. |
 | **Tooling, Bundlers e Linters** | Alinhar TypeScript, `@angular/build`, `@angular/cli`, Vite, ESLint (flat config), `typescript-eslint`, `angular-eslint` e Prettier. |
-| **Suítes de Teste e Cobertura** | Atualizar runners (`vitest`, `@vitest/coverage-v8`, `jest`), adaptadores DOM (`jsdom`, `happy-dom`), bibliotecas de asserção (`@testing-library/*`) e repórteres LCOV. |
+| **Suítes de Teste e Cobertura** | Atualizar runners (`jest`, `jest-preset-angular`, `jest-environment-jsdom`, `vitest`, `@vitest/coverage-v8`), adaptadores DOM (`jsdom`, `happy-dom`), bibliotecas de asserção (`@testing-library/*`) e repórteres LCOV/JUnit/Sonar. |
 | **Infraestrutura, Docker e CI/CD** | Atualizar imagens Docker de build e hosting (Node/Nginx Alpine), `nginx.conf`, DevContainers e pipelines CI/CD. |
 
 ### 2.2 Não Escopo
@@ -51,6 +51,7 @@ Este guia define as diretrizes universais. As versões concretas aplicadas em ca
 1. **Inventário Obrigatório Prévio:** Jamais atualizar pacotes às cegas. Executar sempre `npm outdated` e `npm audit` para mapear o cenário completo antes de qualquer alteração.
 2. **Atualização por Blocos Coesos:**
    - No **Angular**: Todos os pacotes `@angular/*`, `@angular/cli`, `@angular/build` e `@angular/compiler-cli` devem estar alinhados na mesma minor/patch compatível.
+   - No **Jest**: `jest`, `jest-environment-jsdom`, `@types/jest` e `jest-preset-angular` devem permanecer em faixa compatível entre si e com a versão ativa do Angular/TypeScript.
    - No **Vitest**: `vitest` e `@vitest/coverage-v8` devem permanecer rigorosamente na **mesma versão major.minor** para evitar alertas de incompatibilidade em runtime.
    - No **PrimeNG**: `primeng` e `@primeuix/themes` / `primeicons` devem ser validados em conjunto.
 3. **Respeito Rígido aos Ranges de Node.js e TypeScript:**
@@ -70,7 +71,7 @@ flowchart TD
     BlocoB["Bloco B: Estado, Rotas e i18n\nSignals / Router / @ngx-translate"]
     BlocoC["Bloco C: UI, Design System e Exportacao\nPrimeNG / PrimeUIX / pdfmake / html-to-image"]
     BlocoD["Bloco D: Tooling, Linters e TypeScript\nTypeScript / Prettier / ESLint"]
-    BlocoE["Bloco E: Suite de Testes e Cobertura\nVitest / @vitest/coverage-v8 / jsdom"]
+    BlocoE["Bloco E: Suite de Testes e Cobertura\nJest / jest-preset-angular / Vitest / jsdom"]
     BlocoF["Bloco F: Containers, Nginx e CI/CD\nDockerfile / nginx.conf / DevContainers / Sonar"]
 
     BlocoA --> BlocoB
@@ -90,7 +91,7 @@ flowchart TD
 3. **Fase 2 — Estado e i18n:** Atualizar `@ngx-translate/*` verificando assinaturas (`provideTranslateService` / `provideTranslateHttpLoader`).
 4. **Fase 3 — UI, Design System e Exportadores:** Atualizar PrimeNG, `@primeuix/themes`, `pdfmake` e `html-to-image` verificando CSS/theming e imports ESM/CJS.
 5. **Fase 4 — Tooling e TypeScript:** Atualizar TypeScript dentro do range suportado e validar `npx.cmd tsc --noEmit`.
-6. **Fase 5 — Testes Automatizados e Cobertura:** Alinhar `vitest` + `@vitest/coverage-v8` + `jsdom` e confirmar 100% dos testes e geração de `lcov.info`.
+6. **Fase 5 — Testes Automatizados e Cobertura:** Alinhar `jest` + `jest-preset-angular` + `jest-environment-jsdom` (ou `vitest` + `@vitest/coverage-v8`) + `jsdom` e confirmar 100% dos testes e geração de `lcov.info`.
 7. **Fase 6 — Compilação de Produção:** Rodar `npm.cmd run build:prod` e conferir artefatos e budgets em `dist/`.
 8. **Fase 7 — Infraestrutura, Nginx e Evidências:** Validar alinhamento com `Dockerfile`, `nginx.conf` e registrar o `<AAAA-MM-DD>-ConjuntoHomologado-Frontend.md`.
 
@@ -131,6 +132,7 @@ npm.cmd audit --omit=dev
 
 | Risco / Sintoma | Impacto | Estratégia de Mitigação |
 | --------------- | ------- | ----------------------- |
+| **Incompatibilidade entre `jest` / `jest-preset-angular` e ESM (`.mjs`)** | Falha ao carregar pacotes Angular/PrimeNG | Manter `jest` e `jest-preset-angular` compatíveis e revisar `transformIgnorePatterns` no `jest.config.js`. |
 | **Divergência entre `vitest` e `@vitest/coverage-v8`** | Erro ou warnings na geração de cobertura | Manter ambos exatamente na mesma versão major.minor. |
 | **Divergência entre TypeScript e Angular Compiler** | Erros de compilação ou versão não suportada | Respeitar a trava `typescript` suportada pelo `@angular/compiler-cli` ativo. |
 | **Breaking changes em `pdfmake` / `html-to-image`** | Falha de exportação PDF/PNG em runtime | Validar chamadas de `addVirtualFileSystem` e `toPng` em testes e no build lazy chunk. |

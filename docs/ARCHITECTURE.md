@@ -1,267 +1,285 @@
-# 🏛️ Arquitetura - SmartCoreHub
+# Arquitetura — KinkConsentManager
 
-Documentação centralizada da arquitetura, princípios, camadas, padrões, decisões técnicas, exemplos e boas práticas do SmartCoreHub.
-
-[[_TOC_]]
+Documentação centralizada da arquitetura, princípios, camadas, padrões, decisões técnicas, contratos genéricos e boas práticas do **KinkConsentManager**.
 
 ---
 
 ## Índice
-1. [Visão Geral e Objetivos](#visão-geral-e-objetivos)
-2. [Princípios e Padrões](#princípios-e-padrões)
-3. [Estrutura de Camadas](#estrutura-de-camadas)
-4. [Diagrama de Arquitetura](#diagrama-de-arquitetura)
-5. [Detalhamento das Camadas](#detalhamento-das-camadas)
-6. [Padrões e Boas Práticas](#padrões-e-boas-práticas)
-7. [Decisões Técnicas](#decisões-técnicas)
-8. [Exemplos de Código](#exemplos-de-código)
-9. [FAQ](#faq)
-10. [Links Úteis](#links-úteis)
-11. [Catálogo de tecnologias e recursos](#catálogo-de-tecnologias-e-recursos)
+
+1. [Visão Geral e Objetivos](#1-visão-geral-e-objetivos)
+2. [Princípios e Padrões](#2-princípios-e-padrões)
+3. [Estrutura de Camadas do Repositório](#3-estrutura-de-camadas-do-repositório)
+4. [Diagrama de Arquitetura](#4-diagrama-de-arquitetura)
+5. [Detalhamento das Camadas](#5-detalhamento-das-camadas)
+6. [Padrões, Segurança e Decisões Técnicas](#6-padrões-segurança-e-decisões-técnicas)
+7. [Exemplos de Código](#7-exemplos-de-código)
+8. [FAQ](#8-faq)
+9. [Links Úteis](#9-links-úteis)
+10. [Catálogo de Tecnologias e Recursos](#10-catálogo-de-tecnologias-e-recursos)
 
 ---
 
 ## 1. Visão Geral e Objetivos
 
-O SmartCoreHub é uma plataforma multi-tenant de localização e operação (tenants, aplicações, planos, traduções e integrações servidor a servidor). A arquitetura segue SOLID e Clean Architecture.
+O **KinkConsentManager** é uma plataforma *privacy-first* (arquitetura **Zero-Knowledge** no cliente) voltada para preenchimento guiado, visualização estruturada e exportação segura de checklists de limites e consentimento.
 
-- Duas APIs ASP.NET Core: plataforma (`SmartCoreHub.API`) e localização para clientes (`SmartCoreHub.Localization.API`)
-- Autenticação JWT Bearer, API Key (`X-Auth-Token`) e MFA por código
-- IAM com perfis de acesso, escopos e membership N:N de tenant e aplicação
-- Painel admin Angular, landing React, SDK .NET, SDK TypeScript e extensões de IDE
-- CQRS nos fluxos complexos via `IApplicationDispatcher` (MediatR fica só no adapter do Core.SDK)
-- Mensagens funcionais da API separadas do conteúdo de tradução do tenant
+- **Escopo oficial da V1 (implementado em `frontend/`):**
+  - Aplicação SPA **100% client-side** em **Angular 22** (Standalone Components, Signals e execução *zoneless*), com **PrimeNG 22** (tema Aura) e **PrimeIcons 8**.
+  - Rotas principais carregadas sob demanda (*lazy loading*): `/checklist` e `/export`.
+  - Arquitetura **Schema-Driven UI** (`checklist-v1.json`), completamente separada dos dicionários de internacionalização (`@ngx-translate/core` 18 em `pt-BR` e `en-US`).
+  - Três modos complementares de preenchimento: *Accordion + Próxima Categoria*, *View Full* e *Quick-Fill Wizard*.
+  - Persistência local resiliente em `localStorage` (`LocalStoragePersistenceService`), sem envio de respostas a servidores.
+  - Exportação e portabilidade 100% no navegador: **PNG (`1200px`)**, **PDF programático** (`pdfmake` em *chunk lazy*), **JSON Draft** (exportação e reimportação com validação de `schemaVersion`) e **CSV UTF-8 com BOM** (`\uFEFF`, compatível com Excel).
+  - Camada genérica de contratos e acesso a dados já preparada (`ICrudOperations`, `BaseDataService`, `BaseCrudService`, `BaseCrudRepository`, `ISchemaRepository`) para futura evolução modular.
+- **Backend — Coming Soon (Roadmap V2+):**
+  - Ainda **não existe implementação de backend** neste repositório na V1.
+  - Módulos de servidor, persistência remota, sincronização criptografada de ponta a ponta (Zero-Knowledge E2E) e demais recursos descritos em [Bueprint.md](./Bueprint.md) ficam documentados em alto nível como **Coming Soon** para definição e execução a partir da V2+.
+
+---
 
 ## 2. Princípios e Padrões
 
-- SOLID, Clean Architecture, Separation of Concerns
-- Repository Pattern, Factory Pattern, CQRS com dispatcher próprio
-- DTOs, Value Objects, Generics, Extension Methods
-- Injeção de dependência e Central Package Management (`Directory.Packages.props`)
+- **Zero-Knowledge & Privacy-First (V1):** nenhum dado preenchido pelo usuário sai do dispositivo na V1; zero chamadas externas de telemetria, zero renderização de HTML dinâmico bruto (`[innerHTML]`) e política CSP restrita em produção via Nginx.
+- **Schema-Driven UI & i18n Desacoplado:** estrutura, ordem, tipos de questão e escalas residem no schema estático (`checklist-v1.json`); todos os textos legíveis residem nos arquivos de tradução (`assets/i18n/{lang}.json`), validados por teste automatizado de paridade.
+- **SOLID & Separation of Concerns:** páginas inteligentes (*Smart Pages*) orquestram estado e serviços; componentes compartilhados (*Dumb Components*) permanecem desacoplados e orientados a `input()` / `output()`.
+- **Regra dos 4+1 Arquivos:** todo componente possui pasta própria com `.component.ts`, `.component.html`, `.component.scss`, `.component.spec.ts` e barrel `index.ts`, com `ChangeDetectionStrategy.OnPush` e proibição de templates inline.
+- **Repository Pattern & Camada CRUD Genérica:** contratos base reutilizáveis (`ICrudOperations`, `BaseDataService`, `BaseCrudService`, `ICrudRepository`, `BaseCrudRepository`, `ISchemaRepository`) com `InjectionToken` (`SCHEMA_REPOSITORY_TOKEN`, `API_BASE_URL`, `createCrudRepositoryToken`).
+- **Reactive State com Angular Signals (`BaseStateService`):** estado imutável baseado em `signal()`, `computed()` e `asReadonly()`, em modo **Angular 22 zoneless**.
 
-## 3. Estrutura de Camadas
+---
 
+## 3. Estrutura de Camadas do Repositório
+
+### 3.1 Mapa da Raiz
+
+```text
+kinkconsentmanager/
+├── .devcontainer/                 # Ambiente padronizado (frontend ativo + backend-container reservado V2+)
+├── docs/                          # Documentação centralizada (arquitetura, diretrizes, specs V1 e guias frontend)
+├── frontend/                      # Aplicação SPA Angular 22 (V1 Checklist & Export) + Docker/Nginx/Jest/Sonar
+├── references/                    # Código e referências históricas analisadas na concepção da V1
+└── backend/                       # [Coming Soon — Roadmap V2+] Ainda não implementado na V1
 ```
-backend/
-├── APIs/                        # Endpoints REST
-├── Core/                        # SmartCoreHub.Core.SDK (NuGet único multi-TFM)
-├── Implementations/
-│   ├── SmartCoreHub.Domain/         # Entidades de feature, validators, contratos de negócio
-│   ├── SmartCoreHub.Infrastructure/ # DbContext, repositórios de domínio, migrations
-│   └── SmartCoreHub.Service/        # Lógica de negócio, DTOs
-├── SDKs/                        # Localization.SDK .NET e extensões de IDE
-├── MCP/                         # Servidores Model Context Protocol
-├── Orchestration/               # AppHost Aspire (opt-in) e ServiceDefaults
-frontend/                        # Painel admin Angular
-frontendsdk/                     # SDK TypeScript (@smartcorehub/localization-sdk)
-landingpage/                     # Landing pública React
+
+### 3.2 Camadas Internas do Frontend (`frontend/src/app/`)
+
+```text
+frontend/src/app/
+├── app.component.{ts,html,scss,spec.ts}   # App Shell (alternância de idioma, toast/mensageria e RouterOutlet)
+├── app.config.ts                          # Providers globais (Router, HttpClient, TranslateService, SCHEMA_REPOSITORY_TOKEN)
+├── app.routes.ts                          # Roteamento raiz lazy (/checklist, /export)
+├── core/
+│   ├── models/                            # Contratos IMutáveis, Schema, Respostas, ExportConfig, CrudModels e __tests__
+│   ├── repositories/                      # ISchemaRepository, StaticJsonSchemaRepository, ICrudRepository, BaseCrudRepository
+│   └── services/                          # BaseStateService, BaseDataService, BaseCrudService, ChecklistStateService, I18nService, LocalStoragePersistenceService
+├── shared/
+│   ├── components/                        # 5 Dumb Components (4+1): dynamic-question-item, full-grid-preview, legend-bar, progress-indicator, scale-selector
+│   └── pipes/                             # SchemaTranslatePipe (resolução reativa de chaves do schema)
+└── features/
+    ├── checklist/                         # Rotas, ChecklistPageComponent, CategoryAccordion, ChecklistHeader, FullViewContainer, QuickFillWizardModal e helpers
+    └── export/                            # Rotas, ExportPageComponent, ExportActionsToolbar e serviços (Flatten, PNG, PDF, JSON Draft, CSV, FileDownload)
 ```
 
-Tipos genéricos e reutilizáveis (entidades base, Result/Guard, DTOs comuns, `IGenericService<>`, repositórios genéricos EF/Dapper, providers de cache, adapters Azure/JWT/AutoMapper/sanitização e utilitários de EF) têm fonte única no [`SmartCoreHub.Core.SDK`](../backend/Core/SmartCoreHub.Core.SDK/README.md); `Implementations` mantém apenas o específico do produto.
+---
 
 ## 4. Diagrama de Arquitetura
 
 ```mermaid
-graph TB
-	Admin[Painel Angular] --> Api[SmartCoreHub.API]
-	Sdk[SDKs .NET e TypeScript] --> LocApi[Localization.API]
-	Mcp[MCP] --> Api
-	Mcp --> LocApi
-	Api --> Dispatcher[IApplicationDispatcher]
-	LocApi --> Dispatcher
-	Dispatcher --> Service
-	Api --> Service
-	Service --> Domain
-	Service --> Infrastructure
-	Infrastructure --> Domain
-	Service --> Core[Core.SDK]
-	Api --> Core
+flowchart TD
+    Browser["Navegador / PWA Client"] --> Nginx["Nginx Alpine CSP + /health (Docker Prod)"]
+    Nginx --> Shell["App Shell Angular 22 (Zoneless + Signals + OnPush)"]
+
+    Shell --> ChecklistRoute["/checklist (Lazy Feature)"]
+    Shell --> ExportRoute["/export (Lazy Feature)"]
+
+    ChecklistRoute --> DumbKit["Shared Atomic UI Kit (5 Dumb Components + SchemaTranslatePipe)"]
+    ExportRoute --> DumbKit
+
+    ChecklistRoute --> CoreState["ChecklistStateService + BaseStateService + I18nService"]
+    ExportRoute --> CoreState
+    ExportRoute --> ExportServices["Export Services (Flatten, PNG, PDF Lazy, JSON Draft, CSV, Download)"]
+
+    CoreState --> Storage["LocalStoragePersistenceService (try/catch local)"]
+    ChecklistRoute --> RepoLayer["ISchemaRepository / StaticJsonSchemaRepository"]
+    ExportRoute --> RepoLayer
+
+    RepoLayer --> StaticAssets["Assets Estáticos (checklist-v1.json + pt-BR.json / en-US.json)"]
+    CrudLayer["Generic CRUD Layer (BaseCrudRepository -> BaseCrudService -> BaseDataService)"] -. "Pronto para V2+ via API_BASE_URL" .-> BackendSoon["Backend API (Coming Soon — Roadmap V2+)"]
 ```
+
+---
 
 ## 5. Detalhamento das Camadas
 
-### Core (SmartCoreHub.Core.SDK)
-NuGet único multi-TFM (`netstandard2.0` → `net10.0`) com primitivas de domínio, contratos e implementações genéricas. Dependências pesadas (EF, Dapper, Redis, Mongo, Cosmos, Azure, JWT, AutoMapper, HtmlSanitizer) entram apenas nos TFMs `net8.0`/`net10.0` via `Compile Remove` + `PackageReference` condicionais.
+### 5.1 Core Layer (`src/app/core/`)
 
-### Domain Layer
-Define entidades, value objects e contratos de domínio.
+- **Models (`core/models/`):** contratos tipados para schema (`ChecklistSchema`), respostas (`ChecklistAnswer`, `ChecklistDraft`), exportação (`ExportConfig`, `ExportResult`), paginação/CRUD genérico (`EntityId`, `QueryParams`, `PageRequest`, `PageResult<T>`, `ICrudOperations`) e suíte de integridade estrutural (`__tests__/schema-integrity.spec.ts`).
+- **Repositories (`core/repositories/`):**
+  - `ISchemaRepository` + `SCHEMA_REPOSITORY_TOKEN`: abstrai a origem do checklist schema. Na V1 é provido por `StaticJsonSchemaRepository` (com cache e evicção de erro antes do `shareReplay(1)`).
+  - `ICrudRepository<T, TId, TCreate, TUpdate>` + `BaseCrudRepository` + `createCrudRepositoryToken`: repositório genérico que delega persistência a um serviço `ICrudOperations` (ex.: `BaseDataService` ou `BaseCrudService`), com cache opcional em memória e invalidação automática em mutações.
+- **Services (`core/services/`):**
+  - `BaseStateService<T>`: container reativo genérico baseado em Angular Signals (`state`, `select()`, `setState()`, `resetState()`).
+  - `BaseDataService<T, ...>`: cliente HTTP genérico baseado em `HttpClient` e `API_BASE_URL`, padronizando `getAll`, `getPage`, `getById`, `create`, `update`, `patch` e `delete`.
+  - `BaseCrudService<T, ...>`: camada de aplicação/domínio genérica sobre `ICrudOperations` com hooks de ciclo de vida (`beforeCreate`, `afterLoadList`, etc.).
+  - `ChecklistStateService`: gerencia schema ativo, respostas, progresso, seleção de modo de visualização, restauração automática do `localStorage` e importação de rascunhos.
+  - `I18nService`: coordena `@ngx-translate/core` (`pt-BR` / `en-US`) preservando intactas as respostas ao alternar idioma em tempo real.
+  - `LocalStoragePersistenceService`: leitura e escrita seguras protegidas por `try/catch` (resiliente a modo anônimo, SSR/jsdom e `QuotaExceededError`).
 
-Exemplo:
-```csharp
-public class Client {
-	public Guid Id { get; set; }
-	public string Name { get; set; }
-	public virtual ICollection<CloudConfiguration> CloudConfigurations { get; set; } = new List<CloudConfiguration>();
-}
-```
+### 5.2 Shared UI Kit & Pipes (`src/app/shared/`)
 
-### Infrastructure Layer
-Implementa acesso a dados, integrações externas e repositórios.
+- **Componentes Dumb (regra 4+1 arquivos, `OnPush`, sem estado global):**
+  - `ScaleSelectorComponent`: seletor acessível de escalas com navegação por teclado e tokens visuais.
+  - `DynamicQuestionItemComponent`: renderização orientada ao tipo do item (`scale_matrix`, opções simples/múltiplas, texto livre/outro, modo dual-role).
+  - `LegendBarComponent`: legenda dinâmica das escalas e cores do schema ativo.
+  - `ProgressIndicatorComponent`: indicador de progresso respondido vs. total.
+  - `FullGridPreviewComponent`: prévia consolidada vertical (`1200px` para captura/impressão e leitura).
+- **Pipes (`shared/pipes/`):**
+  - `SchemaTranslatePipe`: traduz dinamicamente chaves de categorias, itens, escalas, papéis (*roles*) e opções.
 
-Exemplo:
-```csharp
-public class ClientRepository : IClientRepository {
-	private readonly SmartCoreHubDbContext _context;
-	// ... métodos CRUD ...
-}
-```
+### 5.3 Features V1 (`src/app/features/`)
 
-### Service Layer
-Orquestra regras de negócio, faz conversão DTO e coordena operações.
+- **Feature `checklist/`:** página inteligente `ChecklistPageComponent`, cabeçalho `ChecklistHeaderComponent`, navegação por categoria em acordeão `CategoryAccordionComponent`, modo completo `FullViewContainerComponent`, preenchimento guiado `QuickFillWizardModalComponent` e utilitários puros em `checklist-view.helpers.ts`.
+- **Feature `export/`:** página inteligente `ExportPageComponent`, barra `ExportActionsToolbarComponent` e serviços especializados: `ChecklistFlattenService`, `PngExportService` (com token injetável `PNG_RENDERER` sobre `html-to-image`), `PdfExportService` (carregamento dinâmico via `PDF_MAKER_LOADER` sobre `pdfmake` 0.3 + `addVirtualFileSystem`), `JsonDraftService`, `CsvExportService` e `FileDownloadService`.
 
-Exemplo:
-```csharp
-public class UserService : IUserService {
-	private readonly IUserBusiness _userBusiness;
-	// ... métodos de orquestração ...
-}
-```
+### 5.4 Infraestrutura, Containers e Hosting (`frontend/` e `.devcontainer/`)
 
-### API Layer
-Controllers, endpoints REST, autenticação e validação.
+- **[Dockerfile](../frontend/Dockerfile):** build *multi-stage* (estágios de desenvolvimento, compilação Angular de produção e runtime enxuto em **Nginx Alpine**).
+- **[nginx.conf](../frontend/nginx.conf):** entrega da SPA com `try_files`, cabeçalhos de segurança e **Content-Security-Policy (CSP)**, endpoint de saúde `/health`, `Cache-Control: no-store` em `index.html`, `no-cache, must-revalidate` em `/assets/` e cache longo `immutable` em bundles com hash.
+- **[docker-compose.yml](../frontend/docker-compose.yml)** & **[dockercompose.prod.yml](../frontend/dockercompose.prod.yml):** orquestração local (`:8082` em produção local, profile `dev` na `:4200`) e produção (`:80`) com *healthcheck*.
+- **[.devcontainer/docker-compose.yml](../.devcontainer/docker-compose.yml):** ambiente isolado Node 24 (`frontend-container` ativo e `backend-container` já reservado para o Roadmap V2+).
 
-### ClientSDK
-SDK para consumo externo da API.
+### 5.5 Backend (Genérico — Coming Soon)
 
-### Tests
-Testes unitários e de integração para todas as camadas.
+> **Status Atual:** **Não implementado (Coming Soon / Roadmap V2+).** A V1 funciona integralmente no navegador sem dependência de API ou banco de dados.
 
-## 6. Padrões e Boas Práticas
+Quando o backend for introduzido em ciclos futuros (V2+), deverá seguir diretrizes arquiteturais genéricas e agnósticas à linguagem/framework que for escolhido no momento:
 
-- Cada camada tem responsabilidade única (SRP)
-- Entities sem lógica de negócio
-- Business isolada e testável
-- Repositórios apenas para acesso a dados
-- DTOs para comunicação entre camadas
-- Injeção de dependência para baixo acoplamento
-- **Encapsulamento de Cache (R-ARCH-CACHE)**: Toda implementação que exigir cache deve obrigatoriamente utilizar o motor genérico do SDK (`SmartCoreHub.Core.SDK.Service.Caching.CacheService` / `ICacheService`), que atua como gateway único para todos os provedores e tiers (Memória, Redis, MongoDB, Cosmos). Todos os provedores e adapters de infraestrutura residem exclusivamente no `Core.SDK`. Os serviços de negócio das features (ex.: `LocalizationResourceMultiTierCacheService`) devem conter estritamente a orquestração e a lógica de domínio, interagindo com todos os tiers por meio do `Core.SDK.CacheService` e isolando cada nível em métodos encapsulados. É terminantemente proibido injetar providers brutos (Redis/MongoDB/Memory) diretamente em serviços de negócio ou criar adapters redundantes.
-- **Contrato de Enums Frontend-Backend (R-ARCH-ENUM-NUMERIC)**: Todo payload JSON enviado pelo Frontend para endpoints da API deve obrigatoriamente trafegar enums como valores inteiros numéricos (`0, 1, 2, ...`), nunca como nomes textuais/strings. O backend .NET (`System.Text.Json`) serializa e desserializa enums nativamente por número. O envio de strings é terminantemente proibido em novas implementações para eliminar conversores customizados redundantes (`JsonConverter`) e garantir consistência com colunas JSON de banco de dados e snapshots de migração EF Core.
-- Cadeias de migration por provedor no Infrastructure (não misturar MySQL/PG/SQL Server)
-- Identificadores em inglês, comentários em português e mensagens de runtime em inglês
-- Testes automatizados para regras de negócio
-- Documentação sempre atualizada
+- **Separação em Camadas:** distinção clara entre borda HTTP/API (rotas, autenticação/autorização, DTOs), lógica de aplicação/domínio (validações, regras de negócio, criptografia/auditoria) e persistência/repositórios.
+- **Compatibilidade com o Frontend Existente:** contratos REST/JSON alinhados aos tipos já preparados em `frontend/src/app/core/models/crud.model.ts` (`PageRequest`, `PageResult<T>`, query params) e consumo transparente via `BaseDataService` + `API_BASE_URL` (permitindo substituir ou estender `SCHEMA_REPOSITORY_TOKEN` e novos repositórios sem reescrever componentes visuais).
+- **Zero-Knowledge & Segurança:** caso haja sincronização, compartilhamento ou histórico em nuvem, priorizar criptografia de ponta a ponta (*Zero-Knowledge E2E* conforme [Bueprint.md](./Bueprint.md)), cabeçalhos de segurança, CORS estrito, proteção contra CSRF/injeção, logs sem dados sensíveis e endpoints de prontidão (`/health`, `/ready`).
+- **Contratos & Observabilidade:** especificação OpenAPI/REST documentada, códigos HTTP padronizados e suíte de testes automatizados cobrindo contratos, regras de negócio e persistência.
 
-## 7. Decisões Técnicas
+### 5.6 Testes e Qualidade (`Jest 30` + `SonarCloud`)
 
-- Migrations no projeto `SmartCoreHub.Infrastructure`, pastas `Migrations/MySql|SqlServer|PostgreSql`
-- Contextos tipados (`SmartCoreHubDbContextMySql` / `SqlServer` / `PostgreSql`) + histórico EF por provedor
-- Runtime escolhe o provedor via `DatabaseProvider` + `ConnectionStrings:DefaultConnection`
-- DevContainer para ambiente padronizado
-- API documentada com Swagger, Scalar, ReDoc, RapiDoc e OpenAPI nativo (`/openapi/v1.json`)
-- EF Core 9 sobre o host .NET 10: o provider MySQL (Pomelo 9) ainda não acompanha o EF 10
-- Scripts para build, migrations e testes
-- Observabilidade opcional: Serilog, Application Insights e OpenTelemetry/OTLP
-- Mensagem funcional da API (`IFunctionalMessageProvider`) é outro plano do conteúdo de tenant (`ILocalizationProvider`). A regra guarda `.WithMessage` em inglês, `ErrorCode` sintético e `.WithMessageKey`. `X-Locale` vence `Accept-Language` e escolhe `en-US`, `pt-BR` ou `es-ES`. Sem cultura reconhecida, o padrão funcional é `en-US`. O painel envia os dois cabeçalhos com a cultura do seletor ou, sem escolha, a do navegador.
-- Serialização de Enums: o backend adota enums inteiros numéricos padrão do .NET (`System.Text.Json`). O Frontend trafega obrigatoriamente valores numéricos correspondentes, assegurando integridade e evitando converters customizados e desvios de formato em colunas JSON de banco.
-
-## 8. Exemplos de Código
-
-### Migration via Script
-```powershell
-./scripts/create-migration.ps1 -MigrationName "AddUserIsActiveIndex" -DatabaseProvider "PostgreSQL"
-./scripts/create-migration.ps1 -MigrationName "AddUserIsActiveIndex" -DatabaseProvider "PostgreSQL" -UpdateDatabase
-```
-
-### Migration via EF Tools (PostgreSQL)
-```bash
-cd backend
-dotnet ef migrations add AddUserIsActiveIndex_PostgreSql \
-  --project Implementations/SmartCoreHub.Infrastructure/SmartCoreHub.Infrastructure.csproj \
-  --startup-project APIs/SmartCoreHub.API/SmartCoreHub.API.csproj \
-  --context SmartCoreHubDbContextPostgreSql \
-  --output-dir Migrations/PostgreSql \
-  -- --environment Development
-
-dotnet ef database update \
-  --project Implementations/SmartCoreHub.Infrastructure/SmartCoreHub.Infrastructure.csproj \
-  --startup-project APIs/SmartCoreHub.API/SmartCoreHub.API.csproj \
-  --context SmartCoreHubDbContextPostgreSql \
-  -- --environment Development
-```
-
-Guia completo (incluindo trocar runtime para PostgreSQL): [General/Outros/EF-MIGRATIONS-HOWTO.md](./General/Outros/EF-MIGRATIONS-HOWTO.md).
-
-### Teste Unitário de Business
-```csharp
-[Test]
-public async Task CreateClient_WithValidData_ShouldCreateClient() {
-	// Arrange
-	// ...mock e setup...
-	// Act
-	// ...chamada...
-	// Assert
-	// ...verificações...
-}
-```
-
-## 9. FAQ
-
-**1. Como o multi-banco funciona nas migrations?**
-> Model compartilhado + três contextos tipados e pastas/históricos separados. Trocar o runtime = `DatabaseProvider` + connection string; dados exigem ETL (ver EF-MIGRATIONS-HOWTO).
-
-**2. Como garantir testabilidade?**
-> Isolando regras de negócio e usando interfaces para mocks.
-
-**3. Como adicionar um novo serviço de nuvem?**
-> Implemente a interface e registre na factory de serviços.
-
-**4. Como documentar endpoints?**
-> Use Swagger e mantenha exemplos atualizados.
-
-**5. Como a API devolve a mensagem no idioma do cliente?**
-> Envie `X-Locale` (`en-US`, `pt-BR` ou `es-ES`). Esse cabeçalho vence `Accept-Language`. A chave (`messageKey`) permanece; o texto muda. Sem cultura reconhecida, o padrão funcional é `en-US`. O guia está em [04-GUIA-DE-USO-E-IMPLEMENTACAO.md](./Features/Pendding/PADRONIZACAO-IDIOMA-I18N-E-CENTRALIZACAO-MENSAGENS/04-GUIA-DE-USO-E-IMPLEMENTACAO.md).
-
-## 10. Links Úteis
-
-- [Guia do Desenvolvedor](./General/Outros/DEVELOPER-GUIDE.md)
-- [EF Core — migrations e troca de provedor](./General/Outros/EF-MIGRATIONS-HOWTO.md)
-- [Documentação do SDK](./Features/FEITOS/SDK-README.md)
-- [Guia da API REST](./General/Outros/api-README.md)
-- [Guia do Frontend](./General/Outros/frontend-README.md)
-- [Mensagens funcionais — guia de uso](./Features/Pendding/PADRONIZACAO-IDIOMA-I18N-E-CENTRALIZACAO-MENSAGENS/04-GUIA-DE-USO-E-IMPLEMENTACAO.md)
-- [Clean Architecture - Uncle Bob](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html)
-- [SOLID Principles](https://en.wikipedia.org/wiki/SOLID)
-- [Entity Framework Core](https://docs.microsoft.com/ef/core/)
+- **Runner:** **Jest 30** com **`jest-preset-angular` 17** (`setupZonelessTestEnv()`) e **`jest-environment-jsdom`**.
+- **Suíte Baseline V1 (2026-11-22):** **29 arquivos `.spec.ts`**, **150 testes unitários aprovados (100%)**, cobertura global de **92,18% Statements** / **91,84% Lines** (`>= 95%` em repositórios e serviços core).
+- **Relatórios e Governança Estática:** `lcov.info`, `sonar-report.xml`, `junit/test-results.xml` e relatórios HTML (`coverage/html`, `coverage/jest-stare`, `coverage/jest-html-reporters`), alinhados a [sonar-project.properties](../frontend/sonar-project.properties) e Prettier.
 
 ---
 
-## 11. Catálogo de tecnologias e recursos
+## 6. Padrões, Segurança e Decisões Técnicas
 
-Versões lidas em 23/10/2026. A fonte viva é `backend/global.json`, `backend/Directory.Packages.props` e `frontend/package.json`.
-
-### Plataforma
-
-| Área | Tecnologia |
-|---|---|
-| Runtime | .NET SDK 10.0.300 (`rollForward: latestFeature`), ASP.NET Core 10.0.13 |
-| Core.SDK | `net8.0`, `net10.0`, `net6.0`, `netstandard2.1`, `netstandard2.0`. Dependências pesadas só em `net8.0` e `net10.0` |
-| Dados | EF Core 9.0.20. MySQL (Pomelo 9.0.0, padrão), SQL Server, PostgreSQL (Npgsql 9.0.4), InMemory e SQLite. Leitura intensiva com Dapper 2.1.89 |
-| Cache e nuvem | Memory cache, Redis, MongoDB, Azure Cosmos, Blob, Queue, Table e `Azure.Identity` |
-| CQRS | `IApplicationDispatcher`; MediatR 12.5.0 só como adapter |
-| Validação e mapa | FluentValidation 12.2.0; AutoMapper 16.2.0 atrás de `ISmartCoreHubMapper` |
-| Segurança | JWT Bearer 8.23.0, BCrypt.Net-Next, API Key, MFA, HtmlSanitizer, Polly |
-| Observabilidade | Serilog, Application Insights 3.2.0, OpenTelemetry 1.20.x |
-| Documentação HTTP | Swashbuckle 10.3.1, Scalar 2.18.2, ReDoc, RapiDoc |
-| Orquestração local | .NET Aspire Hosting 13.6.2, opt-in. Não substitui o Azure App Service |
-| Relatórios no Core.SDK | OpenXml, PDFsharp e QuestPDF |
-| IA no Core.SDK | Semantic Kernel e conectores OpenAI, Ollama e Mistral |
-| Testes backend | NUnit 4.6.1, Moq, AwesomeAssertions, Bogus, Coverlet e Testcontainers |
-
-### Clientes
-
-| Superfície | Tecnologia |
-|---|---|
-| Painel admin | Angular 22.2, Angular Material, PrimeNG 21, ngx-translate 17, RxJS 7.8, TypeScript 6.0, Bootstrap 5, Jest 30. Node `^22.22.3`, `^24.15.0` ou `>=26` |
-| Idiomas da interface | `pt-BR`, `en-US`, `es-ES`, `fr-FR`, `de-DE`, `ja-JP`, `zh-CN`. A API funcional traduz `en-US`, `pt-BR` e `es-ES` |
-| Landing | React 19, Vite e i18next |
-| SDK de cliente | `SmartCoreHub.Localization.SDK` (.NET) e `@smartcorehub/localization-sdk` (TypeScript) |
-| IDE | Extensões VS Code e Cursor do Localization SDK e do Core.SDK |
-| Agentes | Servidores MCP da plataforma e da Localization API |
-
-### Recursos funcionais da API principal
-
-Autenticação e MFA, usuários, perfis de acesso e escopos, tenants, aplicações, configuração de aplicação, tokens de API e telemetria, métricas diárias de uso, planos, assinaturas, compras e eventos de cobrança, configuração de nuvem, Blob, Queue e Table, recursos de localização (busca, importação, exportação, clone e glossário), templates e variáveis de notificação, auditoria e informação de versão do produto.
+- **Separação Estrita Schema ↔ Tradução:** o arquivo `checklist-v1.json` nunca armazena textos em português/inglês diretamente; armazena IDs estáveis mapeados pelos dicionários `pt-BR.json` e `en-US.json`. Isso permite adicionar novos idiomas sem alterar o schema nem invalidar rascunhos salvos (`schemaVersion`).
+- **Prevenção de Cache Permanente de Erro:** em repositórios com `shareReplay(1)` (`StaticJsonSchemaRepository`, `BaseCrudRepository`), `catchError` limpa a referência em cache antes de propagar o erro, permitindo novas tentativas imediatas (*retry*).
+- **Tokens de Injeção para Bibliotecas Pesadas e DOM:** `PNG_RENDERER` (`html-to-image`) e `PDF_MAKER_LOADER` (`pdfmake` 0.3 via `addVirtualFileSystem`) permitem *code-splitting* em produção e *mocking* determinístico no Jest sem renderização real de canvas.
+- **Portabilidade Segura de Rascunhos:** `JsonDraftService` valida estrutura e compatibilidade de `schemaVersion`; `CsvExportService` aplica `\uFEFF` (UTF-8 BOM) e escape RFC-4180 completo.
+- **Execução Zoneless:** sem dependência de `zone.js`; toda reatividade flui via Angular Signals e APIs de teste Jest compatíveis com `setupZonelessTestEnv()`.
 
 ---
 
-**Esta arquitetura garante escalabilidade, manutenibilidade e facilidade de onboarding para novos desenvolvedores!**
+## 7. Exemplos de Código
+
+### Estado Reativo Genérico (`BaseStateService`)
+
+```typescript
+export abstract class BaseStateService<T extends object> {
+  protected readonly stateSignal: WritableSignal<T>;
+  readonly state: Signal<T>;
+
+  protected constructor(initialState: T) {
+    this.stateSignal = signal(initialState);
+    this.state = this.stateSignal.asReadonly();
+  }
+
+  select<K extends keyof T>(key: K): Signal<T[K]> {
+    return computed(() => this.stateSignal()[key]);
+  }
+}
+```
+
+### Integração Preparada para Futuras APIs (`BaseDataService` + `BaseCrudRepository`)
+
+```typescript
+@Injectable({ providedIn: 'root' })
+export class ChecklistTemplateDataService extends BaseDataService<ChecklistSchemaSummary> {
+  protected readonly resourcePath = 'api/v1/checklist-templates';
+}
+
+export abstract class BaseCrudRepository<T, TId extends EntityId = string> {
+  protected abstract readonly service: ICrudOperations<T, TId>;
+}
+```
+
+### Teste Unitário Zoneless no Padrão AAA (`Jest 30`)
+
+```typescript
+// Cenário: Exportação de rascunho JSON e validação da estrutura gerada.
+// Objetivo: Garantir que o Blob produzido preserve schemaVersion e respostas atuais.
+it('should serialize current state into a versioned JSON Blob', async () => {
+  // Arrange
+  const snapshot = { schemaVersion: '1.0.0', answers: { item_rope: { primaryScale: 'enjoy' } } };
+
+  // Act
+  const result = service.buildDraftBlob(snapshot);
+
+  // Assert
+  expect(result.filename).toMatch(/\.json$/);
+  await expect(result.blob.text()).resolves.toContain('"schemaVersion": "1.0.0"');
+});
+```
+
+---
+
+## 8. FAQ
+
+**1. Por que ainda não existe pasta `backend/` no repositório?**
+> Porque a **V1** foi planejada e entregue com escopo 100% client-side para garantir privacidade absoluta sem servidor. O backend está previsto como **Coming Soon (Roadmap V2+)**, com infraestrutura preparatória de contratos CRUD (`BaseDataService`, `BaseCrudService`, `BaseCrudRepository`, `API_BASE_URL`) e container reservado em [docker-compose.yml](../.devcontainer/docker-compose.yml).
+
+**2. Como trocar o schema estático atual por uma API REST no futuro?**
+> Basta prover uma nova implementação de `ISchemaRepository` utilizando `BaseDataService` no token `SCHEMA_REPOSITORY_TOKEN` em `app.config.ts`, mantendo as páginas e componentes intocados.
+
+**3. Por que usar `StaticJsonSchemaRepository` + `assets/i18n/` separados?**
+> Permite validar a paridade estrutural automaticamente em build/test (`schema-integrity.spec.ts`), evoluir idiomas sem duplicar itens e preservar respostas salvas quando o usuário troca de idioma em tempo real.
+
+**4. Como executar testes e build em Windows PowerShell?**
+> Em ambientes Windows onde a ExecutionPolicy bloqueia scripts `.ps1`, utilizar sempre `npm.cmd`, `npx.cmd` e `ng.cmd` (`npm.cmd run test:coverage`, `npm.cmd run build:prod`).
+
+---
+
+## 9. Links Úteis
+
+- [Índice Geral da Documentação](./README.md)
+- [Diretrizes do Projeto (PROJECT_GUIDELINES)](./PROJECT_GUIDELINES.md)
+- [Blueprint Conceitual e Roadmap Futuro](./Bueprint.md)
+- [Levantamento Funcional e Técnico V1](./Features/LEVANTAMENTO_FUNCIONAL_TECNICO.md)
+- [Plano de Implementação Frontend V1](./Features/PLANO_IMPLEMENTACAO_FRONTEND.md)
+- [Checklist de Implementação e Progresso](./Features/CHECKLIST_IMPLEMENTACAO_PROGRESSO.md)
+- [Diretrizes de Cobertura — KinkConsentManager](./Frontend/COVERAGE%20AND%20TEST/Diretrizes-Coverage-Frontend-KinkConsentManager.md)
+- [Diretrizes de Code Smells — KinkConsentManager UI](./Frontend/COVERAGE%20AND%20TEST/Diretrizes-CodeSmell-KinkConsentManagerUI.md)
+- [Guia de Atualização de Pacotes Frontend](./Frontend/UpdatePackages/GuiaAtualizacaoPacotes-KinkConsentManagerUI.md)
+- [Conjunto Homologado Frontend (2026-11-22)](./Frontend/UpdatePackages/2026-11-22-ConjuntoHomologado-Frontend.md)
+
+---
+
+## 10. Catálogo de Tecnologias e Recursos
+
+Fontes vivas: [frontend/package.json](../frontend/package.json), [frontend/jest.config.js](../frontend/jest.config.js) e [frontend/Dockerfile](../frontend/Dockerfile).
+
+### Frontend V1 (Implementado)
+
+| Área | Tecnologia / Versão Declarada |
+| ---- | ----------------------------- |
+| Framework & Runtime | Angular `^22.1.0` (Standalone, Signals, **zoneless**), `@angular/cli` / `@angular/build` `^22.1.2`, Node `24` |
+| Linguagem & Reatividade | TypeScript `~6.0.2` (`strict: true`, `strictTemplates: true`), RxJS `~7.8.0` |
+| Design System & UI | PrimeNG `^22.1.5`, `@primeuix/themes` `^3.1.1` (Aura), PrimeIcons `^8.0.2`, `@angular/cdk` `^22.3.0` |
+| Internacionalização | `@ngx-translate/core` `^18.1.0`, `@ngx-translate/http-loader` `^18.1.0` (`pt-BR`, `en-US`) |
+| Exportação Client-Side | `html-to-image` `^1.11.13` (PNG `1200px`), `pdfmake` `^0.3.15` + `@types/pdfmake` `^0.3.3` (PDF lazy chunk), CSV RFC-4180 + BOM, JSON Draft |
+| Testes & Cobertura | **Jest** `^30.5.2`, `jest-preset-angular` `^17.0.3`, `jest-environment-jsdom` `^30.5.2`, `jsdom` `^28.0.0`, `@types/jest` `^30.0.0` |
+| Relatórios de Teste & Qualidade | `jest-junit`, `jest-html-reporter`, `jest-sonar`, `jest-stare`, `jest-html-reporters`, Prettier `^3.8.1`, SonarCloud (`sonar-project.properties`) |
+| Infraestrutura & Serving | Docker multi-stage, Nginx Alpine (`nginx.conf` com CSP, `/health` e cache policy), DevContainers |
+
+### Backend (Coming Soon — Roadmap V2+)
+
+| Área | Status |
+| ---- | ------ |
+| Servidor / API REST & Persistência Remota | **Coming Soon (V2+)** — Sem implementação na V1; stack, persistência e endpoints a definir na V2+ mantendo compatibilidade com a camada genérica do frontend (`API_BASE_URL`, `BaseDataService`, `BaseCrudRepository`) e diretrizes Zero-Knowledge. |
