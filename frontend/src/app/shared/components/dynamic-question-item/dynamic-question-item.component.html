@@ -1,17 +1,29 @@
 <div class="question-item" role="group" [attr.aria-labelledby]="questionLabelId()">
   <div class="question-item__header">
     <span class="question-item__label" [id]="questionLabelId()">{{ itemLabel() }}</span>
-    @if (hasTooltip()) {
+    <div class="question-item__actions">
+      @if (hasTooltip()) {
+        <button
+          type="button"
+          class="question-item__tooltip-btn"
+          [matTooltip]="itemTooltip()"
+          matTooltipPosition="above"
+          [attr.aria-label]="itemTooltip()"
+        >
+          <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+        </button>
+      }
       <button
         type="button"
-        class="question-item__tooltip-btn"
-        [pTooltip]="itemTooltip()"
-        tooltipPosition="top"
-        [attr.aria-label]="itemTooltip()"
+        class="question-item__speak-btn"
+        [matTooltip]="effectiveReadAloudLabel()"
+        matTooltipPosition="above"
+        [attr.aria-label]="effectiveReadAloudLabel()"
+        (click)="readAloud.emit()"
       >
-        <i class="pi pi-info-circle" aria-hidden="true"></i>
+        <i class="fa-solid fa-volume-high" aria-hidden="true"></i>
       </button>
-    }
+    </div>
   </div>
 
   <div class="question-item__control">
@@ -46,40 +58,30 @@
       }
 
       @case ('single_choice') {
-        <div class="question-item__options">
+        <mat-radio-group
+          class="question-item__options"
+          [name]="radioGroupName()"
+          [value]="selectedSingleOption()"
+          (change)="onSingleOptionSelect($event.value)"
+        >
           @for (optId of item().options ?? []; track optId) {
             <div class="question-item__option">
-              <p-radiobutton
-                [inputId]="optionInputId(optId)"
-                [name]="radioGroupName()"
-                [value]="optId"
-                [ngModel]="selectedSingleOption()"
-                (ngModelChange)="onSingleOptionSelect($event)"
-              />
-              <label class="question-item__option-label" [for]="optionInputId(optId)">
-                {{ getOptionLabel(optId) }}
-              </label>
+              <mat-radio-button [id]="optionInputId(optId)" [value]="optId">
+                <span class="question-item__option-label">{{ getOptionLabel(optId) }}</span>
+              </mat-radio-button>
             </div>
           }
 
           @if (item().allowOtherOption) {
             <div class="question-item__option">
-              <p-radiobutton
-                [inputId]="optionInputId(otherOptionValue)"
-                [name]="radioGroupName()"
-                [value]="otherOptionValue"
-                [ngModel]="selectedSingleOption()"
-                (ngModelChange)="onSingleOptionSelect($event)"
-              />
-              <label class="question-item__option-label" [for]="optionInputId(otherOptionValue)">
-                {{ otherLabel() }}
-              </label>
+              <mat-radio-button [id]="optionInputId(otherOptionValue)" [value]="otherOptionValue">
+                <span class="question-item__option-label">{{ otherLabel() }}</span>
+              </mat-radio-button>
             </div>
 
             @if (isOtherSingleSelected()) {
               <div class="question-item__other-field">
                 <input
-                  pInputText
                   type="text"
                   class="question-item__text-input"
                   [attr.aria-label]="otherLabel()"
@@ -90,42 +92,37 @@
               </div>
             }
           }
-        </div>
+        </mat-radio-group>
       }
 
       @case ('multiple_choice') {
         <div class="question-item__options">
           @for (optId of item().options ?? []; track optId) {
             <div class="question-item__option">
-              <p-checkbox
-                [binary]="true"
-                [inputId]="optionInputId(optId)"
-                [ngModel]="isMultipleOptionSelected(optId)"
-                (ngModelChange)="onMultipleOptionToggle(optId, $event)"
-              />
-              <label class="question-item__option-label" [for]="optionInputId(optId)">
-                {{ getOptionLabel(optId) }}
-              </label>
+              <mat-checkbox
+                [id]="optionInputId(optId)"
+                [checked]="isMultipleOptionSelected(optId)"
+                (change)="onMultipleOptionToggle(optId, $event.checked)"
+              >
+                <span class="question-item__option-label">{{ getOptionLabel(optId) }}</span>
+              </mat-checkbox>
             </div>
           }
 
           @if (item().allowOtherOption) {
             <div class="question-item__option">
-              <p-checkbox
-                [binary]="true"
-                [inputId]="optionInputId(otherOptionValue)"
-                [ngModel]="isOtherMultipleSelected()"
-                (ngModelChange)="onMultipleOptionToggle(otherOptionValue, $event)"
-              />
-              <label class="question-item__option-label" [for]="optionInputId(otherOptionValue)">
-                {{ otherLabel() }}
-              </label>
+              <mat-checkbox
+                [id]="optionInputId(otherOptionValue)"
+                [checked]="isOtherMultipleSelected()"
+                (change)="onMultipleOptionToggle(otherOptionValue, $event.checked)"
+              >
+                <span class="question-item__option-label">{{ otherLabel() }}</span>
+              </mat-checkbox>
             </div>
 
             @if (isOtherMultipleSelected()) {
               <div class="question-item__other-field">
                 <input
-                  pInputText
                   type="text"
                   class="question-item__text-input"
                   [attr.aria-label]="otherLabel()"
@@ -142,7 +139,6 @@
       @case ('restricted_text') {
         <div class="question-item__text-area-wrapper">
           <textarea
-            pTextarea
             rows="3"
             class="question-item__textarea"
             [attr.aria-labelledby]="questionLabelId()"

@@ -1,0 +1,282 @@
+@use 'variables' as v;
+@use 'mixins' as m;
+
+%row-center {
+  display: flex;
+  align-items: center;
+}
+
+.stepper {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+
+  &__empty {
+    @include m.card-surface;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 2.5rem 1.25rem;
+    text-align: center;
+    color: v.$text-secondary;
+  }
+
+  &__empty-icon {
+    font-size: 2rem;
+    color: v.$text-muted;
+  }
+
+  &__empty-text {
+    margin: 0;
+  }
+
+  &__rail-card {
+    @include m.card-surface;
+    padding: 0.875rem 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  &__mobile-status {
+    @extend %row-center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    font-size: 0.8125rem;
+    color: v.$text-secondary;
+
+    strong {
+      color: v.$text-primary;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    @include m.respond-md {
+      display: none;
+    }
+  }
+
+  &__rail {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    list-style: none;
+    margin: 0;
+    padding: 0.25rem 0.125rem;
+    overflow-x: auto;
+    scrollbar-width: thin;
+  }
+
+  &__node {
+    @extend %row-center;
+    flex: 1 0 auto;
+    gap: 0.25rem;
+
+    &--last {
+      flex: 0 0 auto;
+    }
+  }
+
+  &__step-btn {
+    @extend %row-center;
+    min-height: 44px;
+    gap: 0.5rem;
+    padding: 0.375rem 0.625rem;
+    border-radius: v.$radius-md;
+    border: 1px solid transparent;
+    background: transparent;
+    color: v.$text-secondary;
+    cursor: pointer;
+    text-align: left;
+
+    &:hover {
+      background-color: v.$surface-subtle;
+      color: v.$text-primary;
+    }
+
+    &--active {
+      background-color: v.$accent-soft;
+      border-color: v.$accent-primary;
+      color: v.$accent-primary;
+    }
+  }
+
+  &__circle {
+    width: 1.875rem;
+    height: 1.875rem;
+    border-radius: 9999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    background-color: v.$surface-subtle;
+    border: 1.5px solid v.$border-strong;
+    color: v.$text-secondary;
+    flex-shrink: 0;
+  }
+
+  &__step-btn--active &__circle {
+    background-color: v.$accent-primary;
+    border-color: v.$accent-primary;
+    color: #ffffff;
+  }
+
+  &__step-btn--done &__circle {
+    background-color: v.$scale-enjoy;
+    border-color: v.$scale-enjoy;
+    color: #ffffff;
+  }
+
+  &__step-meta {
+    display: flex;
+    flex-direction: column;
+    max-width: 10.5rem;
+  }
+
+  &__step-title {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__step-count {
+    font-size: 0.7rem;
+    color: v.$text-muted;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__connector {
+    flex: 1 0 1rem;
+    min-width: 1rem;
+    height: 2px;
+    background-color: v.$border-color;
+  }
+
+  &__panel {
+    @include m.card-surface;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+
+    @include m.respond-md {
+      padding: 1.25rem 1.5rem;
+    }
+  }
+
+  &__panel-header,
+  &__review-header {
+    display: flex;
+    flex-direction: column;
+    gap: 0.625rem;
+  }
+
+  &__review-header {
+    @include m.respond-md {
+      flex-direction: row;
+      align-items: flex-start;
+      justify-content: space-between;
+    }
+  }
+
+  &__panel-heading,
+  &__acc-header {
+    @extend %row-center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    width: 100%;
+  }
+
+  &__panel-title {
+    margin: 0;
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: v.$text-primary;
+  }
+
+  &__review-subtitle {
+    margin: 0.25rem 0 0;
+    font-size: 0.9rem;
+    color: v.$text-secondary;
+  }
+
+  &__review-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  &__acc-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: v.$text-primary;
+  }
+
+  &__count {
+    flex-shrink: 0;
+    padding: 0.1875rem 0.625rem;
+    border-radius: 9999px;
+    background-color: v.$surface-subtle;
+    border: 1px solid v.$border-color;
+    color: v.$text-secondary;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__description {
+    margin: 0;
+    padding: 0.75rem 1rem;
+    border-left: 3px solid v.$accent-primary;
+    border-radius: v.$radius-sm;
+    background-color: v.$surface-subtle;
+    color: v.$text-secondary;
+    font-size: 0.9375rem;
+  }
+
+  &__acc-body,
+  &__items {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  &__footer {
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 0.625rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid v.$border-color;
+
+    @include m.respond-sm {
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+    }
+  }
+
+  &__footer-right {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+}
+
+:host ::ng-deep {
+  .stepper__prev-btn,
+  .stepper__next-btn,
+  .stepper__finish-btn,
+  .stepper__review-jump-btn {
+    min-height: v.$min-touch-target;
+    width: 100%;
+
+    @include m.respond-sm {
+      width: auto;
+    }
+  }
+}

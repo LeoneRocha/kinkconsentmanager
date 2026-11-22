@@ -1,0 +1,174 @@
+import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
+import { ButtonModule } from 'primeng/button';
+import { TooltipModule } from 'primeng/tooltip';
+import {
+  GroupDefinition,
+  ItemDefinition,
+  ItemResponseValue,
+  ResolvedPreviewTexts,
+  ResolvedRolePairLabels,
+  ScaleId,
+  ScaleOption,
+} from '../../../../core/models';
+import { DynamicQuestionItemComponent } from '../../../../shared/components';
+import {
+  countGroupAnsweredItems,
+  getGroupDescription,
+  getGroupTitle,
+  getItemAnswer,
+  getItemLabel,
+  getItemRoleLabels,
+  getItemTooltip,
+  isDualRoleScaleItem,
+} from '../../utils/checklist-view.helpers';
+
+/**
+ * Classic KinkSheet-inspired multi-column grouped block checklist view with row dividers and role headers.
+ */
+@Component({
+  selector: 'app-classic-kink-sheet',
+  imports: [ButtonModule, TooltipModule, DynamicQuestionItemComponent],
+  templateUrl: './classic-kink-sheet.component.html',
+  styleUrl: './classic-kink-sheet.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class ClassicKinkSheetComponent {
+  readonly groups = input.required<readonly GroupDefinition[]>();
+  readonly scales = input.required<readonly ScaleOption[]>();
+  readonly answers = input.required<Readonly<Record<string, ItemResponseValue>>>();
+  readonly texts = input.required<ResolvedPreviewTexts>();
+  readonly noResultsText = input<string>('Nenhum item encontrado para os filtros aplicados.');
+  readonly finishLabel = input<string>('Finalizar e Exportar');
+  readonly otherPlaceholder = input<string>('Descreva brevemente sua preferência...');
+  readonly readAloudLabel = input<string>('Ouvir leitura deste item');
+  readonly classicHint = input<string>(
+    'Visualização clássica em blocos por categoria: clique nos círculos para marcar ou desmarcar cada escala.',
+  );
+
+  readonly answerChange = output<{ itemId: string; patch: Partial<ItemResponseValue> }>();
+  readonly readItemAloud = output<ItemDefinition>();
+  readonly finishChecklist = output<void>();
+
+  protected orderedScales(): readonly ScaleOption[] {
+    return [...this.scales()].sort((a, b) => a.order - b.order);
+  }
+
+  protected hasScaleItems(group: GroupDefinition): boolean {
+    return group.items.some((item) => item.type === 'scale_matrix');
+  }
+
+  protected groupRoleHeader(group: GroupDefinition): {
+    readonly primary: string;
+    readonly secondary?: string;
+    readonly isDual: boolean;
+  } {
+    const firstMatrixItem = group.items.find((item) => item.type === 'scale_matrix');
+    if (!firstMatrixItem) {
+      return { primary: '', isDual: false };
+    }
+    const labels = getItemRoleLabels(group, firstMatrixItem, this.texts());
+    const isDual = group.items.some((item) => isDualRoleScaleItem(group, item));
+    return {
+      primary: labels.primary,
+      secondary: isDual ? labels.secondary : undefined,
+      isDual,
+    };
+  }
+
+  protected selectRoleScale(
+    itemId: string,
+    roleField: 'primaryScale' | 'secondaryScale',
+    scaleId: ScaleId,
+  ): void {
+    const current = this.itemAnswer(itemId);
+    const active = roleField === 'primaryScale' ? current?.primaryScale : current?.secondaryScale;
+    const nextValue = active === scaleId ? undefined : scaleId;
+    this.answerChange.emit({
+      itemId,
+      patch: roleField === 'primaryScale' ? { primaryScale: nextValue } : { secondaryScale: nextValue },
+    });
+  }
+
+  protected isRoleScaleSelected(
+    itemId: string,
+    roleField: 'primaryScale' | 'secondaryScale',
+    scaleId: ScaleId,
+  ): boolean {
+    const current = this.itemAnswer(itemId);
+    const active = roleField === 'primaryScale' ? current?.primaryScale : current?.secondaryScale;
+    return active === scaleId;
+  }
+
+  protected onClassicDotKeydown(
+    event: KeyboardEvent,
+    itemId: string,
+    roleField: 'primaryScale' | 'secondaryScale',
+    currentIndex: number,
+  ): void {
+    const ordered = this.orderedScales();
+    if (ordered.length === 0) {
+      return;
+    }
+
+    let nextIndex: number | null = null;
+    if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+      nextIndex = (currentIndex + 1) % ordered.length;
+    } else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+      nextIndex = (currentIndex - 1 + ordered.length) % ordered.length;
+    } else if (event.key === 'Home') {
+      nextIndex = 0;
+    } else if (event.key === 'End') {
+      nextIndex = ordered.length - 1;
+    }
+
+    if (nextIndex === null) {
+      return;
+    }
+
+    event.preventDefault();
+    const targetScale = ordered[nextIndex];
+    if (targetScale) {
+      this.selectRoleScale(itemId, roleField, targetScale.id);
+    }
+  }
+
+  protected onComplexAnswerChange(itemId: string, patch: Partial<ItemResponseValue>): void {
+    this.answerChange.emit({ itemId, patch });
+  }
+
+  protected scaleLabel(scaleId: ScaleId): string {
+    return this.texts().scales[scaleId] ?? scaleId;
+  }
+
+  protected groupTitle(group: GroupDefinition): string {
+    return getGroupTitle(group, this.texts());
+  }
+
+  protected groupDescription(group: GroupDefinition): string {
+    return getGroupDescription(group, this.texts());
+  }
+
+  protected groupAnsweredCount(group: GroupDefinition): number {
+    return countGroupAnsweredItems(group, this.answers());
+  }
+
+  protected isDualRole(group: GroupDefinition, item: ItemDefinition): boolean {
+    return isDualRoleScaleItem(group, item);
+  }
+
+  protected roleLabels(group: GroupDefinition, item: ItemDefinition): ResolvedRolePairLabels {
+    return getItemRoleLabels(group, item, this.texts());
+  }
+
+  protected itemLabel(item: ItemDefinition): string {
+    return getItemLabel(item, this.texts());
+  }
+
+  protected itemTooltip(item: ItemDefinition): string {
+    return getItemTooltip(item, this.texts());
+  }
+
+  protected itemAnswer(itemId: string): ItemResponseValue | undefined {
+    return getItemAnswer(this.answers(), itemId);
+  }
+}

@@ -8,44 +8,66 @@
   gap: 0.875rem;
   padding: 1rem;
 
+  &:hover {
+    border-color: v.$border-strong;
+  }
+
   @include m.respond-md {
     flex-direction: row;
     align-items: flex-start;
     justify-content: space-between;
     gap: 1.5rem;
+    padding: 1.125rem 1.25rem;
   }
 
   &__header {
     display: flex;
-    align-items: center;
-    gap: 0.5rem;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.625rem;
     flex: 1 1 40%;
     min-width: 0;
+
+    @include m.respond-md {
+      justify-content: flex-start;
+      align-items: center;
+    }
   }
 
   &__label {
     font-size: 0.9375rem;
     font-weight: 600;
     color: v.$text-primary;
-    line-height: 1.4;
+    line-height: 1.45;
+    word-break: break-word;
   }
 
-  &__tooltip-btn {
+  &__actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    flex-shrink: 0;
+  }
+
+  &__tooltip-btn,
+  &__speak-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 1.75rem;
-    min-height: 1.75rem;
+    min-width: 2rem;
+    min-height: 2rem;
     padding: 0;
-    border: none;
+    border: 1px solid transparent;
     border-radius: 9999px;
     background: transparent;
     color: v.$text-muted;
     cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 
     &:hover {
       color: v.$accent-primary;
-      background-color: v.$surface-subtle;
+      background-color: v.$accent-soft;
+      border-color: v.$accent-soft;
     }
 
     &:focus-visible {
@@ -80,7 +102,7 @@
     display: flex;
     align-items: center;
     gap: 0.625rem;
-    min-height: 2.25rem;
+    min-height: 2.375rem;
   }
 
   &__option-label {
@@ -97,6 +119,20 @@
   &__text-input,
   &__textarea {
     width: 100%;
+    padding: 0.625rem 0.75rem;
+    border: 1px solid v.$border-strong;
+    border-radius: v.$radius-sm;
+    background-color: v.$surface-card;
+    color: v.$text-primary;
+    font-size: 0.9375rem;
+    line-height: 1.45;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+    &:focus {
+      outline: none;
+      border-color: v.$accent-primary;
+      box-shadow: 0 0 0 2px v.$accent-soft;
+    }
   }
 
   &__text-area-wrapper {

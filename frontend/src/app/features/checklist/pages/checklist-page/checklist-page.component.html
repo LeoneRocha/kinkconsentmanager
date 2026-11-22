@@ -1,4 +1,4 @@
-<div class="checklist-page">
+<div class="checklist-page" [class.checklist-page--classic]="viewMode() === 'classic'">
   @if (isLoading()) {
     <div class="checklist-page__loading" aria-busy="true" [attr.aria-label]="loadingSchemaLabel()">
       <p-skeleton height="8rem" borderRadius="10px" />
@@ -41,38 +41,73 @@
         (goToExport)="onFinishChecklist()"
       />
 
-      <main #contentContainer class="checklist-page__content">
-        @if (viewMode() === 'accordion') {
-          <app-category-accordion
-            [groups]="filteredGroups()"
-            [scales]="activeSchema.scales"
-            [answers]="answers()"
-            [activeIndex]="activeAccordionIndex()"
-            [texts]="texts"
-            [nextCategoryLabel]="nextCategoryLabel()"
-            [finishLabel]="finishLabel()"
-            [otherPlaceholder]="otherPlaceholder()"
-            [noResultsText]="noResultsText()"
-            (activeIndexChange)="onActiveCategoryChange($event)"
-            (answerChange)="onAnswerChange($event)"
-            (nextCategory)="onNextCategory()"
-            (finishChecklist)="onFinishChecklist()"
-          />
-        } @else {
-          <app-full-view-container
-            [groups]="filteredGroups()"
-            [scales]="activeSchema.scales"
-            [answers]="answers()"
-            [texts]="texts"
-            [noResultsText]="noResultsText()"
-            [finishLabel]="finishLabel()"
-            [quickNavTitle]="quickNavTitle()"
-            [otherPlaceholder]="otherPlaceholder()"
-            (answerChange)="onAnswerChange($event)"
-            (finishChecklist)="onFinishChecklist()"
-          />
+      <div class="checklist-page__autosave" role="status" aria-live="polite">
+        <i
+          class="pi"
+          [class.pi-spin]="autosave.isSaving()"
+          [class.pi-spinner]="autosave.isSaving()"
+          [class.pi-lock]="!autosave.isSaving()"
+          aria-hidden="true"
+        ></i>
+        <span>{{ autosaveStatusText() }}</span>
+      </div>
+
+      <section
+        #contentContainer
+        class="checklist-page__content"
+        [attr.aria-label]="headerLabels().title"
+      >
+        @switch (viewMode()) {
+          @case ('stepper') {
+            <app-checklist-stepper
+              [groups]="filteredGroups()"
+              [scales]="activeSchema.scales"
+              [answers]="answers()"
+              [activeStep]="activeStepperStep()"
+              [texts]="texts"
+              [labels]="stepperLabels()"
+              (activeStepChange)="onActiveStepChange($event)"
+              (answerChange)="onAnswerChange($event)"
+              (readItemAloud)="onReadItemAloud($event)"
+              (finishChecklist)="onFinishChecklist()"
+            />
+          }
+
+          @case ('classic') {
+            <app-classic-kink-sheet
+              [groups]="filteredGroups()"
+              [scales]="activeSchema.scales"
+              [answers]="answers()"
+              [texts]="texts"
+              [noResultsText]="noResultsText()"
+              [finishLabel]="finishLabel()"
+              [otherPlaceholder]="otherPlaceholder()"
+              [readAloudLabel]="readAloudLabel()"
+              [classicHint]="classicHint()"
+              (answerChange)="onAnswerChange($event)"
+              (readItemAloud)="onReadItemAloud($event)"
+              (finishChecklist)="onFinishChecklist()"
+            />
+          }
+
+          @case ('full') {
+            <app-full-view-container
+              [groups]="filteredGroups()"
+              [scales]="activeSchema.scales"
+              [answers]="answers()"
+              [texts]="texts"
+              [noResultsText]="noResultsText()"
+              [finishLabel]="finishLabel()"
+              [quickNavTitle]="quickNavTitle()"
+              [otherPlaceholder]="otherPlaceholder()"
+              [readAloudLabel]="readAloudLabel()"
+              (answerChange)="onAnswerChange($event)"
+              (readItemAloud)="onReadItemAloud($event)"
+              (finishChecklist)="onFinishChecklist()"
+            />
+          }
         }
-      </main>
+      </section>
 
       <app-quick-fill-wizard-modal
         [visible]="quickFillVisible()"
@@ -81,8 +116,10 @@
         [answers]="answers()"
         [texts]="texts"
         [labels]="quickFillLabels()"
+        [readAloudLabel]="readAloudLabel()"
         (visibleChange)="quickFillVisible.set($event)"
         (answerChange)="onAnswerChange($event)"
+        (readAloud)="onReadTextAloud($event)"
       />
     }
   }

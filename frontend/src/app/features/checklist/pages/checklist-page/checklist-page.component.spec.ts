@@ -5,7 +5,11 @@ import { ConfirmationService } from 'primeng/api';
 import { Observable, Subject, of, throwError } from 'rxjs';
 import { ChecklistSchema } from '../../../../core/models';
 import { ISchemaRepository, SCHEMA_REPOSITORY_TOKEN } from '../../../../core/repositories';
-import { ChecklistStateService, I18nService } from '../../../../core/services';
+import {
+  ChecklistAutosaveService,
+  ChecklistStateService,
+  I18nService,
+} from '../../../../core/services';
 import { ChecklistPageComponent } from './checklist-page.component';
 
 const MOCK_SCHEMA: ChecklistSchema = {
@@ -180,6 +184,7 @@ const EN_US_TRANSLATIONS = {
 describe('ChecklistPageComponent', () => {
   let fixture: ComponentFixture<ChecklistPageComponent>;
   let checklistState: ChecklistStateService;
+  let autosaveService: ChecklistAutosaveService;
   let i18nService: I18nService;
   let router: Router;
   let getChecklistSchemaMock: jest.Mock<Observable<ChecklistSchema>, [version?: string]>;
@@ -188,6 +193,7 @@ describe('ChecklistPageComponent', () => {
     schemaFactory: () => Observable<ChecklistSchema>,
   ): Promise<void> => {
     localStorage.clear();
+    sessionStorage.clear();
     getChecklistSchemaMock = jest.fn(schemaFactory);
     const repoMock: ISchemaRepository = {
       getChecklistSchema: getChecklistSchemaMock,
@@ -207,15 +213,18 @@ describe('ChecklistPageComponent', () => {
     translate.setTranslation('en-US', EN_US_TRANSLATIONS);
 
     checklistState = TestBed.inject(ChecklistStateService);
+    autosaveService = TestBed.inject(ChecklistAutosaveService);
     i18nService = TestBed.inject(I18nService);
     router = TestBed.inject(Router);
     fixture = TestBed.createComponent(ChecklistPageComponent);
   };
 
   afterEach(() => {
+    autosaveService?.stop();
     fixture?.destroy();
     TestBed.resetTestingModule();
     localStorage.clear();
+    sessionStorage.clear();
     jest.restoreAllMocks();
   });
 
@@ -235,7 +244,7 @@ describe('ChecklistPageComponent', () => {
     expect(getChecklistSchemaMock).toHaveBeenCalledWith('v1');
     expect(hostEl.querySelectorAll('p-skeleton').length).toBe(0);
     expect(hostEl.querySelector('app-checklist-header')).not.toBeNull();
-    expect(hostEl.querySelector('app-category-accordion')).not.toBeNull();
+    expect(hostEl.querySelector('app-checklist-stepper')).not.toBeNull();
     expect(checklistState.schema()).toEqual(MOCK_SCHEMA);
   });
 
@@ -262,10 +271,10 @@ describe('ChecklistPageComponent', () => {
 
     expect(getChecklistSchemaMock).toHaveBeenCalledTimes(2);
     expect(hostEl.querySelector('.checklist-page__error')).toBeNull();
-    expect(hostEl.querySelector('app-category-accordion')).not.toBeNull();
+    expect(hostEl.querySelector('app-checklist-stepper')).not.toBeNull();
   });
 
-  it('should propagate item answers to ChecklistStateService and switch viewMode to full view', async () => {
+  it('should propagate item answers to ChecklistStateService and switch across stepper, classic, and full views', async () => {
     await createTestModule(() => of(MOCK_SCHEMA));
     await fixture.whenStable();
 
@@ -278,16 +287,23 @@ describe('ChecklistPageComponent', () => {
     expect(checklistState.answeredItemsCount()).toBe(1);
     expect(checklistState.progressPercentage()).toBe(50);
 
-    // Switch to full view
+    // Switch to classic view and then full view
     const modeButtons = hostEl.querySelectorAll<HTMLElement>(
       '.checklist-header__mode-select p-togglebutton',
     );
+    expect(modeButtons.length).toBe(3);
+
     modeButtons[1].click();
     await fixture.whenStable();
+    expect(checklistState.viewMode()).toBe('classic');
+    expect(hostEl.querySelector('app-classic-kink-sheet')).not.toBeNull();
+    expect(hostEl.querySelector('app-checklist-stepper')).toBeNull();
 
+    modeButtons[2].click();
+    await fixture.whenStable();
     expect(checklistState.viewMode()).toBe('full');
     expect(hostEl.querySelector('app-full-view-container')).not.toBeNull();
-    expect(hostEl.querySelector('app-category-accordion')).toBeNull();
+    expect(hostEl.querySelector('app-classic-kink-sheet')).toBeNull();
   });
 
   it('should switch language without losing answers and update searchable labels via effect', async () => {
@@ -318,7 +334,7 @@ describe('ChecklistPageComponent', () => {
     expect(checklistState.filteredGroups()[0].items[0].id).toBe('item_rope');
   });
 
-  it('should advance activeCategoryIndex on nextCategory and navigate to /export at last group', async () => {
+  it('should advance through stepper steps into expanded final review accordion and navigate to /export', async () => {
     await createTestModule(() => of(MOCK_SCHEMA));
     await fixture.whenStable();
 
@@ -327,21 +343,23 @@ describe('ChecklistPageComponent', () => {
 
     expect(checklistState.activeCategoryIndex()).toBe(0);
 
-    const firstPanelNextBtn = hostEl.querySelector<HTMLButtonElement>(
-      '.category-accordion__next-btn',
-    );
-    expect(firstPanelNextBtn).not.toBeNull();
-    firstPanelNextBtn!.click();
+    // Step 1 -> Step 2 (Bondage)
+    hostEl.querySelector<HTMLButtonElement>('.stepper__next-btn')?.click();
     await fixture.whenStable();
-
     expect(checklistState.activeCategoryIndex()).toBe(1);
     expect(navigateSpy).not.toHaveBeenCalled();
 
-    const lastPanelFinishBtn = hostEl.querySelector<HTMLButtonElement>(
-      '.category-accordion__finish-btn',
-    );
-    expect(lastPanelFinishBtn).not.toBeNull();
-    lastPanelFinishBtn!.click();
+    // Step 2 -> Final Review Accordion (all panels expanded)
+    hostEl.querySelector<HTMLButtonElement>('.stepper__next-btn')?.click();
+    await fixture.whenStable();
+    expect(hostEl.querySelector('.stepper__panel--review')).not.toBeNull();
+    const expandedPanels = hostEl.querySelectorAll('p-accordion-panel.p-accordionpanel-active');
+    expect(expandedPanels.length).toBe(2);
+
+    // Finish -> /export
+    const finishBtn = hostEl.querySelector<HTMLButtonElement>('.stepper__finish-btn');
+    expect(finishBtn).not.toBeNull();
+    finishBtn!.click();
     await fixture.whenStable();
 
     expect(navigateSpy).toHaveBeenCalledWith(['/export']);
@@ -356,8 +374,12 @@ describe('ChecklistPageComponent', () => {
 
     const confirmationService = fixture.debugElement.injector.get(ConfirmationService);
     const confirmSpy = jest.spyOn(confirmationService, 'confirm');
+    const clearAutosaveSpy = jest.spyOn(autosaveService, 'clearAutosave');
 
     const hostEl = fixture.nativeElement as HTMLElement;
+    expect(hostEl.querySelector('.checklist-page__autosave')?.textContent).toContain(
+      'Autosave criptografado ativo',
+    );
     const clearBtn = hostEl.querySelector<HTMLButtonElement>('.checklist-header__clear-btn');
     expect(clearBtn?.disabled).toBe(false);
     clearBtn!.click();
@@ -373,8 +395,9 @@ describe('ChecklistPageComponent', () => {
     rejectBtn!.click();
     await fixture.whenStable();
     expect(checklistState.answers()['item_safeword']).toEqual({ selectedOption: 'opt_traffic' });
+    expect(clearAutosaveSpy).not.toHaveBeenCalled();
 
-    // Trigger again and accept -> answers cleared
+    // Trigger again and accept -> answers and encrypted autosave cleared
     clearBtn!.click();
     await fixture.whenStable();
     const acceptBtn = document.body.querySelector<HTMLButtonElement>(
@@ -386,6 +409,7 @@ describe('ChecklistPageComponent', () => {
 
     expect(checklistState.answers()).toEqual({});
     expect(checklistState.answeredItemsCount()).toBe(0);
+    expect(clearAutosaveSpy).toHaveBeenCalledTimes(1);
   });
 
   it('should open QuickFillWizardModalComponent and propagate wizard answers to ChecklistStateService', async () => {

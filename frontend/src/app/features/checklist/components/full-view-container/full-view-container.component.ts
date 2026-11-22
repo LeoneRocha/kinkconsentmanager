@@ -42,8 +42,10 @@ export class FullViewContainerComponent {
   readonly finishLabel = input.required<string>();
   readonly quickNavTitle = input<string>('Categorias');
   readonly otherPlaceholder = input<string>('Descreva brevemente sua preferência...');
+  readonly readAloudLabel = input<string>('Ouvir leitura deste item');
 
   readonly answerChange = output<{ itemId: string; patch: Partial<ItemResponseValue> }>();
+  readonly readItemAloud = output<ItemDefinition>();
   readonly finishChecklist = output<void>();
 
   protected jumpToGroup(groupId: string): void {

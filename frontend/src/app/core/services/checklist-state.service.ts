@@ -25,17 +25,23 @@ const VALID_SCALE_IDS: ReadonlySet<string> = new Set<ScaleId>([
 
 interface PersistedChecklistState {
   readonly schemaVersion: string;
-  readonly answers: Readonly<Record<string, ItemResponseValue>>;
   readonly viewMode: ChecklistViewMode;
   readonly activeCategoryIndex: number;
-  readonly lastUpdatedAt: string | null;
+}
+
+export interface EncryptedChecklistSnapshot {
+  readonly schemaVersion?: string;
+  readonly answers: Readonly<Record<string, ItemResponseValue>>;
+  readonly viewMode?: ChecklistViewMode;
+  readonly activeCategoryIndex?: number;
+  readonly savedAt?: string | null;
 }
 
 function createInitialChecklistState(): ChecklistState {
   return {
     schemaVersion: DEFAULT_SCHEMA_VERSION,
     answers: {},
-    viewMode: 'accordion',
+    viewMode: 'stepper',
     activeCategoryIndex: 0,
     searchQuery: '',
     onlyUnanswered: false,
@@ -188,11 +194,10 @@ export class ChecklistStateService extends BaseStateService<ChecklistState> {
       answers: nextAnswers,
       lastUpdatedAt: new Date().toISOString(),
     });
-    this.persistCurrentState();
   }
 
   /**
-   * Removes any recorded answer for a single item and persists the updated state.
+   * Removes any recorded answer for a single item.
    */
   clearItemAnswer(itemId: string): void {
     const currentAnswers = this.stateSignal().answers;
@@ -207,11 +212,10 @@ export class ChecklistStateService extends BaseStateService<ChecklistState> {
       answers: nextAnswers,
       lastUpdatedAt: new Date().toISOString(),
     });
-    this.persistCurrentState();
   }
 
   /**
-   * Switches between accordion and full checklist view modes and persists the preference.
+   * Switches between stepper, classic, and full checklist view modes and persists the preference.
    */
   setViewMode(mode: ChecklistViewMode): void {
     this.setState({ viewMode: mode });
@@ -267,7 +271,7 @@ export class ChecklistStateService extends BaseStateService<ChecklistState> {
   }
 
   /**
-   * Replaces current answers from an imported draft, updates timestamp, and persists.
+   * Replaces current answers from an imported draft and updates the modification timestamp.
    */
   importDraft(draft: ChecklistDraft): void {
     const nextAnswers: Record<string, ItemResponseValue> = {};
@@ -282,6 +286,51 @@ export class ChecklistStateService extends BaseStateService<ChecklistState> {
     this.setState({
       answers: nextAnswers,
       lastUpdatedAt: new Date().toISOString(),
+    });
+  }
+
+  /**
+   * Hydrates answers and navigation preferences recovered from an encrypted autosave snapshot.
+   */
+  restoreFromEncryptedAutosave(snapshot: EncryptedChecklistSnapshot): void {
+    if (snapshot.schemaVersion && snapshot.schemaVersion !== DEFAULT_SCHEMA_VERSION) {
+      return;
+    }
+
+    const restoredAnswers: Record<string, ItemResponseValue> = {};
+    if (isPlainObject(snapshot.answers)) {
+      for (const [itemId, rawValue] of Object.entries(snapshot.answers)) {
+        const normalized = this.normalizeResponse(rawValue);
+        if (normalized !== null) {
+          restoredAnswers[itemId] = normalized;
+        }
+      }
+    }
+
+    const nextViewMode: ChecklistViewMode =
+      snapshot.viewMode === 'stepper' ||
+      snapshot.viewMode === 'classic' ||
+      snapshot.viewMode === 'full'
+        ? snapshot.viewMode
+        : this.stateSignal().viewMode;
+
+    const nextCategoryIndex =
+      typeof snapshot.activeCategoryIndex === 'number' &&
+      Number.isInteger(snapshot.activeCategoryIndex) &&
+      snapshot.activeCategoryIndex >= 0
+        ? this.clampCategoryIndex(snapshot.activeCategoryIndex, this.schemaSignal())
+        : this.stateSignal().activeCategoryIndex;
+
+    const nextLastUpdatedAt =
+      typeof snapshot.savedAt === 'string'
+        ? snapshot.savedAt
+        : this.stateSignal().lastUpdatedAt;
+
+    this.setState({
+      answers: restoredAnswers,
+      viewMode: nextViewMode,
+      activeCategoryIndex: nextCategoryIndex,
+      lastUpdatedAt: nextLastUpdatedAt,
     });
     this.persistCurrentState();
   }
@@ -370,20 +419,11 @@ export class ChecklistStateService extends BaseStateService<ChecklistState> {
       return;
     }
 
-    const answers: Record<string, ItemResponseValue> = {};
-    const rawAnswers = persisted['answers'];
-    if (isPlainObject(rawAnswers)) {
-      for (const [itemId, rawValue] of Object.entries(rawAnswers)) {
-        const normalized = this.normalizeResponse(rawValue);
-        if (normalized !== null) {
-          answers[itemId] = normalized;
-        }
-      }
-    }
-
     const rawViewMode = persisted['viewMode'];
     const viewMode: ChecklistViewMode =
-      rawViewMode === 'accordion' || rawViewMode === 'full' ? rawViewMode : 'accordion';
+      rawViewMode === 'stepper' || rawViewMode === 'classic' || rawViewMode === 'full'
+        ? rawViewMode
+        : 'stepper';
 
     const rawIndex = persisted['activeCategoryIndex'];
     const activeCategoryIndex =
@@ -391,25 +431,23 @@ export class ChecklistStateService extends BaseStateService<ChecklistState> {
         ? rawIndex
         : 0;
 
-    const rawLastUpdated = persisted['lastUpdatedAt'];
-    const lastUpdatedAt = typeof rawLastUpdated === 'string' ? rawLastUpdated : null;
-
     this.setState({
-      answers,
       viewMode,
       activeCategoryIndex,
-      lastUpdatedAt,
     });
+
+    // Purge legacy plaintext answer payloads from unencrypted storage immediately.
+    if (hasOwn(persisted, 'answers') || hasOwn(persisted, 'lastUpdatedAt')) {
+      this.persistCurrentState();
+    }
   }
 
   private persistCurrentState(): void {
     const current = this.stateSignal();
     const payload: PersistedChecklistState = {
       schemaVersion: current.schemaVersion,
-      answers: current.answers,
       viewMode: current.viewMode,
       activeCategoryIndex: current.activeCategoryIndex,
-      lastUpdatedAt: current.lastUpdatedAt,
     };
     this.persistence.save(payload);
   }

@@ -52,8 +52,10 @@
                 [optionLabels]="texts().options"
                 [otherLabel]="texts().otherLabel"
                 [otherPlaceholder]="otherPlaceholder()"
+                [readAloudLabel]="readAloudLabel()"
                 [answer]="itemAnswer(item.id)"
                 (answerChange)="onItemAnswerChange(item.id, $event)"
+                (readAloud)="readItemAloud.emit(item)"
               />
             }
           </div>

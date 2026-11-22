@@ -1,10 +1,8 @@
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { CheckboxModule } from 'primeng/checkbox';
-import { InputTextModule } from 'primeng/inputtext';
-import { RadioButtonModule } from 'primeng/radiobutton';
-import { TextareaModule } from 'primeng/textarea';
-import { TooltipModule } from 'primeng/tooltip';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatRadioModule } from '@angular/material/radio';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import {
   ItemDefinition,
   ItemResponseValue,
@@ -21,11 +19,9 @@ let nextQuestionUid = 0;
   selector: 'app-dynamic-question-item',
   imports: [
     FormsModule,
-    RadioButtonModule,
-    CheckboxModule,
-    TextareaModule,
-    InputTextModule,
-    TooltipModule,
+    MatRadioModule,
+    MatCheckboxModule,
+    MatTooltipModule,
     ScaleSelectorComponent,
   ],
   templateUrl: './dynamic-question-item.component.html',
@@ -43,9 +39,11 @@ export class DynamicQuestionItemComponent {
   readonly optionLabels = input.required<Readonly<Record<string, string>>>();
   readonly otherLabel = input<string>('Outro');
   readonly otherPlaceholder = input<string>('Especifique...');
+  readonly readAloudLabel = input<string>('Ouvir leitura deste item');
   readonly answer = input<ItemResponseValue | undefined>(undefined);
 
   readonly answerChange = output<Partial<ItemResponseValue>>();
+  readonly readAloud = output<void>();
 
   private readonly uid = ++nextQuestionUid;
   protected readonly otherOptionValue = OTHER_OPTION_VALUE;
@@ -53,6 +51,11 @@ export class DynamicQuestionItemComponent {
   protected readonly questionLabelId = computed(() => `q-label-${this.uid}-${this.item().id}`);
   protected readonly radioGroupName = computed(() => `q-radio-${this.uid}-${this.item().id}`);
   protected readonly hasTooltip = computed(() => this.itemTooltip().trim().length > 0);
+  protected readonly effectiveReadAloudLabel = computed(() => {
+    const label = this.readAloudLabel().trim();
+    const fallback = label.length > 0 ? label : 'Ouvir leitura deste item';
+    return `${fallback}: ${this.itemLabel()}`;
+  });
   protected readonly maxTextLength = computed(() => this.item().maxLength ?? 300);
   protected readonly customTextLength = computed(() => (this.answer()?.customText ?? '').length);
   protected readonly selectedSingleOption = computed<string | null>(

@@ -43,7 +43,19 @@
       }
 
       <div class="quick-fill__current" aria-live="polite">
-        <div class="quick-fill__current-group">{{ activeStep.groupTitle }}</div>
+        <div class="quick-fill__current-top">
+          <div class="quick-fill__current-group">{{ activeStep.groupTitle }}</div>
+          <button
+            type="button"
+            class="quick-fill__speak-btn"
+            [pTooltip]="readAloudLabel()"
+            tooltipPosition="top"
+            [attr.aria-label]="readAloudLabel() + ': ' + activeStep.itemLabel"
+            (click)="emitCurrentStepReadAloud()"
+          >
+            <i class="pi pi-volume-up" aria-hidden="true"></i>
+          </button>
+        </div>
         <div class="quick-fill__current-item">{{ activeStep.itemLabel }}</div>
         <div class="quick-fill__current-meta">
           <span class="quick-fill__current-role">{{ activeStep.roleLabel }}</span>

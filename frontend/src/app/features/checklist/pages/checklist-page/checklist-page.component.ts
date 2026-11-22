@@ -20,17 +20,27 @@ import { SkeletonModule } from 'primeng/skeleton';
 import { Subscription } from 'rxjs';
 import {
   ChecklistViewMode,
+  ItemDefinition,
   ItemResponseValue,
   ResolvedPreviewTexts,
   SupportedLanguage,
 } from '../../../../core/models';
 import { SCHEMA_REPOSITORY_TOKEN } from '../../../../core/repositories';
-import { ChecklistStateService, I18nService } from '../../../../core/services';
-import { CategoryAccordionComponent } from '../../components/category-accordion';
+import {
+  AccessibilityService,
+  ChecklistAutosaveService,
+  ChecklistStateService,
+  I18nService,
+} from '../../../../core/services';
 import {
   ChecklistHeaderComponent,
   ChecklistHeaderLabels,
 } from '../../components/checklist-header';
+import {
+  ChecklistStepperComponent,
+  ChecklistStepperLabels,
+} from '../../components/checklist-stepper';
+import { ClassicKinkSheetComponent } from '../../components/classic-kink-sheet';
 import { FullViewContainerComponent } from '../../components/full-view-container';
 import {
   QuickFillLabels,
@@ -38,7 +48,7 @@ import {
 } from '../../components/quick-fill-wizard-modal';
 
 /**
- * Smart container coordinating checklist schema loading, reactive filtering, localization, and navigation.
+ * Smart container coordinating checklist schema loading, stepper/classic/full view modes, localization, and navigation.
  */
 @Component({
   selector: 'app-checklist-page',
@@ -47,7 +57,8 @@ import {
     ConfirmDialogModule,
     SkeletonModule,
     ChecklistHeaderComponent,
-    CategoryAccordionComponent,
+    ChecklistStepperComponent,
+    ClassicKinkSheetComponent,
     FullViewContainerComponent,
     QuickFillWizardModalComponent,
   ],
@@ -59,7 +70,9 @@ import {
 export class ChecklistPageComponent implements OnInit {
   private readonly schemaRepository = inject(SCHEMA_REPOSITORY_TOKEN);
   protected readonly checklistState = inject(ChecklistStateService);
+  protected readonly autosave = inject(ChecklistAutosaveService);
   protected readonly i18n = inject(I18nService);
+  private readonly accessibility = inject(AccessibilityService);
   private readonly confirmationService = inject(ConfirmationService);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
@@ -70,6 +83,7 @@ export class ChecklistPageComponent implements OnInit {
   protected readonly isLoading = signal<boolean>(true);
   protected readonly loadError = signal<boolean>(false);
   protected readonly quickFillVisible = signal<boolean>(false);
+  private readonly reviewStepActive = signal<boolean>(false);
 
   protected readonly schema = this.checklistState.schema;
   protected readonly filteredGroups = this.checklistState.filteredGroups;
@@ -85,10 +99,13 @@ export class ChecklistPageComponent implements OnInit {
     () => Object.keys(this.answers()).length > 0,
   );
 
-  protected readonly activeAccordionIndex = computed<number>(() => {
+  protected readonly activeStepperStep = computed<number>(() => {
     const groups = this.filteredGroups();
     if (groups.length === 0) {
       return 0;
+    }
+    if (this.reviewStepActive()) {
+      return groups.length;
     }
     return Math.min(this.checklistState.activeCategoryIndex(), groups.length - 1);
   });
@@ -109,6 +126,8 @@ export class ChecklistPageComponent implements OnInit {
       subtitle: this.i18n.translateUi('subtitle'),
       languageLabel: this.i18n.translateUi('languageLabel'),
       accordionMode: this.i18n.translateUi('accordionMode'),
+      stepperMode: this.translateWithFallback('stepperMode', 'Guiado (Passos)'),
+      classicMode: this.translateWithFallback('classicMode', 'Modo Clássico'),
       fullMode: this.i18n.translateUi('fullMode'),
       quickFillButton: this.i18n.translateUi('quickFillButton'),
       searchPlaceholder: this.i18n.translateUi('searchPlaceholder'),
@@ -119,6 +138,28 @@ export class ChecklistPageComponent implements OnInit {
       legendTitle: this.i18n.translateUi('legendTitle'),
       privacyNotice: this.i18n.translateUi('privacyNotice'),
       clearSearch: this.i18n.translateUi('clearSelection'),
+    };
+  });
+
+  protected readonly stepperLabels = computed<ChecklistStepperLabels>(() => {
+    this.i18n.currentLang();
+    return {
+      stepLabel: this.translateWithFallback('stepLabel', 'Passo'),
+      stepOfLabel: this.translateWithFallback('stepOfLabel', 'de'),
+      prevStep: this.translateWithFallback('prevStep', 'Passo Anterior'),
+      nextStep: this.translateWithFallback('nextStep', 'Próximo Passo'),
+      goToReview: this.translateWithFallback('goToReview', 'Ir para Revisão'),
+      reviewTitle: this.translateWithFallback('reviewStepTitle', 'Revisão Final'),
+      reviewSubtitle: this.translateWithFallback(
+        'reviewStepSubtitle',
+        'Todas as categorias estão abertas abaixo para revisão rápida. Você pode recolher ou expandir cada bloco e ajustar qualquer resposta antes de exportar.',
+      ),
+      expandAll: this.translateWithFallback('expandAllCategories', 'Expandir tudo'),
+      collapseAll: this.translateWithFallback('collapseAllCategories', 'Recolher tudo'),
+      finish: this.finishLabel(),
+      otherPlaceholder: this.otherPlaceholder(),
+      noResults: this.noResultsText(),
+      readAloud: this.readAloudLabel(),
     };
   });
 
@@ -135,9 +176,12 @@ export class ChecklistPageComponent implements OnInit {
     };
   });
 
-  protected readonly nextCategoryLabel = computed<string>(() => {
+  protected readonly classicHint = computed<string>(() => {
     this.i18n.currentLang();
-    return this.i18n.translateUi('nextCategory');
+    return this.translateWithFallback(
+      'classicSheetHint',
+      'Visualização clássica em blocos por categoria: clique nos círculos para marcar ou desmarcar cada escala.',
+    );
   });
 
   protected readonly finishLabel = computed<string>(() => {
@@ -175,6 +219,36 @@ export class ChecklistPageComponent implements OnInit {
     return this.i18n.translateUi('loadingSchema');
   });
 
+  protected readonly readAloudLabel = computed<string>(() => {
+    this.i18n.currentLang();
+    return this.translateWithFallback('a11yReadAloudItem', 'Ouvir leitura deste item');
+  });
+
+  protected readonly autosaveStatusText = computed<string>(() => {
+    const lang = this.i18n.currentLang();
+    if (this.autosave.isSaving()) {
+      return this.translateWithFallback(
+        'autosaveSaving',
+        'Salvando preenchimento criptografado...',
+      );
+    }
+
+    const savedAt = this.autosave.lastAutosavedAt();
+    if (savedAt) {
+      const formattedTime = this.formatSavedTime(savedAt, lang);
+      const prefix = this.translateWithFallback(
+        'autosaveSavedAt',
+        'Salvo automaticamente (criptografado) às',
+      );
+      return `${prefix} ${formattedTime}`;
+    }
+
+    return this.translateWithFallback(
+      'autosaveActive',
+      'Autosave criptografado ativo (a cada 1 min)',
+    );
+  });
+
   constructor() {
     effect(() => {
       const currentSchema = this.schema();
@@ -198,6 +272,7 @@ export class ChecklistPageComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.autosave.start(this.destroyRef);
     this.loadSchema();
   }
 
@@ -231,44 +306,63 @@ export class ChecklistPageComponent implements OnInit {
   }
 
   protected onSearchQueryChange(query: string): void {
+    this.reviewStepActive.set(false);
     this.checklistState.setSearchQuery(query);
   }
 
   protected onOnlyUnansweredChange(enabled: boolean): void {
+    this.reviewStepActive.set(false);
     this.checklistState.setOnlyUnanswered(enabled);
   }
 
-  protected onActiveCategoryChange(index: number): void {
-    this.checklistState.setActiveCategory(index);
-  }
-
-  protected onAnswerChange(event: { itemId: string; patch: Partial<ItemResponseValue> }): void {
-    this.checklistState.setItemAnswer(event.itemId, event.patch);
-  }
-
-  protected onNextCategory(): void {
+  protected onActiveStepChange(stepIndex: number): void {
     const groups = this.filteredGroups();
-    const schemaGroups = this.schema()?.groups ?? [];
-    const isUnfiltered = groups.length === schemaGroups.length;
-
-    if (isUnfiltered) {
-      const advanced = this.checklistState.nextCategory();
-      if (advanced) {
-        this.scrollToContentTop();
-        return;
-      }
-      this.onFinishChecklist();
-      return;
-    }
-
-    const currentIndex = this.activeAccordionIndex();
-    if (currentIndex < groups.length - 1) {
-      this.checklistState.setActiveCategory(currentIndex + 1);
+    if (groups.length > 0 && stepIndex >= groups.length) {
+      this.reviewStepActive.set(true);
+      this.accessibility.announce(this.stepperLabels().reviewTitle, false);
       this.scrollToContentTop();
       return;
     }
 
-    this.onFinishChecklist();
+    this.reviewStepActive.set(false);
+    this.checklistState.setActiveCategory(stepIndex);
+    const group = groups[stepIndex];
+    if (group) {
+      this.accessibility.announce(this.i18n.getGroupTitle(group.id), false);
+    }
+    this.scrollToContentTop();
+  }
+
+  protected onAnswerChange(event: { itemId: string; patch: Partial<ItemResponseValue> }): void {
+    this.checklistState.setItemAnswer(event.itemId, event.patch);
+    if (this.accessibility.audioAssistEnabled() || this.accessibility.visualCaptionsEnabled()) {
+      const label = this.i18n.getItemLabel(event.itemId);
+      const scaleId = event.patch.primaryScale ?? event.patch.secondaryScale;
+      const valueText = scaleId ? this.i18n.getScaleLabel(scaleId) : '';
+      const message = valueText.length > 0 ? `${label}: ${valueText}` : label;
+      this.accessibility.announce(message);
+    }
+  }
+
+  protected onReadItemAloud(item: ItemDefinition): void {
+    const label = this.i18n.getItemLabel(item.id);
+    const tooltip = this.i18n.getItemTooltip(item.id);
+    const answer = this.answers()[item.id];
+    const parts = [label];
+    if (tooltip.length > 0) {
+      parts.push(tooltip);
+    }
+    if (answer?.primaryScale) {
+      parts.push(this.i18n.getScaleLabel(answer.primaryScale));
+    }
+    if (answer?.secondaryScale) {
+      parts.push(this.i18n.getScaleLabel(answer.secondaryScale));
+    }
+    this.accessibility.speak(parts.join('. '), { force: true });
+  }
+
+  protected onReadTextAloud(text: string): void {
+    this.accessibility.speak(text, { force: true });
   }
 
   protected onOpenQuickFill(): void {
@@ -290,13 +384,41 @@ export class ChecklistPageComponent implements OnInit {
         outlined: true,
       },
       accept: () => {
+        this.reviewStepActive.set(false);
         this.checklistState.resetAllAnswers();
+        this.autosave.clearAutosave();
+        this.accessibility.announce(
+          this.translateWithFallback('a11yClearedStatus', 'Todas as respostas foram limpas.'),
+        );
       },
     });
   }
 
   protected onFinishChecklist(): void {
+    if (this.hasAnswers()) {
+      void this.autosave.saveNow();
+    }
     void this.router.navigate(['/export']);
+  }
+
+  private translateWithFallback(key: string, fallback: string): string {
+    const resolved = this.i18n.translateUi(key);
+    return resolved === `ui.${key}` ? fallback : resolved;
+  }
+
+  private formatSavedTime(isoTimestamp: string, lang: SupportedLanguage): string {
+    const parsed = new Date(isoTimestamp);
+    if (Number.isNaN(parsed.getTime())) {
+      return isoTimestamp;
+    }
+    try {
+      return new Intl.DateTimeFormat(lang, {
+        hour: '2-digit',
+        minute: '2-digit',
+      }).format(parsed);
+    } catch {
+      return parsed.toISOString().slice(11, 16);
+    }
   }
 
   private scrollToContentTop(): void {

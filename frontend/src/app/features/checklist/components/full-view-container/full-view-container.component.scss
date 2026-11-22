@@ -63,11 +63,12 @@
     font-size: 0.875rem;
     font-weight: 500;
     cursor: pointer;
-    transition: border-color 150ms ease, background-color 150ms ease;
+    transition: border-color 150ms ease, background-color 150ms ease, color 150ms ease;
 
     &:hover {
       border-color: v.$accent-primary;
-      background-color: #eef2ff;
+      background-color: v.$accent-soft;
+      color: v.$accent-primary;
     }
 
     &:focus-visible {
@@ -94,7 +95,7 @@
     flex-direction: column;
     gap: 1rem;
     padding: 1rem;
-    scroll-margin-top: 1rem;
+    scroll-margin-top: 5.5rem;
 
     @include m.respond-md {
       padding: 1.25rem 1.5rem;
@@ -126,6 +127,7 @@
     padding: 0.1875rem 0.625rem;
     border-radius: 9999px;
     background-color: v.$surface-subtle;
+    border: 1px solid v.$border-color;
     color: v.$text-secondary;
     font-size: 0.8125rem;
     font-weight: 600;

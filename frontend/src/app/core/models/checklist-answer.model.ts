@@ -1,7 +1,7 @@
 import { ScaleId } from './checklist-schema.model';
 
 export type SupportedLanguage = 'pt-BR' | 'en-US';
-export type ChecklistViewMode = 'accordion' | 'full';
+export type ChecklistViewMode = 'stepper' | 'classic' | 'full';
 
 export const OTHER_OPTION_VALUE = '__other__' as const;
 

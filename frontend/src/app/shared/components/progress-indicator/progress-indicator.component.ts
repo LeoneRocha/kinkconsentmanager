@@ -1,9 +1,9 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
-import { ProgressBarModule } from 'primeng/progressbar';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
 
 @Component({
   selector: 'app-progress-indicator',
-  imports: [ProgressBarModule],
+  imports: [MatProgressBarModule],
   templateUrl: './progress-indicator.component.html',
   styleUrl: './progress-indicator.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

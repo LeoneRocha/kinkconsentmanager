@@ -118,7 +118,7 @@ const REQUIRED_UI_KEYS: readonly string[] = [
 const SEMVER_REGEX =
   /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/;
 const HEX_COLOR_REGEX = /^#[0-9A-Fa-f]{6}$/;
-const PRIME_ICON_REGEX = /^pi pi-[a-z0-9-]+$/;
+const ICON_CLASS_REGEX = /^fa-(?:solid|regular|brands) fa-[a-z0-9-]+$/;
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -176,7 +176,7 @@ describe('Checklist Schema & i18n Integrity', () => {
     for (const scale of schema.scales) {
       expect(scale.color).toMatch(HEX_COLOR_REGEX);
       expect(scale.contrastColor).toMatch(HEX_COLOR_REGEX);
-      expect(scale.icon).toMatch(PRIME_ICON_REGEX);
+      expect(scale.icon).toMatch(ICON_CLASS_REGEX);
       expect(Object.keys(scale).sort()).toEqual([
         'color',
         'contrastColor',

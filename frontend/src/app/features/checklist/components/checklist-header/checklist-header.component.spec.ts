@@ -49,7 +49,7 @@ describe('ChecklistHeaderComponent', () => {
     hasAnswers?: boolean;
   }): Promise<void> => {
     fixture.componentRef.setInput('currentLang', overrides?.currentLang ?? 'pt-BR');
-    fixture.componentRef.setInput('viewMode', overrides?.viewMode ?? 'accordion');
+    fixture.componentRef.setInput('viewMode', overrides?.viewMode ?? 'stepper');
     fixture.componentRef.setInput('searchQuery', overrides?.searchQuery ?? '');
     fixture.componentRef.setInput('onlyUnanswered', overrides?.onlyUnanswered ?? false);
     fixture.componentRef.setInput('answeredCount', overrides?.answeredCount ?? 3);
@@ -92,7 +92,7 @@ describe('ChecklistHeaderComponent', () => {
 
     const hostEl = fixture.nativeElement as HTMLElement;
     const langButtons = hostEl.querySelectorAll<HTMLElement>(
-      '.checklist-header__lang-select p-togglebutton',
+      '.checklist-header__lang-select mat-button-toggle button',
     );
     expect(langButtons.length).toBe(2);
 
@@ -102,20 +102,21 @@ describe('ChecklistHeaderComponent', () => {
     expect(emitted).toEqual(['en-US']);
   });
 
-  it('should emit viewModeChange when toggling between accordion and full mode', async () => {
+  it('should emit viewModeChange when switching across stepper, classic, and full modes', async () => {
     const emitted: ChecklistViewMode[] = [];
     component.viewModeChange.subscribe((mode) => emitted.push(mode));
 
     const hostEl = fixture.nativeElement as HTMLElement;
     const modeButtons = hostEl.querySelectorAll<HTMLElement>(
-      '.checklist-header__mode-select p-togglebutton',
+      '.checklist-header__mode-select mat-button-toggle button',
     );
-    expect(modeButtons.length).toBe(2);
+    expect(modeButtons.length).toBe(3);
 
     modeButtons[1].click();
+    modeButtons[2].click();
     await fixture.whenStable();
 
-    expect(emitted).toEqual(['full']);
+    expect(emitted).toEqual(['classic', 'full']);
   });
 
   it('should emit searchQueryChange when typing into search input and clearing', async () => {
@@ -146,10 +147,12 @@ describe('ChecklistHeaderComponent', () => {
     component.onlyUnansweredChange.subscribe((enabled) => emitted.push(enabled));
 
     const hostEl = fixture.nativeElement as HTMLElement;
-    const toggleInput = hostEl.querySelector<HTMLInputElement>('#only-unanswered-toggle');
-    expect(toggleInput).not.toBeNull();
+    const toggleBtn = hostEl.querySelector<HTMLButtonElement>(
+      '#only-unanswered-toggle button[role="switch"]',
+    );
+    expect(toggleBtn).not.toBeNull();
 
-    toggleInput!.click();
+    toggleBtn!.click();
     await fixture.whenStable();
 
     expect(emitted).toEqual([true]);

@@ -18,7 +18,11 @@ import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { take } from 'rxjs';
 import { ExportFormat, ExportResult, ResolvedPreviewTexts } from '../../../../core/models';
 import { SCHEMA_REPOSITORY_TOKEN } from '../../../../core/repositories';
-import { ChecklistStateService, I18nService } from '../../../../core/services';
+import {
+  ChecklistAutosaveService,
+  ChecklistStateService,
+  I18nService,
+} from '../../../../core/services';
 import { FullGridPreviewComponent } from '../../../../shared/components';
 import { ExportActionsToolbarComponent } from '../../components/export-actions-toolbar';
 import {
@@ -47,6 +51,7 @@ import {
 })
 export class ExportPageComponent implements OnInit {
   private readonly checklistState = inject(ChecklistStateService);
+  private readonly autosave = inject(ChecklistAutosaveService);
   private readonly i18n = inject(I18nService);
   private readonly schemaRepository = inject(SCHEMA_REPOSITORY_TOKEN);
   private readonly messageService = inject(MessageService);
@@ -91,6 +96,7 @@ export class ExportPageComponent implements OnInit {
   });
 
   ngOnInit(): void {
+    void this.autosave.restoreFromAutosave();
     this.loadSchemaIfNeeded();
   }
 

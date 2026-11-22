@@ -1,4 +1,4 @@
-import { inject, Injectable, signal } from '@angular/core';
+import { DOCUMENT, inject, Injectable, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslateService } from '@ngx-translate/core';
 import { take } from 'rxjs';
@@ -9,33 +9,38 @@ import {
   RolePairId,
   SupportedLanguage,
 } from '../models';
-import { LocalStoragePersistenceService } from './local-storage-persistence.service';
+import {
+  PREF_LANGUAGE_KEY,
+  USER_PREFERENCES_REPOSITORY_TOKEN,
+} from '../repositories/user-preferences.repository';
+import { LocaleCatalogService, LocaleMetadata } from './locale-catalog.service';
 
-export const LANGUAGE_STORAGE_KEY = 'kcm_lang_v1';
-
-function isSupportedLanguage(value: unknown): value is SupportedLanguage {
-  return value === 'pt-BR' || value === 'en-US';
-}
+export const LANGUAGE_STORAGE_KEY = PREF_LANGUAGE_KEY;
 
 /**
- * Facade over ngx-translate providing typed schema lookups, preview bundles, and reactive language state.
+ * Facade over ngx-translate, `LocaleCatalogService`, and `UserPreferencesRepository`
+ * managing persistent interface language, document `lang` attribute, and reactive schema lookups.
  */
 @Injectable({ providedIn: 'root' })
 export class I18nService {
+  private readonly document = inject(DOCUMENT);
   private readonly translateService = inject(TranslateService);
-  private readonly persistence = inject(LocalStoragePersistenceService);
+  private readonly preferencesRepo = inject(USER_PREFERENCES_REPOSITORY_TOKEN);
+  private readonly localeCatalog = inject(LocaleCatalogService);
 
   private readonly currentLangSignal = signal<SupportedLanguage>('pt-BR');
   private readonly translationRevisionSignal = signal(0);
 
+  readonly availableLocales: readonly LocaleMetadata[] = this.localeCatalog.getFallbackLocales();
   readonly currentLang = this.currentLangSignal.asReadonly();
 
   constructor() {
     this.translateService.onLangChange
       ?.pipe(takeUntilDestroyed())
       .subscribe((event) => {
-        if (isSupportedLanguage(event.lang)) {
+        if (this.localeCatalog.isSupportedLocale(event.lang)) {
           this.currentLangSignal.set(event.lang);
+          this.syncDocumentLang(event.lang);
         }
         this.translationRevisionSignal.update((rev) => rev + 1);
       });
@@ -46,28 +51,36 @@ export class I18nService {
         this.translationRevisionSignal.update((rev) => rev + 1);
       });
 
-    const persistedLang = this.persistence.load<unknown>(LANGUAGE_STORAGE_KEY);
+    const persistedLang = this.preferencesRepo.getLanguage();
     const serviceLang = this.translateService.getCurrentLang();
-    const initialLang: SupportedLanguage = isSupportedLanguage(persistedLang)
-      ? persistedLang
-      : isSupportedLanguage(serviceLang)
+    const initialLang: SupportedLanguage =
+      persistedLang ??
+      (this.localeCatalog.isSupportedLocale(serviceLang)
         ? serviceLang
-        : 'pt-BR';
+        : this.localeCatalog.resolveBrowserPreferredLocale());
 
     this.currentLangSignal.set(initialLang);
+    this.syncDocumentLang(initialLang);
     if (serviceLang !== initialLang) {
-      this.translateService.use(initialLang).pipe(take(1)).subscribe({ error: () => {} });
+      this.translateService.use(initialLang).pipe(take(1)).subscribe({ error: () => { } });
     }
   }
 
   /**
-   * Switches active application language without mutating checklist answer state.
+   * Switches active application language and persists it cleanly without mutating checklist answers.
    */
   setLanguage(lang: SupportedLanguage): void {
     this.currentLangSignal.set(lang);
-    this.persistence.save(lang, LANGUAGE_STORAGE_KEY);
-    this.translateService.use(lang).pipe(take(1)).subscribe({ error: () => {} });
+    this.syncDocumentLang(lang);
+    this.preferencesRepo.saveLanguage(lang);
+    this.translateService.use(lang).pipe(take(1)).subscribe({ error: () => { } });
     this.translationRevisionSignal.update((rev) => rev + 1);
+  }
+
+  private syncDocumentLang(lang: SupportedLanguage): void {
+    if (this.document?.documentElement) {
+      this.document.documentElement.lang = lang;
+    }
   }
 
   /**
@@ -237,7 +250,6 @@ export class I18nService {
     fullKey: string,
     params?: Record<string, string | number>,
   ): string | null {
-    // Track active language and translation store revisions inside reactive consumers.
     this.currentLangSignal();
     this.translationRevisionSignal();
 

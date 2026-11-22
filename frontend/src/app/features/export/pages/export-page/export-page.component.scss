@@ -6,13 +6,6 @@
   flex-direction: column;
   gap: 1.25rem;
   width: 100%;
-  max-width: v.$container-max-width;
-  margin: 0 auto;
-  padding: 1rem;
-
-  @include m.respond-md {
-    padding: 1.5rem;
-  }
 
   &__header {
     display: flex;
@@ -108,6 +101,7 @@
   &__preview-scroll {
     width: 100%;
     overflow-x: auto;
+    border-radius: v.$radius-md;
   }
 
   &__offscreen-capture {

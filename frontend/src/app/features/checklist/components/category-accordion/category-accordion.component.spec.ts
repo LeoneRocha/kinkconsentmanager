@@ -109,15 +109,15 @@ describe('CategoryAccordionComponent', () => {
 
   it('should render accordion panels with group titles, descriptions, and item counts', () => {
     const hostEl = fixture.nativeElement as HTMLElement;
-    const panels = hostEl.querySelectorAll('p-accordion-panel');
+    const panels = hostEl.querySelectorAll('mat-expansion-panel');
     expect(panels.length).toBe(2);
 
     const titles = Array.from(hostEl.querySelectorAll('.category-accordion__title')).map((el) =>
       el.textContent?.trim(),
     );
     expect(titles).toEqual(['Safety & Health', 'Bondage']);
-    expect(panels[0].classList.contains('p-accordionpanel-active')).toBe(true);
-    expect(panels[1].classList.contains('p-accordionpanel-active')).toBe(false);
+    expect(panels[0].classList.contains('mat-expanded')).toBe(true);
+    expect(panels[1].classList.contains('mat-expanded')).toBe(false);
     expect(panels[0].textContent).toContain('Safewords and care.');
   });
 
@@ -126,7 +126,7 @@ describe('CategoryAccordionComponent', () => {
     component.activeIndexChange.subscribe((idx) => emitted.push(idx));
 
     const hostEl = fixture.nativeElement as HTMLElement;
-    const headers = hostEl.querySelectorAll<HTMLElement>('p-accordion-header');
+    const headers = hostEl.querySelectorAll<HTMLElement>('mat-expansion-panel-header');
     expect(headers.length).toBe(2);
 
     headers[1].click();
@@ -140,7 +140,7 @@ describe('CategoryAccordionComponent', () => {
     component.nextCategory.subscribe(nextSpy);
 
     const hostEl = fixture.nativeElement as HTMLElement;
-    const firstPanel = hostEl.querySelectorAll('p-accordion-panel')[0];
+    const firstPanel = hostEl.querySelectorAll('mat-expansion-panel')[0];
     const nextBtn = firstPanel.querySelector<HTMLButtonElement>('.category-accordion__next-btn');
     const finishBtnInFirst = firstPanel.querySelector('.category-accordion__finish-btn');
 
@@ -160,7 +160,7 @@ describe('CategoryAccordionComponent', () => {
     component.finishChecklist.subscribe(finishSpy);
 
     const hostEl = fixture.nativeElement as HTMLElement;
-    const lastPanel = hostEl.querySelectorAll('p-accordion-panel')[1];
+    const lastPanel = hostEl.querySelectorAll('mat-expansion-panel')[1];
     const finishBtn = lastPanel.querySelector<HTMLButtonElement>('.category-accordion__finish-btn');
     const nextBtnInLast = lastPanel.querySelector('.category-accordion__next-btn');
 
@@ -180,7 +180,7 @@ describe('CategoryAccordionComponent', () => {
     component.answerChange.subscribe((val) => emitted.push(val));
 
     const hostEl = fixture.nativeElement as HTMLElement;
-    const lastPanel = hostEl.querySelectorAll('p-accordion-panel')[1];
+    const lastPanel = hostEl.querySelectorAll('mat-expansion-panel')[1];
     const scaleButtons = lastPanel.querySelectorAll<HTMLButtonElement>('button[role="radio"]');
     expect(scaleButtons.length).toBe(10);
 
@@ -193,7 +193,7 @@ describe('CategoryAccordionComponent', () => {
   it('should display empty state when groups is empty', async () => {
     await setBaseInputs({ groups: [] });
     const hostEl = fixture.nativeElement as HTMLElement;
-    expect(hostEl.querySelector('p-accordion')).toBeNull();
+    expect(hostEl.querySelector('mat-accordion')).toBeNull();
     expect(hostEl.querySelector('.category-accordion__empty')?.textContent).toContain(
       'Nenhum item encontrado',
     );

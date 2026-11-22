@@ -5,10 +5,10 @@
       {{ answered() }} / {{ total() }} ({{ clampedPercentage() }}%)
     </span>
   </div>
-  <p-progressbar
+  <mat-progress-bar
     class="progress-indicator__bar"
+    mode="determinate"
     [value]="clampedPercentage()"
-    [showValue]="false"
     [attr.aria-label]="label()"
   />
 </div>

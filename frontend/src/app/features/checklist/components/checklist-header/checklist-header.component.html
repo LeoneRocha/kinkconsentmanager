@@ -4,7 +4,7 @@
       <h1 class="checklist-header__title">{{ labels().title }}</h1>
       <p class="checklist-header__subtitle">{{ labels().subtitle }}</p>
       <p class="checklist-header__privacy">
-        <i class="pi pi-shield" aria-hidden="true"></i>
+        <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
         <span>{{ labels().privacyNotice }}</span>
       </p>
     </div>
@@ -12,47 +12,48 @@
     <div class="checklist-header__top-actions">
       <div class="checklist-header__lang">
         <span id="checklist-lang-label" class="sr-only">{{ labels().languageLabel }}</span>
-        <p-selectbutton
+        <mat-button-toggle-group
           class="checklist-header__lang-select"
-          [options]="languageOptions"
-          optionLabel="label"
-          optionValue="value"
-          [allowEmpty]="false"
-          [ariaLabelledBy]="'checklist-lang-label'"
-          [ngModel]="currentLang()"
-          (ngModelChange)="onLanguageModelChange($event)"
-        />
+          [hideSingleSelectionIndicator]="true"
+          [attr.aria-labelledby]="'checklist-lang-label'"
+          [value]="currentLang()"
+          (change)="onLanguageModelChange($event.value)"
+        >
+          @for (opt of languageOptions; track opt.value) {
+            <mat-button-toggle [value]="opt.value">{{ opt.label }}</mat-button-toggle>
+          }
+        </mat-button-toggle-group>
       </div>
 
-      <p-button
+      <button
+        mat-stroked-button
         type="button"
-        styleClass="checklist-header__export-btn"
-        severity="secondary"
-        [outlined]="true"
-        icon="pi pi-file-export"
-        [label]="labels().exportButton"
-        (onClick)="goToExport.emit()"
-      />
+        class="checklist-header__export-btn"
+        (click)="goToExport.emit()"
+      >
+        <i class="fa-solid fa-file-export" aria-hidden="true"></i>
+        <span>{{ labels().exportButton }}</span>
+      </button>
     </div>
   </div>
 
   <div class="checklist-header__controls">
     <div class="checklist-header__mode">
-      <p-selectbutton
+      <mat-button-toggle-group
         class="checklist-header__mode-select"
-        [options]="viewModeOptions()"
-        optionLabel="label"
-        optionValue="value"
-        [allowEmpty]="false"
-        [ngModel]="viewMode()"
-        (ngModelChange)="onViewModeModelChange($event)"
-      />
+        [hideSingleSelectionIndicator]="true"
+        [value]="viewMode()"
+        (change)="onViewModeModelChange($event.value)"
+      >
+        @for (opt of viewModeOptions(); track opt.value) {
+          <mat-button-toggle [value]="opt.value">{{ opt.label }}</mat-button-toggle>
+        }
+      </mat-button-toggle-group>
     </div>
 
     <div class="checklist-header__search">
-      <i class="pi pi-search checklist-header__search-icon" aria-hidden="true"></i>
+      <i class="fa-solid fa-magnifying-glass checklist-header__search-icon" aria-hidden="true"></i>
       <input
-        pInputText
         type="search"
         class="checklist-header__search-input"
         [placeholder]="labels().searchPlaceholder"
@@ -67,41 +68,42 @@
           [attr.aria-label]="labels().clearSearch"
           (click)="searchQueryChange.emit('')"
         >
-          <i class="pi pi-times" aria-hidden="true"></i>
+          <i class="fa-solid fa-xmark" aria-hidden="true"></i>
         </button>
       }
     </div>
 
     <div class="checklist-header__filter">
-      <p-toggleswitch
-        inputId="only-unanswered-toggle"
-        [ngModel]="onlyUnanswered()"
-        (ngModelChange)="onOnlyUnansweredModelChange($event)"
-      />
-      <label class="checklist-header__filter-label" for="only-unanswered-toggle">
-        {{ labels().onlyUnanswered }}
-      </label>
+      <mat-slide-toggle
+        id="only-unanswered-toggle"
+        [checked]="onlyUnanswered()"
+        (change)="onOnlyUnansweredModelChange($event.checked)"
+      >
+        <span class="checklist-header__filter-label">{{ labels().onlyUnanswered }}</span>
+      </mat-slide-toggle>
     </div>
 
     <div class="checklist-header__cta-group">
-      <p-button
+      <button
+        mat-flat-button
         type="button"
-        styleClass="checklist-header__quick-fill-btn"
-        icon="pi pi-bolt"
-        [label]="labels().quickFillButton"
-        (onClick)="openQuickFill.emit()"
-      />
+        class="checklist-header__quick-fill-btn"
+        (click)="openQuickFill.emit()"
+      >
+        <i class="fa-solid fa-bolt" aria-hidden="true"></i>
+        <span>{{ labels().quickFillButton }}</span>
+      </button>
 
-      <p-button
+      <button
+        mat-stroked-button
         type="button"
-        styleClass="checklist-header__clear-btn"
-        severity="danger"
-        [outlined]="true"
-        icon="pi pi-trash"
-        [label]="labels().clearAll"
+        class="checklist-header__clear-btn"
         [disabled]="!hasAnswers()"
-        (onClick)="clearAll.emit()"
-      />
+        (click)="clearAll.emit()"
+      >
+        <i class="fa-solid fa-trash" aria-hidden="true"></i>
+        <span>{{ labels().clearAll }}</span>
+      </button>
     </div>
   </div>
 
@@ -123,9 +125,9 @@
     >
       <span>{{ labels().legendTitle }}</span>
       <i
-        class="pi"
-        [class.pi-chevron-up]="legendExpanded()"
-        [class.pi-chevron-down]="!legendExpanded()"
+        class="fa-solid"
+        [class.fa-chevron-up]="legendExpanded()"
+        [class.fa-chevron-down]="!legendExpanded()"
         aria-hidden="true"
       ></i>
     </button>

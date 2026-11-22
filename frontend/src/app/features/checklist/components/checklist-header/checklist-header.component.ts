@@ -1,9 +1,8 @@
 import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ButtonModule } from 'primeng/button';
-import { InputTextModule } from 'primeng/inputtext';
-import { SelectButtonModule } from 'primeng/selectbutton';
-import { ToggleSwitchModule } from 'primeng/toggleswitch';
+import { MatButtonModule } from '@angular/material/button';
+import { MatButtonToggleModule } from '@angular/material/button-toggle';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { ChecklistViewMode, ScaleOption, SupportedLanguage } from '../../../../core/models';
 import { LegendBarComponent, ProgressIndicatorComponent } from '../../../../shared/components';
 
@@ -12,6 +11,8 @@ export interface ChecklistHeaderLabels {
   readonly subtitle: string;
   readonly languageLabel: string;
   readonly accordionMode: string;
+  readonly stepperMode?: string;
+  readonly classicMode?: string;
   readonly fullMode: string;
   readonly quickFillButton: string;
   readonly searchPlaceholder: string;
@@ -29,6 +30,8 @@ export const DEFAULT_CHECKLIST_HEADER_LABELS: ChecklistHeaderLabels = {
   subtitle: 'Checklist de Limites, Práticas e Consentimento Consensual',
   languageLabel: 'Idioma',
   accordionMode: 'Guiado (Accordion)',
+  stepperMode: 'Guiado (Passos)',
+  classicMode: 'Modo Clássico',
   fullMode: 'Visão Completa',
   quickFillButton: 'Preenchimento Rápido',
   searchPlaceholder: 'Buscar prática ou categoria...',
@@ -93,7 +96,8 @@ export class ChecklistHeaderComponent {
   ];
 
   protected readonly viewModeOptions = computed<SelectOption<ChecklistViewMode>[]>(() => [
-    { label: this.labels().accordionMode, value: 'accordion' },
+    { label: this.labels().stepperMode ?? 'Guiado (Passos)', value: 'stepper' },
+    { label: this.labels().classicMode ?? 'Modo Clássico', value: 'classic' },
     { label: this.labels().fullMode, value: 'full' },
   ]);
 
@@ -104,7 +108,7 @@ export class ChecklistHeaderComponent {
   }
 
   protected onViewModeModelChange(value: ChecklistViewMode | null): void {
-    if (value === 'accordion' || value === 'full') {
+    if (value === 'stepper' || value === 'classic' || value === 'full') {
       this.viewModeChange.emit(value);
     }
   }

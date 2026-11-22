@@ -12,6 +12,12 @@
   border-radius: v.$radius-md;
 
   &--print {
+    --kcm-surface-card: #ffffff;
+    --kcm-surface-subtle: #f1f5f9;
+    --kcm-border-color: #e2e8f0;
+    --kcm-text-primary: #0f172a;
+    --kcm-text-secondary: #475569;
+    --kcm-text-muted: #64748b;
     border: none;
     border-radius: 0;
     padding: 1.5rem;

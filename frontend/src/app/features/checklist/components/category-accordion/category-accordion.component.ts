@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
-import { AccordionModule, AccordionValue } from 'primeng/accordion';
-import { ButtonModule } from 'primeng/button';
+import { MatButtonModule } from '@angular/material/button';
+import { MatExpansionModule } from '@angular/material/expansion';
 import {
   GroupDefinition,
   ItemDefinition,
@@ -26,7 +26,7 @@ import {
  */
 @Component({
   selector: 'app-category-accordion',
-  imports: [AccordionModule, ButtonModule, DynamicQuestionItemComponent],
+  imports: [MatExpansionModule, MatButtonModule, DynamicQuestionItemComponent],
   templateUrl: './category-accordion.component.html',
   styleUrl: './category-accordion.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -41,9 +41,11 @@ export class CategoryAccordionComponent {
   readonly finishLabel = input<string>('Finalizar e Exportar');
   readonly otherPlaceholder = input<string>('Descreva brevemente sua preferência...');
   readonly noResultsText = input<string>('Nenhum item encontrado para os filtros aplicados.');
+  readonly readAloudLabel = input<string>('Ouvir leitura deste item');
 
   readonly activeIndexChange = output<number>();
   readonly answerChange = output<{ itemId: string; patch: Partial<ItemResponseValue> }>();
+  readonly readItemAloud = output<ItemDefinition>();
   readonly nextCategory = output<void>();
   readonly finishChecklist = output<void>();
 

@@ -1,5 +1,31 @@
 import { jest } from '@jest/globals';
+import { webcrypto } from 'node:crypto';
+import { TextDecoder, TextEncoder } from 'node:util';
 import { setupZonelessTestEnv } from 'jest-preset-angular/setup-env/zoneless';
+
+if (typeof globalThis.TextEncoder === 'undefined') {
+  Object.defineProperty(globalThis, 'TextEncoder', {
+    value: TextEncoder,
+    configurable: true,
+    writable: true,
+  });
+}
+
+if (typeof globalThis.TextDecoder === 'undefined') {
+  Object.defineProperty(globalThis, 'TextDecoder', {
+    value: TextDecoder,
+    configurable: true,
+    writable: true,
+  });
+}
+
+if (!globalThis.crypto?.subtle) {
+  Object.defineProperty(globalThis, 'crypto', {
+    value: webcrypto,
+    configurable: true,
+    writable: true,
+  });
+}
 
 setupZonelessTestEnv();
 
@@ -61,7 +87,7 @@ if (typeof Element !== 'undefined' && typeof Element.prototype.scrollIntoView !=
   });
 }
 
-// Mock para ResizeObserver utilizado por componentes PrimeNG / overlays
+// Mock para ResizeObserver utilizado por componentes Angular Material / overlays
 if (typeof globalThis.ResizeObserver === 'undefined') {
   globalThis.ResizeObserver = class ResizeObserver {
     observe(): void {}

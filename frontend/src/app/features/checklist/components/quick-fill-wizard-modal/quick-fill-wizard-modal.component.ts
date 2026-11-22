@@ -10,6 +10,7 @@ import {
 } from '@angular/core';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
+import { TooltipModule } from 'primeng/tooltip';
 import {
   GroupDefinition,
   ItemResponseValue,
@@ -87,7 +88,7 @@ function isInteractiveInputTarget(target: EventTarget | null): boolean {
  */
 @Component({
   selector: 'app-quick-fill-wizard-modal',
-  imports: [DialogModule, ButtonModule],
+  imports: [DialogModule, ButtonModule, TooltipModule],
   templateUrl: './quick-fill-wizard-modal.component.html',
   styleUrl: './quick-fill-wizard-modal.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -99,9 +100,11 @@ export class QuickFillWizardModalComponent {
   readonly answers = input.required<Readonly<Record<string, ItemResponseValue>>>();
   readonly texts = input.required<ResolvedPreviewTexts>();
   readonly labels = input<QuickFillLabels>(DEFAULT_QUICK_FILL_LABELS);
+  readonly readAloudLabel = input<string>('Ouvir leitura deste item');
 
   readonly visibleChange = output<boolean>();
   readonly answerChange = output<{ itemId: string; patch: Partial<ItemResponseValue> }>();
+  readonly readAloud = output<string>();
 
   private readonly currentIndex = signal(0);
   private wasVisible = false;
@@ -301,6 +304,19 @@ export class QuickFillWizardModalComponent {
     }
 
     this.emitStepScale(step, undefined);
+  }
+
+  protected emitCurrentStepReadAloud(): void {
+    const step = this.currentStep();
+    if (!step) {
+      return;
+    }
+    const selectedId = this.currentScaleId();
+    const parts = [step.groupTitle, step.itemLabel, step.roleLabel];
+    if (selectedId) {
+      parts.push(this.getScaleLabel(selectedId));
+    }
+    this.readAloud.emit(parts.join('. '));
   }
 
   protected getScaleLabel(scaleId: ScaleId): string {

@@ -5,9 +5,96 @@
     <title>KinkConsentManager — Checklist de Limites e Consentimento</title>
     <base href="/" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="icon" type="image/x-icon" href="favicon.ico" />
+
+    <!-- SEO Primário -->
+    <meta
+      name="description"
+      content="Checklist interativo de limites, práticas BDSM e consentimento consensual (PT-BR / EN-US). Preenchimento guiado com privacidade 100% local, autosave criptografado e exportação em PNG, PDF, CSV e JSON."
+    />
+    <meta
+      name="keywords"
+      content="kinklist, checklist BDSM, consentimento consensual, limites BDSM, KinkConsentManager, safeword, aftercare, privacidade local, kink sheet"
+    />
+    <meta name="author" content="KinkConsentManager" />
+    <meta name="application-name" content="KinkConsentManager" />
+    <meta name="robots" content="index, follow" />
+    <meta name="rating" content="adult" />
+    <meta name="referrer" content="no-referrer" />
+
+    <!-- Tema e Aparência -->
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f8fafc" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0f172a" />
+
+    <!-- Open Graph / Compartilhamento Social -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="KinkConsentManager" />
+    <meta property="og:title" content="KinkConsentManager — Checklist de Limites e Consentimento" />
+    <meta
+      property="og:description"
+      content="Mapeie limites, desejos e acordos consensuais com privacidade 100% local e criptografada no navegador. Exporte em PNG, PDF, CSV ou JSON."
+    />
+    <meta property="og:locale" content="pt_BR" />
+    <meta property="og:locale:alternate" content="en_US" />
+    <meta property="og:image" content="/og-image.png" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta
+      property="og:image:alt"
+      content="KinkConsentManager — Ícone de engrenagem com chifres e rabo estilizado e resumo da ferramenta de consentimento consensual"
+    />
+
+    <!-- Twitter / X Cards -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="KinkConsentManager — Checklist de Limites e Consentimento" />
+    <meta
+      name="twitter:description"
+      content="Checklist bilíngue (PT-BR / EN-US) de limites e consentimento com autosave criptografado e exportação 100% no navegador."
+    />
+    <meta name="twitter:image" content="/og-image.png" />
+    <meta
+      name="twitter:image:alt"
+      content="KinkConsentManager — Checklist consensual de limites e práticas com privacidade local"
+    />
+
+    <!-- Favicons & PWA Manifest -->
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png" />
+    <link rel="icon" type="image/x-icon" sizes="any" href="favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png" />
+    <link rel="manifest" href="site.webmanifest" />
+
+    <!-- Dados Estruturados Schema.org -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "KinkConsentManager",
+        "applicationCategory": "LifestyleApplication",
+        "operatingSystem": "Web",
+        "inLanguage": ["pt-BR", "en-US"],
+        "isAccessibleForFree": true,
+        "description": "Checklist consensual interativo para mapeamento de limites, práticas BDSM e acordos de segurança com armazenamento criptografado exclusivamente local no navegador e exportação em PNG, PDF, CSV e JSON.",
+        "featureList": [
+          "Modo guiado por passos, Modo Clássico KinkSheet e Visão Completa",
+          "Suporte bilíngue em Português (Brasil) e English (US)",
+          "Autosave periódico criptografado com Web Crypto AES-GCM 256-bit",
+          "Exportação client-side em PNG, PDF, CSV e JSON"
+        ]
+      }
+    </script>
   </head>
   <body>
     <app-root></app-root>
+    <noscript>
+      <div style="padding: 1.5rem; font-family: system-ui, sans-serif; text-align: center;">
+        <h1>KinkConsentManager</h1>
+        <p>
+          Ative o JavaScript no navegador para utilizar o checklist consensual de limites e
+          consentimento. Seus dados permanecem criptografados exclusivamente no seu dispositivo.
+        </p>
+      </div>
+    </noscript>
   </body>
 </html>

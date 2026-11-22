@@ -6,35 +6,35 @@
       "order": 1,
       "color": "#D32F2F",
       "contrastColor": "#FFFFFF",
-      "icon": "pi pi-ban"
+      "icon": "fa-solid fa-ban"
     },
     {
       "id": "soft_limit",
       "order": 2,
       "color": "#F57C00",
       "contrastColor": "#111827",
-      "icon": "pi pi-exclamation-triangle"
+      "icon": "fa-solid fa-triangle-exclamation"
     },
     {
       "id": "curious",
       "order": 3,
       "color": "#FBC02D",
       "contrastColor": "#111827",
-      "icon": "pi pi-question-circle"
+      "icon": "fa-solid fa-circle-question"
     },
     {
       "id": "enjoy",
       "order": 4,
       "color": "#388E3C",
       "contrastColor": "#FFFFFF",
-      "icon": "pi pi-check-circle"
+      "icon": "fa-solid fa-circle-check"
     },
     {
       "id": "favorite",
       "order": 5,
       "color": "#7B1FA2",
       "contrastColor": "#FFFFFF",
-      "icon": "pi pi-heart-fill"
+      "icon": "fa-solid fa-heart"
     }
   ],
   "groups": [

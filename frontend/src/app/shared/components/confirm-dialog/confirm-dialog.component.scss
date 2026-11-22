@@ -1,0 +1,35 @@
+@use 'variables' as v;
+
+.confirm-dialog {
+  &__title {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    color: v.$text-primary;
+  }
+
+  &__icon {
+    color: v.$accent-primary;
+
+    &--danger {
+      color: v.$scale-hard-limit;
+    }
+  }
+
+  &__message {
+    margin: 0;
+    color: v.$text-secondary;
+    line-height: 1.5;
+  }
+
+  &__actions {
+    gap: 0.5rem;
+    padding-top: 0.75rem;
+  }
+
+  &__accept-btn--danger {
+    --mat-sys-primary: #{v.$scale-hard-limit};
+    --mat-button-filled-container-color: #{v.$scale-hard-limit};
+    --mat-button-filled-label-text-color: #ffffff;
+  }
+}

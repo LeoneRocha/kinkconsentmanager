@@ -336,5 +336,7 @@ describe('I18nService', () => {
     expect(preview.title).toBe('KinkConsentManager');
     expect(preview.notAnsweredLabel).toBe('Not answered');
     expect(preview.roles['dominant_submissive']).toEqual({ primary: 'Dom', secondary: 'Sub' });
+    expect(freshI18n.availableLocales.map((l) => l.code)).toEqual(['pt-BR', 'en-US']);
+    expect(document.documentElement.lang).toBe('en-US');
   });
 });

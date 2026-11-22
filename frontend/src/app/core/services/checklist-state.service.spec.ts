@@ -100,7 +100,7 @@ describe('ChecklistStateService', () => {
   it('should initialize with default state when storage is empty', () => {
     expect(service.schema()).toBeNull();
     expect(service.answers()).toEqual({});
-    expect(service.viewMode()).toBe('accordion');
+    expect(service.viewMode()).toBe('stepper');
     expect(service.activeCategoryIndex()).toBe(0);
     expect(service.searchQuery()).toBe('');
     expect(service.onlyUnanswered()).toBe(false);
@@ -112,7 +112,7 @@ describe('ChecklistStateService', () => {
     expect(service.nextCategory()).toBe(false);
   });
 
-  it('should hydrate persisted state on construction when schemaVersion matches 1.0.0', () => {
+  it('should hydrate non-sensitive navigation state and purge legacy plaintext answers on construction', () => {
     TestBed.resetTestingModule();
     localStorage.setItem(
       CHECKLIST_STORAGE_KEY,
@@ -129,13 +129,19 @@ describe('ChecklistStateService', () => {
 
     TestBed.configureTestingModule({});
     const hydratedService = TestBed.inject(ChecklistStateService);
+    const localPersistence = TestBed.inject(LocalStoragePersistenceService);
 
-    expect(hydratedService.answers()).toEqual({
-      rope_bondage: { primaryScale: 'enjoy', secondaryScale: 'curious' },
-    });
+    expect(hydratedService.answers()).toEqual({});
     expect(hydratedService.viewMode()).toBe('full');
     expect(hydratedService.activeCategoryIndex()).toBe(1);
-    expect(hydratedService.lastUpdatedAt()).toBe('2026-11-22T10:00:00.000Z');
+    expect(hydratedService.lastUpdatedAt()).toBeNull();
+
+    const sanitized = localPersistence.load<Record<string, unknown>>();
+    expect(sanitized).toEqual({
+      schemaVersion: '1.0.0',
+      viewMode: 'full',
+      activeCategoryIndex: 1,
+    });
   });
 
   it('should ignore persisted state if schemaVersion mismatches', () => {
@@ -154,8 +160,31 @@ describe('ChecklistStateService', () => {
     const freshService = TestBed.inject(ChecklistStateService);
 
     expect(freshService.answers()).toEqual({});
-    expect(freshService.viewMode()).toBe('accordion');
+    expect(freshService.viewMode()).toBe('stepper');
     expect(freshService.activeCategoryIndex()).toBe(0);
+  });
+
+  // Cenário: Estado legado salvo com viewMode='accordion' e troca para 'classic'.
+  // Objetivo: Migrar 'accordion' para 'stepper' na hidratação e persistir o novo modo 'classic'.
+  it('should migrate legacy accordion persisted mode to stepper and persist classic mode', () => {
+    TestBed.resetTestingModule();
+    localStorage.setItem(
+      CHECKLIST_STORAGE_KEY,
+      JSON.stringify({
+        schemaVersion: '1.0.0',
+        answers: {},
+        viewMode: 'accordion',
+        activeCategoryIndex: 0,
+      }),
+    );
+
+    TestBed.configureTestingModule({});
+    const migratedService = TestBed.inject(ChecklistStateService);
+    expect(migratedService.viewMode()).toBe('stepper');
+
+    migratedService.setViewMode('classic');
+    expect(migratedService.viewMode()).toBe('classic');
+    expect(persistence.load<{ viewMode: string }>()?.viewMode).toBe('classic');
   });
 
   it('should clamp activeCategoryIndex when initializeSchema is called', () => {
@@ -170,7 +199,7 @@ describe('ChecklistStateService', () => {
     expect(service.activeCategoryIndex()).toBe(0);
   });
 
-  it('should update primaryScale without overwriting secondaryScale in dual-role mode', () => {
+  it('should update primaryScale without overwriting secondaryScale in dual-role mode and avoid plaintext storage', () => {
     service.initializeSchema(TEST_SCHEMA);
 
     service.setItemAnswer('rope_bondage', { primaryScale: 'enjoy' });
@@ -183,11 +212,8 @@ describe('ChecklistStateService', () => {
     });
     expect(service.lastUpdatedAt()).not.toBeNull();
 
-    const stored = persistence.load<{ answers: Record<string, unknown> }>();
-    expect(stored?.answers['rope_bondage']).toEqual({
-      primaryScale: 'favorite',
-      secondaryScale: 'curious',
-    });
+    const stored = persistence.load<Record<string, unknown>>();
+    expect(stored?.['answers']).toBeUndefined();
   });
 
   it('should remove item entry when all answer fields become empty and clear via clearItemAnswer', () => {
@@ -206,9 +232,9 @@ describe('ChecklistStateService', () => {
     service.clearItemAnswer('cuffs');
     expect(service.answers()['cuffs']).toBeUndefined();
 
-    const saveSpy = jest.spyOn(persistence, 'save');
+    const beforeUpdatedAt = service.lastUpdatedAt();
     service.clearItemAnswer('nonexistent_item');
-    expect(saveSpy).not.toHaveBeenCalled();
+    expect(service.lastUpdatedAt()).toBe(beforeUpdatedAt);
   });
 
   it('should evaluate regular single_choice and multiple_choice options accurately', () => {
@@ -328,7 +354,7 @@ describe('ChecklistStateService', () => {
     expect(service.activeCategoryIndex()).toBe(1);
   });
 
-  it('should importDraft, exportDraftSnapshot, and persist imported answers', () => {
+  it('should importDraft, exportDraftSnapshot, and restore normalized state from encrypted autosave', () => {
     service.initializeSchema(TEST_SCHEMA);
 
     const draft: ChecklistDraft = {
@@ -344,7 +370,7 @@ describe('ChecklistStateService', () => {
     service.importDraft(draft);
     expect(service.answers()).toEqual(draft.answers);
     expect(service.answeredItemsCount()).toBe(2);
-    expect(persistence.load<{ answers: unknown }>()?.answers).toEqual(draft.answers);
+    expect(persistence.load<Record<string, unknown>>()?.['answers']).toBeUndefined();
 
     const exported = service.exportDraftSnapshot('pt-BR');
     expect(exported.schemaVersion).toBe('1.0.0');
@@ -356,6 +382,30 @@ describe('ChecklistStateService', () => {
     expect(exported.answers['aftercare_prefs']?.selectedOptions).not.toBe(
       service.answers()['aftercare_prefs']?.selectedOptions,
     );
+
+    // Incompatible schema version is ignored
+    service.restoreFromEncryptedAutosave({
+      schemaVersion: '9.9.9',
+      answers: { cuffs: { primaryScale: 'hard_limit' } },
+    });
+    expect(service.answers()).toEqual(draft.answers);
+
+    // Valid snapshot restores normalized answers and clamped navigation state
+    service.restoreFromEncryptedAutosave({
+      schemaVersion: '1.0.0',
+      answers: {
+        rope_bondage: { primaryScale: 'enjoy', secondaryScale: 'curious' },
+      },
+      viewMode: 'classic',
+      activeCategoryIndex: 99,
+      savedAt: '2026-11-22T15:30:00.000Z',
+    });
+    expect(service.answers()).toEqual({
+      rope_bondage: { primaryScale: 'enjoy', secondaryScale: 'curious' },
+    });
+    expect(service.viewMode()).toBe('classic');
+    expect(service.activeCategoryIndex()).toBe(1);
+    expect(service.lastUpdatedAt()).toBe('2026-11-22T15:30:00.000Z');
   });
 
   it('should clear answers, reset activeCategoryIndex to 0, and clear persistence on resetAllAnswers()', () => {

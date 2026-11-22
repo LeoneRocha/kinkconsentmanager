@@ -144,7 +144,7 @@ describe('DynamicQuestionItemComponent', () => {
     });
 
     const hostEl = fixture.nativeElement as HTMLElement;
-    const radios = hostEl.querySelectorAll<HTMLInputElement>('p-radiobutton input[type="radio"]');
+    const radios = hostEl.querySelectorAll<HTMLInputElement>('mat-radio-button input[type="radio"]');
     expect(radios.length).toBe(2);
 
     const emitSpy = jest.fn<void, [Partial<ItemResponseValue>]>();
@@ -169,7 +169,7 @@ describe('DynamicQuestionItemComponent', () => {
 
     const hostEl = fixture.nativeElement as HTMLElement;
     const checkboxes = hostEl.querySelectorAll<HTMLInputElement>(
-      'p-checkbox input[type="checkbox"]',
+      'mat-checkbox input[type="checkbox"]',
     );
     expect(checkboxes.length).toBe(3);
 
@@ -203,12 +203,12 @@ describe('DynamicQuestionItemComponent', () => {
     );
 
     const hostEl = fixture.nativeElement as HTMLElement;
-    expect(hostEl.querySelector('input[pInputText]')).toBeNull();
+    expect(hostEl.querySelector('input.question-item__text-input')).toBeNull();
 
     const emittedSingle: Partial<ItemResponseValue>[] = [];
     const sub1 = component.answerChange.subscribe((val) => emittedSingle.push(val));
 
-    const radios = hostEl.querySelectorAll<HTMLInputElement>('p-radiobutton input[type="radio"]');
+    const radios = hostEl.querySelectorAll<HTMLInputElement>('mat-radio-button input[type="radio"]');
     expect(radios.length).toBe(2);
     radios[1].click();
     await fixture.whenStable();
@@ -219,7 +219,7 @@ describe('DynamicQuestionItemComponent', () => {
     fixture.componentRef.setInput('answer', { selectedOption: OTHER_OPTION_VALUE, otherText: '' });
     await fixture.whenStable();
 
-    const singleOtherInput = hostEl.querySelector<HTMLInputElement>('input[pInputText]');
+    const singleOtherInput = hostEl.querySelector<HTMLInputElement>('input.question-item__text-input');
     expect(singleOtherInput).not.toBeNull();
     singleOtherInput!.value = 'Custom protocol';
     singleOtherInput!.dispatchEvent(new Event('input', { bubbles: true }));
@@ -245,7 +245,7 @@ describe('DynamicQuestionItemComponent', () => {
     const emittedMulti: Partial<ItemResponseValue>[] = [];
     component.answerChange.subscribe((val) => emittedMulti.push(val));
 
-    const multiOtherInput = hostEl.querySelector<HTMLInputElement>('input[pInputText]');
+    const multiOtherInput = hostEl.querySelector<HTMLInputElement>('input.question-item__text-input');
     expect(multiOtherInput).not.toBeNull();
     multiOtherInput!.value = 'Leather';
     multiOtherInput!.dispatchEvent(new Event('input', { bubbles: true }));
@@ -268,7 +268,7 @@ describe('DynamicQuestionItemComponent', () => {
     );
 
     const hostEl = fixture.nativeElement as HTMLElement;
-    const textarea = hostEl.querySelector<HTMLTextAreaElement>('textarea[pTextarea]');
+    const textarea = hostEl.querySelector<HTMLTextAreaElement>('textarea.question-item__textarea');
     const counter = hostEl.querySelector('.question-item__counter');
 
     expect(textarea).not.toBeNull();
@@ -292,14 +292,35 @@ describe('DynamicQuestionItemComponent', () => {
     );
 
     const hostEl = fixture.nativeElement as HTMLElement;
-    expect(hostEl.querySelector('.pi-info-circle')).toBeNull();
+    expect(hostEl.querySelector('.fa-circle-info')).toBeNull();
 
     fixture.componentRef.setInput('itemTooltip', 'Helpful safety explanation');
     await fixture.whenStable();
 
-    const icon = hostEl.querySelector('.pi-info-circle');
+    const icon = hostEl.querySelector('.fa-circle-info');
     expect(icon).not.toBeNull();
     const triggerBtn = hostEl.querySelector('.question-item__tooltip-btn');
     expect(triggerBtn?.getAttribute('aria-label')).toBe('Helpful safety explanation');
+  });
+
+  // Cenário: Clique no botão de leitura em voz alta do item.
+  // Objetivo: Emitir o evento readAloud mantendo rótulo acessível com o nome do item.
+  it('should render speak button with accessible label and emit readAloud on click', async () => {
+    await setBaseInputs(
+      { id: 'item_tts', type: 'scale_matrix' },
+      { itemLabel: 'Rope Bondage' },
+    );
+
+    const speakEmitSpy = jest.fn<void, []>();
+    component.readAloud.subscribe(speakEmitSpy);
+
+    const speakBtn = fixture.nativeElement.querySelector(
+      '.question-item__speak-btn',
+    ) as HTMLButtonElement;
+    expect(speakBtn).not.toBeNull();
+    expect(speakBtn.getAttribute('aria-label')).toContain('Rope Bondage');
+
+    speakBtn.click();
+    expect(speakEmitSpy).toHaveBeenCalledTimes(1);
   });
 });

@@ -1,4 +1,132 @@
+@use '@angular/material' as mat;
 @use 'variables' as v;
+
+:root {
+  --kcm-surface-bg: #f1f5f9;
+  --kcm-surface-card: #ffffff;
+  --kcm-surface-elevated: #ffffff;
+  --kcm-surface-subtle: #f8fafc;
+  --kcm-border-color: #e2e8f0;
+  --kcm-border-strong: #cbd5e1;
+  --kcm-text-primary: #0f172a;
+  --kcm-text-secondary: #475569;
+  --kcm-text-muted: #64748b;
+  --kcm-accent-primary: #4f46e5;
+  --kcm-accent-primary-hover: #4338ca;
+  --kcm-accent-soft: rgba(79, 70, 229, 0.11);
+  --kcm-topbar-bg: rgba(255, 255, 255, 0.88);
+  --kcm-shadow-sm: 0 2px 10px rgba(15, 23, 42, 0.05);
+  --kcm-shadow-md: 0 8px 24px rgba(15, 23, 42, 0.08);
+  --kcm-shadow-lg: 0 18px 42px rgba(15, 23, 42, 0.14);
+  --kcm-kbd-bg: rgba(15, 23, 42, 0.08);
+  --kcm-ambient-top: rgba(79, 70, 229, 0.08);
+  --kcm-ambient-bottom: rgba(14, 165, 233, 0.07);
+}
+
+html {
+  @include mat.theme((
+    color: (
+      primary: mat.$azure-palette,
+      theme-type: light,
+    ),
+    typography: Inter,
+    density: 0,
+  ));
+  --mat-sys-primary: var(--kcm-accent-primary);
+  --mat-sys-surface: var(--kcm-surface-card);
+  --mat-sys-surface-container-low: var(--kcm-surface-card);
+  --mat-sys-surface-container: var(--kcm-surface-elevated);
+  --mat-sys-on-surface: var(--kcm-text-primary);
+  --mat-sys-on-surface-variant: var(--kcm-text-secondary);
+  --mat-sys-outline: var(--kcm-border-strong);
+  --mat-sys-outline-variant: var(--kcm-border-color);
+  --mat-expansion-container-background-color: var(--kcm-surface-card);
+  --mat-expansion-container-text-color: var(--kcm-text-primary);
+  --mat-expansion-header-text-color: var(--kcm-text-primary);
+  --mat-expansion-header-indicator-color: var(--kcm-text-secondary);
+}
+
+html.app-dark {
+  @include mat.theme((
+    color: (
+      primary: mat.$azure-palette,
+      theme-type: dark,
+    ),
+  ));
+  color-scheme: dark;
+  --kcm-surface-bg: #0f1117;
+  --kcm-surface-card: #181c26;
+  --kcm-surface-elevated: #1f2431;
+  --kcm-surface-subtle: #212635;
+  --kcm-border-color: #2c3347;
+  --kcm-border-strong: #3d4661;
+  --kcm-text-primary: #f1f5f9;
+  --kcm-text-secondary: #cbd5e1;
+  --kcm-text-muted: #94a3b8;
+  --kcm-accent-primary: #818cf8;
+  --kcm-accent-primary-hover: #6366f1;
+  --kcm-accent-soft: rgba(129, 140, 248, 0.18);
+  --kcm-topbar-bg: rgba(20, 23, 32, 0.9);
+  --kcm-shadow-sm: 0 4px 16px rgba(0, 0, 0, 0.35);
+  --kcm-shadow-md: 0 12px 28px rgba(0, 0, 0, 0.48);
+  --kcm-shadow-lg: 0 22px 48px rgba(0, 0, 0, 0.65);
+  --kcm-kbd-bg: rgba(241, 245, 249, 0.14);
+  --kcm-ambient-top: rgba(99, 102, 241, 0.14);
+  --kcm-ambient-bottom: rgba(56, 189, 248, 0.08);
+}
+
+html.app-high-contrast {
+  --kcm-surface-bg: #ffffff;
+  --kcm-surface-card: #ffffff;
+  --kcm-surface-elevated: #ffffff;
+  --kcm-surface-subtle: #f4f4f5;
+  --kcm-border-color: #0f172a;
+  --kcm-border-strong: #000000;
+  --kcm-text-primary: #000000;
+  --kcm-text-secondary: #111827;
+  --kcm-text-muted: #1f2937;
+  --kcm-accent-primary: #0033cc;
+  --kcm-accent-primary-hover: #002299;
+  --kcm-accent-soft: rgba(0, 51, 204, 0.14);
+  --kcm-topbar-bg: #ffffff;
+  --kcm-shadow-sm: none;
+  --kcm-shadow-md: 0 0 0 2px #000000;
+  --kcm-shadow-lg: 0 0 0 2px #000000;
+  --kcm-ambient-top: transparent;
+  --kcm-ambient-bottom: transparent;
+}
+
+html.app-dark.app-high-contrast {
+  --kcm-surface-bg: #000000;
+  --kcm-surface-card: #090b10;
+  --kcm-surface-elevated: #111827;
+  --kcm-surface-subtle: #111827;
+  --kcm-border-color: #f8fafc;
+  --kcm-border-strong: #ffffff;
+  --kcm-text-primary: #ffffff;
+  --kcm-text-secondary: #f1f5f9;
+  --kcm-text-muted: #e2e8f0;
+  --kcm-accent-primary: #ffd60a;
+  --kcm-accent-primary-hover: #ffc300;
+  --kcm-accent-soft: rgba(255, 214, 10, 0.22);
+  --kcm-topbar-bg: #000000;
+  --kcm-shadow-sm: none;
+  --kcm-shadow-md: 0 0 0 2px #ffffff;
+  --kcm-shadow-lg: 0 0 0 2px #ffffff;
+}
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+}
+
+html.app-font-large {
+  font-size: 112.5%;
+}
+
+html.app-font-xlarge {
+  font-size: 125%;
+}
 
 *,
 *::before,
@@ -12,10 +140,15 @@ body {
   padding: 0;
   min-height: 100%;
   background-color: v.$surface-bg;
+  background-image:
+    radial-gradient(circle at 12% 0%, var(--kcm-ambient-top) 0%, transparent 45%),
+    radial-gradient(circle at 88% 100%, var(--kcm-ambient-bottom) 0%, transparent 45%);
+  background-attachment: fixed;
   color: v.$text-primary;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 button,
@@ -28,6 +161,73 @@ select {
 :focus-visible {
   outline: 2px solid v.$accent-primary;
   outline-offset: 2px;
+}
+
+html.app-high-contrast :focus-visible {
+  outline-width: 3px;
+  outline-offset: 3px;
+}
+
+html.app-reduced-motion {
+  scroll-behavior: auto;
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+.kcm-skeleton {
+  display: block;
+  width: 100%;
+  border-radius: 10px;
+  background: linear-gradient(
+    90deg,
+    var(--kcm-surface-subtle) 25%,
+    var(--kcm-border-color) 50%,
+    var(--kcm-surface-subtle) 75%
+  );
+  background-size: 200% 100%;
+  animation: kcm-skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes kcm-skeleton-pulse {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.kcm-snackbar-success {
+  --mat-snack-bar-container-color: #15803d;
+  --mat-snack-bar-supporting-text-color: #ffffff;
+  --mat-snack-bar-button-color: #dcfce7;
+}
+
+.kcm-snackbar-error {
+  --mat-snack-bar-container-color: #b91c1c;
+  --mat-snack-bar-supporting-text-color: #ffffff;
+  --mat-snack-bar-button-color: #fee2e2;
 }
 
 .sr-only {
