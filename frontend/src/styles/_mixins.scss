@@ -1,0 +1,35 @@
+@use 'variables' as v;
+
+@mixin respond-sm {
+  @media (min-width: v.$bp-sm) {
+    @content;
+  }
+}
+
+@mixin respond-md {
+  @media (min-width: v.$bp-md) {
+    @content;
+  }
+}
+
+@mixin respond-lg {
+  @media (min-width: v.$bp-lg) {
+    @content;
+  }
+}
+
+@mixin touch-target($size: v.$min-touch-target) {
+  min-width: $size;
+  min-height: $size;
+}
+
+@mixin focus-ring($color: v.$accent-primary) {
+  outline: 2px solid $color;
+  outline-offset: 2px;
+}
+
+@mixin card-surface {
+  background-color: v.$surface-card;
+  border: 1px solid v.$border-color;
+  border-radius: v.$radius-md;
+}

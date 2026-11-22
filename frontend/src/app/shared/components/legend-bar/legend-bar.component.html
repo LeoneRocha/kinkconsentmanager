@@ -1,0 +1,14 @@
+<ul class="legend-bar" role="list">
+  @for (scale of orderedScales(); track scale.id) {
+    <li class="legend-bar__item" role="listitem">
+      <span
+        class="legend-bar__chip"
+        [style.background-color]="scale.color"
+        [style.color]="scale.contrastColor"
+      >
+        <i [class]="scale.icon" class="legend-bar__icon" aria-hidden="true"></i>
+      </span>
+      <span class="legend-bar__label">{{ getScaleLabel(scale) }}</span>
+    </li>
+  }
+</ul>

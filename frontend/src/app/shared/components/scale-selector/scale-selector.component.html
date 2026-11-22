@@ -1,0 +1,34 @@
+<div class="scale-selector" [class.scale-selector--compact]="compact()">
+  @if (roleTitle().trim().length > 0) {
+    <span class="scale-selector__role">{{ roleTitle() }}</span>
+  }
+
+  <div
+    class="scale-selector__group"
+    role="radiogroup"
+    [attr.aria-label]="roleTitle()"
+    [attr.aria-disabled]="disabled() ? 'true' : null"
+  >
+    @for (scale of orderedScales(); track scale.id; let idx = $index) {
+      <button
+        #scaleBtn
+        type="button"
+        role="radio"
+        class="scale-selector__btn"
+        [class.scale-selector__btn--selected]="isSelected(scale.id)"
+        [disabled]="disabled()"
+        [attr.aria-checked]="isSelected(scale.id)"
+        [attr.aria-label]="getScaleLabel(scale)"
+        [attr.title]="getScaleLabel(scale)"
+        [attr.tabindex]="focusableScaleId() === scale.id ? 0 : -1"
+        [style.background-color]="isSelected(scale.id) ? scale.color : null"
+        [style.border-color]="scale.color"
+        [style.color]="isSelected(scale.id) ? scale.contrastColor : null"
+        (click)="onSelect(scale.id)"
+        (keydown)="onKeydown($event, idx)"
+      >
+        <i [class]="scale.icon" class="scale-selector__icon" aria-hidden="true"></i>
+      </button>
+    }
+  </div>
+</div>

@@ -1,0 +1,78 @@
+<main class="export-page">
+  <header class="export-page__header">
+    <div class="export-page__heading-group">
+      <h1 class="export-page__title">{{ t('exportTitle') }}</h1>
+      <p class="export-page__subtitle">{{ t('exportSubtitle') }}</p>
+    </div>
+
+    <p class="export-page__privacy">
+      <i class="pi pi-lock" aria-hidden="true"></i>
+      <span>{{ t('privacyNotice') }}</span>
+    </p>
+  </header>
+
+  <app-export-actions-toolbar
+    [busyFormat]="busyFormat()"
+    [hasSchema]="hasSchema()"
+    [backLabel]="t('backToChecklist')"
+    [pngLabel]="t('downloadPng')"
+    [pdfLabel]="t('downloadPdf')"
+    [jsonLabel]="t('exportJson')"
+    [importJsonLabel]="t('importJson')"
+    [csvLabel]="t('exportCsv')"
+    (backToChecklist)="onBackToChecklist()"
+    (exportPng)="onExportPng()"
+    (exportPdf)="onExportPdf()"
+    (exportJson)="onExportJson()"
+    (importJsonFile)="onImportJsonFile($event)"
+    (exportCsv)="onExportCsv()"
+  />
+
+  @if (isLoadingSchema()) {
+    <section class="export-page__status" aria-live="polite">
+      <p-progressspinner
+        strokeWidth="4"
+        [style]="{ width: '40px', height: '40px' }"
+        [ariaLabel]="t('loadingSchema')"
+      />
+      <p class="export-page__status-text">{{ t('loadingSchema') }}</p>
+    </section>
+  } @else if (loadError()) {
+    <section class="export-page__error" aria-live="assertive">
+      <p-message severity="error">{{ t('loadingError') }}</p-message>
+      <button
+        pButton
+        type="button"
+        severity="secondary"
+        class="export-page__retry-btn"
+        (click)="retryLoadSchema()"
+      >
+        <i class="pi pi-refresh" aria-hidden="true"></i>
+        <span>{{ t('retry') }}</span>
+      </button>
+    </section>
+  } @else if (schema(); as activeSchema) {
+    @if (previewTexts(); as texts) {
+      <section class="export-page__preview" [attr.aria-label]="t('previewHeading')">
+        <h2 class="export-page__preview-heading">{{ t('previewHeading') }}</h2>
+        <div class="export-page__preview-scroll">
+          <app-full-grid-preview
+            [schema]="activeSchema"
+            [answers]="answers()"
+            [texts]="texts"
+            [printMode]="false"
+          />
+        </div>
+      </section>
+
+      <div #pngCaptureContainer class="export-page__offscreen-capture" aria-hidden="true">
+        <app-full-grid-preview
+          [schema]="activeSchema"
+          [answers]="answers()"
+          [texts]="texts"
+          [printMode]="true"
+        />
+      </div>
+    }
+  }
+</main>

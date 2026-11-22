@@ -1,0 +1,137 @@
+<header class="checklist-header">
+  <div class="checklist-header__top">
+    <div class="checklist-header__brand">
+      <h1 class="checklist-header__title">{{ labels().title }}</h1>
+      <p class="checklist-header__subtitle">{{ labels().subtitle }}</p>
+      <p class="checklist-header__privacy">
+        <i class="pi pi-shield" aria-hidden="true"></i>
+        <span>{{ labels().privacyNotice }}</span>
+      </p>
+    </div>
+
+    <div class="checklist-header__top-actions">
+      <div class="checklist-header__lang">
+        <span id="checklist-lang-label" class="sr-only">{{ labels().languageLabel }}</span>
+        <p-selectbutton
+          class="checklist-header__lang-select"
+          [options]="languageOptions"
+          optionLabel="label"
+          optionValue="value"
+          [allowEmpty]="false"
+          [ariaLabelledBy]="'checklist-lang-label'"
+          [ngModel]="currentLang()"
+          (ngModelChange)="onLanguageModelChange($event)"
+        />
+      </div>
+
+      <p-button
+        type="button"
+        styleClass="checklist-header__export-btn"
+        severity="secondary"
+        [outlined]="true"
+        icon="pi pi-file-export"
+        [label]="labels().exportButton"
+        (onClick)="goToExport.emit()"
+      />
+    </div>
+  </div>
+
+  <div class="checklist-header__controls">
+    <div class="checklist-header__mode">
+      <p-selectbutton
+        class="checklist-header__mode-select"
+        [options]="viewModeOptions()"
+        optionLabel="label"
+        optionValue="value"
+        [allowEmpty]="false"
+        [ngModel]="viewMode()"
+        (ngModelChange)="onViewModeModelChange($event)"
+      />
+    </div>
+
+    <div class="checklist-header__search">
+      <i class="pi pi-search checklist-header__search-icon" aria-hidden="true"></i>
+      <input
+        pInputText
+        type="search"
+        class="checklist-header__search-input"
+        [placeholder]="labels().searchPlaceholder"
+        [attr.aria-label]="labels().searchPlaceholder"
+        [ngModel]="searchQuery()"
+        (ngModelChange)="searchQueryChange.emit($event)"
+      />
+      @if (searchQuery().length > 0) {
+        <button
+          type="button"
+          class="checklist-header__search-clear"
+          [attr.aria-label]="labels().clearSearch"
+          (click)="searchQueryChange.emit('')"
+        >
+          <i class="pi pi-times" aria-hidden="true"></i>
+        </button>
+      }
+    </div>
+
+    <div class="checklist-header__filter">
+      <p-toggleswitch
+        inputId="only-unanswered-toggle"
+        [ngModel]="onlyUnanswered()"
+        (ngModelChange)="onOnlyUnansweredModelChange($event)"
+      />
+      <label class="checklist-header__filter-label" for="only-unanswered-toggle">
+        {{ labels().onlyUnanswered }}
+      </label>
+    </div>
+
+    <div class="checklist-header__cta-group">
+      <p-button
+        type="button"
+        styleClass="checklist-header__quick-fill-btn"
+        icon="pi pi-bolt"
+        [label]="labels().quickFillButton"
+        (onClick)="openQuickFill.emit()"
+      />
+
+      <p-button
+        type="button"
+        styleClass="checklist-header__clear-btn"
+        severity="danger"
+        [outlined]="true"
+        icon="pi pi-trash"
+        [label]="labels().clearAll"
+        [disabled]="!hasAnswers()"
+        (onClick)="clearAll.emit()"
+      />
+    </div>
+  </div>
+
+  <div class="checklist-header__progress-row">
+    <app-progress-indicator
+      [answered]="answeredCount()"
+      [total]="totalCount()"
+      [percentage]="progressPercentage()"
+      [label]="labels().progressLabel"
+    />
+  </div>
+
+  <div class="checklist-header__legend-section">
+    <button
+      type="button"
+      class="checklist-header__legend-toggle"
+      [attr.aria-expanded]="legendExpanded()"
+      (click)="toggleLegend()"
+    >
+      <span>{{ labels().legendTitle }}</span>
+      <i
+        class="pi"
+        [class.pi-chevron-up]="legendExpanded()"
+        [class.pi-chevron-down]="!legendExpanded()"
+        aria-hidden="true"
+      ></i>
+    </button>
+
+    @if (legendExpanded()) {
+      <app-legend-bar [scales]="scales()" [scaleLabels]="scaleLabels()" />
+    }
+  </div>
+</header>

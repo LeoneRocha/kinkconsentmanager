@@ -1,0 +1,112 @@
+<nav class="export-toolbar" aria-label="Export actions">
+  <div class="export-toolbar__navigation">
+    <button
+      pButton
+      type="button"
+      severity="secondary"
+      [outlined]="true"
+      class="export-toolbar__btn export-toolbar__btn--back"
+      data-action="back"
+      (click)="onBackClick()"
+    >
+      <i class="pi pi-arrow-left" aria-hidden="true"></i>
+      <span>{{ backLabel() }}</span>
+    </button>
+  </div>
+
+  <div class="export-toolbar__actions">
+    <button
+      pButton
+      type="button"
+      severity="primary"
+      class="export-toolbar__btn"
+      data-action="png"
+      [disabled]="actionsDisabled()"
+      [attr.aria-busy]="busyFormat() === 'png'"
+      (click)="onExportPngClick()"
+    >
+      <i
+        [class]="busyFormat() === 'png' ? 'pi pi-spin pi-spinner' : 'pi pi-image'"
+        aria-hidden="true"
+      ></i>
+      <span>{{ pngLabel() }}</span>
+    </button>
+
+    <button
+      pButton
+      type="button"
+      severity="primary"
+      class="export-toolbar__btn"
+      data-action="pdf"
+      [disabled]="actionsDisabled()"
+      [attr.aria-busy]="busyFormat() === 'pdf'"
+      (click)="onExportPdfClick()"
+    >
+      <i
+        [class]="busyFormat() === 'pdf' ? 'pi pi-spin pi-spinner' : 'pi pi-file-pdf'"
+        aria-hidden="true"
+      ></i>
+      <span>{{ pdfLabel() }}</span>
+    </button>
+
+    <button
+      pButton
+      type="button"
+      severity="secondary"
+      [outlined]="true"
+      class="export-toolbar__btn"
+      data-action="json"
+      [disabled]="actionsDisabled()"
+      [attr.aria-busy]="busyFormat() === 'json'"
+      (click)="onExportJsonClick()"
+    >
+      <i
+        [class]="busyFormat() === 'json' ? 'pi pi-spin pi-spinner' : 'pi pi-download'"
+        aria-hidden="true"
+      ></i>
+      <span>{{ jsonLabel() }}</span>
+    </button>
+
+    <button
+      pButton
+      type="button"
+      severity="secondary"
+      [outlined]="true"
+      class="export-toolbar__btn"
+      data-action="import-json"
+      [disabled]="actionsDisabled()"
+      (click)="onImportJsonTriggerClick()"
+    >
+      <i class="pi pi-upload" aria-hidden="true"></i>
+      <span>{{ importJsonLabel() }}</span>
+    </button>
+
+    <button
+      pButton
+      type="button"
+      severity="secondary"
+      [outlined]="true"
+      class="export-toolbar__btn"
+      data-action="csv"
+      [disabled]="actionsDisabled()"
+      [attr.aria-busy]="busyFormat() === 'csv'"
+      (click)="onExportCsvClick()"
+    >
+      <i
+        [class]="busyFormat() === 'csv' ? 'pi pi-spin pi-spinner' : 'pi pi-table'"
+        aria-hidden="true"
+      ></i>
+      <span>{{ csvLabel() }}</span>
+    </button>
+
+    <input
+      #jsonFileInput
+      type="file"
+      accept=".json,application/json"
+      class="export-toolbar__file-input"
+      tabindex="-1"
+      [attr.aria-label]="importJsonLabel()"
+      (change)="onFileSelected($event)"
+    />
+  </div>
+</nav>

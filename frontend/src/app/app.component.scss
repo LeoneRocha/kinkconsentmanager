@@ -1,0 +1,102 @@
+@use 'variables' as v;
+@use 'mixins' as m;
+
+.app-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: v.$surface-bg;
+
+  &__topbar {
+    background-color: v.$surface-card;
+    border-bottom: 1px solid v.$border-color;
+    position: sticky;
+    top: 0;
+    z-index: 20;
+  }
+
+  &__topbar-inner {
+    max-width: v.$container-max-width;
+    margin: 0 auto;
+    padding: 0.75rem 1rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+
+  &__brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+    color: v.$text-primary;
+    font-weight: 700;
+    font-size: 1.05rem;
+  }
+
+  &__brand-icon {
+    color: v.$accent-primary;
+    font-size: 1.2rem;
+  }
+
+  &__nav {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  &__nav-link {
+    @include m.touch-target(40px);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.4rem 0.85rem;
+    border-radius: v.$radius-sm;
+    text-decoration: none;
+    color: v.$text-secondary;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: background-color 0.15s ease, color 0.15s ease;
+
+    &:hover {
+      background-color: v.$surface-subtle;
+      color: v.$text-primary;
+    }
+
+    &--active {
+      background-color: rgba(v.$accent-primary, 0.1);
+      color: v.$accent-primary;
+    }
+  }
+
+  &__main {
+    flex: 1 0 auto;
+    width: 100%;
+    max-width: v.$container-max-width;
+    margin: 0 auto;
+    padding: 1rem;
+
+    @include m.respond-md {
+      padding: 1.5rem 1.25rem;
+    }
+  }
+
+  &__footer {
+    border-top: 1px solid v.$border-color;
+    background-color: v.$surface-card;
+    padding: 0.85rem 1rem;
+    text-align: center;
+  }
+
+  &__privacy {
+    margin: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    font-size: 0.85rem;
+    color: v.$text-secondary;
+  }
+}

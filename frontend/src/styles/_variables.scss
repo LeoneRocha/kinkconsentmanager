@@ -1,0 +1,42 @@
+// Scale tokens (WCAG 2.1 AA high-contrast pairs)
+$scale-hard-limit: #D32F2F;
+$scale-hard-limit-contrast: #FFFFFF;
+
+$scale-soft-limit: #F57C00;
+$scale-soft-limit-contrast: #111827;
+
+$scale-curious: #FBC02D;
+$scale-curious-contrast: #111827;
+
+$scale-enjoy: #388E3C;
+$scale-enjoy-contrast: #FFFFFF;
+
+$scale-favorite: #7B1FA2;
+$scale-favorite-contrast: #FFFFFF;
+
+$scale-empty: #E0E0E0;
+$scale-empty-contrast: #374151;
+
+// Surface and text tokens
+$surface-bg: #F8FAFC;
+$surface-card: #FFFFFF;
+$surface-subtle: #F1F5F9;
+$border-color: #E2E8F0;
+$text-primary: #0F172A;
+$text-secondary: #475569;
+$text-muted: #64748B;
+$accent-primary: #4F46E5;
+$accent-primary-hover: #4338CA;
+
+// Mobile-first breakpoints
+$bp-sm: 576px;
+$bp-md: 768px;
+$bp-lg: 1024px;
+$bp-xl: 1280px;
+
+// Touch & spacing
+$min-touch-target: 44px;
+$radius-sm: 6px;
+$radius-md: 10px;
+$radius-lg: 14px;
+$container-max-width: 1120px;

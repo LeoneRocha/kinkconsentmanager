@@ -2,6 +2,32 @@
 # kinkconsentmanager - Global .gitignore
 # ==============================================
 
+# Compiled output / Angular
+/dist
+/tmp
+/out-tsc
+/bazel-out
+/.angular/cache
+.sass-cache/
+/connect.lock
+/libpeerconnection.log
+testem.log
+/typings
+__screenshots__/
+
+# Node
+/node_modules
+/node_modules/**
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Coverage directory used by tools like istanbul / vitest
+/coverage
+coverage/
+*.lcov
+
 # OS generated files
 .DS_Store
 .DS_Store?
@@ -13,19 +39,23 @@ Thumbs.db
 Desktop.ini
 
 # IDE and Editor files
-.vscode/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+!.vscode/mcp.json
 .idea/
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+.history/*
 *.swp
 *.swo
 *~
-
-# Logs
-logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-lerna-debug.log*
 
 # Environment variables
 .env
@@ -34,16 +64,13 @@ lerna-debug.log*
 .env.test.local
 .env.production.local
 
-# Temporary files
+# Temporary & Backup files
 tmp/
 temp/
 *.tmp
 *.temp
-
-# Backup files
 *.bak
 *.backup
-*~
 
 # Archive files
 *.zip
@@ -55,29 +82,11 @@ temp/
 # Documentation build
 docs/_build/
 site/
-
-# Coverage directory used by tools like istanbul
-coverage/
-*.lcov
-
-# Docker
-.docker/
-docker-compose.override.yml
-docker-compose.override.yaml 
 *.db
-*.vsidx 
-/.vs/ProjectSettings.json
-/.vs/slnx.sqlite
-/.vs/VSWorkspaceState.json
-frontend/.vs/slnx.sqlite
-frontend/.vs
-.vs 
+*.vsidx
+/.vs/
 **/TestResults/
 *.trx
-backend/.github/copilot-instructions.md
-/node_modules/**
-*.lscache 
-frontend/.jest-cache/ 
+*.lscache
 sensitivedata.txt
-artifacts/**  
-artifacts/nupkg/** 
+artifacts/**

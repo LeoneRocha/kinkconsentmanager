@@ -1,0 +1,156 @@
+<p-dialog
+  styleClass="quick-fill-dialog"
+  [visible]="visible()"
+  (visibleChange)="onDialogVisibleChange($event)"
+  [header]="labels().title"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [dismissableMask]="true"
+  [closeOnEscape]="false"
+  [closeAriaLabel]="labels().close"
+  [style]="{ width: 'min(94vw, 44rem)' }"
+>
+  @if (currentStep(); as activeStep) {
+    <div class="quick-fill">
+      <div class="quick-fill__status">
+        <span class="quick-fill__counter">
+          {{ safeIndex() + 1 }} / {{ steps().length }}
+        </span>
+      </div>
+
+      @if (previousSteps().length > 0) {
+        <ul class="quick-fill__context quick-fill__context--prev" aria-label="Previous steps">
+          @for (prev of previousSteps(); track prev.key) {
+            <li class="quick-fill__context-row">
+              <button
+                type="button"
+                class="quick-fill__context-btn"
+                (click)="goToStep(prev.stepIndex)"
+              >
+                <span
+                  class="quick-fill__context-dot"
+                  [style.background-color]="getStepScaleColor(prev)"
+                  aria-hidden="true"
+                ></span>
+                <span class="quick-fill__context-text">
+                  {{ prev.groupTitle }} &bull; {{ prev.itemLabel }} &bull; {{ prev.roleLabel }}
+                </span>
+              </button>
+            </li>
+          }
+        </ul>
+      }
+
+      <div class="quick-fill__current" aria-live="polite">
+        <div class="quick-fill__current-group">{{ activeStep.groupTitle }}</div>
+        <div class="quick-fill__current-item">{{ activeStep.itemLabel }}</div>
+        <div class="quick-fill__current-meta">
+          <span class="quick-fill__current-role">{{ activeStep.roleLabel }}</span>
+          @if (currentScaleId(); as selectedId) {
+            <span class="quick-fill__current-selected">
+              {{ getScaleLabel(selectedId) }}
+            </span>
+          }
+        </div>
+      </div>
+
+      @if (nextSteps().length > 0) {
+        <ul class="quick-fill__context quick-fill__context--next" aria-label="Next steps">
+          @for (next of nextSteps(); track next.key) {
+            <li class="quick-fill__context-row">
+              <button
+                type="button"
+                class="quick-fill__context-btn"
+                (click)="goToStep(next.stepIndex)"
+              >
+                <span
+                  class="quick-fill__context-dot"
+                  [style.background-color]="getStepScaleColor(next)"
+                  aria-hidden="true"
+                ></span>
+                <span class="quick-fill__context-text">
+                  {{ next.groupTitle }} &bull; {{ next.itemLabel }} &bull; {{ next.roleLabel }}
+                </span>
+              </button>
+            </li>
+          }
+        </ul>
+      }
+
+      <div class="quick-fill__scales" role="group" [attr.aria-label]="activeStep.itemLabel">
+        @for (scale of orderedScales(); track scale.id; let idx = $index) {
+          <button
+            type="button"
+            class="quick-fill__scale-btn"
+            [class.quick-fill__scale-btn--selected]="currentScaleId() === scale.id"
+            [attr.aria-pressed]="currentScaleId() === scale.id"
+            [style.border-color]="scale.color"
+            [style.background-color]="currentScaleId() === scale.id ? scale.color : null"
+            [style.color]="currentScaleId() === scale.id ? scale.contrastColor : null"
+            (click)="selectScale(scale.id)"
+          >
+            <span class="quick-fill__scale-key">{{ idx + 1 }}</span>
+            <i [class]="scale.icon" class="quick-fill__scale-icon" aria-hidden="true"></i>
+            <span class="quick-fill__scale-label">{{ getScaleLabel(scale.id) }}</span>
+          </button>
+        }
+
+        <button
+          type="button"
+          class="quick-fill__clear-btn"
+          (click)="clearCurrentStep()"
+        >
+          <i class="pi pi-eraser" aria-hidden="true"></i>
+          <span>{{ labels().clearKey }}</span>
+        </button>
+      </div>
+
+      <p class="quick-fill__hint">{{ labels().shortcutHint }}</p>
+
+      <div class="quick-fill__nav">
+        <p-button
+          type="button"
+          styleClass="quick-fill__prev-btn"
+          severity="secondary"
+          [outlined]="true"
+          icon="pi pi-arrow-left"
+          [label]="labels().prev"
+          [disabled]="!canGoPrev()"
+          (onClick)="prevStep()"
+        />
+
+        <p-button
+          type="button"
+          styleClass="quick-fill__close-btn"
+          severity="secondary"
+          [text]="true"
+          [label]="labels().close"
+          (onClick)="closeModal()"
+        />
+
+        <p-button
+          type="button"
+          styleClass="quick-fill__next-btn"
+          icon="pi pi-arrow-right"
+          iconPos="right"
+          [label]="labels().next"
+          [disabled]="!canGoNext()"
+          (onClick)="nextStep()"
+        />
+      </div>
+    </div>
+  } @else {
+    <div class="quick-fill__empty" role="status">
+      <i class="pi pi-info-circle quick-fill__empty-icon" aria-hidden="true"></i>
+      <p class="quick-fill__empty-text">{{ labels().empty }}</p>
+      <p-button
+        type="button"
+        styleClass="quick-fill__close-btn"
+        severity="secondary"
+        [label]="labels().close"
+        (onClick)="closeModal()"
+      />
+    </div>
+  }
+</p-dialog>

@@ -1,0 +1,75 @@
+@if (groups().length === 0) {
+  <div class="category-accordion__empty" role="status">
+    <i class="pi pi-filter-slash category-accordion__empty-icon" aria-hidden="true"></i>
+    <p class="category-accordion__empty-text">{{ noResultsText() }}</p>
+  </div>
+} @else {
+  <p-accordion
+    class="category-accordion"
+    [value]="activeIndex()"
+    (valueChange)="onAccordionValueChange($event)"
+  >
+    @for (group of groups(); track group.id; let i = $index; let isLast = $last) {
+      <p-accordion-panel [value]="i">
+        <p-accordion-header>
+          <div class="category-accordion__header">
+            <span class="category-accordion__title">{{ groupTitle(group) }}</span>
+            <span class="category-accordion__count">
+              {{ groupAnsweredCount(group) }} / {{ group.items.length }}
+            </span>
+          </div>
+        </p-accordion-header>
+
+        <p-accordion-content>
+          <div class="category-accordion__body">
+            @if (groupDescription(group); as description) {
+              <p class="category-accordion__description">{{ description }}</p>
+            }
+
+            <div class="category-accordion__items">
+              @for (item of group.items; track item.id) {
+                <app-dynamic-question-item
+                  [item]="item"
+                  [scales]="scales()"
+                  [isDualRole]="isDualRole(group, item)"
+                  [roleLabels]="roleLabels(group, item)"
+                  [itemLabel]="itemLabel(item)"
+                  [itemTooltip]="itemTooltip(item)"
+                  [scaleLabels]="texts().scales"
+                  [optionLabels]="texts().options"
+                  [otherLabel]="texts().otherLabel"
+                  [otherPlaceholder]="otherPlaceholder()"
+                  [answer]="itemAnswer(item.id)"
+                  (answerChange)="onItemAnswerChange(item.id, $event)"
+                />
+              }
+            </div>
+
+            <div class="category-accordion__footer">
+              @if (!isLast) {
+                <p-button
+                  type="button"
+                  styleClass="category-accordion__next-btn"
+                  [label]="nextCategoryLabel()"
+                  icon="pi pi-arrow-right"
+                  iconPos="right"
+                  (onClick)="nextCategory.emit()"
+                />
+              } @else {
+                <p-button
+                  type="button"
+                  styleClass="category-accordion__finish-btn"
+                  severity="success"
+                  [label]="finishLabel()"
+                  icon="pi pi-check"
+                  iconPos="right"
+                  (onClick)="finishChecklist.emit()"
+                />
+              }
+            </div>
+          </div>
+        </p-accordion-content>
+      </p-accordion-panel>
+    }
+  </p-accordion>
+}

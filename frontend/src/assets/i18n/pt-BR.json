@@ -1,0 +1,352 @@
+{
+  "ui": {
+    "title": "KinkConsentManager",
+    "subtitle": "Checklist de Limites, Práticas e Consentimento Consensual",
+    "languageLabel": "Idioma",
+    "accordionMode": "Guiado (Accordion)",
+    "fullMode": "Visão Completa",
+    "quickFillButton": "Preenchimento Rápido",
+    "searchPlaceholder": "Buscar prática ou categoria...",
+    "onlyUnanswered": "Apenas não respondidos",
+    "clearAll": "Limpar tudo",
+    "clearConfirmTitle": "Limpar todas as respostas?",
+    "clearConfirmMessage": "Todas as marcações e anotações salvas localmente serão removidas. Esta ação não pode ser desfeita.",
+    "confirmYes": "Sim, limpar",
+    "confirmNo": "Cancelar",
+    "nextCategory": "Próxima Categoria",
+    "finishAndExport": "Finalizar e Exportar",
+    "noResults": "Nenhum item encontrado para os filtros aplicados.",
+    "loadingError": "Não foi possível carregar o checklist. Verifique os dados locais e tente novamente.",
+    "retry": "Tentar novamente",
+    "progressLabel": "Progresso",
+    "otherOptionLabel": "Outro (especifique)",
+    "otherOptionPlaceholder": "Descreva brevemente sua preferência...",
+    "charactersRemaining": "caracteres restantes",
+    "notAnswered": "Não respondido",
+    "tooltipHint": "Saiba mais sobre esta prática",
+    "navChecklist": "Checklist",
+    "navExport": "Exportar",
+    "quickFillTitle": "Preenchimento Rápido",
+    "quickFillPrev": "Anterior",
+    "quickFillNext": "Próximo",
+    "quickFillClearKey": "Limpar (0)",
+    "quickFillShortcutHint": "Atalhos: teclas 1–5 escolhem a escala e avançam, 0 limpa a marcação e ↑/↓ navegam entre itens.",
+    "quickFillEmpty": "Não há itens de escala disponíveis para preenchimento rápido.",
+    "quickFillClose": "Fechar",
+    "exportTitle": "Prévia e Exportação do Checklist",
+    "exportSubtitle": "Revise suas respostas e exporte em formato visual ou portátil 100% no seu dispositivo.",
+    "backToChecklist": "Voltar ao Checklist",
+    "downloadPng": "Baixar PNG",
+    "downloadPdf": "Baixar PDF",
+    "exportJson": "Exportar JSON",
+    "importJson": "Importar JSON",
+    "exportCsv": "Exportar CSV",
+    "schemaVersionLabel": "Versão do Schema",
+    "generatedAtLabel": "Gerado em",
+    "exportSuccess": "Arquivo exportado com sucesso.",
+    "exportError": "Não foi possível concluir a exportação.",
+    "importSuccess": "Rascunho JSON importado e restaurado com sucesso.",
+    "importErrorInvalidJson": "Arquivo inválido: não foi possível ler um rascunho JSON válido.",
+    "importErrorIncompatibleVersion": "Versão do schema incompatível com este checklist.",
+    "previewHeading": "Resumo Completo das Respostas",
+    "roleHeader": "Papel",
+    "valueHeader": "Resposta",
+    "notesHeader": "Observações",
+    "loadingSchema": "Carregando checklist...",
+    "privacyNotice": "Privacidade local: seus dados permanecem exclusivamente no seu navegador.",
+    "legendTitle": "Legenda da Escala",
+    "quickNavTitle": "Categorias",
+    "clearSelection": "Limpar seleção",
+    "itemHeader": "Prática / Item",
+    "categoryHeader": "Categoria"
+  },
+  "roles": {
+    "giving_receiving": {
+      "primary": "Ativo / Aplicando",
+      "secondary": "Passivo / Recebendo"
+    },
+    "dominant_submissive": {
+      "primary": "Dominante (Dom)",
+      "secondary": "Submisso(a) (Sub)"
+    },
+    "self_partner": {
+      "primary": "Em Mim",
+      "secondary": "No(a) Parceiro(a)"
+    },
+    "general": {
+      "primary": "Geral"
+    }
+  },
+  "scales": {
+    "hard_limit": "Limite Rígido (Não)",
+    "soft_limit": "Limite Flexível (Ressalvas)",
+    "curious": "Curiosidade / Talvez",
+    "enjoy": "Gosto / Apreciado",
+    "favorite": "Favorito"
+  },
+  "groups": {
+    "grp_safety_health": {
+      "title": "Segurança, Saúde e Aftercare",
+      "description": "Acordos prévios essenciais de comunicação, safewords, cuidados pós-cena, alergias médicas e gatilhos emocionais."
+    },
+    "grp_affection_general": {
+      "title": "Afeto, Preliminares e Geral",
+      "description": "Práticas de conexão afetiva, intimidade sensorial, provocação e controle de ritmo durante a interação."
+    },
+    "grp_bondage_restraint": {
+      "title": "Bondage e Contenção",
+      "description": "Técnicas, acessórios e materiais de imobilização física, privação sensorial ou restrição de movimento."
+    },
+    "grp_impact_play": {
+      "title": "Impact Play",
+      "description": "Estímulos de impacto físico consensual aplicados com as mãos ou instrumentos específicos."
+    },
+    "grp_sensation_pain": {
+      "title": "Sensação e Dor Consensual",
+      "description": "Jogos térmicos, pressão, estímulos cutâneos e práticas de sensação intensa ou dor erótica."
+    },
+    "grp_domination_power": {
+      "title": "Dominação, Submissão e Poder (D/s)",
+      "description": "Dinâmicas de troca de poder consensual, protocolos, disciplina, controle e papéis D/s."
+    },
+    "grp_roleplay_gear": {
+      "title": "Vestimenta, Fetiche e Brinquedos",
+      "description": "Preferências visuais, materiais fetiche, caracterização em roleplay e uso de acessórios íntimos."
+    },
+    "grp_breath_edge": {
+      "title": "Práticas de Borda e Alto Risco (RACK)",
+      "description": "Atividades de risco elevado que exigem consentimento plenamente informado, pesquisa técnica e protocolos rigorosos de mitigação (RACK)."
+    }
+  },
+  "items": {
+    "item_safeword_system": {
+      "label": "Sistema de Safeword (Palavra de Segurança)",
+      "tooltip": "Escolha o mecanismo principal combinado para desacelerar, pausar ou encerrar imediatamente uma cena."
+    },
+    "item_aftercare_preferences": {
+      "label": "Preferências de Aftercare (Pós-cena)",
+      "tooltip": "Cuidados físicos e emocionais desejados logo após o encerramento da cena para regulação e acolhimento."
+    },
+    "item_medical_allergies": {
+      "label": "Restrições médicas, alergias e condições físicas",
+      "tooltip": "Informe alergias (ex.: látex, níquel, parafina), asma, lesões articulares, histórico circulatório ou medicações relevantes."
+    },
+    "item_psychological_triggers": {
+      "label": "Gatilhos psicológicos e limites emocionais",
+      "tooltip": "Temas, palavras, contextos ou memórias sensoriais que devem ser estritamente evitados para preservar o bem-estar emocional."
+    },
+    "item_cuddling_affection": {
+      "label": "Carinho, abraços e afeto físico",
+      "tooltip": "Toque afetuoso, acolhimento, beijos e proximidade corporal antes, durante ou após a interação."
+    },
+    "item_oral_stimulation": {
+      "label": "Estimulação oral",
+      "tooltip": "Prática de sexo oral consensual como parte das preliminares ou da cena principal."
+    },
+    "item_sensory_massage": {
+      "label": "Massagem sensorial",
+      "tooltip": "Uso intencional de toque lento, pressão variável, óleos ou texturas para aquecimento e consciência corporal."
+    },
+    "item_teasing_anticipation": {
+      "label": "Teasing e provocação",
+      "tooltip": "Construção gradual de desejo e expectativa por meio de toques leves, pausas e provocação verbal ou física."
+    },
+    "item_edging": {
+      "label": "Edging (Controle pré-clímax)",
+      "tooltip": "Levar a pessoa repetidamente próximo ao orgasmo e interromper o estímulo para intensificar ou prolongar a resposta."
+    },
+    "item_pace_control": {
+      "label": "Controle de ritmo e intensidade",
+      "tooltip": "Direcionamento explícito da velocidade, respiração e progressão de intensidade ao longo do encontro."
+    },
+    "item_dirty_talk": {
+      "label": "Dirty talk / Conversa erótica",
+      "tooltip": "Comunicação verbal explícita, comandos eróticos ou narração consensual durante a interação."
+    },
+    "item_cuffs_light": {
+      "label": "Algemas e contenção leve",
+      "tooltip": "Restrição de punhos ou tornozelos com algemas acolchoadas, couro ou metal, preservando circulação e conforto."
+    },
+    "item_rope_shibari": {
+      "label": "Bondage com cordas (Shibari / Kinbaku)",
+      "tooltip": "Amarração artística ou funcional com cordas, respeitando pontos anatômicos seguros para evitar compressão nervosa."
+    },
+    "item_blindfold": {
+      "label": "Venda nos olhos",
+      "tooltip": "Bloqueio temporário da visão para intensificar os demais sentidos e o elemento de surpresa consensual."
+    },
+    "item_gag": {
+      "label": "Mordaça (Gag)",
+      "tooltip": "Acessório bucal que limita a fala; requer checagem respiratória contínua e sinal não-verbal de safeword combinado."
+    },
+    "item_collar_leash": {
+      "label": "Coleira e guia",
+      "tooltip": "Uso simbólico ou funcional de coleira e guia; nunca aplique tração que comprima a traqueia ou o pescoço."
+    },
+    "item_suspension_bondage": {
+      "label": "Suspensão (Bondage suspenso)",
+      "tooltip": "Elevação parcial ou total do corpo com cordas e pontos de ancoragem; exige conhecimento técnico avançado e monitoramento constante."
+    },
+    "item_sensory_deprivation": {
+      "label": "Privação sensorial",
+      "tooltip": "Combinação de venda, abafadores auditivos ou isolamento tátil para reduzir estímulos externos."
+    },
+    "item_cage_confinement": {
+      "label": "Gaiola ou confinamento",
+      "tooltip": "Permanência consensual em gaiola ou espaço restrito sob supervisão contínua e possibilidade de saída imediata."
+    },
+    "item_bondage_materials": {
+      "label": "Materiais preferidos para bondage",
+      "tooltip": "Selecione os materiais com os quais você se sente confortável em termos de textura, segurança e higiene."
+    },
+    "item_spanking_manual": {
+      "label": "Spanking manual (Mãos)",
+      "tooltip": "Palmadas com a mão aberta em áreas seguras como glúteos e parte posterior das coxas."
+    },
+    "item_paddle": {
+      "label": "Paddle / Palmatória",
+      "tooltip": "Impacto plano e distribuído com palmatória de couro, madeira ou silicone em zonas musculares seguras."
+    },
+    "item_flogger": {
+      "label": "Flogger (Chicote de tiras)",
+      "tooltip": "Instrumento de múltiplas tiras flexíveis que produz desde sensação suave de aquecimento até impacto intenso."
+    },
+    "item_cane": {
+      "label": "Cane (Vara)",
+      "tooltip": "Instrumento fino e rígido que gera impacto linear agudo (ardência intensa), exigindo alta precisão de mira."
+    },
+    "item_crop": {
+      "label": "Crop (Chibata curta)",
+      "tooltip": "Haste flexível com ponta de couro usada para estalos pontuais, som e estímulo visual ou tátil."
+    },
+    "item_face_slapping": {
+      "label": "Tapa no rosto",
+      "tooltip": "Impacto facial leve a moderado; exige alinhamento prévio rigoroso para evitar regiões sensíveis como ouvidos, nariz e olhos."
+    },
+    "item_impact_tools": {
+      "label": "Instrumentos de impacto preferidos",
+      "tooltip": "Indique quais equipamentos ou superfícies são mais adequados ao seu conforto físico e sensorial."
+    },
+    "item_hot_wax": {
+      "label": "Cera quente",
+      "tooltip": "Gotejamento de velas específicas de baixa temperatura (parafina/soja cosmética), testando distância e sensibilidade térmica."
+    },
+    "item_ice_play": {
+      "label": "Gelo e contraste térmico",
+      "tooltip": "Aplicação de cubos de gelo ou acessórios resfriados sobre a pele, isoladamente ou alternando com calor."
+    },
+    "item_nipple_clamps": {
+      "label": "Prendedores e grampos de mamilo",
+      "tooltip": "Aplicação de pressão graduada nos mamilos; recomenda-se liberação periódica para preservar a circulação."
+    },
+    "item_scratching": {
+      "label": "Arranhões",
+      "tooltip": "Marcas superficiais na pele com unhas ou acessórios pontiagudos sem perfurar a derme."
+    },
+    "item_biting": {
+      "label": "Mordidas",
+      "tooltip": "Pressão dental consensual em áreas acordadas previamente, controlando força e possíveis marcas visíveis."
+    },
+    "item_electro_stimulation": {
+      "label": "Eletroestimulação (E-stim)",
+      "tooltip": "Uso de equipamentos próprios para estímulo elétrico erótico abaixo da linha da cintura; contraindicado com marcapasso ou cardiopatias."
+    },
+    "item_play_piercing": {
+      "label": "Agulhas / Play piercing",
+      "tooltip": "Perfuração temporária com agulhas estéreis descartáveis; exige assepsia rigorosa, descarte seguro e treinamento específico."
+    },
+    "item_ds_dynamic": {
+      "label": "Dinâmica D/s (Cena ou 24/7)",
+      "tooltip": "Troca consensual de autoridade e submissão delimitada ao momento da cena ou estendida a acordos contínuos."
+    },
+    "item_domestic_servitude": {
+      "label": "Serviço doméstico",
+      "tooltip": "Atividades de cuidado, organização ou atendimento ao(à) parceiro(a) dentro de um contexto lúdico ou protocolar de serviço."
+    },
+    "item_pet_play": {
+      "label": "Pet play",
+      "tooltip": "Roleplay em que um participante assume características e postura de animal de estimação sob cuidado ou comando do(a) tutor(a)."
+    },
+    "item_consensual_discipline": {
+      "label": "Disciplina e punição consensual",
+      "tooltip": "Aplicação combinada de regras, tarefas e correções consensuais dentro de limites claros."
+    },
+    "item_orgasm_control": {
+      "label": "Controle e negação de orgasmo",
+      "tooltip": "Permissão, adiamento ou restrição temporária do clímax mediante regras previamente acordadas."
+    },
+    "item_verbal_humiliation": {
+      "label": "Humilhação verbal consensual",
+      "tooltip": "Uso combinado de provocações ou termos depreciativos exclusivamente em cena, evitando gatilhos pessoais declarados."
+    },
+    "item_body_worship": {
+      "label": "Adoração corporal",
+      "tooltip": "Devoção sensorial e reverência direcionada a partes do corpo (como pés, coxas ou torso) por meio de beijos e toques."
+    },
+    "item_gear_leather": {
+      "label": "Couro (Leather)",
+      "tooltip": "Uso de peças, arreios (harnesses), jaquetas ou acessórios em couro como elemento estético ou sensorial."
+    },
+    "item_gear_latex": {
+      "label": "Látex e borracha",
+      "tooltip": "Vestuário ajustado em látex ou PVC; verifique sempre eventual alergia ao látex antes do uso."
+    },
+    "item_gear_lingerie_stockings": {
+      "label": "Lingerie, meias e saltos",
+      "tooltip": "Uso de peças íntimas estilizadas, meias 7/8, cintas-liga ou calçados específicos na composição visual."
+    },
+    "item_gear_uniforms_costumes": {
+      "label": "Uniformes e fantasias",
+      "tooltip": "Caracterização temática ou uso de uniformes para ambientação de roleplay consensual."
+    },
+    "item_gear_cross_dressing": {
+      "label": "Cross-dressing",
+      "tooltip": "Uso de vestimentas associadas a outra expressão de gênero durante a intimidade ou encenação."
+    },
+    "item_gear_toys_vibrators": {
+      "label": "Brinquedos, plugs e vibradores",
+      "tooltip": "Inclusão de vibradores, dildos, plugs anais ou estimuladores com materiais seguros para o corpo e higienizados."
+    },
+    "item_breathplay_choking": {
+      "label": "Controle de respiração (Breathplay / Choking)",
+      "tooltip": "ALERTA RACK (Alto Risco): Envolve risco real de hipóxia, lesão vascular, desmaio e parada cardiorrespiratória. Nunca pratique sem estudo aprofundado, sinal não-verbal ativo e consentimento explícito."
+    },
+    "item_fear_play": {
+      "label": "Fear play",
+      "tooltip": "ALERTA RACK (Alto Risco): Indução controlada de adrenalina e sobressalto. Pode desencadear crises de pânico ou dissociação; exige safewords inequívocos, checagens constantes e aftercare dedicado."
+    },
+    "item_cnc_roleplay": {
+      "label": "Consensual Non-Con (CNC)",
+      "tooltip": "ALERTA RACK (Alto Risco): Encenação de não-consentimento baseada em consentimento prévio explícito e revogável a qualquer segundo. Requer roteiro claro, safeword de interrupção imediata e cuidados emocionais pós-cena."
+    },
+    "item_blood_cutting": {
+      "label": "Sangue e cutting (Bloodplay)",
+      "tooltip": "ALERTA RACK (Alto Risco): Envolve risco de infecções, transmissão de patógenos sanguíneos, hemorragia e cicatrizes permanentes. Requer esterilização hospitalar, lâminas descartáveis e testagem prévia."
+    }
+  },
+  "options": {
+    "opt_sw_traffic_light": "Semáforo (Verde = continuar / Amarelo = desacelerar / Vermelho = parar)",
+    "opt_sw_custom_word": "Palavra ou frase específica personalizada",
+    "opt_sw_nonverbal": "Sinal não-verbal (ex.: bater duas vezes / soltar objeto)",
+    "opt_sw_checkins": "Check-ins verbais periódicos combinados",
+    "opt_ac_cuddling": "Carinho, abraços e contato pele a pele",
+    "opt_ac_hydration_snacks": "Água, hidratação e lanche leve",
+    "opt_ac_blanket_warmth": "Cobertor e aquecimento corporal",
+    "opt_ac_quiet_space": "Tempo em silêncio e espaço para descomprimir",
+    "opt_ac_verbal_reassurance": "Conversa acolhedora e reafirmação emocional",
+    "opt_ac_wound_skin_care": "Cuidados com a pele, limpeza e primeiros socorros",
+    "opt_mat_cotton_rope": "Corda de algodão (macia)",
+    "opt_mat_jute_hemp": "Corda de juta ou cânhamo",
+    "opt_mat_leather": "Couro (algemas e tiras)",
+    "opt_mat_neoprene_padded": "Neoprene ou nylon acolchoado",
+    "opt_mat_silicone": "Silicone",
+    "opt_mat_metal": "Metal / aço inoxidável",
+    "opt_mat_bondage_tape": "Fita de bondage sem adesivo na pele",
+    "opt_tool_open_hand": "Mão aberta",
+    "opt_tool_leather_paddle": "Paddle (palmatória) de couro ou madeira",
+    "opt_tool_suede_flogger": "Flogger de camurça ou couro macio",
+    "opt_tool_riding_crop": "Crop / chibata curta",
+    "opt_tool_rattan_cane": "Vara de rattan (cane)",
+    "opt_tool_belt_strap": "Cinto ou tira de couro"
+  }
+}

@@ -1,0 +1,141 @@
+<article class="full-grid-preview" [class.full-grid-preview--print]="printMode()">
+  <header class="full-grid-preview__header">
+    <h2 class="full-grid-preview__title">{{ texts().title }}</h2>
+    <dl class="full-grid-preview__meta">
+      <div class="full-grid-preview__meta-item">
+        <dt class="full-grid-preview__meta-label">{{ texts().schemaVersionLabel }}</dt>
+        <dd class="full-grid-preview__meta-value">{{ schema().schemaVersion }}</dd>
+      </div>
+      <div class="full-grid-preview__meta-item">
+        <dt class="full-grid-preview__meta-label">{{ texts().generatedAtLabel }}</dt>
+        <dd class="full-grid-preview__meta-value">{{ texts().generatedAtValue }}</dd>
+      </div>
+    </dl>
+  </header>
+
+  <section class="full-grid-preview__legend">
+    <app-legend-bar [scales]="orderedScales()" [scaleLabels]="texts().scales" />
+  </section>
+
+  <div class="full-grid-preview__groups">
+    @for (group of previewGroups(); track group.groupId) {
+      <section class="preview-group" [attr.data-group-id]="group.groupId">
+        <header class="preview-group__header">
+          <h3 class="preview-group__title">{{ group.title }}</h3>
+          @if (group.description) {
+            <p class="preview-group__description">{{ group.description }}</p>
+          }
+        </header>
+
+        <table class="preview-group__table">
+          @if (group.hasDualRoleColumns) {
+            <thead>
+              <tr>
+                <td class="preview-group__col-item" aria-hidden="true"></td>
+                <th scope="col" class="preview-group__col-role">
+                  {{ group.primaryColumnHeader }}
+                </th>
+                <th scope="col" class="preview-group__col-role">
+                  {{ group.secondaryColumnHeader }}
+                </th>
+              </tr>
+            </thead>
+          }
+          <tbody>
+            @for (row of group.rows; track row.itemId) {
+              <tr class="preview-row" [attr.data-item-id]="row.itemId">
+                <th scope="row" class="preview-row__label">{{ row.itemLabel }}</th>
+
+                @if (row.type === 'scale_matrix' && row.isDualRole) {
+                  <td class="preview-row__value preview-row__value--dual">
+                    @if (row.showRoleHint) {
+                      <span class="preview-row__role-hint">{{ row.primaryRoleLabel }}:</span>
+                    }
+                    @if (row.primaryScaleCell; as cell) {
+                      @if (cell.answered) {
+                        <span
+                          class="preview-pill"
+                          [style.background-color]="cell.color ?? null"
+                          [style.color]="cell.contrastColor ?? null"
+                        >
+                          @if (cell.icon) {
+                            <i [class]="cell.icon" aria-hidden="true"></i>
+                          }
+                          <span>{{ cell.label }}</span>
+                        </span>
+                      } @else {
+                        <span class="preview-unanswered">{{ cell.label }}</span>
+                      }
+                    }
+                  </td>
+                  <td class="preview-row__value preview-row__value--dual">
+                    @if (row.showRoleHint && row.secondaryRoleLabel) {
+                      <span class="preview-row__role-hint">{{ row.secondaryRoleLabel }}:</span>
+                    }
+                    @if (row.secondaryScaleCell; as cell) {
+                      @if (cell.answered) {
+                        <span
+                          class="preview-pill"
+                          [style.background-color]="cell.color ?? null"
+                          [style.color]="cell.contrastColor ?? null"
+                        >
+                          @if (cell.icon) {
+                            <i [class]="cell.icon" aria-hidden="true"></i>
+                          }
+                          <span>{{ cell.label }}</span>
+                        </span>
+                      } @else {
+                        <span class="preview-unanswered">{{ cell.label }}</span>
+                      }
+                    }
+                  </td>
+                } @else if (row.type === 'scale_matrix') {
+                  <td
+                    class="preview-row__value preview-row__value--single"
+                    [attr.colspan]="group.hasDualRoleColumns ? 2 : null"
+                  >
+                    @if (row.primaryScaleCell; as cell) {
+                      @if (cell.answered) {
+                        <span
+                          class="preview-pill"
+                          [style.background-color]="cell.color ?? null"
+                          [style.color]="cell.contrastColor ?? null"
+                        >
+                          @if (cell.icon) {
+                            <i [class]="cell.icon" aria-hidden="true"></i>
+                          }
+                          <span>{{ cell.label }}</span>
+                        </span>
+                      } @else {
+                        <span class="preview-unanswered">{{ cell.label }}</span>
+                      }
+                    }
+                  </td>
+                } @else {
+                  <td
+                    class="preview-row__value preview-row__value--text"
+                    [attr.colspan]="group.hasDualRoleColumns ? 2 : null"
+                  >
+                    @if (row.isAnswered) {
+                      <span
+                        [class]="
+                          row.type === 'restricted_text'
+                            ? 'preview-free-text'
+                            : 'preview-options-text'
+                        "
+                      >
+                        {{ row.formattedTextValue }}
+                      </span>
+                    } @else {
+                      <span class="preview-unanswered">{{ row.formattedTextValue }}</span>
+                    }
+                  </td>
+                }
+              </tr>
+            }
+          </tbody>
+        </table>
+      </section>
+    }
+  </div>
+</article>

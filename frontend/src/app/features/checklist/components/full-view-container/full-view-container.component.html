@@ -1,0 +1,76 @@
+@if (groups().length === 0) {
+  <div class="full-view__empty" role="status">
+    <i class="pi pi-filter-slash full-view__empty-icon" aria-hidden="true"></i>
+    <p class="full-view__empty-text">{{ noResultsText() }}</p>
+  </div>
+} @else {
+  <div class="full-view">
+    <nav class="full-view__quick-nav" [attr.aria-label]="quickNavTitle()">
+      <span class="full-view__quick-nav-label">{{ quickNavTitle() }}</span>
+      <div class="full-view__pills">
+        @for (group of groups(); track group.id) {
+          <button
+            type="button"
+            class="full-view__pill"
+            (click)="jumpToGroup(group.id)"
+          >
+            <span>{{ groupTitle(group) }}</span>
+            <span class="full-view__pill-count">
+              {{ groupAnsweredCount(group) }}/{{ group.items.length }}
+            </span>
+          </button>
+        }
+      </div>
+    </nav>
+
+    <div class="full-view__sections">
+      @for (group of groups(); track group.id) {
+        <section class="full-view__section" [id]="groupSectionId(group.id)">
+          <header class="full-view__section-header">
+            <div class="full-view__section-heading">
+              <h2 class="full-view__section-title">{{ groupTitle(group) }}</h2>
+              <span class="full-view__section-count">
+                {{ groupAnsweredCount(group) }} / {{ group.items.length }}
+              </span>
+            </div>
+
+            @if (groupDescription(group); as description) {
+              <p class="full-view__section-desc">{{ description }}</p>
+            }
+          </header>
+
+          <div class="full-view__items">
+            @for (item of group.items; track item.id) {
+              <app-dynamic-question-item
+                [item]="item"
+                [scales]="scales()"
+                [isDualRole]="isDualRole(group, item)"
+                [roleLabels]="roleLabels(group, item)"
+                [itemLabel]="itemLabel(item)"
+                [itemTooltip]="itemTooltip(item)"
+                [scaleLabels]="texts().scales"
+                [optionLabels]="texts().options"
+                [otherLabel]="texts().otherLabel"
+                [otherPlaceholder]="otherPlaceholder()"
+                [answer]="itemAnswer(item.id)"
+                (answerChange)="onItemAnswerChange(item.id, $event)"
+              />
+            }
+          </div>
+        </section>
+      }
+    </div>
+
+    <div class="full-view__footer">
+      <p-button
+        type="button"
+        styleClass="full-view__finish-btn"
+        severity="success"
+        [label]="finishLabel()"
+        icon="pi pi-check"
+        iconPos="right"
+        (onClick)="finishChecklist.emit()"
+      />
+    </div>
+  </div>
+}

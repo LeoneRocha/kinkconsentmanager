@@ -1,0 +1,355 @@
+{
+  "schemaVersion": "1.0.0",
+  "scales": [
+    {
+      "id": "hard_limit",
+      "order": 1,
+      "color": "#D32F2F",
+      "contrastColor": "#FFFFFF",
+      "icon": "pi pi-ban"
+    },
+    {
+      "id": "soft_limit",
+      "order": 2,
+      "color": "#F57C00",
+      "contrastColor": "#111827",
+      "icon": "pi pi-exclamation-triangle"
+    },
+    {
+      "id": "curious",
+      "order": 3,
+      "color": "#FBC02D",
+      "contrastColor": "#111827",
+      "icon": "pi pi-question-circle"
+    },
+    {
+      "id": "enjoy",
+      "order": 4,
+      "color": "#388E3C",
+      "contrastColor": "#FFFFFF",
+      "icon": "pi pi-check-circle"
+    },
+    {
+      "id": "favorite",
+      "order": 5,
+      "color": "#7B1FA2",
+      "contrastColor": "#FFFFFF",
+      "icon": "pi pi-heart-fill"
+    }
+  ],
+  "groups": [
+    {
+      "id": "grp_safety_health",
+      "order": 1,
+      "defaultDualRole": false,
+      "rolePairId": "general",
+      "items": [
+        {
+          "id": "item_safeword_system",
+          "type": "single_choice",
+          "options": [
+            "opt_sw_traffic_light",
+            "opt_sw_custom_word",
+            "opt_sw_nonverbal",
+            "opt_sw_checkins"
+          ],
+          "allowOtherOption": true,
+          "maxLength": 120
+        },
+        {
+          "id": "item_aftercare_preferences",
+          "type": "multiple_choice",
+          "options": [
+            "opt_ac_cuddling",
+            "opt_ac_hydration_snacks",
+            "opt_ac_blanket_warmth",
+            "opt_ac_quiet_space",
+            "opt_ac_verbal_reassurance",
+            "opt_ac_wound_skin_care"
+          ],
+          "allowOtherOption": true,
+          "maxLength": 120
+        },
+        {
+          "id": "item_medical_allergies",
+          "type": "restricted_text",
+          "maxLength": 300
+        },
+        {
+          "id": "item_psychological_triggers",
+          "type": "restricted_text",
+          "maxLength": 300
+        }
+      ]
+    },
+    {
+      "id": "grp_affection_general",
+      "order": 2,
+      "defaultDualRole": true,
+      "rolePairId": "giving_receiving",
+      "items": [
+        {
+          "id": "item_cuddling_affection",
+          "type": "scale_matrix"
+        },
+        {
+          "id": "item_oral_stimulation",
+          "type": "scale_matrix"
+        },
+        {
+          "id": "item_sensory_massage",
+          "type": "scale_matrix"
+        },
+        {
+          "id": "item_teasing_anticipation",
+          "type": "scale_matrix"
+        },
+        {
+          "id": "item_edging",
+          "type": "scale_matrix"
+        },
+        {
+          "id": "item_pace_control",
+          "type": "scale_matrix"
+        },
+        {
+          "id": "item_dirty_talk",
+          "type": "scale_matrix"
+        }
+      ]
+    },
+    {
+      "id": "grp_bondage_restraint",
+      "order": 3,
+      "defaultDualRole": true,
+      "rolePairId": "giving_receiving",
+      "items": [
+        {
+          "id": "item_cuffs_light",
+          "type": "scale_matrix"
+        },
+        {
+          "id": "item_rope_shibari",
+          "type": "scale_matrix"
+        },
+        {
+          "id": "item_blindfold",
+          "type": "scale_matrix"
+        },
+        {
+          "id": "item_gag",
+          "type": "scale_matrix"
+        },
+        {
+          "id": "item_collar_leash",
+          "type": "scale_matrix"
+        },
+        {
+          "id": "item_suspension_bondage",
+          "type": "scale_matrix"
+        },
+        {
+          "id": "item_sensory_deprivation",
+          "type": "scale_matrix"
+        },
+        {
+          "id": "item_cage_confinement",
+          "type": "scale_matrix"
+        },
+        {
+          "id": "item_bondage_materials",
+          "type": "multiple_choice",
+          "dualRole": false,
+          "rolePairId": "general",
+          "options": [
+            "opt_mat_cotton_rope",
+            "opt_mat_jute_hemp",
+            "opt_mat_leather",
+            "opt_mat_neoprene_padded",
+            "opt_mat_silicone",
+            "opt_mat_metal",
+            "opt_mat_bondage_tape"
+          ],
+          "allowOtherOption": true,
+          "maxLength": 120
+        }
+      ]
+    },
+    {
+      "id": "grp_impact_play",
+      "order": 4,
+      "defaultDualRole": true,
+      "rolePairId": "giving_receiving",
+      "items": [
+        {
+          "id": "item_spanking_manual",
+          "type": "scale_matrix"
+        },
+        {
+          "id": "item_paddle",
+          "type": "scale_matrix"
+        },
+        {
+          "id": "item_flogger",
+          "type": "scale_matrix"
+        },
+        {
+          "id": "item_cane",
+          "type": "scale_matrix"
+        },
+        {
+          "id": "item_crop",
+          "type": "scale_matrix"
+        },
+        {
+          "id": "item_face_slapping",
+          "type": "scale_matrix"
+        },
+        {
+          "id": "item_impact_tools",
+          "type": "multiple_choice",
+          "dualRole": false,
+          "rolePairId": "general",
+          "options": [
+            "opt_tool_open_hand",
+            "opt_tool_leather_paddle",
+            "opt_tool_suede_flogger",
+            "opt_tool_riding_crop",
+            "opt_tool_rattan_cane",
+            "opt_tool_belt_strap"
+          ],
+          "allowOtherOption": true,
+          "maxLength": 120
+        }
+      ]
+    },
+    {
+      "id": "grp_sensation_pain",
+      "order": 5,
+      "defaultDualRole": true,
+      "rolePairId": "giving_receiving",
+      "items": [
+        {
+          "id": "item_hot_wax",
+          "type": "scale_matrix"
+        },
+        {
+          "id": "item_ice_play",
+          "type": "scale_matrix"
+        },
+        {
+          "id": "item_nipple_clamps",
+          "type": "scale_matrix"
+        },
+        {
+          "id": "item_scratching",
+          "type": "scale_matrix"
+        },
+        {
+          "id": "item_biting",
+          "type": "scale_matrix"
+        },
+        {
+          "id": "item_electro_stimulation",
+          "type": "scale_matrix"
+        },
+        {
+          "id": "item_play_piercing",
+          "type": "scale_matrix"
+        }
+      ]
+    },
+    {
+      "id": "grp_domination_power",
+      "order": 6,
+      "defaultDualRole": true,
+      "rolePairId": "dominant_submissive",
+      "items": [
+        {
+          "id": "item_ds_dynamic",
+          "type": "scale_matrix"
+        },
+        {
+          "id": "item_domestic_servitude",
+          "type": "scale_matrix"
+        },
+        {
+          "id": "item_pet_play",
+          "type": "scale_matrix"
+        },
+        {
+          "id": "item_consensual_discipline",
+          "type": "scale_matrix"
+        },
+        {
+          "id": "item_orgasm_control",
+          "type": "scale_matrix"
+        },
+        {
+          "id": "item_verbal_humiliation",
+          "type": "scale_matrix"
+        },
+        {
+          "id": "item_body_worship",
+          "type": "scale_matrix"
+        }
+      ]
+    },
+    {
+      "id": "grp_roleplay_gear",
+      "order": 7,
+      "defaultDualRole": true,
+      "rolePairId": "self_partner",
+      "items": [
+        {
+          "id": "item_gear_leather",
+          "type": "scale_matrix"
+        },
+        {
+          "id": "item_gear_latex",
+          "type": "scale_matrix"
+        },
+        {
+          "id": "item_gear_lingerie_stockings",
+          "type": "scale_matrix"
+        },
+        {
+          "id": "item_gear_uniforms_costumes",
+          "type": "scale_matrix"
+        },
+        {
+          "id": "item_gear_cross_dressing",
+          "type": "scale_matrix"
+        },
+        {
+          "id": "item_gear_toys_vibrators",
+          "type": "scale_matrix"
+        }
+      ]
+    },
+    {
+      "id": "grp_breath_edge",
+      "order": 8,
+      "defaultDualRole": true,
+      "rolePairId": "giving_receiving",
+      "items": [
+        {
+          "id": "item_breathplay_choking",
+          "type": "scale_matrix"
+        },
+        {
+          "id": "item_fear_play",
+          "type": "scale_matrix"
+        },
+        {
+          "id": "item_cnc_roleplay",
+          "type": "scale_matrix"
+        },
+        {
+          "id": "item_blood_cutting",
+          "type": "scale_matrix"
+        }
+      ]
+    }
+  ]
+}

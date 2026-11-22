@@ -1,0 +1,160 @@
+<div class="question-item" role="group" [attr.aria-labelledby]="questionLabelId()">
+  <div class="question-item__header">
+    <span class="question-item__label" [id]="questionLabelId()">{{ itemLabel() }}</span>
+    @if (hasTooltip()) {
+      <button
+        type="button"
+        class="question-item__tooltip-btn"
+        [pTooltip]="itemTooltip()"
+        tooltipPosition="top"
+        [attr.aria-label]="itemTooltip()"
+      >
+        <i class="pi pi-info-circle" aria-hidden="true"></i>
+      </button>
+    }
+  </div>
+
+  <div class="question-item__control">
+    @switch (item().type) {
+      @case ('scale_matrix') {
+        @if (isDualRole()) {
+          <div class="question-item__dual-scales">
+            <app-scale-selector
+              [scales]="scales()"
+              [scaleLabels]="scaleLabels()"
+              [roleTitle]="roleLabels().primary"
+              [selectedScale]="answer()?.primaryScale"
+              (scaleChange)="onPrimaryScaleChange($event)"
+            />
+            <app-scale-selector
+              [scales]="scales()"
+              [scaleLabels]="scaleLabels()"
+              [roleTitle]="roleLabels().secondary ?? ''"
+              [selectedScale]="answer()?.secondaryScale"
+              (scaleChange)="onSecondaryScaleChange($event)"
+            />
+          </div>
+        } @else {
+          <app-scale-selector
+            [scales]="scales()"
+            [scaleLabels]="scaleLabels()"
+            [roleTitle]="roleLabels().primary"
+            [selectedScale]="answer()?.primaryScale"
+            (scaleChange)="onPrimaryScaleChange($event)"
+          />
+        }
+      }
+
+      @case ('single_choice') {
+        <div class="question-item__options">
+          @for (optId of item().options ?? []; track optId) {
+            <div class="question-item__option">
+              <p-radiobutton
+                [inputId]="optionInputId(optId)"
+                [name]="radioGroupName()"
+                [value]="optId"
+                [ngModel]="selectedSingleOption()"
+                (ngModelChange)="onSingleOptionSelect($event)"
+              />
+              <label class="question-item__option-label" [for]="optionInputId(optId)">
+                {{ getOptionLabel(optId) }}
+              </label>
+            </div>
+          }
+
+          @if (item().allowOtherOption) {
+            <div class="question-item__option">
+              <p-radiobutton
+                [inputId]="optionInputId(otherOptionValue)"
+                [name]="radioGroupName()"
+                [value]="otherOptionValue"
+                [ngModel]="selectedSingleOption()"
+                (ngModelChange)="onSingleOptionSelect($event)"
+              />
+              <label class="question-item__option-label" [for]="optionInputId(otherOptionValue)">
+                {{ otherLabel() }}
+              </label>
+            </div>
+
+            @if (isOtherSingleSelected()) {
+              <div class="question-item__other-field">
+                <input
+                  pInputText
+                  type="text"
+                  class="question-item__text-input"
+                  [attr.aria-label]="otherLabel()"
+                  [placeholder]="otherPlaceholder()"
+                  [ngModel]="answer()?.otherText ?? ''"
+                  (ngModelChange)="onSingleOtherTextChange($event)"
+                />
+              </div>
+            }
+          }
+        </div>
+      }
+
+      @case ('multiple_choice') {
+        <div class="question-item__options">
+          @for (optId of item().options ?? []; track optId) {
+            <div class="question-item__option">
+              <p-checkbox
+                [binary]="true"
+                [inputId]="optionInputId(optId)"
+                [ngModel]="isMultipleOptionSelected(optId)"
+                (ngModelChange)="onMultipleOptionToggle(optId, $event)"
+              />
+              <label class="question-item__option-label" [for]="optionInputId(optId)">
+                {{ getOptionLabel(optId) }}
+              </label>
+            </div>
+          }
+
+          @if (item().allowOtherOption) {
+            <div class="question-item__option">
+              <p-checkbox
+                [binary]="true"
+                [inputId]="optionInputId(otherOptionValue)"
+                [ngModel]="isOtherMultipleSelected()"
+                (ngModelChange)="onMultipleOptionToggle(otherOptionValue, $event)"
+              />
+              <label class="question-item__option-label" [for]="optionInputId(otherOptionValue)">
+                {{ otherLabel() }}
+              </label>
+            </div>
+
+            @if (isOtherMultipleSelected()) {
+              <div class="question-item__other-field">
+                <input
+                  pInputText
+                  type="text"
+                  class="question-item__text-input"
+                  [attr.aria-label]="otherLabel()"
+                  [placeholder]="otherPlaceholder()"
+                  [ngModel]="answer()?.otherText ?? ''"
+                  (ngModelChange)="onMultipleOtherTextChange($event)"
+                />
+              </div>
+            }
+          }
+        </div>
+      }
+
+      @case ('restricted_text') {
+        <div class="question-item__text-area-wrapper">
+          <textarea
+            pTextarea
+            rows="3"
+            class="question-item__textarea"
+            [attr.aria-labelledby]="questionLabelId()"
+            [maxlength]="maxTextLength()"
+            [ngModel]="answer()?.customText ?? ''"
+            (ngModelChange)="onCustomTextChange($event)"
+          ></textarea>
+          <div class="question-item__counter" aria-live="polite">
+            {{ customTextLength() }} / {{ maxTextLength() }}
+          </div>
+        </div>
+      }
+    }
+  </div>
+</div>

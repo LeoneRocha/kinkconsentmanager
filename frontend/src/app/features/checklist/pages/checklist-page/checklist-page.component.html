@@ -1,0 +1,91 @@
+<div class="checklist-page">
+  @if (isLoading()) {
+    <div class="checklist-page__loading" aria-busy="true" [attr.aria-label]="loadingSchemaLabel()">
+      <p-skeleton height="8rem" borderRadius="10px" />
+      <p-skeleton height="3.5rem" borderRadius="10px" />
+      <p-skeleton height="14rem" borderRadius="10px" />
+      <p-skeleton height="4rem" borderRadius="10px" />
+    </div>
+  } @else if (loadError()) {
+    <div class="checklist-page__error" role="alert">
+      <i class="pi pi-exclamation-circle checklist-page__error-icon" aria-hidden="true"></i>
+      <p class="checklist-page__error-text">{{ loadingErrorText() }}</p>
+      <p-button
+        type="button"
+        styleClass="checklist-page__retry-btn"
+        icon="pi pi-refresh"
+        [label]="retryLabel()"
+        (onClick)="loadSchema()"
+      />
+    </div>
+  } @else if (schema(); as activeSchema) {
+    @if (resolvedTexts(); as texts) {
+      <app-checklist-header
+        [currentLang]="i18n.currentLang()"
+        [viewMode]="viewMode()"
+        [searchQuery]="searchQuery()"
+        [onlyUnanswered]="onlyUnanswered()"
+        [answeredCount]="answeredCount()"
+        [totalCount]="totalCount()"
+        [progressPercentage]="progressPercentage()"
+        [scales]="activeSchema.scales"
+        [scaleLabels]="texts.scales"
+        [hasAnswers]="hasAnswers()"
+        [labels]="headerLabels()"
+        (languageChange)="onLanguageChange($event)"
+        (viewModeChange)="onViewModeChange($event)"
+        (searchQueryChange)="onSearchQueryChange($event)"
+        (onlyUnansweredChange)="onOnlyUnansweredChange($event)"
+        (openQuickFill)="onOpenQuickFill()"
+        (clearAll)="onClearAll()"
+        (goToExport)="onFinishChecklist()"
+      />
+
+      <main #contentContainer class="checklist-page__content">
+        @if (viewMode() === 'accordion') {
+          <app-category-accordion
+            [groups]="filteredGroups()"
+            [scales]="activeSchema.scales"
+            [answers]="answers()"
+            [activeIndex]="activeAccordionIndex()"
+            [texts]="texts"
+            [nextCategoryLabel]="nextCategoryLabel()"
+            [finishLabel]="finishLabel()"
+            [otherPlaceholder]="otherPlaceholder()"
+            [noResultsText]="noResultsText()"
+            (activeIndexChange)="onActiveCategoryChange($event)"
+            (answerChange)="onAnswerChange($event)"
+            (nextCategory)="onNextCategory()"
+            (finishChecklist)="onFinishChecklist()"
+          />
+        } @else {
+          <app-full-view-container
+            [groups]="filteredGroups()"
+            [scales]="activeSchema.scales"
+            [answers]="answers()"
+            [texts]="texts"
+            [noResultsText]="noResultsText()"
+            [finishLabel]="finishLabel()"
+            [quickNavTitle]="quickNavTitle()"
+            [otherPlaceholder]="otherPlaceholder()"
+            (answerChange)="onAnswerChange($event)"
+            (finishChecklist)="onFinishChecklist()"
+          />
+        }
+      </main>
+
+      <app-quick-fill-wizard-modal
+        [visible]="quickFillVisible()"
+        [groups]="activeSchema.groups"
+        [scales]="activeSchema.scales"
+        [answers]="answers()"
+        [texts]="texts"
+        [labels]="quickFillLabels()"
+        (visibleChange)="quickFillVisible.set($event)"
+        (answerChange)="onAnswerChange($event)"
+      />
+    }
+  }
+
+  <p-confirmdialog />
+</div>

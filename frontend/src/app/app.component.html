@@ -1,0 +1,45 @@
+<div class="app-shell">
+  <header class="app-shell__topbar" role="banner">
+    <div class="app-shell__topbar-inner">
+      <a class="app-shell__brand" routerLink="/checklist">
+        <i class="pi pi-shield app-shell__brand-icon" aria-hidden="true"></i>
+        <span class="app-shell__brand-title">
+          {{ 'title' | schemaTranslate: 'ui' }}
+        </span>
+      </a>
+
+      <nav class="app-shell__nav" [attr.aria-label]="'title' | schemaTranslate: 'ui'">
+        <a
+          class="app-shell__nav-link"
+          routerLink="/checklist"
+          routerLinkActive="app-shell__nav-link--active"
+        >
+          <i class="pi pi-list-check" aria-hidden="true"></i>
+          <span>{{ 'navChecklist' | schemaTranslate: 'ui' }}</span>
+        </a>
+        <a
+          class="app-shell__nav-link"
+          routerLink="/export"
+          routerLinkActive="app-shell__nav-link--active"
+        >
+          <i class="pi pi-download" aria-hidden="true"></i>
+          <span>{{ 'navExport' | schemaTranslate: 'ui' }}</span>
+        </a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main-content" class="app-shell__main">
+    <router-outlet />
+  </main>
+
+  <footer class="app-shell__footer" role="contentinfo">
+    <p class="app-shell__privacy">
+      <i class="pi pi-lock" aria-hidden="true"></i>
+      <span>{{ 'privacyNotice' | schemaTranslate: 'ui' }}</span>
+    </p>
+  </footer>
+</div>
+
+<p-toast />
+<p-confirmdialog />
