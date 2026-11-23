@@ -13,3 +13,5 @@ https://goctionni.github.io/KinkList/v1.0.2.html
 https://goctionni.github.io/kinklist-v2/
 
 
+
+Agora crie um documento resumindo todas alteracoes feita e melhorias do que foi desenvolvido 

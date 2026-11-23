@@ -17,6 +17,17 @@
   </div>
   } @else if (schema(); as activeSchema) {
     @if (resolvedTexts(); as texts) {
+      @if (!hasSelectedStartMode()) {
+        <app-checklist-mode-selector
+          [labels]="modeSelectorLabels()"
+          [answeredCount]="answeredCount()"
+          [totalCount]="totalCount()"
+          [progressPercentage]="progressPercentage()"
+          [isImporting]="isImportingJson()"
+          (selectMode)="onStartModeSelected($event)"
+          (importJsonFile)="onImportJsonFile($event)"
+        />
+      } @else {
       <div class="checklist-page__sticky-top">
         <app-checklist-header
           [currentLang]="i18n.currentLang()"
@@ -117,6 +128,7 @@
     }
     }
   </section>
+      }
   }
   }
 </div>

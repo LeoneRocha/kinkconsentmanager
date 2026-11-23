@@ -1,0 +1,101 @@
+<section class="mode-selector" [attr.aria-label]="labels().pageTitle">
+  <header class="mode-selector__hero">
+    <div class="mode-selector__hero-copy">
+      <span class="mode-selector__brand">{{ labels().brandTitle }}</span>
+      <h1 class="mode-selector__title">{{ labels().pageTitle }}</h1>
+      <p class="mode-selector__subtitle">{{ labels().pageSubtitle }}</p>
+    </div>
+
+    <div class="mode-selector__hero-meta">
+      <p class="mode-selector__privacy">
+        <i class="fa-solid fa-lock" aria-hidden="true"></i>
+        <span>{{ labels().privacyNotice }}</span>
+      </p>
+
+      @if (hasSavedProgress()) {
+        <div class="mode-selector__saved-banner" role="status">
+          <i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i>
+          <span>
+            {{ labels().existingProgressLabel }}:
+            <strong>{{ answeredCount() }} / {{ totalCount() }} ({{ progressPercentage() }}%)</strong>
+          </span>
+        </div>
+      }
+    </div>
+  </header>
+
+  <div class="mode-selector__grid">
+    @for (card of modeCards(); track card.mode) {
+      <button
+        type="button"
+        class="mode-selector__card"
+        [attr.data-start-mode]="card.mode"
+        (click)="onSelectMode(card.mode)"
+      >
+        <div class="mode-selector__card-top">
+          <span class="mode-selector__icon" aria-hidden="true">
+            <i [class]="card.icon"></i>
+          </span>
+          <div class="mode-selector__title-wrap">
+            <h2 class="mode-selector__card-title">{{ card.title }}</h2>
+            <span class="mode-selector__badge">{{ card.badge }}</span>
+          </div>
+        </div>
+
+        <p class="mode-selector__desc">{{ card.description }}</p>
+
+        <div class="mode-selector__howto">
+          <span class="mode-selector__howto-label">
+            <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+            <span>{{ labels().howToFillLabel }}</span>
+          </span>
+          <p class="mode-selector__howto-text">{{ card.howToFill }}</p>
+        </div>
+
+        <span class="mode-selector__cta">
+          <span>{{ hasSavedProgress() ? labels().continueButton : labels().startButton }}</span>
+          <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+        </span>
+      </button>
+    }
+  </div>
+
+  <div class="mode-selector__import-card">
+    <div class="mode-selector__import-copy">
+      <span class="mode-selector__import-icon" aria-hidden="true">
+        <i class="fa-solid fa-file-import"></i>
+      </span>
+      <div class="mode-selector__import-text">
+        <h2 class="mode-selector__import-title">{{ labels().importTitle }}</h2>
+        <p class="mode-selector__import-desc">{{ labels().importDesc }}</p>
+      </div>
+    </div>
+
+    <div class="mode-selector__import-actions">
+      <button
+        mat-stroked-button
+        type="button"
+        class="mode-selector__import-btn"
+        data-action="import-json"
+        [disabled]="isImporting()"
+        (click)="onImportTriggerClick()"
+      >
+        <i
+          [class]="isImporting() ? 'fa-solid fa-spinner fa-spin' : 'fa-solid fa-upload'"
+          aria-hidden="true"
+        ></i>
+        <span>{{ labels().importButton }}</span>
+      </button>
+
+      <input
+        #jsonFileInput
+        type="file"
+        accept=".json,application/json"
+        class="mode-selector__file-input"
+        tabindex="-1"
+        [attr.aria-label]="labels().importButton"
+        (change)="onFileSelected($event)"
+      />
+    </div>
+  </div>
+</section>

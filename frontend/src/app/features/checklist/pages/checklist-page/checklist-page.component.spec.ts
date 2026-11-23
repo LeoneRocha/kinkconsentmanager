@@ -1,9 +1,10 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatDialog } from '@angular/material/dialog';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { provideRouter, Router } from '@angular/router';
 import { provideTranslateService, TranslateService } from '@ngx-translate/core';
 import { Observable, Subject, of, throwError } from 'rxjs';
-import { ChecklistSchema } from '../../../../core/models';
+import { ChecklistSchema, ChecklistViewMode } from '../../../../core/models';
 import { ISchemaRepository, SCHEMA_REPOSITORY_TOKEN } from '../../../../core/repositories';
 import {
   ChecklistAutosaveService,
@@ -92,6 +93,10 @@ const PT_BR_TRANSLATIONS = {
     legendTitle: 'Legenda',
     quickNavTitle: 'Categorias',
     clearSelection: 'Limpar seleção',
+    importJson: 'Importar JSON',
+    importSuccess: 'Rascunho JSON importado e restaurado com sucesso.',
+    importErrorInvalidJson: 'Arquivo inválido.',
+    importErrorIncompatibleVersion: 'Versão do schema incompatível.',
   },
   scales: {
     hard_limit: 'Limite Rígido',
@@ -155,6 +160,10 @@ const EN_US_TRANSLATIONS = {
     legendTitle: 'Legend',
     quickNavTitle: 'Categories',
     clearSelection: 'Clear selection',
+    importJson: 'Import JSON',
+    importSuccess: 'JSON draft imported and restored successfully.',
+    importErrorInvalidJson: 'Invalid file.',
+    importErrorIncompatibleVersion: 'Schema version incompatible.',
   },
   scales: {
     hard_limit: 'Hard Limit',
@@ -186,8 +195,17 @@ describe('ChecklistPageComponent', () => {
   let checklistState: ChecklistStateService;
   let autosaveService: ChecklistAutosaveService;
   let i18nService: I18nService;
+  let snackBar: MatSnackBar;
   let router: Router;
   let getChecklistSchemaMock: jest.Mock<Observable<ChecklistSchema>, [version?: string]>;
+
+  const startInMode = async (mode: ChecklistViewMode = 'stepper'): Promise<HTMLElement> => {
+    await fixture.whenStable();
+    const hostEl = fixture.nativeElement as HTMLElement;
+    hostEl.querySelector<HTMLButtonElement>(`button[data-start-mode="${mode}"]`)?.click();
+    await fixture.whenStable();
+    return hostEl;
+  };
 
   const createTestModule = async (
     schemaFactory: () => Observable<ChecklistSchema>,
@@ -215,11 +233,13 @@ describe('ChecklistPageComponent', () => {
     checklistState = TestBed.inject(ChecklistStateService);
     autosaveService = TestBed.inject(ChecklistAutosaveService);
     i18nService = TestBed.inject(I18nService);
+    snackBar = TestBed.inject(MatSnackBar);
     router = TestBed.inject(Router);
     fixture = TestBed.createComponent(ChecklistPageComponent);
   };
 
   afterEach(() => {
+    snackBar?.dismiss();
     autosaveService?.stop();
     TestBed.inject(MatDialog).closeAll();
     fixture?.destroy();
@@ -229,13 +249,14 @@ describe('ChecklistPageComponent', () => {
     jest.restoreAllMocks();
   });
 
-  it('should show skeleton loaders while schema is loading and render checklist once resolved', async () => {
+  it('should show skeleton loaders while schema is loading, then render mode selector first before entering chosen checklist mode', async () => {
     const schemaSubject = new Subject<ChecklistSchema>();
     await createTestModule(() => schemaSubject.asObservable());
 
     fixture.detectChanges();
     const hostEl = fixture.nativeElement as HTMLElement;
     expect(hostEl.querySelectorAll('.kcm-skeleton').length).toBeGreaterThan(0);
+    expect(hostEl.querySelector('app-checklist-mode-selector')).toBeNull();
     expect(hostEl.querySelector('app-checklist-header')).toBeNull();
 
     schemaSubject.next(MOCK_SCHEMA);
@@ -244,9 +265,14 @@ describe('ChecklistPageComponent', () => {
 
     expect(getChecklistSchemaMock).toHaveBeenCalledWith('v1');
     expect(hostEl.querySelectorAll('.kcm-skeleton').length).toBe(0);
+    expect(hostEl.querySelector('app-checklist-mode-selector')).not.toBeNull();
+    expect(hostEl.querySelector('app-checklist-header')).toBeNull();
+    expect(checklistState.schema()).toEqual(MOCK_SCHEMA);
+
+    await startInMode('stepper');
+    expect(hostEl.querySelector('app-checklist-mode-selector')).toBeNull();
     expect(hostEl.querySelector('app-checklist-header')).not.toBeNull();
     expect(hostEl.querySelector('app-checklist-stepper')).not.toBeNull();
-    expect(checklistState.schema()).toEqual(MOCK_SCHEMA);
   });
 
   it('should render error state when schema loading fails and retry cleanly', async () => {
@@ -272,14 +298,15 @@ describe('ChecklistPageComponent', () => {
 
     expect(getChecklistSchemaMock).toHaveBeenCalledTimes(2);
     expect(hostEl.querySelector('.checklist-page__error')).toBeNull();
+    expect(hostEl.querySelector('app-checklist-mode-selector')).not.toBeNull();
+
+    await startInMode('stepper');
     expect(hostEl.querySelector('app-checklist-stepper')).not.toBeNull();
   });
 
   it('should propagate item answers to ChecklistStateService and switch across stepper, classic, and full views', async () => {
     await createTestModule(() => of(MOCK_SCHEMA));
-    await fixture.whenStable();
-
-    const hostEl = fixture.nativeElement as HTMLElement;
+    const hostEl = await startInMode('stepper');
     const radios = hostEl.querySelectorAll<HTMLInputElement>('mat-radio-button input[type="radio"]');
     radios[0].click();
     await fixture.whenStable();
@@ -339,10 +366,9 @@ describe('ChecklistPageComponent', () => {
 
   it('should advance through stepper steps into expanded final review accordion and navigate to /export', async () => {
     await createTestModule(() => of(MOCK_SCHEMA));
-    await fixture.whenStable();
+    const hostEl = await startInMode('stepper');
 
     const navigateSpy = jest.spyOn(router, 'navigate').mockResolvedValue(true);
-    const hostEl = fixture.nativeElement as HTMLElement;
 
     expect(checklistState.activeCategoryIndex()).toBe(0);
 
@@ -382,7 +408,7 @@ describe('ChecklistPageComponent', () => {
 
   it('should open MatDialog confirmation on clearAll, support interactive saveNow button, and reset answers only when accepted', async () => {
     await createTestModule(() => of(MOCK_SCHEMA));
-    await fixture.whenStable();
+    const hostEl = await startInMode('stepper');
 
     checklistState.setItemAnswer('item_safeword', { selectedOption: 'opt_traffic' });
     await fixture.whenStable();
@@ -398,8 +424,6 @@ describe('ChecklistPageComponent', () => {
       >);
     const saveNowSpy = jest.spyOn(autosaveService, 'saveNow').mockResolvedValue(true);
     const clearAutosaveSpy = jest.spyOn(autosaveService, 'clearAutosave');
-
-    const hostEl = fixture.nativeElement as HTMLElement;
     const saveBtn = hostEl.querySelector<HTMLButtonElement>('.checklist-header__save-btn');
     expect(saveBtn?.textContent).toContain('Salvar');
     expect(hostEl.querySelector('.checklist-header__save-meta')?.textContent).toContain(
@@ -444,23 +468,76 @@ describe('ChecklistPageComponent', () => {
     expect(clearAutosaveSpy).toHaveBeenCalledTimes(1);
   });
 
-  it('should render QuickFillWizardModalComponent inline in quick_fill viewMode and propagate wizard answers to ChecklistStateService', async () => {
+  it('should render QuickFillWizardModalComponent inline when selected from start screen and propagate keyboard answers', async () => {
     await createTestModule(() => of(MOCK_SCHEMA));
-    await fixture.whenStable();
+    const hostEl = await startInMode('quick_fill');
 
-    const hostEl = fixture.nativeElement as HTMLElement;
-    const modeButtons = hostEl.querySelectorAll<HTMLButtonElement>(
-      '.checklist-header__mode-select mat-button-toggle button',
-    );
-    expect(modeButtons.length).toBe(4);
-    modeButtons[3].click();
-    await fixture.whenStable();
-
+    expect(checklistState.viewMode()).toBe('quick_fill');
     expect(hostEl.querySelector('.quick-fill-inline')).not.toBeNull();
     expect(hostEl.querySelector('.quick-fill-backdrop')).toBeNull();
     window.dispatchEvent(new KeyboardEvent('keydown', { key: '5' }));
     await fixture.whenStable();
 
     expect(checklistState.answers()['item_rope']).toEqual({ primaryScale: 'favorite' });
+  });
+
+  it('should import a valid JSON draft from mode selector to enter checklist, and keep selector open on invalid JSON', async () => {
+    await createTestModule(() => of(MOCK_SCHEMA));
+    await fixture.whenStable();
+
+    const snackSpy = jest.spyOn(snackBar, 'open');
+    const hostEl = fixture.nativeElement as HTMLElement;
+    const fileInput = hostEl.querySelector<HTMLInputElement>(
+      'app-checklist-mode-selector input[type="file"]',
+    )!;
+
+    const createFile = (content: string, name: string): File => {
+      const file = new File([content], name, { type: 'application/json' });
+      Object.defineProperty(file, 'text', {
+        value: () => Promise.resolve(content),
+        configurable: true,
+      });
+      return file;
+    };
+
+    const invalidFile = createFile('{invalid', 'bad.json');
+    Object.defineProperty(fileInput, 'files', {
+      value: { 0: invalidFile, length: 1, item: (i: number) => (i === 0 ? invalidFile : null) },
+      configurable: true,
+    });
+    fileInput.dispatchEvent(new Event('change'));
+    await fixture.whenStable();
+
+    expect(hostEl.querySelector('app-checklist-mode-selector')).not.toBeNull();
+    expect(snackSpy).toHaveBeenCalledWith(
+      expect.stringContaining('Arquivo inválido.'),
+      'OK',
+      expect.objectContaining({ panelClass: ['kcm-snackbar-error'] }),
+    );
+
+    const validPayload = JSON.stringify({
+      schemaVersion: '1.0.0',
+      exportedAt: '2026-11-22T22:50:00.000Z',
+      language: 'pt-BR',
+      answers: {
+        item_safeword: { selectedOption: 'opt_traffic' },
+      },
+    });
+    const validFile = createFile(validPayload, 'draft.json');
+    Object.defineProperty(fileInput, 'files', {
+      value: { 0: validFile, length: 1, item: (i: number) => (i === 0 ? validFile : null) },
+      configurable: true,
+    });
+    fileInput.dispatchEvent(new Event('change'));
+    await fixture.whenStable();
+
+    expect(checklistState.answers()['item_safeword']).toEqual({ selectedOption: 'opt_traffic' });
+    expect(hostEl.querySelector('app-checklist-mode-selector')).toBeNull();
+    expect(hostEl.querySelector('app-checklist-header')).not.toBeNull();
+    expect(snackSpy).toHaveBeenCalledWith(
+      expect.stringContaining('Rascunho JSON importado e restaurado com sucesso.'),
+      'OK',
+      expect.objectContaining({ panelClass: ['kcm-snackbar-success'] }),
+    );
   });
 });

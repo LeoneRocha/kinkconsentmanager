@@ -14,6 +14,7 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import {
@@ -41,6 +42,11 @@ import {
   ChecklistHeaderLabels,
 } from '../../components/checklist-header';
 import {
+  ChecklistModeSelectorComponent,
+  ChecklistModeSelectorLabels,
+} from '../../components/checklist-mode-selector';
+import { JsonDraftService } from '../../../export/services';
+import {
   ChecklistStepRailComponent,
   ChecklistStepperComponent,
   ChecklistStepperLabels,
@@ -62,6 +68,7 @@ import {
     LegendBarComponent,
     ProgressIndicatorComponent,
     ChecklistHeaderComponent,
+    ChecklistModeSelectorComponent,
     ChecklistStepRailComponent,
     ChecklistStepperComponent,
     ClassicKinkSheetComponent,
@@ -79,6 +86,8 @@ export class ChecklistPageComponent implements OnInit {
   protected readonly i18n = inject(I18nService);
   private readonly accessibility = inject(AccessibilityService);
   private readonly dialog = inject(MatDialog);
+  private readonly snackBar = inject(MatSnackBar);
+  private readonly jsonDraft = inject(JsonDraftService);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
 
@@ -88,6 +97,8 @@ export class ChecklistPageComponent implements OnInit {
 
   protected readonly isLoading = signal<boolean>(true);
   protected readonly loadError = signal<boolean>(false);
+  protected readonly hasSelectedStartMode = signal<boolean>(false);
+  protected readonly isImportingJson = signal<boolean>(false);
   private readonly reviewStepActive = signal<boolean>(false);
   protected readonly emptyInvalidStepIds: ReadonlySet<string> = new Set();
 
@@ -205,6 +216,78 @@ export class ChecklistPageComponent implements OnInit {
       'classicSheetHint',
       'Visualização clássica em blocos por categoria: clique nos círculos para marcar ou desmarcar cada escala.',
     );
+  });
+
+  protected readonly modeSelectorLabels = computed<ChecklistModeSelectorLabels>(() => {
+    this.i18n.currentLang();
+    return {
+      brandTitle: this.i18n.translateUi('title'),
+      pageTitle: this.translateWithFallback(
+        'modePickerTitle',
+        'Como você prefere preencher o checklist?',
+      ),
+      pageSubtitle: this.translateWithFallback(
+        'modePickerSubtitle',
+        'Escolha o formato mais confortável para o seu ritmo. Você poderá alternar de modo a qualquer momento sem perder suas respostas.',
+      ),
+      privacyNotice: this.i18n.translateUi('privacyNotice'),
+      howToFillLabel: this.translateWithFallback('modePickerHowToFillLabel', 'Como preencher'),
+      startButton: this.translateWithFallback('modePickerStartButton', 'Começar neste modo'),
+      continueButton: this.translateWithFallback('modePickerContinueButton', 'Continuar neste modo'),
+      existingProgressLabel: this.translateWithFallback(
+        'modePickerExistingProgress',
+        'Progresso local encontrado',
+      ),
+      stepperTitle: this.translateWithFallback('stepperMode', 'Guiado (Passos)'),
+      stepperBadge: this.translateWithFallback('modePickerStepperBadge', 'Recomendado'),
+      stepperDesc: this.translateWithFallback(
+        'modePickerStepperDesc',
+        'Avance uma categoria por vez com trilha visual de etapas e validação antes de seguir.',
+      ),
+      stepperHowToFill: this.translateWithFallback(
+        'modePickerStepperHow',
+        'Responda todos os itens do passo atual, avance pelas categorias no topo ou rodapé e confira tudo na Revisão Final antes de exportar.',
+      ),
+      classicTitle: this.translateWithFallback('classicMode', 'Modo Clássico'),
+      classicBadge: this.translateWithFallback('modePickerClassicBadge', 'Folha compacta'),
+      classicDesc: this.translateWithFallback(
+        'modePickerClassicDesc',
+        'Visual tradicional em blocos por categoria com círculos coloridos lado a lado.',
+      ),
+      classicHowToFill: this.translateWithFallback(
+        'modePickerClassicHow',
+        'Clique diretamente nos círculos coloridos (Dar / Receber ou escala geral) para marcar ou desmarcar rapidamente cada prática.',
+      ),
+      fullTitle: this.i18n.translateUi('fullMode'),
+      fullBadge: this.translateWithFallback('modePickerFullBadge', 'Página única'),
+      fullDesc: this.translateWithFallback(
+        'modePickerFullDesc',
+        'Todas as categorias e práticas expandidas em uma única página com navegação rápida.',
+      ),
+      fullHowToFill: this.translateWithFallback(
+        'modePickerFullHow',
+        'Role livremente pela lista completa ou pule direto para qualquer categoria usando os atalhos no topo.',
+      ),
+      quickFillTitle: this.i18n.translateUi('quickFillButton'),
+      quickFillBadge: this.translateWithFallback('modePickerQuickFillBadge', 'Atalhos 1–5'),
+      quickFillDesc: this.translateWithFallback(
+        'modePickerQuickFillDesc',
+        'Fluxo focado em um item por vez para preencher o checklist em poucos minutos.',
+      ),
+      quickFillHowToFill: this.translateWithFallback(
+        'modePickerQuickFillHow',
+        'Use as teclas 1 a 5 (ou clique nas opções) para escolher a escala e avançar automaticamente; pressione 0 para limpar ou ↑/↓ para navegar.',
+      ),
+      importTitle: this.translateWithFallback(
+        'modePickerImportTitle',
+        'Já tem um preenchimento salvo em JSON?',
+      ),
+      importDesc: this.translateWithFallback(
+        'modePickerImportDesc',
+        'Importe um arquivo .json exportado anteriormente para restaurar suas respostas e continuar editando ou exportar novamente.',
+      ),
+      importButton: this.translateWithFallback('modePickerImportButton', 'Importar JSON'),
+    };
   });
 
   protected readonly finishLabel = computed<string>(() => {
@@ -346,6 +429,86 @@ export class ChecklistPageComponent implements OnInit {
     this.checklistState.setViewMode(mode);
   }
 
+  protected onStartModeSelected(mode: ChecklistViewMode): void {
+    this.reviewStepActive.set(false);
+    this.checklistState.setViewMode(mode);
+    this.hasSelectedStartMode.set(true);
+    this.scrollToContentTop();
+  }
+
+  protected async onImportJsonFile(file: File): Promise<void> {
+    const activeSchema = this.schema();
+    if (!activeSchema || this.isImportingJson()) {
+      return;
+    }
+
+    this.isImportingJson.set(true);
+    const importTitle = this.translateWithFallback('importJson', 'Importar JSON');
+    try {
+      const rawContent = await this.readFileAsText(file);
+      const validation = this.jsonDraft.parseAndValidateDraft(
+        rawContent,
+        activeSchema.schemaVersion,
+      );
+
+      if (validation.valid && validation.draft) {
+        this.reviewStepActive.set(false);
+        this.checklistState.importDraft(validation.draft);
+        void this.autosave.saveNow();
+        this.hasSelectedStartMode.set(true);
+        this.scrollToContentTop();
+        this.snackBar.open(
+          `${importTitle} — ${this.translateWithFallback(
+            'importSuccess',
+            'Rascunho JSON importado e restaurado com sucesso.',
+          )}`,
+          'OK',
+          {
+            duration: 4000,
+            panelClass: ['kcm-snackbar-success'],
+          },
+        );
+        return;
+      }
+
+      const isIncompatibleVersion = validation.errors.some((error) =>
+        error.toLowerCase().includes('incompatible'),
+      );
+      this.snackBar.open(
+        `${importTitle} — ${
+          isIncompatibleVersion
+            ? this.translateWithFallback(
+                'importErrorIncompatibleVersion',
+                'Versão do schema incompatível com este checklist.',
+              )
+            : this.translateWithFallback(
+                'importErrorInvalidJson',
+                'Arquivo inválido: não foi possível ler um rascunho JSON válido.',
+              )
+        }`,
+        'OK',
+        {
+          duration: 5000,
+          panelClass: ['kcm-snackbar-error'],
+        },
+      );
+    } catch {
+      this.snackBar.open(
+        `${importTitle} — ${this.translateWithFallback(
+          'importErrorInvalidJson',
+          'Arquivo inválido: não foi possível ler um rascunho JSON válido.',
+        )}`,
+        'OK',
+        {
+          duration: 5000,
+          panelClass: ['kcm-snackbar-error'],
+        },
+      );
+    } finally {
+      this.isImportingJson.set(false);
+    }
+  }
+
   protected onSearchQueryChange(query: string): void {
     this.reviewStepActive.set(false);
     this.checklistState.setSearchQuery(query);
@@ -477,5 +640,22 @@ export class ChecklistPageComponent implements OnInit {
         // Ignore unimplemented window.scrollTo in non-browser DOM test environments.
       }
     }
+  }
+
+  private readFileAsText(file: File): Promise<string> {
+    if (typeof file.text === 'function') {
+      return file.text();
+    }
+
+    return new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        resolve(typeof reader.result === 'string' ? reader.result : '');
+      };
+      reader.onerror = () => {
+        reject(reader.error ?? new Error('Failed to read selected file.'));
+      };
+      reader.readAsText(file, 'utf-8');
+    });
   }
 }
