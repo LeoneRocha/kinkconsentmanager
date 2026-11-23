@@ -30,7 +30,7 @@ export interface ChecklistHeaderLabels {
 }
 
 export const DEFAULT_CHECKLIST_HEADER_LABELS: ChecklistHeaderLabels = {
-  title: 'KinkConsentManager',
+  title: 'Checklist',
   subtitle: 'Checklist de Limites, Práticas e Consentimento Consensual',
   languageLabel: 'Idioma',
   accordionMode: 'Guiado (Accordion)',

@@ -139,7 +139,7 @@ export class ChecklistPageComponent implements OnInit {
   protected readonly headerLabels = computed<ChecklistHeaderLabels>(() => {
     this.i18n.currentLang();
     return {
-      title: this.i18n.translateUi('title'),
+      title: this.translateWithFallback('navChecklist', 'Checklist'),
       subtitle: this.i18n.translateUi('subtitle'),
       languageLabel: this.i18n.translateUi('languageLabel'),
       accordionMode: this.i18n.translateUi('accordionMode'),

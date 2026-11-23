@@ -208,8 +208,8 @@ export class I18nService {
 
     return {
       title: this.resolveFirstUiKey(
-        ['preview.title', 'appTitle', 'title'],
-        'KinkConsentManager',
+        ['preview.title', 'navChecklist', 'appTitle', 'title'],
+        'Checklist',
       ),
       schemaVersionLabel: this.resolveFirstUiKey(
         ['schemaVersionLabel', 'preview.schemaVersion', 'export.schemaVersion', 'schemaVersion'],

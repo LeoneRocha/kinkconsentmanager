@@ -333,7 +333,7 @@ describe('I18nService', () => {
     };
 
     const preview = freshI18n.buildResolvedPreviewTexts(schemaWithItemRole, '2026-11-22');
-    expect(preview.title).toBe('KinkConsentManager');
+    expect(preview.title).toBe('Checklist');
     expect(preview.notAnsweredLabel).toBe('Not answered');
     expect(preview.roles['dominant_submissive']).toEqual({ primary: 'Dom', secondary: 'Sub' });
     expect(freshI18n.availableLocales.map((l) => l.code)).toEqual(['pt-BR', 'en-US']);

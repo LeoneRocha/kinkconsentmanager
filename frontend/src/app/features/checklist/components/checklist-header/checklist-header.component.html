@@ -4,59 +4,6 @@
       <h1 class="checklist-header__title">{{ labels().title }}</h1>
       <p class="checklist-header__subtitle">{{ labels().subtitle }}</p>
     </div>
-
-    <div class="checklist-header__top-actions">
-      <div class="checklist-header__save-box">
-        <div class="checklist-header__save-actions">
-          <button
-            mat-flat-button
-            type="button"
-            class="checklist-header__save-btn"
-            [class.checklist-header__save-btn--dirty]="hasUnsavedChanges()"
-            [disabled]="isAutosaving() || !hasUnsavedChanges()"
-            [matTooltip]="labels().saveNowTooltip ?? 'Salvar agora (criptografado)'"
-            matTooltipPosition="below"
-            (click)="saveNow.emit()"
-          >
-            <i
-              class="fa-solid"
-              [class.fa-spin]="isAutosaving()"
-              [class.fa-spinner]="isAutosaving()"
-              [class.fa-floppy-disk]="!isAutosaving()"
-              aria-hidden="true"
-            ></i>
-            <span>{{ labels().saveButton ?? 'Salvar' }}</span>
-          </button>
-
-          <button
-            mat-flat-button
-            type="button"
-            class="checklist-header__export-btn"
-            [class.checklist-header__export-btn--ready]="isChecklistComplete()"
-            [disabled]="!isChecklistComplete()"
-            (click)="goToExport.emit()"
-          >
-            <i class="fa-solid fa-file-export" aria-hidden="true"></i>
-            <span>{{ labels().exportButton }}</span>
-          </button>
-        </div>
-
-        <div class="checklist-header__autosave-row">
-          <mat-slide-toggle
-            class="checklist-header__autosave-toggle"
-            [checked]="autosaveEnabled()"
-            (change)="onAutosaveEnabledModelChange($event.checked)"
-          >
-            {{ labels().autosaveToggleLabel ?? 'Salvamento automático' }}
-          </mat-slide-toggle>
-
-          <span class="checklist-header__save-meta" role="status" aria-live="polite">
-            <i class="fa-solid fa-lock" aria-hidden="true"></i>
-            <span>{{ autosaveText() }}</span>
-          </span>
-        </div>
-      </div>
-    </div>
   </div>
 
   <mat-accordion class="checklist-header__accordion" [multi]="true">
@@ -114,4 +61,57 @@
       </div>
     </mat-expansion-panel>
   </mat-accordion>
+
+  <div class="checklist-header__top-actions">
+    <div class="checklist-header__save-box">
+      <div class="checklist-header__save-actions">
+        <button
+          mat-flat-button
+          type="button"
+          class="checklist-header__save-btn"
+          [class.checklist-header__save-btn--dirty]="hasUnsavedChanges()"
+          [disabled]="isAutosaving() || !hasUnsavedChanges()"
+          [matTooltip]="labels().saveNowTooltip ?? 'Salvar agora (criptografado)'"
+          matTooltipPosition="below"
+          (click)="saveNow.emit()"
+        >
+          <i
+            class="fa-solid"
+            [class.fa-spin]="isAutosaving()"
+            [class.fa-spinner]="isAutosaving()"
+            [class.fa-floppy-disk]="!isAutosaving()"
+            aria-hidden="true"
+          ></i>
+          <span>{{ labels().saveButton ?? 'Salvar' }}</span>
+        </button>
+
+        <button
+          mat-flat-button
+          type="button"
+          class="checklist-header__export-btn"
+          [class.checklist-header__export-btn--ready]="isChecklistComplete()"
+          [disabled]="!isChecklistComplete()"
+          (click)="goToExport.emit()"
+        >
+          <i class="fa-solid fa-file-export" aria-hidden="true"></i>
+          <span>{{ labels().exportButton }}</span>
+        </button>
+      </div>
+
+      <div class="checklist-header__autosave-row">
+        <mat-slide-toggle
+          class="checklist-header__autosave-toggle"
+          [checked]="autosaveEnabled()"
+          (change)="onAutosaveEnabledModelChange($event.checked)"
+        >
+          {{ labels().autosaveToggleLabel ?? 'Salvamento automático' }}
+        </mat-slide-toggle>
+
+        <span class="checklist-header__save-meta" role="status" aria-live="polite">
+          <i class="fa-solid fa-lock" aria-hidden="true"></i>
+          <span>{{ autosaveText() }}</span>
+        </span>
+      </div>
+    </div>
+  </div>
 </header>
