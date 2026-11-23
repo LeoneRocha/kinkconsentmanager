@@ -1,282 +1,153 @@
-@if (groups().length === 0) {
-  <div class="stepper__empty" role="status">
-    <i class="fa-solid fa-filter-circle-xmark stepper__empty-icon" aria-hidden="true"></i>
-    <p class="stepper__empty-text">{{ labels().noResults }}</p>
-  </div>
-} @else {
-  <div class="stepper__card">
-    <div class="stepper__chrome">
-      @if (totalCount() > 0) {
-        <app-progress-indicator
-          [answered]="answeredCount()"
-          [total]="totalCount()"
-          [percentage]="progressPercentage()"
-          [label]="progressLabel()"
-        />
-      }
+@if (!externalChromeHost() && groups().length > 0) {
+  <app-checklist-step-rail
+    [groups]="groups()"
+    [scales]="scales()"
+    [answers]="answers()"
+    [activeStep]="safeStep()"
+    [texts]="texts()"
+    [labels]="labels()"
+    [invalidStepIds]="invalidStepIds()"
+    [answeredCount]="answeredCount()"
+    [totalCount]="totalCount()"
+    [progressPercentage]="progressPercentage()"
+    [progressLabel]="progressLabel()"
+    (stepSelect)="selectStep($event)"
+    (reviewSelect)="goToReviewStep()"
+  />
+}
 
-      <div class="stepper__mobile-status">
-        <span>
-          {{ labels().stepLabel }} {{ safeStep() + 1 }} {{ labels().stepOfLabel }} {{ totalSteps() }}
+@if (groups().length === 0) {
+<div class="stepper__empty" role="status">
+  <i class="fa-solid fa-filter-circle-xmark stepper__empty-icon" aria-hidden="true"></i>
+  <p class="stepper__empty-text">{{ labels().noResults }}</p>
+</div>
+} @else {
+<div class="stepper__card">
+
+  @if (!isReviewStep() && currentGroup(); as group) {
+  <section class="stepper__panel" role="tabpanel" [attr.aria-label]="groupTitle(group)">
+    <header class="stepper__panel-header">
+      <div class="stepper__panel-heading">
+        <h2 class="stepper__panel-title">{{ groupTitle(group) }}</h2>
+        <span class="stepper__count">
+          {{ groupAnsweredCount(group) }} / {{ group.items.length }}
         </span>
-        <strong>
-          {{ isReviewStep() ? labels().reviewTitle : (currentGroup() ? groupTitle(currentGroup()!) : '') }}
-        </strong>
       </div>
 
-      <ol class="stepper__rail" role="tablist" [attr.aria-label]="labels().stepLabel">
-        @for (group of groups(); track group.id; let i = $index) {
-          <li
-            class="stepper__node"
-            [class.stepper__node--done]="stepState(group, i) === 'done'"
-            [class.stepper__node--active]="stepState(group, i) === 'active'"
-            [class.stepper__node--invalid]="stepState(group, i) === 'invalid'"
-          >
-            <button
-              type="button"
-              role="tab"
-              class="stepper__step-btn"
-              [class.stepper__step-btn--done]="stepState(group, i) === 'done'"
-              [class.stepper__step-btn--active]="stepState(group, i) === 'active'"
-              [class.stepper__step-btn--invalid]="stepState(group, i) === 'invalid'"
-              [class.stepper__step-btn--locked]="i > safeStep() && !canAdvanceTo(i)"
-              [attr.aria-selected]="safeStep() === i"
-              [title]="groupTitle(group)"
-              (click)="selectStep(i)"
-            >
-              <span class="stepper__circle" aria-hidden="true">
-                @if (stepState(group, i) === 'done') {
-                  <i class="fa-solid fa-check"></i>
-                } @else if (stepState(group, i) === 'invalid') {
-                  <i class="fa-solid fa-exclamation"></i>
-                } @else {
-                  {{ i + 1 }}
-                }
-              </span>
-              <span class="stepper__step-meta">
-                <span class="stepper__step-title">{{ groupTitle(group) }}</span>
-                <span class="stepper__step-count">
-                  {{ groupAnsweredCount(group) }}/{{ group.items.length }}
-                </span>
-              </span>
-            </button>
-          </li>
-        }
+      @if (groupDescription(group); as description) {
+      <p class="stepper__description">{{ description }}</p>
+      }
+    </header>
 
-        <li
-          class="stepper__node stepper__node--last"
-          [class.stepper__node--done]="isReviewStep() && areAllGroupsCompleted()"
-          [class.stepper__node--active]="isReviewStep() && !areAllGroupsCompleted()"
-        >
-          <button
-            type="button"
-            role="tab"
-            class="stepper__step-btn stepper__step-btn--review"
-            [class.stepper__step-btn--done]="isReviewStep() && areAllGroupsCompleted()"
-            [class.stepper__step-btn--active]="isReviewStep() && !areAllGroupsCompleted()"
-            [class.stepper__step-btn--locked]="!isReviewStep() && !canAdvanceTo(reviewStepIndex())"
-            [attr.aria-selected]="isReviewStep()"
-            [title]="labels().reviewTitle"
-            (click)="goToReviewStep()"
-          >
-            <span class="stepper__circle" aria-hidden="true">
-              <i class="fa-solid fa-list-check"></i>
-            </span>
-            <span class="stepper__step-meta">
-              <span class="stepper__step-title">{{ labels().reviewTitle }}</span>
-            </span>
-          </button>
-        </li>
-      </ol>
+    <div class="stepper__items">
+      @for (item of group.items; track item.id) {
+      <app-dynamic-question-item [item]="item" [scales]="scales()" [isDualRole]="isDualRole(group, item)"
+        [roleLabels]="roleLabels(group, item)" [itemLabel]="itemLabel(item)" [itemTooltip]="itemTooltip(item)"
+        [scaleLabels]="texts().scales" [optionLabels]="texts().options" [otherLabel]="texts().otherLabel"
+        [otherPlaceholder]="labels().otherPlaceholder" [readAloudLabel]="labels().readAloud"
+        [answer]="itemAnswer(item.id)" (answerChange)="onItemAnswerChange(item.id, $event)"
+        (readAloud)="readItemAloud.emit(item)" />
+      }
     </div>
 
-    <div class="stepper__legend">
-      <app-legend-bar [scales]="scales()" [scaleLabels]="texts().scales" />
-    </div>
-
-    @if (!isReviewStep() && currentGroup(); as group) {
-      <section class="stepper__panel" role="tabpanel" [attr.aria-label]="groupTitle(group)">
-        <header class="stepper__panel-header">
-          <div class="stepper__panel-heading">
-            <h2 class="stepper__panel-title">{{ groupTitle(group) }}</h2>
-            <span class="stepper__count">
-              {{ groupAnsweredCount(group) }} / {{ group.items.length }}
-            </span>
-          </div>
-
-          @if (groupDescription(group); as description) {
-            <p class="stepper__description">{{ description }}</p>
-          }
-        </header>
-
-        <div class="stepper__items">
-          @for (item of group.items; track item.id) {
-            <app-dynamic-question-item
-              [item]="item"
-              [scales]="scales()"
-              [isDualRole]="isDualRole(group, item)"
-              [roleLabels]="roleLabels(group, item)"
-              [itemLabel]="itemLabel(item)"
-              [itemTooltip]="itemTooltip(item)"
-              [scaleLabels]="texts().scales"
-              [optionLabels]="texts().options"
-              [otherLabel]="texts().otherLabel"
-              [otherPlaceholder]="labels().otherPlaceholder"
-              [readAloudLabel]="labels().readAloud"
-              [answer]="itemAnswer(item.id)"
-              (answerChange)="onItemAnswerChange(item.id, $event)"
-              (readAloud)="readItemAloud.emit(item)"
-            />
-          }
-        </div>
-
-        @if (showIncompleteAlert() && !isCurrentStepCompleted()) {
-          <p class="stepper__validation-alert" role="alert">
-            <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
-            <span>{{ labels().stepIncompleteAlert ?? 'Preencha todos os itens deste passo antes de avançar.' }}</span>
-          </p>
-        }
-
-        <footer class="stepper__footer">
-          <button
-            mat-stroked-button
-            type="button"
-            class="stepper__prev-btn"
-            [disabled]="!canGoPrev()"
-            (click)="goPrevStep()"
-          >
-            <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
-            <span>{{ labels().prevStep }}</span>
-          </button>
-
-          <div class="stepper__footer-right">
-            @if (safeStep() < groups().length - 1) {
-              <button
-                mat-flat-button
-                type="button"
-                class="stepper__review-jump-btn"
-                [class.stepper__ready-btn]="areAllGroupsCompleted()"
-                [disabled]="!areAllGroupsCompleted()"
-                (click)="goToReviewStep()"
-              >
-                <i class="fa-solid fa-list-check" aria-hidden="true"></i>
-                <span>{{ labels().goToReview }}</span>
-              </button>
-            }
-            <button
-              mat-flat-button
-              type="button"
-              class="stepper__next-btn"
-              (click)="goNextStep()"
-            >
-              <span>{{ safeStep() === groups().length - 1 ? labels().reviewTitle : labels().nextStep }}</span>
-              <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
-            </button>
-          </div>
-        </footer>
-      </section>
-    } @else {
-      <section class="stepper__panel stepper__panel--review" role="tabpanel" [attr.aria-label]="labels().reviewTitle">
-        <header class="stepper__review-header">
-          <div class="stepper__review-copy">
-            <h2 class="stepper__panel-title">{{ labels().reviewTitle }}</h2>
-            <p class="stepper__review-subtitle">{{ labels().reviewSubtitle }}</p>
-          </div>
-
-          <div class="stepper__review-actions">
-            <button
-              mat-stroked-button
-              type="button"
-              class="stepper__expand-all-btn"
-              (click)="expandAllReviewPanels()"
-            >
-              <i class="fa-solid fa-plus" aria-hidden="true"></i>
-              <span>{{ labels().expandAll }}</span>
-            </button>
-            <button
-              mat-stroked-button
-              type="button"
-              class="stepper__collapse-all-btn"
-              (click)="collapseAllReviewPanels()"
-            >
-              <i class="fa-solid fa-minus" aria-hidden="true"></i>
-              <span>{{ labels().collapseAll }}</span>
-            </button>
-          </div>
-        </header>
-
-        <mat-accordion class="stepper__review-accordion" [multi]="true">
-          @for (group of groups(); track group.id; let i = $index) {
-            <mat-expansion-panel
-              [expanded]="isReviewPanelExpanded(i)"
-              (opened)="onReviewPanelToggled(i, true)"
-              (closed)="onReviewPanelToggled(i, false)"
-            >
-              <mat-expansion-panel-header>
-                <mat-panel-title>
-                  <div class="stepper__acc-header">
-                    <span class="stepper__acc-title">{{ groupTitle(group) }}</span>
-                    <span class="stepper__count">
-                      {{ groupAnsweredCount(group) }} / {{ group.items.length }}
-                    </span>
-                  </div>
-                </mat-panel-title>
-              </mat-expansion-panel-header>
-
-              <div class="stepper__acc-body">
-                @if (groupDescription(group); as description) {
-                  <p class="stepper__description">{{ description }}</p>
-                }
-
-                <div class="stepper__items">
-                  @for (item of group.items; track item.id) {
-                    <app-dynamic-question-item
-                      [item]="item"
-                      [scales]="scales()"
-                      [isDualRole]="isDualRole(group, item)"
-                      [roleLabels]="roleLabels(group, item)"
-                      [itemLabel]="itemLabel(item)"
-                      [itemTooltip]="itemTooltip(item)"
-                      [scaleLabels]="texts().scales"
-                      [optionLabels]="texts().options"
-                      [otherLabel]="texts().otherLabel"
-                      [otherPlaceholder]="labels().otherPlaceholder"
-                      [readAloudLabel]="labels().readAloud"
-                      [answer]="itemAnswer(item.id)"
-                      (answerChange)="onItemAnswerChange(item.id, $event)"
-                      (readAloud)="readItemAloud.emit(item)"
-                    />
-                  }
-                </div>
-              </div>
-            </mat-expansion-panel>
-          }
-        </mat-accordion>
-
-        <footer class="stepper__footer">
-          <button
-            mat-stroked-button
-            type="button"
-            class="stepper__prev-btn"
-            (click)="goPrevStep()"
-          >
-            <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
-            <span>{{ labels().prevStep }}</span>
-          </button>
-
-          <button
-            mat-flat-button
-            type="button"
-            class="stepper__finish-btn"
-            [class.stepper__ready-btn]="areAllGroupsCompleted()"
-            [disabled]="!areAllGroupsCompleted()"
-            (click)="finishChecklist.emit()"
-          >
-            <span>{{ labels().finish }}</span>
-            <i class="fa-solid fa-check" aria-hidden="true"></i>
-          </button>
-        </footer>
-      </section>
+    @if (showIncompleteAlert() && !isCurrentStepCompleted()) {
+    <p class="stepper__validation-alert" role="alert">
+      <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+      <span>{{ labels().stepIncompleteAlert ?? 'Preencha todos os itens deste passo antes de avançar.' }}</span>
+    </p>
     }
-  </div>
+
+    <footer class="stepper__footer">
+      <button mat-stroked-button type="button" class="stepper__prev-btn" [disabled]="!canGoPrev()"
+        (click)="goPrevStep()">
+        <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+        <span>{{ labels().prevStep }}</span>
+      </button>
+
+      <div class="stepper__footer-right">
+        @if (safeStep() < groups().length - 1) { <button mat-flat-button type="button" class="stepper__review-jump-btn"
+          [class.stepper__ready-btn]="areAllGroupsCompleted()" [disabled]="!areAllGroupsCompleted()"
+          (click)="goToReviewStep()">
+          <i class="fa-solid fa-list-check" aria-hidden="true"></i>
+          <span>{{ labels().goToReview }}</span>
+          </button>
+          }
+          <button mat-flat-button type="button" class="stepper__next-btn" (click)="goNextStep()">
+            <span>{{ safeStep() === groups().length - 1 ? labels().reviewTitle : labels().nextStep }}</span>
+            <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+          </button>
+      </div>
+    </footer>
+  </section>
+  } @else {
+  <section class="stepper__panel stepper__panel--review" role="tabpanel" [attr.aria-label]="labels().reviewTitle">
+    <header class="stepper__review-header">
+      <div class="stepper__review-copy">
+        <h2 class="stepper__panel-title">{{ labels().reviewTitle }}</h2>
+        <p class="stepper__review-subtitle">{{ labels().reviewSubtitle }}</p>
+      </div>
+
+      <div class="stepper__review-actions">
+        <button mat-stroked-button type="button" class="stepper__expand-all-btn" (click)="expandAllReviewPanels()">
+          <i class="fa-solid fa-plus" aria-hidden="true"></i>
+          <span>{{ labels().expandAll }}</span>
+        </button>
+        <button mat-stroked-button type="button" class="stepper__collapse-all-btn" (click)="collapseAllReviewPanels()">
+          <i class="fa-solid fa-minus" aria-hidden="true"></i>
+          <span>{{ labels().collapseAll }}</span>
+        </button>
+      </div>
+    </header>
+
+    <mat-accordion class="stepper__review-accordion" [multi]="true">
+      @for (group of groups(); track group.id; let i = $index) {
+      <mat-expansion-panel [expanded]="isReviewPanelExpanded(i)" (opened)="onReviewPanelToggled(i, true)"
+        (closed)="onReviewPanelToggled(i, false)">
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            <div class="stepper__acc-header">
+              <span class="stepper__acc-title">{{ groupTitle(group) }}</span>
+              <span class="stepper__count">
+                {{ groupAnsweredCount(group) }} / {{ group.items.length }}
+              </span>
+            </div>
+          </mat-panel-title>
+        </mat-expansion-panel-header>
+
+        <div class="stepper__acc-body">
+          @if (groupDescription(group); as description) {
+          <p class="stepper__description">{{ description }}</p>
+          }
+
+          <div class="stepper__items">
+            @for (item of group.items; track item.id) {
+            <app-dynamic-question-item [item]="item" [scales]="scales()" [isDualRole]="isDualRole(group, item)"
+              [roleLabels]="roleLabels(group, item)" [itemLabel]="itemLabel(item)" [itemTooltip]="itemTooltip(item)"
+              [scaleLabels]="texts().scales" [optionLabels]="texts().options" [otherLabel]="texts().otherLabel"
+              [otherPlaceholder]="labels().otherPlaceholder" [readAloudLabel]="labels().readAloud"
+              [answer]="itemAnswer(item.id)" (answerChange)="onItemAnswerChange(item.id, $event)"
+              (readAloud)="readItemAloud.emit(item)" />
+            }
+          </div>
+        </div>
+      </mat-expansion-panel>
+      }
+    </mat-accordion>
+
+    <footer class="stepper__footer">
+      <button mat-stroked-button type="button" class="stepper__prev-btn" (click)="goPrevStep()">
+        <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+        <span>{{ labels().prevStep }}</span>
+      </button>
+
+      <button mat-flat-button type="button" class="stepper__finish-btn"
+        [class.stepper__ready-btn]="areAllGroupsCompleted()" [disabled]="!areAllGroupsCompleted()"
+        (click)="finishChecklist.emit()">
+        <span>{{ labels().finish }}</span>
+        <i class="fa-solid fa-check" aria-hidden="true"></i>
+      </button>
+    </footer>
+  </section>
+  }
+</div>
 }

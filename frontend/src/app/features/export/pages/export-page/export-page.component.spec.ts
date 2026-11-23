@@ -51,6 +51,7 @@ const PT_BR_TRANSLATIONS = {
     backToChecklist: 'Voltar ao Checklist',
     downloadPng: 'Baixar PNG',
     downloadPdf: 'Baixar PDF',
+    printSummary: 'Imprimir',
     exportJson: 'Exportar JSON',
     importJson: 'Importar JSON',
     exportCsv: 'Exportar CSV',
@@ -435,5 +436,33 @@ describe('ExportPageComponent', () => {
       'data:image/png;base64,EXPORTED',
       expect.stringMatching(/^kink-consent-checklist-classic-\d{4}-\d{2}-\d{2}\.png$/),
     );
+  });
+
+  it('should trigger window.print with layout-tagged document title and restore original title afterwards', async () => {
+    checklistState.setItemAnswer('item_rope', { primaryScale: 'enjoy' });
+    await createPage();
+
+    const originalTitle = document.title;
+    let titleDuringPrint = '';
+    const printSpy = jest.spyOn(window, 'print').mockImplementation(() => {
+      titleDuringPrint = document.title;
+    });
+
+    const hostEl = fixture.nativeElement as HTMLElement;
+    const printBtn = hostEl.querySelector<HTMLButtonElement>('button[data-action="print"]')!;
+    expect(printBtn.disabled).toBe(true);
+
+    hostEl.querySelector<HTMLButtonElement>('button[data-layout="classic"]')?.click();
+    await fixture.whenStable();
+
+    expect(printBtn.disabled).toBe(false);
+    expect(printBtn.classList.contains('export-toolbar__btn--ready')).toBe(true);
+
+    printBtn.click();
+    await fixture.whenStable();
+
+    expect(printSpy).toHaveBeenCalledTimes(1);
+    expect(titleDuringPrint).toMatch(/^kink-consent-checklist-classic-\d{4}-\d{2}-\d{2}$/);
+    expect(document.title).toBe(originalTitle);
   });
 });

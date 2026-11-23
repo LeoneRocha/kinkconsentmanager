@@ -1,16 +1,34 @@
 @use 'variables' as v;
 @use 'mixins' as m;
 
+:host {
+  @extend %col;
+  gap: 0.75rem;
+}
+
+%col {
+  display: flex;
+  flex-direction: column;
+}
+
+%card {
+  @include m.card-surface;
+  overflow: hidden;
+  @extend %col;
+}
+
 %row-center {
   display: flex;
   align-items: center;
 }
 
 .stepper {
+  &__card {
+    @extend %card;
+  }
+
   &__empty {
-    @include m.card-surface;
-    display: flex;
-    flex-direction: column;
+    @extend %card;
     align-items: center;
     gap: 0.75rem;
     padding: 2.5rem 1.25rem;
@@ -25,217 +43,6 @@
 
   &__empty-text {
     margin: 0;
-  }
-
-  &__card {
-    @include m.card-surface;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-  }
-
-  &__chrome {
-    display: flex;
-    flex-direction: column;
-    gap: 1.125rem;
-    padding: 1.25rem;
-    background-color: v.$surface-subtle;
-    border-bottom: 1px solid v.$border-color;
-
-    @include m.respond-md {
-      padding: 1.375rem 1.75rem 1.25rem;
-    }
-  }
-
-  &__legend {
-    padding: 0.75rem 1.25rem;
-    border-bottom: 1px solid v.$border-color;
-    background-color: v.$surface-card;
-
-    @include m.respond-md {
-      padding: 0.875rem 1.75rem;
-    }
-  }
-
-  &__mobile-status {
-    @extend %row-center;
-    justify-content: space-between;
-    gap: 0.5rem;
-    font-size: 0.8125rem;
-    color: v.$text-secondary;
-
-    strong {
-      color: v.$text-primary;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    @include m.respond-md {
-      display: none;
-    }
-  }
-
-  &__rail {
-    display: flex;
-    align-items: flex-start;
-    list-style: none;
-    margin: 0;
-    padding: 0.5rem 0.25rem 0.25rem;
-    overflow-x: auto;
-    scrollbar-width: none;
-
-    &::-webkit-scrollbar {
-      display: none;
-    }
-  }
-
-  &__node {
-    position: relative;
-    flex: 1 1 0;
-    min-width: 92px;
-    display: flex;
-    justify-content: center;
-
-    &::after {
-      content: '';
-      position: absolute;
-      top: 22px;
-      left: calc(50% + 28px);
-      right: calc(-50% + 28px);
-      height: 2px;
-      background-color: v.$border-color;
-      z-index: 0;
-      transition: background-color 0.2s ease;
-    }
-
-    &--done::after {
-      background-color: v.$scale-enjoy;
-    }
-
-    &--active::after {
-      background-color: #f59e0b;
-    }
-
-    &--invalid::after {
-      background-color: v.$accent-primary;
-    }
-
-    &--last::after {
-      display: none;
-    }
-  }
-
-  &__step-btn {
-    position: relative;
-    z-index: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.5rem;
-    width: 100%;
-    padding: 0.25rem 0.375rem;
-    border: none;
-    border-radius: v.$radius-sm;
-    background: transparent;
-    color: v.$text-secondary;
-    cursor: pointer;
-    text-align: center;
-    transition: color 0.15s ease, opacity 0.15s ease;
-
-    &:hover {
-      color: v.$text-primary;
-    }
-
-    &:hover .stepper__circle {
-      border-color: v.$accent-primary;
-    }
-
-    &--active,
-    &--done,
-    &--invalid {
-      color: v.$text-primary;
-    }
-
-    &--locked {
-      opacity: 0.6;
-    }
-  }
-
-  &__circle {
-    width: 44px;
-    height: 44px;
-    border-radius: 9999px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.9rem;
-    font-weight: 700;
-    background-color: v.$surface-card;
-    border: 1.5px solid v.$border-strong;
-    color: v.$text-secondary;
-    flex-shrink: 0;
-    transition:
-      background-color 0.2s ease,
-      border-color 0.2s ease,
-      color 0.2s ease,
-      box-shadow 0.2s ease;
-  }
-
-  &__step-btn--active &__circle {
-    background-color: #f59e0b;
-    border-color: #f59e0b;
-    color: #111827;
-    box-shadow:
-      0 0 0 3px v.$surface-subtle,
-      0 0 0 5px #f59e0b;
-  }
-
-  &__step-btn--invalid &__circle {
-    background-color: v.$accent-primary;
-    border-color: v.$accent-primary;
-    color: #ffffff;
-    box-shadow:
-      0 0 0 3px v.$surface-subtle,
-      0 0 0 5px v.$accent-primary;
-  }
-
-  &__step-btn--done &__circle {
-    background-color: v.$scale-enjoy;
-    border-color: v.$scale-enjoy;
-    color: #ffffff;
-    box-shadow:
-      0 0 0 3px v.$surface-subtle,
-      0 0 0 5px v.$scale-enjoy;
-  }
-
-  &__step-meta {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.125rem;
-    max-width: 100%;
-  }
-
-  &__step-title {
-    font-size: 0.78rem;
-    font-weight: 600;
-    line-height: 1.25;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    word-break: break-word;
-  }
-
-  &__step-btn--active &__step-title {
-    font-weight: 700;
-  }
-
-  &__step-count {
-    font-size: 0.7rem;
-    color: v.$text-muted;
-    font-variant-numeric: tabular-nums;
   }
 
   &__panel {
@@ -362,6 +169,7 @@
 }
 
 :host ::ng-deep {
+
   .stepper__prev-btn,
   .stepper__next-btn,
   .stepper__finish-btn,

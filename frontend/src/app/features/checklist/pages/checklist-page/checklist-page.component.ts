@@ -41,6 +41,7 @@ import {
   ChecklistHeaderLabels,
 } from '../../components/checklist-header';
 import {
+  ChecklistStepRailComponent,
   ChecklistStepperComponent,
   ChecklistStepperLabels,
 } from '../../components/checklist-stepper';
@@ -61,6 +62,7 @@ import {
     LegendBarComponent,
     ProgressIndicatorComponent,
     ChecklistHeaderComponent,
+    ChecklistStepRailComponent,
     ChecklistStepperComponent,
     ClassicKinkSheetComponent,
     FullViewContainerComponent,
@@ -81,11 +83,13 @@ export class ChecklistPageComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
 
   private readonly contentContainer = viewChild<ElementRef<HTMLElement>>('contentContainer');
+  protected readonly stepperRef = viewChild(ChecklistStepperComponent);
   private loadSubscription: Subscription | null = null;
 
   protected readonly isLoading = signal<boolean>(true);
   protected readonly loadError = signal<boolean>(false);
   private readonly reviewStepActive = signal<boolean>(false);
+  protected readonly emptyInvalidStepIds: ReadonlySet<string> = new Set();
 
   protected readonly schema = this.checklistState.schema;
   protected readonly filteredGroups = this.checklistState.filteredGroups;
@@ -466,15 +470,12 @@ export class ChecklistPageComponent implements OnInit {
   }
 
   private scrollToContentTop(): void {
-    const el = this.contentContainer()?.nativeElement;
-    if (!el) {
-      return;
-    }
-    if (typeof el.scrollTo === 'function') {
-      el.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-    if (typeof el.scrollIntoView === 'function') {
-      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (typeof window !== 'undefined' && typeof window.scrollTo === 'function') {
+      try {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } catch {
+        // Ignore unimplemented window.scrollTo in non-browser DOM test environments.
+      }
     }
   }
 }

@@ -1,4 +1,4 @@
-export type ExportFormat = 'png' | 'pdf' | 'json' | 'csv';
+export type ExportFormat = 'png' | 'pdf' | 'print' | 'json' | 'csv';
 
 export interface ExportResult {
   readonly format: ExportFormat;

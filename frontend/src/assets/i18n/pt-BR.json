@@ -50,6 +50,7 @@
     "backToChecklist": "Voltar ao Checklist",
     "downloadPng": "Baixar PNG",
     "downloadPdf": "Baixar PDF",
+    "printSummary": "Imprimir",
     "exportJson": "Exportar JSON",
     "importJson": "Importar JSON",
     "exportCsv": "Exportar CSV",

@@ -28,6 +28,7 @@ export class ExportActionsToolbarComponent {
   readonly backLabel = input<string>('Voltar ao Checklist');
   readonly pngLabel = input<string>('Baixar PNG');
   readonly pdfLabel = input<string>('Baixar PDF');
+  readonly printLabel = input<string>('Imprimir');
   readonly jsonLabel = input<string>('Exportar JSON');
   readonly importJsonLabel = input<string>('Importar JSON');
   readonly csvLabel = input<string>('Exportar CSV');
@@ -35,6 +36,7 @@ export class ExportActionsToolbarComponent {
   readonly backToChecklist = output<void>();
   readonly exportPng = output<void>();
   readonly exportPdf = output<void>();
+  readonly printChecklist = output<void>();
   readonly exportJson = output<void>();
   readonly importJsonFile = output<File>();
   readonly exportCsv = output<void>();
@@ -63,6 +65,13 @@ export class ExportActionsToolbarComponent {
       return;
     }
     this.exportPdf.emit();
+  }
+
+  protected onPrintClick(): void {
+    if (this.exportActionsDisabled()) {
+      return;
+    }
+    this.printChecklist.emit();
   }
 
   protected onExportJsonClick(): void {

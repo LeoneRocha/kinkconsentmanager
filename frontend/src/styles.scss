@@ -303,3 +303,35 @@ html.app-reduced-motion {
   white-space: nowrap;
   border: 0;
 }
+
+@media print {
+  @page {
+    margin: 10mm;
+  }
+
+  html,
+  html.app-dark,
+  body,
+  .app-shell {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    min-height: 0 !important;
+    height: auto !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .app-shell__topbar,
+  .app-shell__footer,
+  .app-shell__skip-link,
+  .app-shell__caption-bar {
+    display: none !important;
+  }
+
+  .app-shell__main {
+    width: 100% !important;
+    max-width: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+}

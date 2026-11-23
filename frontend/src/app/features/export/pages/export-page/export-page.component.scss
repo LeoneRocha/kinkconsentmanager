@@ -307,3 +307,34 @@
     }
   }
 }
+
+@media print {
+  .export-page {
+    gap: 0;
+
+    &__header,
+    &__step-card,
+    &__step-section,
+    &__preview,
+    &__preview-empty,
+    &__status,
+    &__error {
+      display: none !important;
+    }
+
+    &__offscreen-host {
+      position: static !important;
+      left: auto !important;
+      top: auto !important;
+      pointer-events: auto !important;
+      width: 100% !important;
+      overflow: visible !important;
+    }
+
+    &__capture-surface,
+    &__capture-surface--classic {
+      width: 100% !important;
+      background-color: #ffffff !important;
+    }
+  }
+}

@@ -52,6 +52,23 @@
       type="button"
       class="export-toolbar__btn export-toolbar__btn--export"
       [class.export-toolbar__btn--ready]="!exportActionsDisabled()"
+      data-action="print"
+      [disabled]="exportActionsDisabled()"
+      [attr.aria-busy]="busyFormat() === 'print'"
+      (click)="onPrintClick()"
+    >
+      <i
+        [class]="busyFormat() === 'print' ? 'fa-solid fa-spinner fa-spin' : 'fa-solid fa-print'"
+        aria-hidden="true"
+      ></i>
+      <span>{{ printLabel() }}</span>
+    </button>
+
+    <button
+      mat-flat-button
+      type="button"
+      class="export-toolbar__btn export-toolbar__btn--export"
+      [class.export-toolbar__btn--ready]="!exportActionsDisabled()"
       data-action="json"
       [disabled]="exportActionsDisabled()"
       [attr.aria-busy]="busyFormat() === 'json'"

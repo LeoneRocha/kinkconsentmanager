@@ -156,6 +156,28 @@ export class ExportPageComponent implements OnInit {
     }
   }
 
+  protected onPrint(): void {
+    if (!this.hasSchema() || !this.hasSelectedLayout() || this.busyFormat() !== null) {
+      return;
+    }
+
+    this.busyFormat.set('print');
+    const previousTitle = typeof document !== 'undefined' ? document.title : '';
+    try {
+      if (typeof document !== 'undefined') {
+        document.title = this.buildExportFilename();
+      }
+      if (typeof window !== 'undefined' && typeof window.print === 'function') {
+        window.print();
+      }
+    } finally {
+      if (typeof document !== 'undefined') {
+        document.title = previousTitle;
+      }
+      this.busyFormat.set(null);
+    }
+  }
+
   protected onExportJson(): void {
     if (!this.hasSchema() || this.busyFormat() !== null) {
       return;

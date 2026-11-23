@@ -1,0 +1,90 @@
+<div class="stepper__chrome-card">
+  <div class="stepper__chrome">
+    @if (totalCount() > 0) {
+      <app-progress-indicator
+        [answered]="answeredCount()"
+        [total]="totalCount()"
+        [percentage]="progressPercentage()"
+        [label]="progressLabel()"
+      />
+    }
+
+    <div class="stepper__mobile-status">
+      <span>
+        {{ labels().stepLabel }} {{ safeStep() + 1 }} {{ labels().stepOfLabel }} {{ totalSteps() }}
+      </span>
+      <strong>
+        {{ isReviewStep() ? labels().reviewTitle : (currentGroup() ? groupTitle(currentGroup()!) : '') }}
+      </strong>
+    </div>
+
+    <ol class="stepper__rail" role="tablist" [attr.aria-label]="labels().stepLabel">
+      @for (group of groups(); track group.id; let i = $index) {
+        <li
+          class="stepper__node"
+          [class.stepper__node--done]="stepState(group, i) === 'done'"
+          [class.stepper__node--active]="stepState(group, i) === 'active'"
+          [class.stepper__node--invalid]="stepState(group, i) === 'invalid'"
+        >
+          <button
+            type="button"
+            role="tab"
+            class="stepper__step-btn"
+            [class.stepper__step-btn--done]="stepState(group, i) === 'done'"
+            [class.stepper__step-btn--active]="stepState(group, i) === 'active'"
+            [class.stepper__step-btn--invalid]="stepState(group, i) === 'invalid'"
+            [class.stepper__step-btn--locked]="i > safeStep() && !canAdvanceTo(i)"
+            [attr.aria-selected]="safeStep() === i"
+            [title]="groupTitle(group)"
+            (click)="stepSelect.emit(i)"
+          >
+            <span class="stepper__circle" aria-hidden="true">
+              @if (stepState(group, i) === 'done') {
+                <i class="fa-solid fa-check"></i>
+              } @else if (stepState(group, i) === 'invalid') {
+                <i class="fa-solid fa-exclamation"></i>
+              } @else {
+                {{ i + 1 }}
+              }
+            </span>
+            <span class="stepper__step-meta">
+              <span class="stepper__step-title">{{ groupTitle(group) }}</span>
+              <span class="stepper__step-count">
+                {{ groupAnsweredCount(group) }}/{{ group.items.length }}
+              </span>
+            </span>
+          </button>
+        </li>
+      }
+
+      <li
+        class="stepper__node stepper__node--last"
+        [class.stepper__node--done]="isReviewStep() && areAllGroupsCompleted()"
+        [class.stepper__node--active]="isReviewStep() && !areAllGroupsCompleted()"
+      >
+        <button
+          type="button"
+          role="tab"
+          class="stepper__step-btn stepper__step-btn--review"
+          [class.stepper__step-btn--done]="isReviewStep() && areAllGroupsCompleted()"
+          [class.stepper__step-btn--active]="isReviewStep() && !areAllGroupsCompleted()"
+          [class.stepper__step-btn--locked]="!isReviewStep() && !canAdvanceTo(reviewStepIndex())"
+          [attr.aria-selected]="isReviewStep()"
+          [title]="labels().reviewTitle"
+          (click)="reviewSelect.emit()"
+        >
+          <span class="stepper__circle" aria-hidden="true">
+            <i class="fa-solid fa-list-check"></i>
+          </span>
+          <span class="stepper__step-meta">
+            <span class="stepper__step-title">{{ labels().reviewTitle }}</span>
+          </span>
+        </button>
+      </li>
+    </ol>
+  </div>
+
+  <div class="stepper__legend">
+    <app-legend-bar [scales]="scales()" [scaleLabels]="texts().scales" />
+  </div>
+</div>

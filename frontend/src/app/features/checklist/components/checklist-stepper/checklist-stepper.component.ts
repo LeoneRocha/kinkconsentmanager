@@ -18,11 +18,7 @@ import {
   ResolvedRolePairLabels,
   ScaleOption,
 } from '../../../../core/models';
-import {
-  DynamicQuestionItemComponent,
-  LegendBarComponent,
-  ProgressIndicatorComponent,
-} from '../../../../shared/components';
+import { DynamicQuestionItemComponent } from '../../../../shared/components';
 import {
   countGroupAnsweredItems,
   getGroupDescription,
@@ -33,6 +29,7 @@ import {
   getItemTooltip,
   isDualRoleScaleItem,
 } from '../../utils/checklist-view.helpers';
+import { ChecklistStepRailComponent } from './checklist-step-rail.component';
 
 export interface ChecklistStepperLabels {
   readonly stepLabel: string;
@@ -78,8 +75,7 @@ export const DEFAULT_CHECKLIST_STEPPER_LABELS: ChecklistStepperLabels = {
     MatExpansionModule,
     MatButtonModule,
     DynamicQuestionItemComponent,
-    LegendBarComponent,
-    ProgressIndicatorComponent,
+    ChecklistStepRailComponent,
   ],
   templateUrl: './checklist-stepper.component.html',
   styleUrl: './checklist-stepper.component.scss',
@@ -96,21 +92,17 @@ export class ChecklistStepperComponent {
   readonly totalCount = input<number>(0);
   readonly progressPercentage = input<number>(0);
   readonly progressLabel = input<string>('Progresso');
+  readonly externalChromeHost = input<boolean>(false);
 
   readonly activeStepChange = output<number>();
   readonly answerChange = output<{ itemId: string; patch: Partial<ItemResponseValue> }>();
   readonly readItemAloud = output<ItemDefinition>();
   readonly finishChecklist = output<void>();
 
+  readonly invalidStepIds = signal<ReadonlySet<string>>(new Set());
   protected readonly expandedReviewValues = signal<number[]>([]);
-  protected readonly invalidStepIds = signal<ReadonlySet<string>>(new Set());
   protected readonly showIncompleteAlert = signal<boolean>(false);
   private wasOnReviewStep = false;
-
-  protected readonly totalSteps = computed<number>(() => {
-    const count = this.groups().length;
-    return count > 0 ? count + 1 : 0;
-  });
 
   protected readonly reviewStepIndex = computed<number>(() => this.groups().length);
 
@@ -194,22 +186,6 @@ export class ChecklistStepperComponent {
     });
   }
 
-  protected stepState(
-    group: GroupDefinition,
-    index: number,
-  ): 'done' | 'invalid' | 'active' | 'pending' {
-    if (this.isGroupCompleted(group)) {
-      return 'done';
-    }
-    if (this.invalidStepIds().has(group.id)) {
-      return 'invalid';
-    }
-    if (this.safeStep() === index) {
-      return 'active';
-    }
-    return 'pending';
-  }
-
   protected canAdvanceTo(targetIndex: number): boolean {
     const currentStep = this.safeStep();
     if (targetIndex <= currentStep) {
@@ -226,7 +202,7 @@ export class ChecklistStepperComponent {
     return true;
   }
 
-  protected selectStep(stepIndex: number): void {
+  selectStep(stepIndex: number): void {
     const groups = this.groups();
     const maxStep = groups.length;
     const clamped = Math.min(Math.max(0, stepIndex), maxStep);
@@ -272,7 +248,7 @@ export class ChecklistStepperComponent {
     }
   }
 
-  protected goToReviewStep(): void {
+  goToReviewStep(): void {
     this.selectStep(this.reviewStepIndex());
   }
 
