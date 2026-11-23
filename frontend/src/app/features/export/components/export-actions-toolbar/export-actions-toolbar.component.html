@@ -1,99 +1,93 @@
 <nav class="export-toolbar" aria-label="Export actions">
   <div class="export-toolbar__navigation">
     <button
-      pButton
+      mat-stroked-button
       type="button"
-      severity="secondary"
-      [outlined]="true"
       class="export-toolbar__btn export-toolbar__btn--back"
       data-action="back"
       (click)="onBackClick()"
     >
-      <i class="pi pi-arrow-left" aria-hidden="true"></i>
+      <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
       <span>{{ backLabel() }}</span>
     </button>
   </div>
 
   <div class="export-toolbar__actions">
     <button
-      pButton
+      mat-flat-button
       type="button"
-      severity="primary"
-      class="export-toolbar__btn"
+      class="export-toolbar__btn export-toolbar__btn--export"
+      [class.export-toolbar__btn--ready]="!exportActionsDisabled()"
       data-action="png"
-      [disabled]="actionsDisabled()"
+      [disabled]="exportActionsDisabled()"
       [attr.aria-busy]="busyFormat() === 'png'"
       (click)="onExportPngClick()"
     >
       <i
-        [class]="busyFormat() === 'png' ? 'pi pi-spin pi-spinner' : 'pi pi-image'"
+        [class]="busyFormat() === 'png' ? 'fa-solid fa-spinner fa-spin' : 'fa-solid fa-image'"
         aria-hidden="true"
       ></i>
       <span>{{ pngLabel() }}</span>
     </button>
 
     <button
-      pButton
+      mat-flat-button
       type="button"
-      severity="primary"
-      class="export-toolbar__btn"
+      class="export-toolbar__btn export-toolbar__btn--export"
+      [class.export-toolbar__btn--ready]="!exportActionsDisabled()"
       data-action="pdf"
-      [disabled]="actionsDisabled()"
+      [disabled]="exportActionsDisabled()"
       [attr.aria-busy]="busyFormat() === 'pdf'"
       (click)="onExportPdfClick()"
     >
       <i
-        [class]="busyFormat() === 'pdf' ? 'pi pi-spin pi-spinner' : 'pi pi-file-pdf'"
+        [class]="busyFormat() === 'pdf' ? 'fa-solid fa-spinner fa-spin' : 'fa-solid fa-file-pdf'"
         aria-hidden="true"
       ></i>
       <span>{{ pdfLabel() }}</span>
     </button>
 
     <button
-      pButton
+      mat-flat-button
       type="button"
-      severity="secondary"
-      [outlined]="true"
-      class="export-toolbar__btn"
+      class="export-toolbar__btn export-toolbar__btn--export"
+      [class.export-toolbar__btn--ready]="!exportActionsDisabled()"
       data-action="json"
-      [disabled]="actionsDisabled()"
+      [disabled]="exportActionsDisabled()"
       [attr.aria-busy]="busyFormat() === 'json'"
       (click)="onExportJsonClick()"
     >
       <i
-        [class]="busyFormat() === 'json' ? 'pi pi-spin pi-spinner' : 'pi pi-download'"
+        [class]="busyFormat() === 'json' ? 'fa-solid fa-spinner fa-spin' : 'fa-solid fa-download'"
         aria-hidden="true"
       ></i>
       <span>{{ jsonLabel() }}</span>
     </button>
 
     <button
-      pButton
+      mat-stroked-button
       type="button"
-      severity="secondary"
-      [outlined]="true"
       class="export-toolbar__btn"
       data-action="import-json"
       [disabled]="actionsDisabled()"
       (click)="onImportJsonTriggerClick()"
     >
-      <i class="pi pi-upload" aria-hidden="true"></i>
+      <i class="fa-solid fa-upload" aria-hidden="true"></i>
       <span>{{ importJsonLabel() }}</span>
     </button>
 
     <button
-      pButton
+      mat-flat-button
       type="button"
-      severity="secondary"
-      [outlined]="true"
-      class="export-toolbar__btn"
+      class="export-toolbar__btn export-toolbar__btn--export"
+      [class.export-toolbar__btn--ready]="!exportActionsDisabled()"
       data-action="csv"
-      [disabled]="actionsDisabled()"
+      [disabled]="exportActionsDisabled()"
       [attr.aria-busy]="busyFormat() === 'csv'"
       (click)="onExportCsvClick()"
     >
       <i
-        [class]="busyFormat() === 'csv' ? 'pi pi-spin pi-spinner' : 'pi pi-table'"
+        [class]="busyFormat() === 'csv' ? 'fa-solid fa-spinner fa-spin' : 'fa-solid fa-table'"
         aria-hidden="true"
       ></i>
       <span>{{ csvLabel() }}</span>

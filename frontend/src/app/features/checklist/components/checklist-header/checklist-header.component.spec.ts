@@ -1,29 +1,25 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import {
-  ChecklistViewMode,
-  ScaleOption,
-  SupportedLanguage,
-} from '../../../../core/models';
+import { ChecklistViewMode, ScaleOption } from '../../../../core/models';
 import { ChecklistHeaderComponent } from './checklist-header.component';
 
 const MOCK_SCALES: readonly ScaleOption[] = [
-  { id: 'hard_limit', order: 1, color: '#D32F2F', contrastColor: '#FFFFFF', icon: 'pi pi-ban' },
+  { id: 'hard_limit', order: 1, color: '#D32F2F', contrastColor: '#FFFFFF', icon: 'fa-solid fa-ban' },
   {
     id: 'soft_limit',
     order: 2,
     color: '#F57C00',
     contrastColor: '#111827',
-    icon: 'pi pi-exclamation-triangle',
+    icon: 'fa-solid fa-triangle-exclamation',
   },
   {
     id: 'curious',
     order: 3,
     color: '#FBC02D',
     contrastColor: '#111827',
-    icon: 'pi pi-question-circle',
+    icon: 'fa-solid fa-circle-question',
   },
-  { id: 'enjoy', order: 4, color: '#388E3C', contrastColor: '#FFFFFF', icon: 'pi pi-thumbs-up' },
-  { id: 'favorite', order: 5, color: '#7B1FA2', contrastColor: '#FFFFFF', icon: 'pi pi-heart-fill' },
+  { id: 'enjoy', order: 4, color: '#388E3C', contrastColor: '#FFFFFF', icon: 'fa-solid fa-circle-check' },
+  { id: 'favorite', order: 5, color: '#7B1FA2', contrastColor: '#FFFFFF', icon: 'fa-solid fa-heart' },
 ];
 
 const MOCK_SCALE_LABELS: Readonly<Record<string, string>> = {
@@ -39,25 +35,33 @@ describe('ChecklistHeaderComponent', () => {
   let component: ChecklistHeaderComponent;
 
   const setBaseInputs = async (overrides?: {
-    currentLang?: SupportedLanguage;
     viewMode?: ChecklistViewMode;
     searchQuery?: string;
     onlyUnanswered?: boolean;
+    hasAnswers?: boolean;
     answeredCount?: number;
     totalCount?: number;
-    progressPercentage?: number;
-    hasAnswers?: boolean;
+    autosaveText?: string;
+    hasUnsavedChanges?: boolean;
   }): Promise<void> => {
-    fixture.componentRef.setInput('currentLang', overrides?.currentLang ?? 'pt-BR');
     fixture.componentRef.setInput('viewMode', overrides?.viewMode ?? 'stepper');
     fixture.componentRef.setInput('searchQuery', overrides?.searchQuery ?? '');
     fixture.componentRef.setInput('onlyUnanswered', overrides?.onlyUnanswered ?? false);
-    fixture.componentRef.setInput('answeredCount', overrides?.answeredCount ?? 3);
-    fixture.componentRef.setInput('totalCount', overrides?.totalCount ?? 10);
-    fixture.componentRef.setInput('progressPercentage', overrides?.progressPercentage ?? 30);
     fixture.componentRef.setInput('scales', MOCK_SCALES);
     fixture.componentRef.setInput('scaleLabels', MOCK_SCALE_LABELS);
     fixture.componentRef.setInput('hasAnswers', overrides?.hasAnswers ?? true);
+    if (overrides?.answeredCount !== undefined) {
+      fixture.componentRef.setInput('answeredCount', overrides.answeredCount);
+    }
+    if (overrides?.totalCount !== undefined) {
+      fixture.componentRef.setInput('totalCount', overrides.totalCount);
+    }
+    if (overrides?.autosaveText !== undefined) {
+      fixture.componentRef.setInput('autosaveText', overrides.autosaveText);
+    }
+    if (overrides?.hasUnsavedChanges !== undefined) {
+      fixture.componentRef.setInput('hasUnsavedChanges', overrides.hasUnsavedChanges);
+    }
     await fixture.whenStable();
   };
 
@@ -71,38 +75,64 @@ describe('ChecklistHeaderComponent', () => {
     await setBaseInputs();
   });
 
-  it('should render ProgressIndicatorComponent and LegendBarComponent and allow collapsing legend', async () => {
+  it('should render a single collapsible accordion section for controls without search input or scale legend', async () => {
     const hostEl = fixture.nativeElement as HTMLElement;
-    expect(hostEl.querySelector('app-progress-indicator')).not.toBeNull();
-    expect(hostEl.querySelector('app-legend-bar')).not.toBeNull();
-
-    const toggleBtn = hostEl.querySelector<HTMLButtonElement>('.checklist-header__legend-toggle');
-    expect(toggleBtn?.getAttribute('aria-expanded')).toBe('true');
-
-    toggleBtn?.click();
-    await fixture.whenStable();
-
-    expect(toggleBtn?.getAttribute('aria-expanded')).toBe('false');
+    const panels = hostEl.querySelectorAll('.checklist-header__section-panel');
+    expect(panels.length).toBe(1);
+    expect(panels[0].classList.contains('mat-expanded')).toBe(true);
     expect(hostEl.querySelector('app-legend-bar')).toBeNull();
+    expect(hostEl.querySelector('.checklist-header__search-input')).toBeNull();
+    expect(hostEl.querySelector('.checklist-header__lang-select')).toBeNull();
+
+    const headers = hostEl.querySelectorAll<HTMLElement>(
+      '.checklist-header__section-panel mat-expansion-panel-header',
+    );
+    headers[0].click();
+    await fixture.whenStable();
+    expect(panels[0].classList.contains('mat-expanded')).toBe(false);
   });
 
-  it('should emit languageChange when switching language in SelectButton', async () => {
-    const emitted: SupportedLanguage[] = [];
-    component.languageChange.subscribe((lang) => emitted.push(lang));
+  it('should disable Save button (gray) when clean and enable green button (saveNow) when dirty, plus toggle autosave', async () => {
+    await setBaseInputs({
+      autosaveText: 'Salvo às 21:28',
+      hasUnsavedChanges: false,
+    });
+    const saveSpy = jest.fn<void, []>();
+    const toggleSpy = jest.fn<void, [boolean]>();
+    component.saveNow.subscribe(saveSpy);
+    component.autosaveEnabledChange.subscribe(toggleSpy);
 
     const hostEl = fixture.nativeElement as HTMLElement;
-    const langButtons = hostEl.querySelectorAll<HTMLElement>(
-      '.checklist-header__lang-select mat-button-toggle button',
+    const saveBtn = hostEl.querySelector<HTMLButtonElement>('.checklist-header__save-btn');
+    expect(saveBtn).not.toBeNull();
+    expect(saveBtn?.textContent).toContain('Salvar');
+    expect(saveBtn?.disabled).toBe(true);
+    expect(saveBtn?.classList.contains('checklist-header__save-btn--dirty')).toBe(false);
+    expect(hostEl.querySelector('.checklist-header__save-meta')?.textContent).toContain(
+      'Salvo às 21:28',
     );
-    expect(langButtons.length).toBe(2);
 
-    langButtons[1].click();
+    await setBaseInputs({
+      autosaveText: 'Salvo às 21:28',
+      hasUnsavedChanges: true,
+    });
+    expect(saveBtn?.disabled).toBe(false);
+    expect(saveBtn?.classList.contains('checklist-header__save-btn--dirty')).toBe(true);
+
+    saveBtn!.click();
     await fixture.whenStable();
+    expect(saveSpy).toHaveBeenCalledTimes(1);
 
-    expect(emitted).toEqual(['en-US']);
+    const toggleBtn = hostEl.querySelector<HTMLButtonElement>(
+      '.checklist-header__autosave-toggle button[role="switch"]',
+    );
+    expect(toggleBtn).not.toBeNull();
+    toggleBtn!.click();
+    await fixture.whenStable();
+    expect(toggleSpy).toHaveBeenCalledWith(false);
   });
 
-  it('should emit viewModeChange when switching across stepper, classic, and full modes', async () => {
+  it('should emit viewModeChange when switching across stepper, classic, full, and quick_fill modes', async () => {
     const emitted: ChecklistViewMode[] = [];
     component.viewModeChange.subscribe((mode) => emitted.push(mode));
 
@@ -110,36 +140,14 @@ describe('ChecklistHeaderComponent', () => {
     const modeButtons = hostEl.querySelectorAll<HTMLElement>(
       '.checklist-header__mode-select mat-button-toggle button',
     );
-    expect(modeButtons.length).toBe(3);
+    expect(modeButtons.length).toBe(4);
 
     modeButtons[1].click();
     modeButtons[2].click();
+    modeButtons[3].click();
     await fixture.whenStable();
 
-    expect(emitted).toEqual(['classic', 'full']);
-  });
-
-  it('should emit searchQueryChange when typing into search input and clearing', async () => {
-    const emitted: string[] = [];
-    component.searchQueryChange.subscribe((q) => emitted.push(q));
-
-    const hostEl = fixture.nativeElement as HTMLElement;
-    const searchInput = hostEl.querySelector<HTMLInputElement>('.checklist-header__search-input');
-    expect(searchInput).not.toBeNull();
-
-    searchInput!.value = 'bondage';
-    searchInput!.dispatchEvent(new Event('input', { bubbles: true }));
-    await fixture.whenStable();
-
-    expect(emitted).toEqual(['bondage']);
-
-    await setBaseInputs({ searchQuery: 'bondage' });
-    const clearBtn = hostEl.querySelector<HTMLButtonElement>('.checklist-header__search-clear');
-    expect(clearBtn).not.toBeNull();
-    clearBtn!.click();
-    await fixture.whenStable();
-
-    expect(emitted).toEqual(['bondage', '']);
+    expect(emitted).toEqual(['classic', 'full', 'quick_fill']);
   });
 
   it('should emit onlyUnansweredChange when toggling the filter switch', async () => {
@@ -158,22 +166,30 @@ describe('ChecklistHeaderComponent', () => {
     expect(emitted).toEqual([true]);
   });
 
-  it('should emit openQuickFill, clearAll, and goToExport on action button clicks', async () => {
-    const quickFillSpy = jest.fn<void, []>();
+  it('should omit standalone quick-fill button, gate Exportar until all items are completed, and emit clearAll/goToExport', async () => {
+    await setBaseInputs({ answeredCount: 1, totalCount: 2 });
+
     const clearAllSpy = jest.fn<void, []>();
     const exportSpy = jest.fn<void, []>();
 
-    component.openQuickFill.subscribe(quickFillSpy);
     component.clearAll.subscribe(clearAllSpy);
     component.goToExport.subscribe(exportSpy);
 
     const hostEl = fixture.nativeElement as HTMLElement;
-    hostEl.querySelector<HTMLButtonElement>('.checklist-header__quick-fill-btn')?.click();
+    expect(hostEl.querySelector('.checklist-header__quick-fill-btn')).toBeNull();
+
+    const exportBtn = hostEl.querySelector<HTMLButtonElement>('.checklist-header__export-btn')!;
+    expect(exportBtn.disabled).toBe(true);
+    expect(exportBtn.classList.contains('checklist-header__export-btn--ready')).toBe(false);
+
+    await setBaseInputs({ answeredCount: 2, totalCount: 2 });
+    expect(exportBtn.disabled).toBe(false);
+    expect(exportBtn.classList.contains('checklist-header__export-btn--ready')).toBe(true);
+
     hostEl.querySelector<HTMLButtonElement>('.checklist-header__clear-btn')?.click();
-    hostEl.querySelector<HTMLButtonElement>('.checklist-header__export-btn')?.click();
+    exportBtn.click();
     await fixture.whenStable();
 
-    expect(quickFillSpy).toHaveBeenCalledTimes(1);
     expect(clearAllSpy).toHaveBeenCalledTimes(1);
     expect(exportSpy).toHaveBeenCalledTimes(1);
   });

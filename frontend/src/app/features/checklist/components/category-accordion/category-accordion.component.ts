@@ -49,7 +49,7 @@ export class CategoryAccordionComponent {
   readonly nextCategory = output<void>();
   readonly finishChecklist = output<void>();
 
-  protected onAccordionValueChange(value: AccordionValue): void {
+  protected onAccordionValueChange(value: number): void {
     if (typeof value === 'number') {
       this.activeIndexChange.emit(value);
     }

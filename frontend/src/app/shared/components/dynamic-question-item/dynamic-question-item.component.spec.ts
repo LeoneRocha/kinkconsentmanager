@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { MatDialog } from '@angular/material/dialog';
 import {
   ItemDefinition,
   ItemResponseValue,
@@ -6,6 +7,7 @@ import {
   ResolvedRolePairLabels,
   ScaleOption,
 } from '../../../core/models';
+import { ConfirmDialogComponent } from '../confirm-dialog';
 import { DynamicQuestionItemComponent } from './dynamic-question-item.component';
 
 const MOCK_SCALES: readonly ScaleOption[] = [
@@ -322,5 +324,32 @@ describe('DynamicQuestionItemComponent', () => {
 
     speakBtn.click();
     expect(speakEmitSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('should open ConfirmDialog popup with description when clicking the info button', async () => {
+    await setBaseInputs(
+      { id: 'item_info_popup', type: 'scale_matrix' },
+      { itemLabel: 'Rope Bondage', itemTooltip: 'Helpful safety explanation' },
+    );
+
+    const dialog = fixture.debugElement.injector.get(MatDialog);
+    const openSpy = jest.spyOn(dialog, 'open').mockReturnValue({} as ReturnType<MatDialog['open']>);
+
+    const infoBtn = fixture.nativeElement.querySelector(
+      '.question-item__tooltip-btn',
+    ) as HTMLButtonElement;
+    expect(infoBtn).not.toBeNull();
+    infoBtn.click();
+
+    expect(openSpy).toHaveBeenCalledWith(
+      ConfirmDialogComponent,
+      expect.objectContaining({
+        data: expect.objectContaining({
+          header: 'Rope Bondage',
+          message: 'Helpful safety explanation',
+          acceptLabel: 'OK',
+        }),
+      }),
+    );
   });
 });

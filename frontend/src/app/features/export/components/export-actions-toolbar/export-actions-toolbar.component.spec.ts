@@ -58,7 +58,7 @@ describe('ExportActionsToolbarComponent', () => {
     expect(pdfBtn.disabled).toBe(true);
     expect(pngBtn.disabled).toBe(true);
     expect(pdfBtn.getAttribute('aria-busy')).toBe('true');
-    expect(pdfBtn.querySelector('i')?.className).toContain('pi-spinner');
+    expect(pdfBtn.querySelector('i')?.className).toContain('fa-spinner');
   });
 
   it('should emit action outputs when toolbar buttons are clicked', () => {
@@ -110,5 +110,34 @@ describe('ExportActionsToolbarComponent', () => {
 
     expect(importedFiles).toEqual([mockFile]);
     expect(fileInput.value).toBe('');
+  });
+
+  it('should disable export buttons without ready class when exportReady is false, then enable green ready state when true', async () => {
+    fixture.componentRef.setInput('exportReady', false);
+    await fixture.whenStable();
+
+    const hostEl = fixture.nativeElement as HTMLElement;
+    const exportActions = ['png', 'pdf', 'json', 'csv'];
+    for (const action of exportActions) {
+      const btn = hostEl.querySelector<HTMLButtonElement>(`button[data-action="${action}"]`)!;
+      expect(btn.disabled).toBe(true);
+      expect(btn.classList.contains('export-toolbar__btn--ready')).toBe(false);
+    }
+
+    expect(hostEl.querySelector<HTMLButtonElement>('button[data-action="back"]')!.disabled).toBe(
+      false,
+    );
+    expect(
+      hostEl.querySelector<HTMLButtonElement>('button[data-action="import-json"]')!.disabled,
+    ).toBe(false);
+
+    fixture.componentRef.setInput('exportReady', true);
+    await fixture.whenStable();
+
+    for (const action of exportActions) {
+      const btn = hostEl.querySelector<HTMLButtonElement>(`button[data-action="${action}"]`)!;
+      expect(btn.disabled).toBe(false);
+      expect(btn.classList.contains('export-toolbar__btn--ready')).toBe(true);
+    }
   });
 });

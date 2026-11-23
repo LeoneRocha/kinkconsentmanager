@@ -7,7 +7,7 @@ export interface ConfirmDialogData {
   readonly message: string;
   readonly icon?: string;
   readonly acceptLabel: string;
-  readonly rejectLabel: string;
+  readonly rejectLabel?: string;
   readonly danger?: boolean;
 }
 

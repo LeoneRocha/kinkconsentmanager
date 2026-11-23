@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { provideRouter, Router } from '@angular/router';
 import { provideTranslateService, TranslateService } from '@ngx-translate/core';
-import { MessageService } from 'primeng/api';
 import { Observable, of, throwError } from 'rxjs';
 import { ChecklistSchema } from '../../../../core/models';
 import { SCHEMA_REPOSITORY_TOKEN } from '../../../../core/repositories';
@@ -59,6 +59,18 @@ const PT_BR_TRANSLATIONS = {
     notAnswered: 'Não respondido',
     otherOptionLabel: 'Outro',
     previewHeading: 'Resumo Completo das Respostas',
+    exportLayoutLabel: 'Estilo da prévia',
+    exportLayoutModern: 'Visualização Moderna',
+    exportLayoutClassic: 'Visualização Clássica',
+    exportStep1Title: '1. Escolha o estilo do resumo',
+    exportStep1Hint:
+      'Selecione Visualização Moderna ou Visualização Clássica para ver o resumo e liberar os botões de exportação.',
+    exportStep2Title: '2. Exporte seu checklist',
+    exportLayoutModernDesc: 'Tabelas detalhadas por categoria com pílulas coloridas e leitura facilitada.',
+    exportLayoutClassicDesc:
+      'Folha compacta em múltiplas colunas com círculos coloridos no estilo tradicional.',
+    exportSelectLayoutPrompt:
+      'Escolha acima entre Visualização Moderna ou Visualização Clássica para visualizar o resumo completo e habilitar os botões de exportação.',
     loadingSchema: 'Carregando checklist...',
     loadingError: 'Erro ao carregar.',
     retry: 'Tentar novamente',
@@ -101,7 +113,7 @@ function createFileWithText(content: string, filename: string): File {
 describe('ExportPageComponent', () => {
   let fixture: ComponentFixture<ExportPageComponent>;
   let checklistState: ChecklistStateService;
-  let messageService: MessageService;
+  let snackBar: MatSnackBar;
   let router: Router;
 
   let schemaRepoMock: { getChecklistSchema: jest.Mock<Observable<ChecklistSchema>, [version?: string]> };
@@ -135,7 +147,6 @@ describe('ExportPageComponent', () => {
       providers: [
         provideRouter([]),
         provideTranslateService({ lang: 'pt-BR', fallbackLang: 'pt-BR' }),
-        MessageService,
         { provide: SCHEMA_REPOSITORY_TOKEN, useValue: schemaRepoMock },
         { provide: FileDownloadService, useValue: fileDownloadMock },
         { provide: PNG_RENDERER, useValue: pngRendererMock },
@@ -148,11 +159,12 @@ describe('ExportPageComponent', () => {
     translate.use('pt-BR');
 
     checklistState = TestBed.inject(ChecklistStateService);
-    messageService = TestBed.inject(MessageService);
+    snackBar = TestBed.inject(MatSnackBar);
     router = TestBed.inject(Router);
   });
 
   afterEach(() => {
+    snackBar?.dismiss();
     jest.restoreAllMocks();
     localStorage.clear();
   });
@@ -162,7 +174,7 @@ describe('ExportPageComponent', () => {
     await fixture.whenStable();
   };
 
-  it('should load schema via SCHEMA_REPOSITORY_TOKEN when ChecklistStateService has no schema and render visible + offscreen 1200px previews', async () => {
+  it('should require choosing a layout first, keep export buttons disabled until chosen, then render visible + offscreen previews and unlock green buttons', async () => {
     expect(checklistState.schema()).toBeNull();
     await createPage();
 
@@ -170,10 +182,24 @@ describe('ExportPageComponent', () => {
     expect(checklistState.schema()).toEqual(MOCK_SCHEMA);
 
     const hostEl = fixture.nativeElement as HTMLElement;
+    expect(hostEl.querySelectorAll('app-full-grid-preview').length).toBe(0);
+    expect(hostEl.querySelector('.export-page__preview-empty')).not.toBeNull();
+
+    const pngBtn = hostEl.querySelector<HTMLButtonElement>('button[data-action="png"]')!;
+    expect(pngBtn.disabled).toBe(true);
+    expect(pngBtn.classList.contains('export-toolbar__btn--ready')).toBe(false);
+
+    hostEl.querySelector<HTMLButtonElement>('button[data-layout="modern"]')?.click();
+    await fixture.whenStable();
+
+    expect(pngBtn.disabled).toBe(false);
+    expect(pngBtn.classList.contains('export-toolbar__btn--ready')).toBe(true);
+    expect(hostEl.querySelector('.export-page__preview-empty')).toBeNull();
+
     const previews = hostEl.querySelectorAll('app-full-grid-preview');
     expect(previews.length).toBe(2);
 
-    const offscreen = hostEl.querySelector<HTMLElement>('.export-page__offscreen-capture')!;
+    const offscreen = hostEl.querySelector<HTMLElement>('.export-page__capture-surface')!;
     expect(offscreen).not.toBeNull();
     expect(offscreen.querySelector('.full-grid-preview--print')).not.toBeNull();
   });
@@ -214,12 +240,15 @@ describe('ExportPageComponent', () => {
     expect(navigateSpy).toHaveBeenCalledWith(['/checklist']);
   });
 
-  it('should capture the offscreen 1200px container for PNG export and display a success toast', async () => {
-    const messageAddSpy = jest.spyOn(messageService, 'add');
+  it('should capture the offscreen 1200px container for PNG export and display a success snackbar', async () => {
+    const snackSpy = jest.spyOn(snackBar, 'open');
     await createPage();
 
     const hostEl = fixture.nativeElement as HTMLElement;
-    const offscreen = hostEl.querySelector<HTMLElement>('.export-page__offscreen-capture')!;
+    hostEl.querySelector<HTMLButtonElement>('button[data-layout="modern"]')?.click();
+    await fixture.whenStable();
+
+    const offscreen = hostEl.querySelector<HTMLElement>('.export-page__capture-surface')!;
 
     hostEl.querySelector<HTMLButtonElement>('button[data-action="png"]')?.click();
     await fixture.whenStable();
@@ -227,64 +256,69 @@ describe('ExportPageComponent', () => {
     expect(pngRendererMock).toHaveBeenCalledWith(offscreen);
     expect(fileDownloadMock.downloadDataUrl).toHaveBeenCalledWith(
       'data:image/png;base64,EXPORTED',
-      expect.stringMatching(/\.png$/),
+      expect.stringMatching(/^kink-consent-checklist-modern-\d{4}-\d{2}-\d{2}\.png$/),
     );
-    expect(messageAddSpy).toHaveBeenCalledWith(
-      expect.objectContaining({
-        severity: 'success',
-        detail: 'Arquivo exportado com sucesso.',
-      }),
+    expect(snackSpy).toHaveBeenCalledWith(
+      expect.stringContaining('Arquivo exportado com sucesso.'),
+      'OK',
+      expect.objectContaining({ panelClass: ['kcm-snackbar-success'] }),
     );
   });
 
-  it('should show an error toast when PNG export fails', async () => {
+  it('should show an error snackbar when PNG export fails', async () => {
     pngRendererMock.mockRejectedValueOnce(new Error('PNG render crashed'));
-    const messageAddSpy = jest.spyOn(messageService, 'add');
+    const snackSpy = jest.spyOn(snackBar, 'open');
     await createPage();
 
     const hostEl = fixture.nativeElement as HTMLElement;
+    hostEl.querySelector<HTMLButtonElement>('button[data-layout="modern"]')?.click();
+    await fixture.whenStable();
+
     hostEl.querySelector<HTMLButtonElement>('button[data-action="png"]')?.click();
     await fixture.whenStable();
 
-    expect(messageAddSpy).toHaveBeenCalledWith(
-      expect.objectContaining({
-        severity: 'error',
-        detail: 'PNG render crashed',
-      }),
+    expect(snackSpy).toHaveBeenCalledWith(
+      expect.stringContaining('PNG render crashed'),
+      'OK',
+      expect.objectContaining({ panelClass: ['kcm-snackbar-error'] }),
     );
   });
 
-  it('should export PDF, JSON draft, and CSV with success toasts', async () => {
-    const messageAddSpy = jest.spyOn(messageService, 'add');
+  it('should export PDF, JSON draft, and CSV with success snackbars', async () => {
+    const snackSpy = jest.spyOn(snackBar, 'open');
     checklistState.setItemAnswer('item_rope', { primaryScale: 'enjoy' });
     await createPage();
 
     const hostEl = fixture.nativeElement as HTMLElement;
+    hostEl.querySelector<HTMLButtonElement>('button[data-layout="modern"]')?.click();
+    await fixture.whenStable();
 
     hostEl.querySelector<HTMLButtonElement>('button[data-action="pdf"]')?.click();
     await fixture.whenStable();
     expect(pdfLoaderMock).toHaveBeenCalledTimes(1);
-    expect(pdfDownloadMock).toHaveBeenCalledWith(expect.stringMatching(/\.pdf$/));
+    expect(pdfDownloadMock).toHaveBeenCalledWith(
+      expect.stringMatching(/^kink-consent-checklist-modern-\d{4}-\d{2}-\d{2}\.pdf$/),
+    );
 
     hostEl.querySelector<HTMLButtonElement>('button[data-action="json"]')?.click();
     await fixture.whenStable();
     expect(fileDownloadMock.downloadBlob).toHaveBeenCalledWith(
       expect.any(Blob),
-      expect.stringMatching(/\.json$/),
+      expect.stringMatching(/^kink-consent-checklist-modern-\d{4}-\d{2}-\d{2}\.json$/),
     );
 
     hostEl.querySelector<HTMLButtonElement>('button[data-action="csv"]')?.click();
     await fixture.whenStable();
     expect(fileDownloadMock.downloadBlob).toHaveBeenCalledWith(
       expect.any(Blob),
-      expect.stringMatching(/\.csv$/),
+      expect.stringMatching(/^kink-consent-checklist-modern-\d{4}-\d{2}-\d{2}\.csv$/),
     );
 
-    expect(messageAddSpy).toHaveBeenCalledTimes(3);
+    expect(snackSpy).toHaveBeenCalledTimes(3);
   });
 
-  it('should import a valid JSON draft file, update ChecklistStateService, and show success toast', async () => {
-    const messageAddSpy = jest.spyOn(messageService, 'add');
+  it('should import a valid JSON draft file, update ChecklistStateService, and show success snackbar', async () => {
+    const snackSpy = jest.spyOn(snackBar, 'open');
     await createPage();
 
     const payload = JSON.stringify({
@@ -312,17 +346,16 @@ describe('ExportPageComponent', () => {
       primaryScale: 'enjoy',
       secondaryScale: 'hard_limit',
     });
-    expect(messageAddSpy).toHaveBeenCalledWith(
-      expect.objectContaining({
-        severity: 'success',
-        detail: 'Rascunho JSON importado e restaurado com sucesso.',
-      }),
+    expect(snackSpy).toHaveBeenCalledWith(
+      expect.stringContaining('Rascunho JSON importado e restaurado com sucesso.'),
+      'OK',
+      expect.objectContaining({ panelClass: ['kcm-snackbar-success'] }),
     );
   });
 
-  it('should show specific error toasts for invalid JSON syntax vs incompatible schema version on import', async () => {
+  it('should show specific error snackbars for invalid JSON syntax vs incompatible schema version on import', async () => {
     checklistState.setItemAnswer('item_rope', { primaryScale: 'enjoy' });
-    const messageAddSpy = jest.spyOn(messageService, 'add');
+    const snackSpy = jest.spyOn(snackBar, 'open');
     await createPage();
 
     const hostEl = fixture.nativeElement as HTMLElement;
@@ -336,11 +369,10 @@ describe('ExportPageComponent', () => {
     fileInput.dispatchEvent(new Event('change'));
     await fixture.whenStable();
 
-    expect(messageAddSpy).toHaveBeenCalledWith(
-      expect.objectContaining({
-        severity: 'error',
-        detail: 'Arquivo inválido.',
-      }),
+    expect(snackSpy).toHaveBeenCalledWith(
+      expect.stringContaining('Arquivo inválido.'),
+      'OK',
+      expect.objectContaining({ panelClass: ['kcm-snackbar-error'] }),
     );
 
     const incompatibleFile = createFileWithText(
@@ -363,13 +395,45 @@ describe('ExportPageComponent', () => {
     fileInput.dispatchEvent(new Event('change'));
     await fixture.whenStable();
 
-    expect(messageAddSpy).toHaveBeenCalledWith(
-      expect.objectContaining({
-        severity: 'error',
-        detail: 'Versão do schema incompatível.',
-      }),
+    expect(snackSpy).toHaveBeenCalledWith(
+      expect.stringContaining('Versão do schema incompatível.'),
+      'OK',
+      expect.objectContaining({ panelClass: ['kcm-snackbar-error'] }),
     );
     // Existing answers preserved on invalid import
     expect(checklistState.answers()['item_rope']).toEqual({ primaryScale: 'enjoy' });
+  });
+
+  it('should switch preview and PNG capture container between modern and classic layouts', async () => {
+    checklistState.setItemAnswer('item_rope', { primaryScale: 'enjoy' });
+    await createPage();
+
+    const hostEl = fixture.nativeElement as HTMLElement;
+    expect(hostEl.querySelector('.export-page__capture-surface')).toBeNull();
+    expect(hostEl.querySelector('.export-page__preview-empty')).not.toBeNull();
+
+    const modernCard = hostEl.querySelector<HTMLButtonElement>('button[data-layout="modern"]')!;
+    const classicCard = hostEl.querySelector<HTMLButtonElement>('button[data-layout="classic"]')!;
+    modernCard.click();
+    await fixture.whenStable();
+
+    let captureSurface = hostEl.querySelector<HTMLElement>('.export-page__capture-surface')!;
+    expect(captureSurface.classList.contains('export-page__capture-surface--classic')).toBe(false);
+    expect(hostEl.querySelector('.export-page__preview .full-grid-preview--classic')).toBeNull();
+
+    classicCard.click();
+    await fixture.whenStable();
+
+    captureSurface = hostEl.querySelector<HTMLElement>('.export-page__capture-surface')!;
+    expect(captureSurface.classList.contains('export-page__capture-surface--classic')).toBe(true);
+    expect(hostEl.querySelector('.export-page__preview .full-grid-preview--classic')).not.toBeNull();
+    expect(captureSurface.querySelector('.full-grid-preview--classic')).not.toBeNull();
+
+    hostEl.querySelector<HTMLButtonElement>('button[data-action="png"]')?.click();
+    await fixture.whenStable();
+    expect(fileDownloadMock.downloadDataUrl).toHaveBeenCalledWith(
+      'data:image/png;base64,EXPORTED',
+      expect.stringMatching(/^kink-consent-checklist-classic-\d{4}-\d{2}-\d{2}\.png$/),
+    );
   });
 });

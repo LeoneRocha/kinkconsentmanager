@@ -1,12 +1,12 @@
 @if (groups().length === 0) {
   <div class="classic-sheet__empty" role="status">
-    <i class="pi pi-filter-slash classic-sheet__empty-icon" aria-hidden="true"></i>
+    <i class="fa-solid fa-filter-circle-xmark classic-sheet__empty-icon" aria-hidden="true"></i>
     <p class="classic-sheet__empty-text">{{ noResultsText() }}</p>
   </div>
 } @else {
   <div class="classic-sheet">
     <p class="classic-sheet__hint">
-      <i class="pi pi-table" aria-hidden="true"></i>
+      <i class="fa-solid fa-table-cells" aria-hidden="true"></i>
       <span>{{ classicHint() }}</span>
     </p>
 
@@ -20,11 +20,12 @@
                 <button
                   type="button"
                   class="classic-block__info-btn"
-                  [pTooltip]="description"
-                  tooltipPosition="top"
+                  [matTooltip]="description"
+                  matTooltipPosition="above"
                   [attr.aria-label]="description"
+                  (click)="openInfoPopup(groupTitle(group), description)"
                 >
-                  <i class="pi pi-info-circle" aria-hidden="true"></i>
+                  <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
                 </button>
               }
             </div>
@@ -48,69 +49,6 @@
               @if (item.type === 'scale_matrix') {
                 @let itemRoles = roleLabels(group, item);
                 <div class="classic-row">
-                  <div class="classic-row__scales">
-                    <div
-                      class="classic-row__dot-group"
-                      role="radiogroup"
-                      [attr.aria-label]="itemLabel(item) + ' - ' + itemRoles.primary"
-                    >
-                      @for (scale of orderedScales(); track scale.id; let idx = $index) {
-                        @let selected = isRoleScaleSelected(item.id, 'primaryScale', scale.id);
-                        <button
-                          type="button"
-                          role="radio"
-                          class="classic-row__dot"
-                          [class.classic-row__dot--selected]="selected"
-                          [attr.aria-checked]="selected"
-                          [attr.aria-label]="itemLabel(item) + ' - ' + itemRoles.primary + ': ' + scaleLabel(scale.id)"
-                          [pTooltip]="itemRoles.primary + ': ' + scaleLabel(scale.id)"
-                          tooltipPosition="top"
-                          [style.border-color]="scale.color"
-                          [style.background-color]="selected ? scale.color : null"
-                          [style.color]="selected ? scale.contrastColor : scale.color"
-                          (click)="selectRoleScale(item.id, 'primaryScale', scale.id)"
-                          (keydown)="onClassicDotKeydown($event, item.id, 'primaryScale', idx)"
-                        >
-                          @if (selected) {
-                            <i [class]="scale.icon" aria-hidden="true"></i>
-                          }
-                        </button>
-                      }
-                    </div>
-
-                    @if (isDualRole(group, item)) {
-                      <span class="classic-row__divider-v" aria-hidden="true"></span>
-                      <div
-                        class="classic-row__dot-group"
-                        role="radiogroup"
-                        [attr.aria-label]="itemLabel(item) + ' - ' + (itemRoles.secondary ?? '')"
-                      >
-                        @for (scale of orderedScales(); track scale.id; let idx = $index) {
-                          @let selected = isRoleScaleSelected(item.id, 'secondaryScale', scale.id);
-                          <button
-                            type="button"
-                            role="radio"
-                            class="classic-row__dot"
-                            [class.classic-row__dot--selected]="selected"
-                            [attr.aria-checked]="selected"
-                            [attr.aria-label]="itemLabel(item) + ' - ' + (itemRoles.secondary ?? '') + ': ' + scaleLabel(scale.id)"
-                            [pTooltip]="(itemRoles.secondary ?? '') + ': ' + scaleLabel(scale.id)"
-                            tooltipPosition="top"
-                            [style.border-color]="scale.color"
-                            [style.background-color]="selected ? scale.color : null"
-                            [style.color]="selected ? scale.contrastColor : scale.color"
-                            (click)="selectRoleScale(item.id, 'secondaryScale', scale.id)"
-                            (keydown)="onClassicDotKeydown($event, item.id, 'secondaryScale', idx)"
-                          >
-                            @if (selected) {
-                              <i [class]="scale.icon" aria-hidden="true"></i>
-                            }
-                          </button>
-                        }
-                      </div>
-                    }
-                  </div>
-
                   <div class="classic-row__item-meta">
                     <span class="classic-row__label">{{ itemLabel(item) }}</span>
                     <div class="classic-row__item-actions">
@@ -118,24 +56,94 @@
                         <button
                           type="button"
                           class="classic-row__action-btn"
-                          [pTooltip]="tip"
-                          tooltipPosition="top"
+                          [matTooltip]="tip"
+                          matTooltipPosition="above"
                           [attr.aria-label]="tip"
+                          (click)="openInfoPopup(itemLabel(item), tip)"
                         >
-                          <i class="pi pi-info-circle" aria-hidden="true"></i>
+                          <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
                         </button>
                       }
                       <button
                         type="button"
                         class="classic-row__action-btn classic-row__speak-btn"
-                        [pTooltip]="readAloudLabel() + ': ' + itemLabel(item)"
-                        tooltipPosition="top"
+                        [matTooltip]="readAloudLabel() + ': ' + itemLabel(item)"
+                        matTooltipPosition="above"
                         [attr.aria-label]="readAloudLabel() + ': ' + itemLabel(item)"
                         (click)="readItemAloud.emit(item)"
                       >
-                        <i class="pi pi-volume-up" aria-hidden="true"></i>
+                        <i class="fa-solid fa-volume-high" aria-hidden="true"></i>
                       </button>
                     </div>
+                  </div>
+
+                  <div class="classic-row__scales">
+                    <div class="classic-row__role-col">
+                      <span class="classic-row__role-caption">{{ itemRoles.primary }}</span>
+                      <div
+                        class="classic-row__dot-group"
+                        role="radiogroup"
+                        [attr.aria-label]="itemLabel(item) + ' - ' + itemRoles.primary"
+                      >
+                        @for (scale of orderedScales(); track scale.id; let idx = $index) {
+                          @let selected = isRoleScaleSelected(item.id, 'primaryScale', scale.id);
+                          <button
+                            type="button"
+                            role="radio"
+                            class="classic-row__dot"
+                            [class.classic-row__dot--selected]="selected"
+                            [attr.aria-checked]="selected"
+                            [attr.aria-label]="itemLabel(item) + ' - ' + itemRoles.primary + ': ' + scaleLabel(scale.id)"
+                            [matTooltip]="itemRoles.primary + ': ' + scaleLabel(scale.id)"
+                            matTooltipPosition="above"
+                            [style.border-color]="scale.color"
+                            [style.background-color]="selected ? scale.color : null"
+                            [style.color]="selected ? scale.contrastColor : scale.color"
+                            (click)="selectRoleScale(item.id, 'primaryScale', scale.id)"
+                            (keydown)="onClassicDotKeydown($event, item.id, 'primaryScale', idx)"
+                          >
+                            @if (selected) {
+                              <i [class]="scale.icon" aria-hidden="true"></i>
+                            }
+                          </button>
+                        }
+                      </div>
+                    </div>
+
+                    @if (isDualRole(group, item)) {
+                      <span class="classic-row__divider-v" aria-hidden="true"></span>
+                      <div class="classic-row__role-col">
+                        <span class="classic-row__role-caption">{{ itemRoles.secondary ?? '' }}</span>
+                        <div
+                          class="classic-row__dot-group"
+                          role="radiogroup"
+                          [attr.aria-label]="itemLabel(item) + ' - ' + (itemRoles.secondary ?? '')"
+                        >
+                          @for (scale of orderedScales(); track scale.id; let idx = $index) {
+                            @let selected = isRoleScaleSelected(item.id, 'secondaryScale', scale.id);
+                            <button
+                              type="button"
+                              role="radio"
+                              class="classic-row__dot"
+                              [class.classic-row__dot--selected]="selected"
+                              [attr.aria-checked]="selected"
+                              [attr.aria-label]="itemLabel(item) + ' - ' + (itemRoles.secondary ?? '') + ': ' + scaleLabel(scale.id)"
+                              [matTooltip]="(itemRoles.secondary ?? '') + ': ' + scaleLabel(scale.id)"
+                              matTooltipPosition="above"
+                              [style.border-color]="scale.color"
+                              [style.background-color]="selected ? scale.color : null"
+                              [style.color]="selected ? scale.contrastColor : scale.color"
+                              (click)="selectRoleScale(item.id, 'secondaryScale', scale.id)"
+                              (keydown)="onClassicDotKeydown($event, item.id, 'secondaryScale', idx)"
+                            >
+                              @if (selected) {
+                                <i [class]="scale.icon" aria-hidden="true"></i>
+                              }
+                            </button>
+                          }
+                        </div>
+                      </div>
+                    }
                   </div>
                 </div>
               } @else {
@@ -165,15 +173,15 @@
     </div>
 
     <div class="classic-sheet__footer">
-      <p-button
+      <button
+        mat-flat-button
         type="button"
-        styleClass="classic-sheet__finish-btn"
-        severity="success"
-        [label]="finishLabel()"
-        icon="pi pi-check"
-        iconPos="right"
-        (onClick)="finishChecklist.emit()"
-      />
+        class="classic-sheet__finish-btn"
+        (click)="finishChecklist.emit()"
+      >
+        <span>{{ finishLabel() }}</span>
+        <i class="fa-solid fa-check" aria-hidden="true"></i>
+      </button>
     </div>
   </div>
 }

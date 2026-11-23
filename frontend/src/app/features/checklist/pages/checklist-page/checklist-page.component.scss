@@ -7,6 +7,14 @@
   gap: 1.25rem;
   width: 100%;
 
+  @include m.respond-md {
+    height: calc(100vh - 11.5rem);
+    height: calc(100dvh - 11.5rem);
+    min-height: 26rem;
+    overflow: hidden;
+    gap: 1rem;
+  }
+
   &__loading {
     display: flex;
     flex-direction: column;
@@ -35,24 +43,36 @@
     font-size: 1rem;
   }
 
-  &__autosave {
-    display: inline-flex;
-    align-items: center;
-    align-self: flex-start;
-    gap: 0.5rem;
-    padding: 0.4rem 0.85rem;
-    border: 1px solid v.$border-color;
-    border-radius: 999px;
-    background: v.$surface-subtle;
-    color: v.$text-secondary;
-    font-size: 0.8125rem;
-    font-weight: 500;
-    line-height: 1.3;
+  &__body-progress {
+    @include m.card-surface;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.25rem;
+  }
+
+  app-checklist-header {
+    @include m.respond-md {
+      flex: 0 0 auto;
+      z-index: 20;
+    }
   }
 
   &__content {
     display: block;
     scroll-margin-top: 5.5rem;
+
+    @include m.respond-md {
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow-y: auto;
+      padding-right: 0.35rem;
+      padding-bottom: 0.5rem;
+      scroll-behavior: smooth;
+      scrollbar-width: thin;
+      scrollbar-color: v.$border-strong transparent;
+    }
   }
 }
 

@@ -1,6 +1,7 @@
-import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
-import { ButtonModule } from 'primeng/button';
-import { TooltipModule } from 'primeng/tooltip';
+import { ChangeDetectionStrategy, Component, inject, input, output } from '@angular/core';
+import { MatButtonModule } from '@angular/material/button';
+import { MatDialog } from '@angular/material/dialog';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import {
   GroupDefinition,
   ItemDefinition,
@@ -10,7 +11,11 @@ import {
   ScaleId,
   ScaleOption,
 } from '../../../../core/models';
-import { DynamicQuestionItemComponent } from '../../../../shared/components';
+import {
+  ConfirmDialogComponent,
+  ConfirmDialogData,
+  DynamicQuestionItemComponent,
+} from '../../../../shared/components';
 import {
   countGroupAnsweredItems,
   getGroupDescription,
@@ -27,12 +32,14 @@ import {
  */
 @Component({
   selector: 'app-classic-kink-sheet',
-  imports: [ButtonModule, TooltipModule, DynamicQuestionItemComponent],
+  imports: [MatButtonModule, MatTooltipModule, DynamicQuestionItemComponent],
   templateUrl: './classic-kink-sheet.component.html',
   styleUrl: './classic-kink-sheet.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ClassicKinkSheetComponent {
+  private readonly dialog = inject(MatDialog);
+
   readonly groups = input.required<readonly GroupDefinition[]>();
   readonly scales = input.required<readonly ScaleOption[]>();
   readonly answers = input.required<Readonly<Record<string, ItemResponseValue>>>();
@@ -48,6 +55,25 @@ export class ClassicKinkSheetComponent {
   readonly answerChange = output<{ itemId: string; patch: Partial<ItemResponseValue> }>();
   readonly readItemAloud = output<ItemDefinition>();
   readonly finishChecklist = output<void>();
+
+  protected openInfoPopup(title: string, description: string): void {
+    const trimmed = description.trim();
+    if (trimmed.length === 0) {
+      return;
+    }
+    this.dialog.open<ConfirmDialogComponent, ConfirmDialogData, boolean>(
+      ConfirmDialogComponent,
+      {
+        width: 'min(92vw, 28rem)',
+        data: {
+          header: title,
+          message: trimmed,
+          icon: 'fa-solid fa-circle-info',
+          acceptLabel: 'OK',
+        },
+      },
+    );
+  }
 
   protected orderedScales(): readonly ScaleOption[] {
     return [...this.scales()].sort((a, b) => a.order - b.order);

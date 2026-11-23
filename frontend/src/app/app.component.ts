@@ -10,7 +10,7 @@ import {
 import { FormsModule } from '@angular/forms';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { RouterLink, RouterOutlet } from '@angular/router';
 import { SupportedLanguage } from './core/models';
 import {
   AccessibilityService,
@@ -40,7 +40,6 @@ interface FontScaleOption {
     FormsModule,
     RouterOutlet,
     RouterLink,
-    RouterLinkActive,
     MatSlideToggleModule,
     MatTooltipModule,
     SchemaTranslatePipe,

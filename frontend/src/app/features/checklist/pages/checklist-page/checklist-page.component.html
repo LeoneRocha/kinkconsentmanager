@@ -1,62 +1,65 @@
 <div class="checklist-page" [class.checklist-page--classic]="viewMode() === 'classic'">
   @if (isLoading()) {
     <div class="checklist-page__loading" aria-busy="true" [attr.aria-label]="loadingSchemaLabel()">
-      <p-skeleton height="8rem" borderRadius="10px" />
-      <p-skeleton height="3.5rem" borderRadius="10px" />
-      <p-skeleton height="14rem" borderRadius="10px" />
-      <p-skeleton height="4rem" borderRadius="10px" />
+      <div class="kcm-skeleton" style="height: 8rem"></div>
+      <div class="kcm-skeleton" style="height: 3.5rem"></div>
+      <div class="kcm-skeleton" style="height: 14rem"></div>
+      <div class="kcm-skeleton" style="height: 4rem"></div>
     </div>
   } @else if (loadError()) {
     <div class="checklist-page__error" role="alert">
-      <i class="pi pi-exclamation-circle checklist-page__error-icon" aria-hidden="true"></i>
+      <i class="fa-solid fa-circle-exclamation checklist-page__error-icon" aria-hidden="true"></i>
       <p class="checklist-page__error-text">{{ loadingErrorText() }}</p>
-      <p-button
+      <button
+        mat-flat-button
         type="button"
-        styleClass="checklist-page__retry-btn"
-        icon="pi pi-refresh"
-        [label]="retryLabel()"
-        (onClick)="loadSchema()"
-      />
+        class="checklist-page__retry-btn"
+        (click)="loadSchema()"
+      >
+        <i class="fa-solid fa-arrows-rotate" aria-hidden="true"></i>
+        <span>{{ retryLabel() }}</span>
+      </button>
     </div>
   } @else if (schema(); as activeSchema) {
     @if (resolvedTexts(); as texts) {
       <app-checklist-header
         [currentLang]="i18n.currentLang()"
         [viewMode]="viewMode()"
-        [searchQuery]="searchQuery()"
         [onlyUnanswered]="onlyUnanswered()"
         [answeredCount]="answeredCount()"
         [totalCount]="totalCount()"
         [progressPercentage]="progressPercentage()"
-        [scales]="activeSchema.scales"
-        [scaleLabels]="texts.scales"
         [hasAnswers]="hasAnswers()"
+        [autosaveText]="autosaveStatusText()"
+        [isAutosaving]="autosave.isSaving()"
+        [hasUnsavedChanges]="autosave.hasUnsavedChanges()"
+        [autosaveEnabled]="autosave.isEnabled()"
         [labels]="headerLabels()"
-        (languageChange)="onLanguageChange($event)"
         (viewModeChange)="onViewModeChange($event)"
-        (searchQueryChange)="onSearchQueryChange($event)"
         (onlyUnansweredChange)="onOnlyUnansweredChange($event)"
-        (openQuickFill)="onOpenQuickFill()"
         (clearAll)="onClearAll()"
         (goToExport)="onFinishChecklist()"
+        (saveNow)="onSaveNow()"
+        (autosaveEnabledChange)="onAutosaveEnabledChange($event)"
       />
-
-      <div class="checklist-page__autosave" role="status" aria-live="polite">
-        <i
-          class="pi"
-          [class.pi-spin]="autosave.isSaving()"
-          [class.pi-spinner]="autosave.isSaving()"
-          [class.pi-lock]="!autosave.isSaving()"
-          aria-hidden="true"
-        ></i>
-        <span>{{ autosaveStatusText() }}</span>
-      </div>
 
       <section
         #contentContainer
         class="checklist-page__content"
         [attr.aria-label]="headerLabels().title"
       >
+        @if (viewMode() !== 'stepper') {
+          <div class="checklist-page__body-progress">
+            <app-progress-indicator
+              [answered]="answeredCount()"
+              [total]="totalCount()"
+              [percentage]="progressPercentage()"
+              [label]="headerLabels().progressLabel"
+            />
+            <app-legend-bar [scales]="activeSchema.scales" [scaleLabels]="texts.scales" />
+          </div>
+        }
+
         @switch (viewMode()) {
           @case ('stepper') {
             <app-checklist-stepper
@@ -66,6 +69,10 @@
               [activeStep]="activeStepperStep()"
               [texts]="texts"
               [labels]="stepperLabels()"
+              [answeredCount]="answeredCount()"
+              [totalCount]="totalCount()"
+              [progressPercentage]="progressPercentage()"
+              [progressLabel]="headerLabels().progressLabel"
               (activeStepChange)="onActiveStepChange($event)"
               (answerChange)="onAnswerChange($event)"
               (readItemAloud)="onReadItemAloud($event)"
@@ -106,23 +113,23 @@
               (finishChecklist)="onFinishChecklist()"
             />
           }
+
+          @case ('quick_fill') {
+            <app-quick-fill-wizard-modal
+              [visible]="true"
+              [inline]="true"
+              [groups]="filteredGroups()"
+              [scales]="activeSchema.scales"
+              [answers]="answers()"
+              [texts]="texts"
+              [labels]="quickFillLabels()"
+              [readAloudLabel]="readAloudLabel()"
+              (answerChange)="onAnswerChange($event)"
+              (readAloud)="onReadTextAloud($event)"
+            />
+          }
         }
       </section>
-
-      <app-quick-fill-wizard-modal
-        [visible]="quickFillVisible()"
-        [groups]="activeSchema.groups"
-        [scales]="activeSchema.scales"
-        [answers]="answers()"
-        [texts]="texts"
-        [labels]="quickFillLabels()"
-        [readAloudLabel]="readAloudLabel()"
-        (visibleChange)="quickFillVisible.set($event)"
-        (answerChange)="onAnswerChange($event)"
-        (readAloud)="onReadTextAloud($event)"
-      />
     }
   }
-
-  <p-confirmdialog />
 </div>

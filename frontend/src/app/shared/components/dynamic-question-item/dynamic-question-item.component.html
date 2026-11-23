@@ -9,6 +9,7 @@
           [matTooltip]="itemTooltip()"
           matTooltipPosition="above"
           [attr.aria-label]="itemTooltip()"
+          (click)="openInfoPopup()"
         >
           <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
         </button>

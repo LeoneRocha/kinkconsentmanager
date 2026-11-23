@@ -65,7 +65,7 @@
     transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 
     &:hover {
-      color: v.$accent-primary;
+      color: v.$accent-text;
       background-color: v.$accent-soft;
       border-color: v.$accent-soft;
     }

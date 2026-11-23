@@ -4,6 +4,7 @@ import { provideTranslateService } from '@ngx-translate/core';
 import { BROWSER_STORAGE_REPOSITORY_TOKEN } from '../repositories';
 import { ChecklistStateService } from './checklist-state.service';
 import {
+  CHECKLIST_AUTOSAVE_ENABLED_KEY,
   CHECKLIST_ENCRYPTED_AUTOSAVE_KEY,
   ChecklistAutosaveService,
   DEFAULT_AUTOSAVE_INTERVAL_MS,
@@ -168,5 +169,42 @@ describe('ChecklistAutosaveService', () => {
 
     fixture.destroy();
     expect(autosave.isRunning()).toBe(false);
+  });
+
+  it('should persist disabled state, stop periodic autosaving, skip saveIfDirty, and resume when re-enabled', async () => {
+    const repo = TestBed.inject(BROWSER_STORAGE_REPOSITORY_TOKEN);
+    const setEncryptedSpy = jest.spyOn(repo, 'setEncrypted');
+
+    service.start();
+    await cryptoService.getOrInitializeSessionKey();
+    expect(service.isEnabled()).toBe(true);
+    expect(service.isRunning()).toBe(true);
+
+    service.setEnabled(false);
+    expect(service.isEnabled()).toBe(false);
+    expect(service.isRunning()).toBe(false);
+    expect(repo.get<boolean>(CHECKLIST_AUTOSAVE_ENABLED_KEY, 'local')).toBe(false);
+
+    checklistState.setItemAnswer('item_safeword', { selectedOption: 'opt_traffic' });
+    expect(await service.saveIfDirty()).toBe(false);
+    await jest.advanceTimersByTimeAsync(DEFAULT_AUTOSAVE_INTERVAL_MS);
+    expect(setEncryptedSpy).not.toHaveBeenCalled();
+
+    // Manual save still works when auto-save is disabled
+    expect(await service.saveNow()).toBe(true);
+    expect(setEncryptedSpy).toHaveBeenCalledTimes(1);
+
+    // Re-enable -> persists true and resumes periodic timer
+    service.setEnabled(true);
+    expect(service.isEnabled()).toBe(true);
+    expect(service.isRunning()).toBe(true);
+    expect(repo.get<boolean>(CHECKLIST_AUTOSAVE_ENABLED_KEY, 'local')).toBe(true);
+
+    checklistState.setItemAnswer('item_rope', { primaryScale: 'enjoy' });
+    await jest.advanceTimersByTimeAsync(DEFAULT_AUTOSAVE_INTERVAL_MS);
+    const pendingSave = setEncryptedSpy.mock.results[1]?.value as Promise<boolean> | undefined;
+    expect(pendingSave).toBeDefined();
+    await pendingSave;
+    expect(setEncryptedSpy).toHaveBeenCalledTimes(2);
   });
 });

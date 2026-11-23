@@ -17,6 +17,7 @@ import { CryptoService } from './crypto.service';
 import { I18nService } from './i18n.service';
 
 export const CHECKLIST_ENCRYPTED_AUTOSAVE_KEY = 'kcm_checklist_autosave_enc_v1';
+export const CHECKLIST_AUTOSAVE_ENABLED_KEY = 'kcm_checklist_autosave_enabled_v1';
 export const DEFAULT_AUTOSAVE_INTERVAL_MS = 60_000;
 
 export const CHECKLIST_AUTOSAVE_INTERVAL_MS = new InjectionToken<number>(
@@ -48,6 +49,7 @@ export class ChecklistAutosaveService {
   private readonly crypto = inject(CryptoService);
   private readonly intervalMs = inject(CHECKLIST_AUTOSAVE_INTERVAL_MS);
 
+  private readonly enabledSignal = signal<boolean>(this.readInitialEnabled());
   private readonly lastAutosavedAtSignal = signal<string | null>(null);
   private readonly isSavingSignal = signal<boolean>(false);
   private readonly isEncryptedSignal = signal<boolean>(this.crypto.isSupported());
@@ -58,6 +60,7 @@ export class ChecklistAutosaveService {
   private pageHideListener: (() => void) | null = null;
   private hasAttemptedRestore = false;
 
+  readonly isEnabled = this.enabledSignal.asReadonly();
   readonly lastAutosavedAt = this.lastAutosavedAtSignal.asReadonly();
   readonly isSaving = this.isSavingSignal.asReadonly();
   readonly isEncrypted = this.isEncryptedSignal.asReadonly();
@@ -68,7 +71,7 @@ export class ChecklistAutosaveService {
 
   /**
    * Initializes the session encryption key, restores any encrypted autosave snapshot from the
-   * active session, starts the periodic 1-minute autosave interval, and cleans up on destroy.
+   * active session, starts the periodic 1-minute autosave interval if enabled, and cleans up on destroy.
    */
   start(destroyRef?: DestroyRef): void {
     void this.crypto.getOrInitializeSessionKey().catch(() => undefined);
@@ -77,6 +80,29 @@ export class ChecklistAutosaveService {
       void this.restoreFromAutosave();
     }
 
+    if (this.enabledSignal()) {
+      this.startTimers();
+    }
+
+    destroyRef?.onDestroy(() => {
+      this.stop();
+    });
+  }
+
+  /**
+   * Enables or disables periodic automatic saving and persists the preference locally.
+   */
+  setEnabled(enabled: boolean): void {
+    this.enabledSignal.set(enabled);
+    this.storageRepository.set(CHECKLIST_AUTOSAVE_ENABLED_KEY, enabled, undefined, 'local');
+    if (enabled) {
+      this.startTimers();
+    } else {
+      this.stop();
+    }
+  }
+
+  private startTimers(): void {
     if (this.intervalHandle === null) {
       this.intervalHandle = setInterval(() => {
         void this.saveIfDirty();
@@ -90,10 +116,14 @@ export class ChecklistAutosaveService {
       };
       window.addEventListener('pagehide', this.pageHideListener);
     }
+  }
 
-    destroyRef?.onDestroy(() => {
-      this.stop();
-    });
+  private readInitialEnabled(): boolean {
+    const stored = this.storageRepository.get<boolean | string>(
+      CHECKLIST_AUTOSAVE_ENABLED_KEY,
+      'local',
+    );
+    return stored !== false && stored !== 'false';
   }
 
   /**
@@ -127,9 +157,13 @@ export class ChecklistAutosaveService {
   }
 
   /**
-   * Saves encrypted JSON only when state changed since the last saved snapshot.
+   * Saves encrypted JSON only when autosave is enabled and state changed since the last saved snapshot.
    */
   async saveIfDirty(): Promise<boolean> {
+    if (!this.enabledSignal()) {
+      return false;
+    }
+
     const currentFingerprint = this.computeStateFingerprint();
     if (currentFingerprint === this.lastSavedFingerprintSignal()) {
       return false;

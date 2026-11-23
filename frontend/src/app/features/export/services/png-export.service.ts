@@ -11,11 +11,30 @@ export const PNG_RENDERER = new InjectionToken<PngRendererFn>('PNG_RENDERER', {
   providedIn: 'root',
   factory: () => async (element: HTMLElement): Promise<string> => {
     const { toPng } = await import('html-to-image');
-    return toPng(element, {
+    try {
+      await document.fonts?.ready;
+    } catch {
+      // Ignore font readiness failures in restricted environments
+    }
+
+    const width = Math.max(element.scrollWidth, element.offsetWidth, 1200);
+    const height = Math.max(element.scrollHeight, element.offsetHeight, 1);
+    const options = {
       pixelRatio: 2,
       backgroundColor: '#ffffff',
-      cacheBust: true,
-    });
+      width,
+      height,
+      style: {
+        margin: '0',
+        transform: 'none',
+      },
+    };
+
+    try {
+      return await toPng(element, options);
+    } catch {
+      return toPng(element, { ...options, skipFonts: true });
+    }
   },
 });
 

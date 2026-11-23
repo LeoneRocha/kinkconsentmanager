@@ -14,17 +14,6 @@
         </span>
       </a>
 
-      <nav class="app-shell__nav" [attr.aria-label]="'title' | schemaTranslate: 'ui'">
-        <a class="app-shell__nav-link" routerLink="/checklist" routerLinkActive="app-shell__nav-link--active">
-          <i class="fa-solid fa-list-check" aria-hidden="true"></i>
-          <span>{{ 'navChecklist' | schemaTranslate: 'ui' }}</span>
-        </a>
-        <a class="app-shell__nav-link" routerLink="/export" routerLinkActive="app-shell__nav-link--active">
-          <i class="fa-solid fa-download" aria-hidden="true"></i>
-          <span>{{ 'navExport' | schemaTranslate: 'ui' }}</span>
-        </a>
-      </nav>
-
       <div class="app-shell__utilities">
         <button type="button" class="app-shell__icon-btn app-shell__icon-btn--theme"
           [class.app-shell__icon-btn--active]="theme.isDark()" [attr.aria-pressed]="theme.isDark()" [attr.aria-label]="

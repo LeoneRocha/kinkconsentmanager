@@ -12,11 +12,9 @@ import {
   viewChild,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { MatButtonModule } from '@angular/material/button';
+import { MatDialog } from '@angular/material/dialog';
 import { Router } from '@angular/router';
-import { ConfirmationService } from 'primeng/api';
-import { ButtonModule } from 'primeng/button';
-import { ConfirmDialogModule } from 'primeng/confirmdialog';
-import { SkeletonModule } from 'primeng/skeleton';
 import { Subscription } from 'rxjs';
 import {
   ChecklistViewMode,
@@ -32,6 +30,12 @@ import {
   ChecklistStateService,
   I18nService,
 } from '../../../../core/services';
+import {
+  ConfirmDialogComponent,
+  ConfirmDialogData,
+  LegendBarComponent,
+  ProgressIndicatorComponent,
+} from '../../../../shared/components';
 import {
   ChecklistHeaderComponent,
   ChecklistHeaderLabels,
@@ -53,16 +57,15 @@ import {
 @Component({
   selector: 'app-checklist-page',
   imports: [
-    ButtonModule,
-    ConfirmDialogModule,
-    SkeletonModule,
+    MatButtonModule,
+    LegendBarComponent,
+    ProgressIndicatorComponent,
     ChecklistHeaderComponent,
     ChecklistStepperComponent,
     ClassicKinkSheetComponent,
     FullViewContainerComponent,
     QuickFillWizardModalComponent,
   ],
-  providers: [ConfirmationService],
   templateUrl: './checklist-page.component.html',
   styleUrl: './checklist-page.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -73,7 +76,7 @@ export class ChecklistPageComponent implements OnInit {
   protected readonly autosave = inject(ChecklistAutosaveService);
   protected readonly i18n = inject(I18nService);
   private readonly accessibility = inject(AccessibilityService);
-  private readonly confirmationService = inject(ConfirmationService);
+  private readonly dialog = inject(MatDialog);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
 
@@ -82,7 +85,6 @@ export class ChecklistPageComponent implements OnInit {
 
   protected readonly isLoading = signal<boolean>(true);
   protected readonly loadError = signal<boolean>(false);
-  protected readonly quickFillVisible = signal<boolean>(false);
   private readonly reviewStepActive = signal<boolean>(false);
 
   protected readonly schema = this.checklistState.schema;
@@ -138,6 +140,19 @@ export class ChecklistPageComponent implements OnInit {
       legendTitle: this.i18n.translateUi('legendTitle'),
       privacyNotice: this.i18n.translateUi('privacyNotice'),
       clearSearch: this.i18n.translateUi('clearSelection'),
+      controlsSectionTitle: this.translateWithFallback(
+        'headerControlsSection',
+        'Visualização, Filtros e Ações',
+      ),
+      saveNowTooltip: this.translateWithFallback(
+        'autosaveSaveNow',
+        'Salvar agora (criptografado)',
+      ),
+      saveButton: this.translateWithFallback('saveButton', 'Salvar'),
+      autosaveToggleLabel: this.translateWithFallback(
+        'autosaveToggleLabel',
+        'Salvamento automático',
+      ),
     };
   });
 
@@ -160,6 +175,10 @@ export class ChecklistPageComponent implements OnInit {
       otherPlaceholder: this.otherPlaceholder(),
       noResults: this.noResultsText(),
       readAloud: this.readAloudLabel(),
+      stepIncompleteAlert: this.translateWithFallback(
+        'stepIncompleteAlert',
+        'Preencha todos os itens deste passo antes de avançar.',
+      ),
     };
   });
 
@@ -234,6 +253,16 @@ export class ChecklistPageComponent implements OnInit {
     }
 
     const savedAt = this.autosave.lastAutosavedAt();
+    if (!this.autosave.isEnabled()) {
+      const disabledLabel = this.translateWithFallback(
+        'autosaveDisabled',
+        'Salvamento automático desativado',
+      );
+      return savedAt
+        ? `${disabledLabel} • ${this.formatSavedTime(savedAt, lang)}`
+        : disabledLabel;
+    }
+
     if (savedAt) {
       const formattedTime = this.formatSavedTime(savedAt, lang);
       const prefix = this.translateWithFallback(
@@ -297,8 +326,16 @@ export class ChecklistPageComponent implements OnInit {
       });
   }
 
-  protected onLanguageChange(lang: SupportedLanguage): void {
-    this.i18n.setLanguage(lang);
+  protected async onSaveNow(): Promise<void> {
+    const saved = await this.autosave.saveNow();
+    if (saved) {
+      this.accessibility.announce(
+        this.translateWithFallback(
+          'autosaveSavedNow',
+          'Preenchimento salvo com criptografia no navegador.',
+        ),
+      );
+    }
   }
 
   protected onViewModeChange(mode: ChecklistViewMode): void {
@@ -365,33 +402,40 @@ export class ChecklistPageComponent implements OnInit {
     this.accessibility.speak(text, { force: true });
   }
 
-  protected onOpenQuickFill(): void {
-    this.quickFillVisible.set(true);
-  }
-
   protected onClearAll(): void {
-    this.confirmationService.confirm({
-      header: this.i18n.translateUi('clearConfirmTitle'),
-      message: this.i18n.translateUi('clearConfirmMessage'),
-      icon: 'pi pi-exclamation-triangle',
-      acceptLabel: this.i18n.translateUi('confirmYes'),
-      rejectLabel: this.i18n.translateUi('confirmNo'),
-      acceptButtonProps: {
-        severity: 'danger',
+    const dialogRef = this.dialog.open<ConfirmDialogComponent, ConfirmDialogData, boolean>(
+      ConfirmDialogComponent,
+      {
+        width: 'min(92vw, 28rem)',
+        data: {
+          header: this.i18n.translateUi('clearConfirmTitle'),
+          message: this.i18n.translateUi('clearConfirmMessage'),
+          icon: 'fa-solid fa-triangle-exclamation',
+          acceptLabel: this.i18n.translateUi('confirmYes'),
+          rejectLabel: this.i18n.translateUi('confirmNo'),
+          danger: true,
+        },
       },
-      rejectButtonProps: {
-        severity: 'secondary',
-        outlined: true,
-      },
-      accept: () => {
+    );
+
+    dialogRef
+      .afterClosed()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((confirmed) => {
+        if (confirmed !== true) {
+          return;
+        }
         this.reviewStepActive.set(false);
         this.checklistState.resetAllAnswers();
         this.autosave.clearAutosave();
         this.accessibility.announce(
           this.translateWithFallback('a11yClearedStatus', 'Todas as respostas foram limpas.'),
         );
-      },
-    });
+      });
+  }
+
+  protected onAutosaveEnabledChange(enabled: boolean): void {
+    this.autosave.setEnabled(enabled);
   }
 
   protected onFinishChecklist(): void {
@@ -423,7 +467,13 @@ export class ChecklistPageComponent implements OnInit {
 
   private scrollToContentTop(): void {
     const el = this.contentContainer()?.nativeElement;
-    if (el && typeof el.scrollIntoView === 'function') {
+    if (!el) {
+      return;
+    }
+    if (typeof el.scrollTo === 'function') {
+      el.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    if (typeof el.scrollIntoView === 'function') {
       el.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   }

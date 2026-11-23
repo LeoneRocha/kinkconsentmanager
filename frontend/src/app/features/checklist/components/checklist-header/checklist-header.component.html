@@ -3,137 +3,115 @@
     <div class="checklist-header__brand">
       <h1 class="checklist-header__title">{{ labels().title }}</h1>
       <p class="checklist-header__subtitle">{{ labels().subtitle }}</p>
-      <p class="checklist-header__privacy">
-        <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
-        <span>{{ labels().privacyNotice }}</span>
-      </p>
     </div>
 
     <div class="checklist-header__top-actions">
-      <div class="checklist-header__lang">
-        <span id="checklist-lang-label" class="sr-only">{{ labels().languageLabel }}</span>
-        <mat-button-toggle-group
-          class="checklist-header__lang-select"
-          [hideSingleSelectionIndicator]="true"
-          [attr.aria-labelledby]="'checklist-lang-label'"
-          [value]="currentLang()"
-          (change)="onLanguageModelChange($event.value)"
-        >
-          @for (opt of languageOptions; track opt.value) {
-            <mat-button-toggle [value]="opt.value">{{ opt.label }}</mat-button-toggle>
-          }
-        </mat-button-toggle-group>
+      <div class="checklist-header__save-box">
+        <div class="checklist-header__save-actions">
+          <button
+            mat-flat-button
+            type="button"
+            class="checklist-header__save-btn"
+            [class.checklist-header__save-btn--dirty]="hasUnsavedChanges()"
+            [disabled]="isAutosaving() || !hasUnsavedChanges()"
+            [matTooltip]="labels().saveNowTooltip ?? 'Salvar agora (criptografado)'"
+            matTooltipPosition="below"
+            (click)="saveNow.emit()"
+          >
+            <i
+              class="fa-solid"
+              [class.fa-spin]="isAutosaving()"
+              [class.fa-spinner]="isAutosaving()"
+              [class.fa-floppy-disk]="!isAutosaving()"
+              aria-hidden="true"
+            ></i>
+            <span>{{ labels().saveButton ?? 'Salvar' }}</span>
+          </button>
+
+          <button
+            mat-flat-button
+            type="button"
+            class="checklist-header__export-btn"
+            [class.checklist-header__export-btn--ready]="isChecklistComplete()"
+            [disabled]="!isChecklistComplete()"
+            (click)="goToExport.emit()"
+          >
+            <i class="fa-solid fa-file-export" aria-hidden="true"></i>
+            <span>{{ labels().exportButton }}</span>
+          </button>
+        </div>
+
+        <div class="checklist-header__autosave-row">
+          <mat-slide-toggle
+            class="checklist-header__autosave-toggle"
+            [checked]="autosaveEnabled()"
+            (change)="onAutosaveEnabledModelChange($event.checked)"
+          >
+            {{ labels().autosaveToggleLabel ?? 'Salvamento automático' }}
+          </mat-slide-toggle>
+
+          <span class="checklist-header__save-meta" role="status" aria-live="polite">
+            <i class="fa-solid fa-lock" aria-hidden="true"></i>
+            <span>{{ autosaveText() }}</span>
+          </span>
+        </div>
       </div>
-
-      <button
-        mat-stroked-button
-        type="button"
-        class="checklist-header__export-btn"
-        (click)="goToExport.emit()"
-      >
-        <i class="fa-solid fa-file-export" aria-hidden="true"></i>
-        <span>{{ labels().exportButton }}</span>
-      </button>
     </div>
   </div>
 
-  <div class="checklist-header__controls">
-    <div class="checklist-header__mode">
-      <mat-button-toggle-group
-        class="checklist-header__mode-select"
-        [hideSingleSelectionIndicator]="true"
-        [value]="viewMode()"
-        (change)="onViewModeModelChange($event.value)"
-      >
-        @for (opt of viewModeOptions(); track opt.value) {
-          <mat-button-toggle [value]="opt.value">{{ opt.label }}</mat-button-toggle>
-        }
-      </mat-button-toggle-group>
-    </div>
-
-    <div class="checklist-header__search">
-      <i class="fa-solid fa-magnifying-glass checklist-header__search-icon" aria-hidden="true"></i>
-      <input
-        type="search"
-        class="checklist-header__search-input"
-        [placeholder]="labels().searchPlaceholder"
-        [attr.aria-label]="labels().searchPlaceholder"
-        [ngModel]="searchQuery()"
-        (ngModelChange)="searchQueryChange.emit($event)"
-      />
-      @if (searchQuery().length > 0) {
-        <button
-          type="button"
-          class="checklist-header__search-clear"
-          [attr.aria-label]="labels().clearSearch"
-          (click)="searchQueryChange.emit('')"
-        >
-          <i class="fa-solid fa-xmark" aria-hidden="true"></i>
-        </button>
-      }
-    </div>
-
-    <div class="checklist-header__filter">
-      <mat-slide-toggle
-        id="only-unanswered-toggle"
-        [checked]="onlyUnanswered()"
-        (change)="onOnlyUnansweredModelChange($event.checked)"
-      >
-        <span class="checklist-header__filter-label">{{ labels().onlyUnanswered }}</span>
-      </mat-slide-toggle>
-    </div>
-
-    <div class="checklist-header__cta-group">
-      <button
-        mat-flat-button
-        type="button"
-        class="checklist-header__quick-fill-btn"
-        (click)="openQuickFill.emit()"
-      >
-        <i class="fa-solid fa-bolt" aria-hidden="true"></i>
-        <span>{{ labels().quickFillButton }}</span>
-      </button>
-
-      <button
-        mat-stroked-button
-        type="button"
-        class="checklist-header__clear-btn"
-        [disabled]="!hasAnswers()"
-        (click)="clearAll.emit()"
-      >
-        <i class="fa-solid fa-trash" aria-hidden="true"></i>
-        <span>{{ labels().clearAll }}</span>
-      </button>
-    </div>
-  </div>
-
-  <div class="checklist-header__progress-row">
-    <app-progress-indicator
-      [answered]="answeredCount()"
-      [total]="totalCount()"
-      [percentage]="progressPercentage()"
-      [label]="labels().progressLabel"
-    />
-  </div>
-
-  <div class="checklist-header__legend-section">
-    <button
-      type="button"
-      class="checklist-header__legend-toggle"
-      [attr.aria-expanded]="legendExpanded()"
-      (click)="toggleLegend()"
+  <mat-accordion class="checklist-header__accordion" [multi]="true">
+    <mat-expansion-panel
+      class="checklist-header__section-panel"
+      [expanded]="controlsExpanded()"
+      (opened)="controlsExpanded.set(true)"
+      (closed)="controlsExpanded.set(false)"
     >
-      <span>{{ labels().legendTitle }}</span>
-      <i
-        class="fa-solid"
-        [class.fa-chevron-up]="legendExpanded()"
-        [class.fa-chevron-down]="!legendExpanded()"
-        aria-hidden="true"
-      ></i>
-    </button>
+      <mat-expansion-panel-header>
+        <mat-panel-title class="checklist-header__section-title">
+          <i class="fa-solid fa-sliders" aria-hidden="true"></i>
+          <span>{{ labels().controlsSectionTitle ?? 'Visualização, Filtros e Ações' }}</span>
+        </mat-panel-title>
+      </mat-expansion-panel-header>
 
-    @if (legendExpanded()) {
-      <app-legend-bar [scales]="scales()" [scaleLabels]="scaleLabels()" />
-    }
-  </div>
+      <div class="checklist-header__controls-grid">
+        <div class="checklist-header__controls-row">
+          <mat-button-toggle-group
+            class="checklist-header__mode-select"
+            [hideSingleSelectionIndicator]="true"
+            [value]="viewMode()"
+            (change)="onViewModeModelChange($event.value)"
+          >
+            @for (opt of viewModeOptions(); track opt.value) {
+              <mat-button-toggle [value]="opt.value">{{ opt.label }}</mat-button-toggle>
+            }
+          </mat-button-toggle-group>
+
+          <div class="checklist-header__right-controls">
+            <div class="checklist-header__filter">
+              <mat-slide-toggle
+                id="only-unanswered-toggle"
+                [checked]="onlyUnanswered()"
+                (change)="onOnlyUnansweredModelChange($event.checked)"
+              >
+                <span class="checklist-header__filter-label">{{ labels().onlyUnanswered }}</span>
+              </mat-slide-toggle>
+            </div>
+
+            <div class="checklist-header__cta-group">
+              <button
+                mat-stroked-button
+                type="button"
+                class="checklist-header__clear-btn"
+                [disabled]="!hasAnswers()"
+                (click)="clearAll.emit()"
+              >
+                <i class="fa-solid fa-trash" aria-hidden="true"></i>
+                <span>{{ labels().clearAll }}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </mat-expansion-panel>
+  </mat-accordion>
 </header>

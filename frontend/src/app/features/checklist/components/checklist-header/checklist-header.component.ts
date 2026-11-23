@@ -1,10 +1,10 @@
 import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
+import { MatExpansionModule } from '@angular/material/expansion';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { ChecklistViewMode, ScaleOption, SupportedLanguage } from '../../../../core/models';
-import { LegendBarComponent, ProgressIndicatorComponent } from '../../../../shared/components';
 
 export interface ChecklistHeaderLabels {
   readonly title: string;
@@ -23,6 +23,10 @@ export interface ChecklistHeaderLabels {
   readonly legendTitle: string;
   readonly privacyNotice: string;
   readonly clearSearch: string;
+  readonly controlsSectionTitle?: string;
+  readonly saveNowTooltip?: string;
+  readonly saveButton?: string;
+  readonly autosaveToggleLabel?: string;
 }
 
 export const DEFAULT_CHECKLIST_HEADER_LABELS: ChecklistHeaderLabels = {
@@ -42,6 +46,10 @@ export const DEFAULT_CHECKLIST_HEADER_LABELS: ChecklistHeaderLabels = {
   legendTitle: 'Legenda da Escala',
   privacyNotice: 'Privacidade local: seus dados permanecem exclusivamente no seu navegador.',
   clearSearch: 'Limpar busca',
+  controlsSectionTitle: 'Visualização, Filtros e Ações',
+  saveNowTooltip: 'Salvar agora (criptografado)',
+  saveButton: 'Salvar',
+  autosaveToggleLabel: 'Salvamento automático',
 };
 
 interface SelectOption<T> {
@@ -50,65 +58,61 @@ interface SelectOption<T> {
 }
 
 /**
- * Sticky checklist toolbar with language switch, view mode, search/filter controls, progress, and scale legend.
+ * Modular checklist header with clean identity bar, interactive encrypted save button,
+ * and a collapsible controls section for view mode selection, filters, and actions.
  */
 @Component({
   selector: 'app-checklist-header',
   imports: [
-    FormsModule,
-    ButtonModule,
-    InputTextModule,
-    SelectButtonModule,
-    ToggleSwitchModule,
-    ProgressIndicatorComponent,
-    LegendBarComponent,
+    MatButtonModule,
+    MatButtonToggleModule,
+    MatExpansionModule,
+    MatSlideToggleModule,
+    MatTooltipModule,
   ],
   templateUrl: './checklist-header.component.html',
   styleUrl: './checklist-header.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ChecklistHeaderComponent {
-  readonly currentLang = input.required<SupportedLanguage>();
+  readonly currentLang = input<SupportedLanguage>('pt-BR');
   readonly viewMode = input.required<ChecklistViewMode>();
-  readonly searchQuery = input.required<string>();
+  readonly searchQuery = input<string>('');
   readonly onlyUnanswered = input.required<boolean>();
-  readonly answeredCount = input.required<number>();
-  readonly totalCount = input.required<number>();
-  readonly progressPercentage = input.required<number>();
-  readonly scales = input.required<readonly ScaleOption[]>();
-  readonly scaleLabels = input.required<Readonly<Record<string, string>>>();
+  readonly answeredCount = input<number>(0);
+  readonly totalCount = input<number>(0);
+  readonly progressPercentage = input<number>(0);
+  readonly scales = input<readonly ScaleOption[]>([]);
+  readonly scaleLabels = input<Readonly<Record<string, string>>>({});
   readonly hasAnswers = input.required<boolean>();
+  readonly autosaveText = input<string>('Autosave criptografado ativo (a cada 1 min)');
+  readonly isAutosaving = input<boolean>(false);
+  readonly hasUnsavedChanges = input<boolean>(false);
+  readonly autosaveEnabled = input<boolean>(true);
   readonly labels = input<ChecklistHeaderLabels>(DEFAULT_CHECKLIST_HEADER_LABELS);
 
-  readonly languageChange = output<SupportedLanguage>();
   readonly viewModeChange = output<ChecklistViewMode>();
   readonly searchQueryChange = output<string>();
   readonly onlyUnansweredChange = output<boolean>();
-  readonly openQuickFill = output<void>();
   readonly clearAll = output<void>();
   readonly goToExport = output<void>();
+  readonly saveNow = output<void>();
+  readonly autosaveEnabledChange = output<boolean>();
 
-  protected readonly legendExpanded = signal(true);
-
-  protected readonly languageOptions: SelectOption<SupportedLanguage>[] = [
-    { label: 'PT-BR', value: 'pt-BR' },
-    { label: 'EN-US', value: 'en-US' },
-  ];
+  protected readonly controlsExpanded = signal(true);
+  protected readonly isChecklistComplete = computed<boolean>(
+    () => this.totalCount() > 0 && this.answeredCount() >= this.totalCount(),
+  );
 
   protected readonly viewModeOptions = computed<SelectOption<ChecklistViewMode>[]>(() => [
     { label: this.labels().stepperMode ?? 'Guiado (Passos)', value: 'stepper' },
     { label: this.labels().classicMode ?? 'Modo Clássico', value: 'classic' },
     { label: this.labels().fullMode, value: 'full' },
+    { label: this.labels().quickFillButton, value: 'quick_fill' },
   ]);
 
-  protected onLanguageModelChange(value: SupportedLanguage | null): void {
-    if (value === 'pt-BR' || value === 'en-US') {
-      this.languageChange.emit(value);
-    }
-  }
-
   protected onViewModeModelChange(value: ChecklistViewMode | null): void {
-    if (value === 'stepper' || value === 'classic' || value === 'full') {
+    if (value === 'stepper' || value === 'classic' || value === 'full' || value === 'quick_fill') {
       this.viewModeChange.emit(value);
     }
   }
@@ -117,7 +121,7 @@ export class ChecklistHeaderComponent {
     this.onlyUnansweredChange.emit(Boolean(value));
   }
 
-  protected toggleLegend(): void {
-    this.legendExpanded.update((expanded) => !expanded);
+  protected onAutosaveEnabledModelChange(value: unknown): void {
+    this.autosaveEnabledChange.emit(Boolean(value));
   }
 }

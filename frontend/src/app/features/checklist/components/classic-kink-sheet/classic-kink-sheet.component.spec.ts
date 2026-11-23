@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { MatDialog } from '@angular/material/dialog';
 import {
   GroupDefinition,
   ItemDefinition,
@@ -6,6 +7,7 @@ import {
   ResolvedPreviewTexts,
   ScaleOption,
 } from '../../../../core/models';
+import { ConfirmDialogComponent } from '../../../../shared/components';
 import { ClassicKinkSheetComponent } from './classic-kink-sheet.component';
 
 const MOCK_SCALES: readonly ScaleOption[] = [
@@ -107,7 +109,7 @@ describe('ClassicKinkSheetComponent', () => {
 
   // Cenário: Renderização clássica em blocos agrupados com divisores e papéis.
   // Objetivo: Garantir que cada categoria seja renderizada em bloco com seletores compactos e itens complexos integrados.
-  it('should render grouped category blocks, role headers, scale dots, and complex items', () => {
+  it('should render grouped category blocks, item title before Giving/Receiving dots, and complex items', () => {
     const hostEl = fixture.nativeElement as HTMLElement;
     const blocks = hostEl.querySelectorAll('.classic-block');
     expect(blocks.length).toBe(2);
@@ -115,6 +117,13 @@ describe('ClassicKinkSheetComponent', () => {
     expect(hostEl.querySelectorAll('.classic-block__roles').length).toBe(1);
     expect(hostEl.querySelectorAll('app-dynamic-question-item').length).toBe(1);
     expect(hostEl.querySelectorAll('.classic-row__dot-group').length).toBe(3);
+
+    const firstMatrixRow = hostEl.querySelector('.classic-row:not(.classic-row--complex)')!;
+    const children = Array.from(firstMatrixRow.children).map((el) => el.className);
+    expect(children[0]).toContain('classic-row__item-meta');
+    expect(children[1]).toContain('classic-row__scales');
+    expect(firstMatrixRow.textContent).toContain('Giving');
+    expect(firstMatrixRow.textContent).toContain('Receiving');
   });
 
   // Cenário: Clique nos círculos de escala no modo Clássico para marcar e limpar resposta.
@@ -159,5 +168,26 @@ describe('ClassicKinkSheetComponent', () => {
     const hostEl = fixture.nativeElement as HTMLElement;
     expect(hostEl.querySelector('.classic-sheet__empty')).not.toBeNull();
     expect(hostEl.querySelector('.classic-block')).toBeNull();
+  });
+
+  it('should open ConfirmDialog popup with category description when clicking group info button', () => {
+    const dialog = fixture.debugElement.injector.get(MatDialog);
+    const openSpy = jest.spyOn(dialog, 'open').mockReturnValue({} as ReturnType<MatDialog['open']>);
+
+    const hostEl = fixture.nativeElement as HTMLElement;
+    const infoBtn = hostEl.querySelector<HTMLButtonElement>('.classic-block__info-btn');
+    expect(infoBtn).not.toBeNull();
+    infoBtn!.click();
+
+    expect(openSpy).toHaveBeenCalledWith(
+      ConfirmDialogComponent,
+      expect.objectContaining({
+        data: expect.objectContaining({
+          header: 'Safety',
+          message: 'Pre-scene rules.',
+          acceptLabel: 'OK',
+        }),
+      }),
+    );
   });
 });

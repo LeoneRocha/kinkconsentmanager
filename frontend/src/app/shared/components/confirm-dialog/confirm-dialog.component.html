@@ -15,14 +15,16 @@
 </mat-dialog-content>
 
 <mat-dialog-actions align="end" class="confirm-dialog__actions">
-  <button
-    mat-stroked-button
-    type="button"
-    class="confirm-dialog__reject-btn"
-    (click)="onReject()"
-  >
-    {{ data.rejectLabel }}
-  </button>
+  @if (data.rejectLabel) {
+    <button
+      mat-stroked-button
+      type="button"
+      class="confirm-dialog__reject-btn"
+      (click)="onReject()"
+    >
+      {{ data.rejectLabel }}
+    </button>
+  }
   <button
     mat-flat-button
     type="button"

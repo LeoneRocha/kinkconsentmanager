@@ -74,27 +74,23 @@
   }
 
   &__topbar-inner {
-    max-width: v.$container-max-width;
+    width: 100%;
+    max-width: none;
     margin: 0 auto;
     padding: 0.625rem 0.875rem;
-    display: grid;
-    grid-template-columns: 1fr auto;
-    grid-template-areas:
-      'brand utilities'
-      'nav nav';
+    display: flex;
     align-items: center;
-    gap: 0.625rem 0.75rem;
+    justify-content: space-between;
+    gap: 0.75rem;
 
     @include m.respond-md {
-      padding: 0.75rem 1.25rem;
-      grid-template-columns: auto 1fr auto;
-      grid-template-areas: 'brand nav utilities';
+      width: 90%;
+      padding: 0.75rem 0;
       gap: 1rem;
     }
   }
 
   &__brand {
-    grid-area: brand;
     display: inline-flex;
     align-items: center;
     gap: 0.625rem;
@@ -111,7 +107,7 @@
     align-items: center;
     justify-content: center;
     border-radius: v.$radius-sm;
-    background: linear-gradient(135deg, v.$accent-primary, #7c3aed);
+    background: linear-gradient(135deg, v.$accent-primary, #991b1b);
     color: #ffffff;
     flex-shrink: 0;
   }
@@ -122,51 +118,11 @@
     white-space: nowrap;
   }
 
-  &__nav {
-    grid-area: nav;
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.375rem;
-    padding: 0.25rem;
-    border-radius: v.$radius-md;
-    background-color: v.$surface-subtle;
-    border: 1px solid v.$border-color;
-
-    @include m.respond-md {
-      display: inline-flex;
-      justify-self: center;
-    }
-  }
-
-  &__nav-link {
-    min-height: 40px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.45rem;
-    padding: 0.4rem 0.9rem;
-    border-radius: v.$radius-sm;
-    text-decoration: none;
-    color: v.$text-secondary;
-    font-weight: 600;
-    font-size: 0.875rem;
-
-    &:hover {
-      color: v.$text-primary;
-      background-color: v.$surface-card;
-    }
-
-    &--active {
-      background-color: v.$accent-soft;
-      color: v.$accent-primary;
-    }
-  }
-
   &__utilities {
-    grid-area: utilities;
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
+    flex-shrink: 0;
   }
 
   &__popover-anchor {
@@ -188,7 +144,7 @@
     &--active {
       border-color: v.$accent-primary;
       background-color: v.$accent-soft;
-      color: v.$accent-primary;
+      color: v.$accent-text;
     }
 
     &--theme .pi-sun {
@@ -266,7 +222,7 @@
 
     &--selected {
       background-color: v.$accent-soft;
-      color: v.$accent-primary;
+      color: v.$accent-text;
       font-weight: 600;
     }
   }
@@ -366,7 +322,7 @@
     &--active {
       border-color: v.$accent-primary;
       background-color: v.$accent-soft;
-      color: v.$accent-primary;
+      color: v.$accent-text;
     }
   }
 
@@ -374,7 +330,7 @@
     @extend %panel-btn;
     border-color: v.$accent-primary;
     background-color: v.$accent-soft;
-    color: v.$accent-primary;
+    color: v.$accent-text;
   }
 
   &__reset-btn {
@@ -394,16 +350,13 @@
   &__main {
     flex: 1 0 auto;
     width: 100%;
-    max-width: v.$container-max-width;
+    max-width: none;
     margin: 0 auto;
     padding: 0.875rem 0.75rem 2rem;
 
-    &:has(.checklist-page--classic) {
-      max-width: 1380px;
-    }
-
     @include m.respond-md {
-      padding: 1.5rem 1.25rem 2.5rem;
+      width: 90%;
+      padding: 1.5rem 0 2.5rem;
     }
   }
 
@@ -456,7 +409,7 @@
     height: 2rem;
     border-radius: 9999px;
     background-color: v.$accent-soft;
-    color: v.$accent-primary;
+    color: v.$accent-text;
     display: inline-flex;
     align-items: center;
     justify-content: center;

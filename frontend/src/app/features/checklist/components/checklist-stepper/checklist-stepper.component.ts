@@ -18,7 +18,11 @@ import {
   ResolvedRolePairLabels,
   ScaleOption,
 } from '../../../../core/models';
-import { DynamicQuestionItemComponent } from '../../../../shared/components';
+import {
+  DynamicQuestionItemComponent,
+  LegendBarComponent,
+  ProgressIndicatorComponent,
+} from '../../../../shared/components';
 import {
   countGroupAnsweredItems,
   getGroupDescription,
@@ -44,6 +48,7 @@ export interface ChecklistStepperLabels {
   readonly otherPlaceholder: string;
   readonly noResults: string;
   readonly readAloud: string;
+  readonly stepIncompleteAlert?: string;
 }
 
 export const DEFAULT_CHECKLIST_STEPPER_LABELS: ChecklistStepperLabels = {
@@ -61,6 +66,7 @@ export const DEFAULT_CHECKLIST_STEPPER_LABELS: ChecklistStepperLabels = {
   otherPlaceholder: 'Descreva brevemente sua preferência...',
   noResults: 'Nenhum item encontrado para os filtros aplicados.',
   readAloud: 'Ouvir leitura deste item',
+  stepIncompleteAlert: 'Preencha todos os itens deste passo antes de avançar.',
 };
 
 /**
@@ -68,7 +74,13 @@ export const DEFAULT_CHECKLIST_STEPPER_LABELS: ChecklistStepperLabels = {
  */
 @Component({
   selector: 'app-checklist-stepper',
-  imports: [MatExpansionModule, MatButtonModule, DynamicQuestionItemComponent],
+  imports: [
+    MatExpansionModule,
+    MatButtonModule,
+    DynamicQuestionItemComponent,
+    LegendBarComponent,
+    ProgressIndicatorComponent,
+  ],
   templateUrl: './checklist-stepper.component.html',
   styleUrl: './checklist-stepper.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -80,6 +92,10 @@ export class ChecklistStepperComponent {
   readonly activeStep = input.required<number>();
   readonly texts = input.required<ResolvedPreviewTexts>();
   readonly labels = input<ChecklistStepperLabels>(DEFAULT_CHECKLIST_STEPPER_LABELS);
+  readonly answeredCount = input<number>(0);
+  readonly totalCount = input<number>(0);
+  readonly progressPercentage = input<number>(0);
+  readonly progressLabel = input<string>('Progresso');
 
   readonly activeStepChange = output<number>();
   readonly answerChange = output<{ itemId: string; patch: Partial<ItemResponseValue> }>();
@@ -87,6 +103,8 @@ export class ChecklistStepperComponent {
   readonly finishChecklist = output<void>();
 
   protected readonly expandedReviewValues = signal<number[]>([]);
+  protected readonly invalidStepIds = signal<ReadonlySet<string>>(new Set());
+  protected readonly showIncompleteAlert = signal<boolean>(false);
   private wasOnReviewStep = false;
 
   protected readonly totalSteps = computed<number>(() => {
@@ -114,6 +132,19 @@ export class ChecklistStepperComponent {
 
   protected readonly canGoPrev = computed<boolean>(() => this.safeStep() > 0);
 
+  protected readonly isCurrentStepCompleted = computed<boolean>(() => {
+    const group = this.currentGroup();
+    return group ? this.isGroupCompleted(group) : true;
+  });
+
+  protected readonly canAdvanceCurrentStep = computed<boolean>(() =>
+    this.isCurrentStepCompleted(),
+  );
+
+  protected readonly areAllGroupsCompleted = computed<boolean>(
+    () => this.groups().length > 0 && this.groups().every((group) => this.isGroupCompleted(group)),
+  );
+
   constructor() {
     effect(() => {
       const groups = this.groups();
@@ -134,13 +165,96 @@ export class ChecklistStepperComponent {
 
       this.wasOnReviewStep = onReview;
     });
+
+    effect(() => {
+      const groups = this.groups();
+      const answers = this.answers();
+      const current = this.currentGroup();
+
+      untracked(() => {
+        const currentInvalid = this.invalidStepIds();
+        if (currentInvalid.size > 0) {
+          let changed = false;
+          const next = new Set(currentInvalid);
+          for (const group of groups) {
+            if (next.has(group.id) && countGroupAnsweredItems(group, answers) >= group.items.length) {
+              next.delete(group.id);
+              changed = true;
+            }
+          }
+          if (changed) {
+            this.invalidStepIds.set(next);
+          }
+        }
+
+        if (current && countGroupAnsweredItems(current, answers) >= current.items.length) {
+          this.showIncompleteAlert.set(false);
+        }
+      });
+    });
+  }
+
+  protected stepState(
+    group: GroupDefinition,
+    index: number,
+  ): 'done' | 'invalid' | 'active' | 'pending' {
+    if (this.isGroupCompleted(group)) {
+      return 'done';
+    }
+    if (this.invalidStepIds().has(group.id)) {
+      return 'invalid';
+    }
+    if (this.safeStep() === index) {
+      return 'active';
+    }
+    return 'pending';
+  }
+
+  protected canAdvanceTo(targetIndex: number): boolean {
+    const currentStep = this.safeStep();
+    if (targetIndex <= currentStep) {
+      return true;
+    }
+
+    const groups = this.groups();
+    const limit = Math.min(targetIndex, groups.length);
+    for (let i = 0; i < limit; i++) {
+      if (!this.isGroupCompleted(groups[i])) {
+        return false;
+      }
+    }
+    return true;
   }
 
   protected selectStep(stepIndex: number): void {
-    const maxStep = this.groups().length;
+    const groups = this.groups();
+    const maxStep = groups.length;
     const clamped = Math.min(Math.max(0, stepIndex), maxStep);
-    if (clamped === this.groups().length) {
-      this.expandedReviewValues.set(this.groups().map((_, index) => index));
+    const currentStep = this.safeStep();
+
+    if (clamped > currentStep && !this.canAdvanceTo(clamped)) {
+      const current = this.currentGroup();
+      const blockingGroup =
+        current && !this.isGroupCompleted(current)
+          ? current
+          : groups
+              .slice(0, Math.min(clamped, groups.length))
+              .find((group) => !this.isGroupCompleted(group));
+
+      if (blockingGroup) {
+        this.invalidStepIds.update((prev) => {
+          const next = new Set(prev);
+          next.add(blockingGroup.id);
+          return next;
+        });
+      }
+      this.showIncompleteAlert.set(true);
+      return;
+    }
+
+    this.showIncompleteAlert.set(false);
+    if (clamped === groups.length) {
+      this.expandedReviewValues.set(groups.map((_, index) => index));
     }
     this.activeStepChange.emit(clamped);
   }

@@ -151,7 +151,8 @@ describe('PdfExportService', () => {
 
     const serialized = JSON.stringify(content);
     expect(serialized).toContain('KinkConsentManager Report');
-    expect(serialized).toContain('1.0.0');
+    expect(serialized).not.toContain('Schema Version');
+    expect(serialized).not.toContain('1.0.0');
     expect(serialized).toContain('2026-11-22 18:45');
     expect(serialized).toContain('Essential protocols');
     expect(serialized).toContain('Red stops immediately');

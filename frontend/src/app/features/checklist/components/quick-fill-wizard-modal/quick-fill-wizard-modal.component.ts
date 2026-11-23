@@ -1,3 +1,5 @@
+import { A11yModule } from '@angular/cdk/a11y';
+import { NgTemplateOutlet } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -8,9 +10,8 @@ import {
   output,
   signal,
 } from '@angular/core';
-import { ButtonModule } from 'primeng/button';
-import { DialogModule } from 'primeng/dialog';
-import { TooltipModule } from 'primeng/tooltip';
+import { MatButtonModule } from '@angular/material/button';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import {
   GroupDefinition,
   ItemResponseValue,
@@ -84,17 +85,18 @@ function isInteractiveInputTarget(target: EventTarget | null): boolean {
 }
 
 /**
- * Keyboard-driven rapid-entry overlay stepping sequentially through scale_matrix checklist items.
+ * Keyboard-driven rapid-entry view/dialog stepping sequentially through scale_matrix checklist items.
  */
 @Component({
   selector: 'app-quick-fill-wizard-modal',
-  imports: [DialogModule, ButtonModule, TooltipModule],
+  imports: [A11yModule, NgTemplateOutlet, MatButtonModule, MatTooltipModule],
   templateUrl: './quick-fill-wizard-modal.component.html',
   styleUrl: './quick-fill-wizard-modal.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class QuickFillWizardModalComponent {
   readonly visible = input.required<boolean>();
+  readonly inline = input<boolean>(false);
   readonly groups = input.required<readonly GroupDefinition[]>();
   readonly scales = input.required<readonly ScaleOption[]>();
   readonly answers = input.required<Readonly<Record<string, ItemResponseValue>>>();
@@ -218,8 +220,10 @@ export class QuickFillWizardModalComponent {
     }
 
     if (event.key === 'Escape') {
-      event.preventDefault();
-      this.closeModal();
+      if (!this.inline()) {
+        event.preventDefault();
+        this.closeModal();
+      }
       return;
     }
 
@@ -254,6 +258,12 @@ export class QuickFillWizardModalComponent {
         event.preventDefault();
         this.nextStep();
         break;
+    }
+  }
+
+  protected onBackdropClick(event: MouseEvent): void {
+    if (event.target === event.currentTarget) {
+      this.closeModal();
     }
   }
 

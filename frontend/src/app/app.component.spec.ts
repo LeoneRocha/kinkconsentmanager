@@ -84,15 +84,16 @@ describe('App', () => {
     expect(app).toBeTruthy();
   });
 
-  it('should render navigation links for checklist and export routes', async () => {
+  it('should keep a clean topbar with brand link and utility controls without topbar nav clutter', async () => {
     const fixture = TestBed.createComponent(App);
     fixture.detectChanges();
     await fixture.whenStable();
 
     const el = fixture.nativeElement as HTMLElement;
-    const links = Array.from(el.querySelectorAll('nav a')).map((a) => a.getAttribute('href'));
-    expect(links).toContain('/checklist');
-    expect(links).toContain('/export');
+    const brandLink = el.querySelector<HTMLAnchorElement>('a.app-shell__brand');
+    expect(brandLink?.getAttribute('href')).toBe('/checklist');
+    expect(el.querySelector('nav')).toBeNull();
+    expect(el.querySelector('.app-shell__utilities')).not.toBeNull();
   });
 
   it('should include main landmark, router-outlet, live status region, and privacy notice', async () => {

@@ -1,6 +1,6 @@
 @if (groups().length === 0) {
   <div class="full-view__empty" role="status">
-    <i class="pi pi-filter-slash full-view__empty-icon" aria-hidden="true"></i>
+    <i class="fa-solid fa-filter-circle-xmark full-view__empty-icon" aria-hidden="true"></i>
     <p class="full-view__empty-text">{{ noResultsText() }}</p>
   </div>
 } @else {
@@ -64,15 +64,15 @@
     </div>
 
     <div class="full-view__footer">
-      <p-button
+      <button
+        mat-flat-button
         type="button"
-        styleClass="full-view__finish-btn"
-        severity="success"
-        [label]="finishLabel()"
-        icon="pi pi-check"
-        iconPos="right"
-        (onClick)="finishChecklist.emit()"
-      />
+        class="full-view__finish-btn"
+        (click)="finishChecklist.emit()"
+      >
+        <span>{{ finishLabel() }}</span>
+        <i class="fa-solid fa-check" aria-hidden="true"></i>
+      </button>
     </div>
   </div>
 }

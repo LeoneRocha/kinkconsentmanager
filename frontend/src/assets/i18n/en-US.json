@@ -61,6 +61,19 @@
     "importErrorInvalidJson": "Invalid file: could not parse a valid JSON draft.",
     "importErrorIncompatibleVersion": "Schema version is incompatible with this checklist.",
     "previewHeading": "Complete Response Summary",
+    "exportLayoutLabel": "Preview layout",
+    "exportLayoutModern": "Modern View",
+    "exportLayoutClassic": "Classic View",
+    "exportStep1Title": "1. Choose the summary layout",
+    "exportStep1Hint": "Select Modern View or Classic View to preview the summary and unlock the export buttons.",
+    "exportStep2Title": "2. Export your checklist",
+    "exportLayoutModernDesc": "Detailed category tables with color-coded pills for easy reading.",
+    "exportLayoutClassicDesc": "Compact multi-column sheet with traditional color-coded circles.",
+    "exportSelectLayoutPrompt": "Choose Modern View or Classic View above to display the complete summary and unlock the export buttons.",
+    "stepIncompleteAlert": "Please complete all items in this step before continuing.",
+    "saveButton": "Save",
+    "autosaveToggleLabel": "Auto-save",
+    "autosaveDisabled": "Auto-save disabled",
     "roleHeader": "Role",
     "valueHeader": "Response",
     "notesHeader": "Notes",
@@ -110,7 +123,10 @@
     "a11yClosePanel": "Close accessibility panel",
     "autosaveActive": "Encrypted autosave active (every 1 min)",
     "autosaveSaving": "Saving encrypted responses...",
-    "autosaveSavedAt": "Auto-saved (encrypted) at"
+    "autosaveSavedAt": "Auto-saved (encrypted) at",
+    "autosaveSaveNow": "Save now (encrypted)",
+    "autosaveSavedNow": "Responses saved encrypted in your browser.",
+    "headerControlsSection": "View, Filters & Actions"
   },
   "roles": {
     "giving_receiving": {

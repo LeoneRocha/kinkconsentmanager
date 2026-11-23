@@ -133,7 +133,8 @@ describe('FullGridPreviewComponent', () => {
     expect(hostEl.querySelector('.full-grid-preview__title')?.textContent?.trim()).toBe(
       'Checklist de Consentimento',
     );
-    expect(hostEl.textContent).toContain('1.0.0');
+    expect(hostEl.textContent).not.toContain('Versão do Schema');
+    expect(hostEl.textContent).not.toContain('1.0.0');
     expect(hostEl.textContent).toContain('2026-11-22 18:30');
     expect(hostEl.querySelector('app-legend-bar')).not.toBeNull();
 
@@ -231,5 +232,41 @@ describe('FullGridPreviewComponent', () => {
     await fixture.whenStable();
 
     expect(article.classList.contains('full-grid-preview--print')).toBe(true);
+  });
+
+  it('should render the classic multi-column circle layout when layout is classic', async () => {
+    const answers: Readonly<Record<string, ItemResponseValue>> = {
+      item_rope: { primaryScale: 'enjoy', secondaryScale: 'favorite' },
+      item_single_scale: { primaryScale: 'curious' },
+      item_multi: {
+        selectedOptions: ['opt_verbal', OTHER_OPTION_VALUE],
+        otherText: 'Bolinha na mão',
+      },
+      item_notes: { customText: 'Sempre hidratar após a cena.' },
+    };
+    fixture.componentRef.setInput('answers', answers);
+    fixture.componentRef.setInput('layout', 'classic');
+    await fixture.whenStable();
+
+    const hostEl = fixture.nativeElement as HTMLElement;
+    const article = hostEl.querySelector('.full-grid-preview')!;
+    expect(article.classList.contains('full-grid-preview--classic')).toBe(true);
+    expect(hostEl.querySelector('app-legend-bar')).toBeNull();
+
+    const legendDots = hostEl.querySelectorAll('.classic-preview__legend-dot');
+    expect(legendDots.length).toBe(6);
+
+    const ropeDots = hostEl.querySelectorAll(
+      '[data-item-id="item_rope"] .classic-preview__dot--filled',
+    );
+    expect(ropeDots.length).toBe(2);
+
+    const singleScaleDots = hostEl.querySelectorAll(
+      '[data-item-id="item_single_scale"] .classic-preview__dot',
+    );
+    expect(singleScaleDots.length).toBe(1);
+
+    const textRow = hostEl.querySelector('[data-item-id="item_notes"]')!;
+    expect(textRow.textContent).toContain('Sempre hidratar após a cena.');
   });
 });

@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { MatDialog } from '@angular/material/dialog';
 import { provideRouter, Router } from '@angular/router';
 import { provideTranslateService, TranslateService } from '@ngx-translate/core';
-import { ConfirmationService } from 'primeng/api';
 import { Observable, Subject, of, throwError } from 'rxjs';
 import { ChecklistSchema } from '../../../../core/models';
 import { ISchemaRepository, SCHEMA_REPOSITORY_TOKEN } from '../../../../core/repositories';
@@ -221,6 +221,7 @@ describe('ChecklistPageComponent', () => {
 
   afterEach(() => {
     autosaveService?.stop();
+    TestBed.inject(MatDialog).closeAll();
     fixture?.destroy();
     TestBed.resetTestingModule();
     localStorage.clear();
@@ -228,13 +229,13 @@ describe('ChecklistPageComponent', () => {
     jest.restoreAllMocks();
   });
 
-  it('should show p-skeleton while schema is loading and render checklist once resolved', async () => {
+  it('should show skeleton loaders while schema is loading and render checklist once resolved', async () => {
     const schemaSubject = new Subject<ChecklistSchema>();
     await createTestModule(() => schemaSubject.asObservable());
 
     fixture.detectChanges();
     const hostEl = fixture.nativeElement as HTMLElement;
-    expect(hostEl.querySelectorAll('p-skeleton').length).toBeGreaterThan(0);
+    expect(hostEl.querySelectorAll('.kcm-skeleton').length).toBeGreaterThan(0);
     expect(hostEl.querySelector('app-checklist-header')).toBeNull();
 
     schemaSubject.next(MOCK_SCHEMA);
@@ -242,7 +243,7 @@ describe('ChecklistPageComponent', () => {
     await fixture.whenStable();
 
     expect(getChecklistSchemaMock).toHaveBeenCalledWith('v1');
-    expect(hostEl.querySelectorAll('p-skeleton').length).toBe(0);
+    expect(hostEl.querySelectorAll('.kcm-skeleton').length).toBe(0);
     expect(hostEl.querySelector('app-checklist-header')).not.toBeNull();
     expect(hostEl.querySelector('app-checklist-stepper')).not.toBeNull();
     expect(checklistState.schema()).toEqual(MOCK_SCHEMA);
@@ -279,7 +280,7 @@ describe('ChecklistPageComponent', () => {
     await fixture.whenStable();
 
     const hostEl = fixture.nativeElement as HTMLElement;
-    const radios = hostEl.querySelectorAll<HTMLInputElement>('p-radiobutton input[type="radio"]');
+    const radios = hostEl.querySelectorAll<HTMLInputElement>('mat-radio-button input[type="radio"]');
     radios[0].click();
     await fixture.whenStable();
 
@@ -287,11 +288,11 @@ describe('ChecklistPageComponent', () => {
     expect(checklistState.answeredItemsCount()).toBe(1);
     expect(checklistState.progressPercentage()).toBe(50);
 
-    // Switch to classic view and then full view
+    // Switch to classic view, full view, and quick_fill view
     const modeButtons = hostEl.querySelectorAll<HTMLElement>(
-      '.checklist-header__mode-select p-togglebutton',
+      '.checklist-header__mode-select mat-button-toggle button',
     );
-    expect(modeButtons.length).toBe(3);
+    expect(modeButtons.length).toBe(4);
 
     modeButtons[1].click();
     await fixture.whenStable();
@@ -304,6 +305,12 @@ describe('ChecklistPageComponent', () => {
     expect(checklistState.viewMode()).toBe('full');
     expect(hostEl.querySelector('app-full-view-container')).not.toBeNull();
     expect(hostEl.querySelector('app-classic-kink-sheet')).toBeNull();
+
+    modeButtons[3].click();
+    await fixture.whenStable();
+    expect(checklistState.viewMode()).toBe('quick_fill');
+    expect(hostEl.querySelector('.quick-fill-inline')).not.toBeNull();
+    expect(hostEl.querySelector('app-full-view-container')).toBeNull();
   });
 
   it('should switch language without losing answers and update searchable labels via effect', async () => {
@@ -318,12 +325,8 @@ describe('ChecklistPageComponent', () => {
     await fixture.whenStable();
     expect(checklistState.filteredGroups()).toEqual([]);
 
-    // Switch language via header SelectButton to en-US
-    const hostEl = fixture.nativeElement as HTMLElement;
-    const langButtons = hostEl.querySelectorAll<HTMLElement>(
-      '.checklist-header__lang-select p-togglebutton',
-    );
-    langButtons[1].click();
+    // Switch language via I18nService (topbar selector) to en-US without duplicate header toggle
+    i18nService.setLanguage('en-US');
     await fixture.whenStable();
 
     expect(i18nService.currentLang()).toBe('en-US');
@@ -343,17 +346,29 @@ describe('ChecklistPageComponent', () => {
 
     expect(checklistState.activeCategoryIndex()).toBe(0);
 
-    // Step 1 -> Step 2 (Bondage)
+    // Clicking Next before answering stays on Step 1 and shows validation alert
+    hostEl.querySelector<HTMLButtonElement>('.stepper__next-btn')?.click();
+    await fixture.whenStable();
+    expect(checklistState.activeCategoryIndex()).toBe(0);
+    expect(hostEl.querySelector('.stepper__validation-alert')).not.toBeNull();
+
+    // Complete Step 1 -> Step 2 (Bondage)
+    checklistState.setItemAnswer('item_safeword', { selectedOption: 'opt_traffic' });
+    await fixture.whenStable();
     hostEl.querySelector<HTMLButtonElement>('.stepper__next-btn')?.click();
     await fixture.whenStable();
     expect(checklistState.activeCategoryIndex()).toBe(1);
     expect(navigateSpy).not.toHaveBeenCalled();
 
-    // Step 2 -> Final Review Accordion (all panels expanded)
+    // Complete Step 2 -> Final Review Accordion (all panels expanded)
+    checklistState.setItemAnswer('item_rope', { primaryScale: 'enjoy' });
+    await fixture.whenStable();
     hostEl.querySelector<HTMLButtonElement>('.stepper__next-btn')?.click();
     await fixture.whenStable();
     expect(hostEl.querySelector('.stepper__panel--review')).not.toBeNull();
-    const expandedPanels = hostEl.querySelectorAll('p-accordion-panel.p-accordionpanel-active');
+    const expandedPanels = hostEl.querySelectorAll(
+      '.stepper__panel--review mat-expansion-panel.mat-expanded',
+    );
     expect(expandedPanels.length).toBe(2);
 
     // Finish -> /export
@@ -365,62 +380,84 @@ describe('ChecklistPageComponent', () => {
     expect(navigateSpy).toHaveBeenCalledWith(['/export']);
   });
 
-  it('should open ConfirmationService dialog on clearAll and reset answers only when accepted', async () => {
+  it('should open MatDialog confirmation on clearAll, support interactive saveNow button, and reset answers only when accepted', async () => {
     await createTestModule(() => of(MOCK_SCHEMA));
     await fixture.whenStable();
 
     checklistState.setItemAnswer('item_safeword', { selectedOption: 'opt_traffic' });
     await fixture.whenStable();
 
-    const confirmationService = fixture.debugElement.injector.get(ConfirmationService);
-    const confirmSpy = jest.spyOn(confirmationService, 'confirm');
+    const matDialog = fixture.debugElement.injector.get(MatDialog);
+    const openSpy = jest
+      .spyOn(matDialog, 'open')
+      .mockReturnValueOnce({ afterClosed: () => of(false) } as unknown as ReturnType<
+        MatDialog['open']
+      >)
+      .mockReturnValueOnce({ afterClosed: () => of(true) } as unknown as ReturnType<
+        MatDialog['open']
+      >);
+    const saveNowSpy = jest.spyOn(autosaveService, 'saveNow').mockResolvedValue(true);
     const clearAutosaveSpy = jest.spyOn(autosaveService, 'clearAutosave');
 
     const hostEl = fixture.nativeElement as HTMLElement;
-    expect(hostEl.querySelector('.checklist-page__autosave')?.textContent).toContain(
+    const saveBtn = hostEl.querySelector<HTMLButtonElement>('.checklist-header__save-btn');
+    expect(saveBtn?.textContent).toContain('Salvar');
+    expect(hostEl.querySelector('.checklist-header__save-meta')?.textContent).toContain(
       'Autosave criptografado ativo',
     );
+    saveBtn!.click();
+    await fixture.whenStable();
+    expect(saveNowSpy).toHaveBeenCalledTimes(1);
+
+    const autosaveToggle = hostEl.querySelector<HTMLButtonElement>(
+      '.checklist-header__autosave-toggle button[role="switch"]',
+    );
+    expect(autosaveToggle).not.toBeNull();
+    autosaveToggle!.click();
+    await fixture.whenStable();
+    expect(autosaveService.isEnabled()).toBe(false);
+    expect(hostEl.querySelector('.checklist-header__save-meta')?.textContent).toContain(
+      'Salvamento automático desativado',
+    );
+    autosaveToggle!.click();
+    await fixture.whenStable();
+    expect(autosaveService.isEnabled()).toBe(true);
+
     const clearBtn = hostEl.querySelector<HTMLButtonElement>('.checklist-header__clear-btn');
     expect(clearBtn?.disabled).toBe(false);
+
+    // Reject first -> answers remain
     clearBtn!.click();
     await fixture.whenStable();
 
-    expect(confirmSpy).toHaveBeenCalledTimes(1);
-
-    // Reject first -> answers remain
-    const rejectBtn = document.body.querySelector<HTMLButtonElement>(
-      '.p-confirmdialog-reject-button',
-    );
-    expect(rejectBtn).not.toBeNull();
-    rejectBtn!.click();
-    await fixture.whenStable();
+    expect(openSpy).toHaveBeenCalledTimes(1);
     expect(checklistState.answers()['item_safeword']).toEqual({ selectedOption: 'opt_traffic' });
     expect(clearAutosaveSpy).not.toHaveBeenCalled();
 
     // Trigger again and accept -> answers and encrypted autosave cleared
     clearBtn!.click();
     await fixture.whenStable();
-    const acceptBtn = document.body.querySelector<HTMLButtonElement>(
-      '.p-confirmdialog-accept-button',
-    );
-    expect(acceptBtn).not.toBeNull();
-    acceptBtn!.click();
-    await fixture.whenStable();
 
+    expect(openSpy).toHaveBeenCalledTimes(2);
     expect(checklistState.answers()).toEqual({});
     expect(checklistState.answeredItemsCount()).toBe(0);
     expect(clearAutosaveSpy).toHaveBeenCalledTimes(1);
   });
 
-  it('should open QuickFillWizardModalComponent and propagate wizard answers to ChecklistStateService', async () => {
+  it('should render QuickFillWizardModalComponent inline in quick_fill viewMode and propagate wizard answers to ChecklistStateService', async () => {
     await createTestModule(() => of(MOCK_SCHEMA));
     await fixture.whenStable();
 
     const hostEl = fixture.nativeElement as HTMLElement;
-    hostEl.querySelector<HTMLButtonElement>('.checklist-header__quick-fill-btn')?.click();
+    const modeButtons = hostEl.querySelectorAll<HTMLButtonElement>(
+      '.checklist-header__mode-select mat-button-toggle button',
+    );
+    expect(modeButtons.length).toBe(4);
+    modeButtons[3].click();
     await fixture.whenStable();
 
-    expect(hostEl.querySelector('.quick-fill')).not.toBeNull();
+    expect(hostEl.querySelector('.quick-fill-inline')).not.toBeNull();
+    expect(hostEl.querySelector('.quick-fill-backdrop')).toBeNull();
     window.dispatchEvent(new KeyboardEvent('keydown', { key: '5' }));
     await fixture.whenStable();
 

@@ -32,11 +32,14 @@ interface PreviewRowViewModel {
   readonly isAnswered: boolean;
 }
 
+export type ExportPreviewLayout = 'modern' | 'classic';
+
 interface PreviewGroupViewModel {
   readonly groupId: string;
   readonly title: string;
   readonly description?: string;
   readonly hasDualRoleColumns: boolean;
+  readonly hasScaleRows: boolean;
   readonly primaryColumnHeader: string;
   readonly secondaryColumnHeader: string;
   readonly rows: readonly PreviewRowViewModel[];
@@ -53,6 +56,7 @@ export class FullGridPreviewComponent {
   readonly schema = input.required<ChecklistSchema>();
   readonly answers = input.required<Readonly<Record<string, ItemResponseValue>>>();
   readonly texts = input.required<ResolvedPreviewTexts>();
+  readonly layout = input<ExportPreviewLayout>('modern');
   readonly printMode = input<boolean>(false);
 
   protected readonly orderedScales = computed<readonly ScaleOption[]>(() =>
@@ -118,12 +122,14 @@ export class FullGridPreviewComponent {
 
       const firstDualRow = rows.find((row) => row.isDualRole);
       const hasDualRoleColumns = firstDualRow !== undefined;
+      const hasScaleRows = rows.some((row) => row.type === 'scale_matrix');
 
       return {
         groupId: group.id,
         title: groupTexts?.title ?? group.id,
         description: groupTexts?.description,
         hasDualRoleColumns,
+        hasScaleRows,
         primaryColumnHeader: groupRoles.primary || firstDualRow?.primaryRoleLabel || '',
         secondaryColumnHeader: groupRoles.secondary ?? firstDualRow?.secondaryRoleLabel ?? '',
         rows,

@@ -1,16 +1,18 @@
-<p-dialog
-  styleClass="quick-fill-dialog"
-  [visible]="visible()"
-  (visibleChange)="onDialogVisibleChange($event)"
-  [header]="labels().title"
-  [modal]="true"
-  [draggable]="false"
-  [resizable]="false"
-  [dismissableMask]="true"
-  [closeOnEscape]="false"
-  [closeAriaLabel]="labels().close"
-  [style]="{ width: 'min(94vw, 44rem)' }"
->
+<ng-template #quickFillBody>
+  <header class="quick-fill-dialog__header">
+    <h2 class="quick-fill-dialog__title">{{ labels().title }}</h2>
+    @if (!inline()) {
+      <button
+        type="button"
+        class="quick-fill-dialog__close"
+        [attr.aria-label]="labels().close"
+        (click)="closeModal()"
+      >
+        <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+      </button>
+    }
+  </header>
+
   @if (currentStep(); as activeStep) {
     <div class="quick-fill">
       <div class="quick-fill__status">
@@ -48,12 +50,12 @@
           <button
             type="button"
             class="quick-fill__speak-btn"
-            [pTooltip]="readAloudLabel()"
-            tooltipPosition="top"
+            [matTooltip]="readAloudLabel()"
+            matTooltipPosition="above"
             [attr.aria-label]="readAloudLabel() + ': ' + activeStep.itemLabel"
             (click)="emitCurrentStepReadAloud()"
           >
-            <i class="pi pi-volume-up" aria-hidden="true"></i>
+            <i class="fa-solid fa-volume-high" aria-hidden="true"></i>
           </button>
         </div>
         <div class="quick-fill__current-item">{{ activeStep.itemLabel }}</div>
@@ -113,7 +115,7 @@
           class="quick-fill__clear-btn"
           (click)="clearCurrentStep()"
         >
-          <i class="pi pi-eraser" aria-hidden="true"></i>
+          <i class="fa-solid fa-eraser" aria-hidden="true"></i>
           <span>{{ labels().clearKey }}</span>
         </button>
       </div>
@@ -121,48 +123,75 @@
       <p class="quick-fill__hint">{{ labels().shortcutHint }}</p>
 
       <div class="quick-fill__nav">
-        <p-button
+        <button
+          mat-stroked-button
           type="button"
-          styleClass="quick-fill__prev-btn"
-          severity="secondary"
-          [outlined]="true"
-          icon="pi pi-arrow-left"
-          [label]="labels().prev"
+          class="quick-fill__prev-btn"
           [disabled]="!canGoPrev()"
-          (onClick)="prevStep()"
-        />
+          (click)="prevStep()"
+        >
+          <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+          <span>{{ labels().prev }}</span>
+        </button>
 
-        <p-button
-          type="button"
-          styleClass="quick-fill__close-btn"
-          severity="secondary"
-          [text]="true"
-          [label]="labels().close"
-          (onClick)="closeModal()"
-        />
+        @if (!inline()) {
+          <button
+            mat-button
+            type="button"
+            class="quick-fill__close-btn"
+            (click)="closeModal()"
+          >
+            {{ labels().close }}
+          </button>
+        }
 
-        <p-button
+        <button
+          mat-flat-button
           type="button"
-          styleClass="quick-fill__next-btn"
-          icon="pi pi-arrow-right"
-          iconPos="right"
-          [label]="labels().next"
+          class="quick-fill__next-btn"
           [disabled]="!canGoNext()"
-          (onClick)="nextStep()"
-        />
+          (click)="nextStep()"
+        >
+          <span>{{ labels().next }}</span>
+          <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+        </button>
       </div>
     </div>
   } @else {
     <div class="quick-fill__empty" role="status">
-      <i class="pi pi-info-circle quick-fill__empty-icon" aria-hidden="true"></i>
+      <i class="fa-solid fa-circle-info quick-fill__empty-icon" aria-hidden="true"></i>
       <p class="quick-fill__empty-text">{{ labels().empty }}</p>
-      <p-button
-        type="button"
-        styleClass="quick-fill__close-btn"
-        severity="secondary"
-        [label]="labels().close"
-        (onClick)="closeModal()"
-      />
+      @if (!inline()) {
+        <button
+          mat-stroked-button
+          type="button"
+          class="quick-fill__close-btn"
+          (click)="closeModal()"
+        >
+          {{ labels().close }}
+        </button>
+      }
     </div>
   }
-</p-dialog>
+</ng-template>
+
+@if (inline()) {
+  @if (visible()) {
+    <section class="quick-fill-inline" [attr.aria-label]="labels().title">
+      <ng-container [ngTemplateOutlet]="quickFillBody" />
+    </section>
+  }
+} @else if (visible()) {
+  <div class="quick-fill-backdrop" (click)="onBackdropClick($event)">
+    <div
+      class="quick-fill-dialog"
+      role="dialog"
+      aria-modal="true"
+      [attr.aria-label]="labels().title"
+      cdkTrapFocus
+      cdkTrapFocusAutoCapture
+    >
+      <ng-container [ngTemplateOutlet]="quickFillBody" />
+    </div>
+  </div>
+}

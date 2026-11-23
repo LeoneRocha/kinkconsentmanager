@@ -310,7 +310,8 @@ export class ChecklistStateService extends BaseStateService<ChecklistState> {
     const nextViewMode: ChecklistViewMode =
       snapshot.viewMode === 'stepper' ||
       snapshot.viewMode === 'classic' ||
-      snapshot.viewMode === 'full'
+      snapshot.viewMode === 'full' ||
+      snapshot.viewMode === 'quick_fill'
         ? snapshot.viewMode
         : this.stateSignal().viewMode;
 
@@ -421,7 +422,10 @@ export class ChecklistStateService extends BaseStateService<ChecklistState> {
 
     const rawViewMode = persisted['viewMode'];
     const viewMode: ChecklistViewMode =
-      rawViewMode === 'stepper' || rawViewMode === 'classic' || rawViewMode === 'full'
+      rawViewMode === 'stepper' ||
+      rawViewMode === 'classic' ||
+      rawViewMode === 'full' ||
+      rawViewMode === 'quick_fill'
         ? rawViewMode
         : 'stepper';
 

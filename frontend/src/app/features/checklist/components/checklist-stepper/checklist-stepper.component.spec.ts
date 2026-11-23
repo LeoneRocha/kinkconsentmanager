@@ -104,7 +104,7 @@ describe('ChecklistStepperComponent', () => {
 
   // Cenário: Renderização inicial do stepper com passos numerados e etapa final de revisão.
   // Objetivo: Garantir navegação entre passos via botões e seleção direta na barra superior.
-  it('should render numbered category steps plus final review step and emit activeStepChange', async () => {
+  it('should render yellow active step, block advance & show red invalid state until filled, turn green on completion, and allow advance', async () => {
     const emittedSteps: number[] = [];
     component.activeStepChange.subscribe((step) => emittedSteps.push(step));
 
@@ -112,14 +112,56 @@ describe('ChecklistStepperComponent', () => {
     const stepTabs = hostEl.querySelectorAll('.stepper__step-btn');
     expect(stepTabs.length).toBe(3);
 
+    const rail = hostEl.querySelector('.stepper__rail');
+    const legendContainer = hostEl.querySelector('.stepper__legend');
+    const legendBar = legendContainer?.querySelector('app-legend-bar') ?? null;
+    const tabpanel = hostEl.querySelector('[role="tabpanel"]');
+    expect(rail).not.toBeNull();
+    expect(legendBar).not.toBeNull();
+    expect(tabpanel).not.toBeNull();
+    expect(
+      Boolean(rail!.compareDocumentPosition(legendContainer!) & Node.DOCUMENT_POSITION_FOLLOWING),
+    ).toBe(true);
+    expect(
+      Boolean(
+        legendContainer!.compareDocumentPosition(tabpanel!) & Node.DOCUMENT_POSITION_FOLLOWING,
+      ),
+    ).toBe(true);
+
+    expect(stepTabs[0].classList.contains('stepper__step-btn--active')).toBe(true);
     expect(hostEl.querySelector('.stepper__panel-title')?.textContent).toContain('Safety & Health');
 
     const prevBtn = hostEl.querySelector<HTMLButtonElement>('.stepper__prev-btn');
     expect(prevBtn?.disabled).toBe(true);
 
+    // Attempt advance while Step 1 is incomplete -> blocked & marks Step 1 red/invalid; review jump disabled
+    const reviewJumpBtn = hostEl.querySelector<HTMLButtonElement>('.stepper__review-jump-btn');
+    expect(reviewJumpBtn?.disabled).toBe(true);
+    hostEl.querySelector<HTMLButtonElement>('.stepper__next-btn')?.click();
+    await fixture.whenStable();
+    expect(emittedSteps).toEqual([]);
+    expect(stepTabs[0].classList.contains('stepper__step-btn--invalid')).toBe(true);
+    expect(hostEl.querySelector('.stepper__validation-alert')).not.toBeNull();
+
+    // Fill Step 1 -> turns green and clears alert, allowing Next Step
+    fixture.componentRef.setInput('answers', {
+      item_safeword: { selectedOption: 'opt_traffic' },
+    });
+    await fixture.whenStable();
+    expect(stepTabs[0].classList.contains('stepper__step-btn--done')).toBe(true);
+    expect(hostEl.querySelector('.stepper__validation-alert')).toBeNull();
+
     hostEl.querySelector<HTMLButtonElement>('.stepper__next-btn')?.click();
     await fixture.whenStable();
     expect(emittedSteps).toEqual([1]);
+
+    // Move to Step 2 and fill it -> Review step becomes accessible
+    fixture.componentRef.setInput('activeStep', 1);
+    fixture.componentRef.setInput('answers', {
+      item_safeword: { selectedOption: 'opt_traffic' },
+      item_rope: { primaryScale: 'enjoy' },
+    });
+    await fixture.whenStable();
 
     (stepTabs[2] as HTMLButtonElement).click();
     await fixture.whenStable();
@@ -127,8 +169,8 @@ describe('ChecklistStepperComponent', () => {
   });
 
   // Cenário: Entrada no passo final de Revisão Final.
-  // Objetivo: Exibir todas as categorias em accordion expandido por padrão e permitir recolher/expandir e finalizar.
-  it('should display all categories expanded in accordion on the final review step and allow collapse/expand and finish', async () => {
+  // Objetivo: Exibir todas as categorias em accordion expandido por padrão e exigir tudo preenchido para habilitar Finalizar.
+  it('should display all categories expanded in accordion on the final review step and enable finish in green only when completed', async () => {
     await setBaseInputs({ activeStep: 2 });
 
     const hostEl = fixture.nativeElement as HTMLElement;
@@ -146,9 +188,23 @@ describe('ChecklistStepperComponent', () => {
     await fixture.whenStable();
     expect(panels.every((p) => p.classList.contains('mat-expanded'))).toBe(true);
 
+    const finishBtn = hostEl.querySelector<HTMLButtonElement>('.stepper__finish-btn')!;
+    expect(finishBtn.disabled).toBe(true);
+    expect(finishBtn.classList.contains('stepper__ready-btn')).toBe(false);
+
+    await setBaseInputs({
+      activeStep: 2,
+      answers: {
+        item_safeword: { selectedOption: 'opt_traffic' },
+        item_rope: { primaryScale: 'enjoy' },
+      },
+    });
+    expect(finishBtn.disabled).toBe(false);
+    expect(finishBtn.classList.contains('stepper__ready-btn')).toBe(true);
+
     const finishSpy = jest.fn<void, []>();
     component.finishChecklist.subscribe(finishSpy);
-    hostEl.querySelector<HTMLButtonElement>('.stepper__finish-btn')?.click();
+    finishBtn.click();
     expect(finishSpy).toHaveBeenCalledTimes(1);
   });
 

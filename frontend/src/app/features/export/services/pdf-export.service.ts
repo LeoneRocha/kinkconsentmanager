@@ -86,23 +86,11 @@ export class PdfExportService {
         style: 'docTitle',
       },
       {
-        columns: [
-          {
-            text: [
-              { text: `${texts.schemaVersionLabel}: `, bold: true, color: '#475569' },
-              { text: schema.schemaVersion, color: '#0F172A' },
-            ],
-            style: 'metaText',
-          },
-          {
-            text: [
-              { text: `${texts.generatedAtLabel}: `, bold: true, color: '#475569' },
-              { text: texts.generatedAtValue, color: '#0F172A' },
-            ],
-            style: 'metaText',
-            alignment: 'right',
-          },
+        text: [
+          { text: `${texts.generatedAtLabel}: `, bold: true, color: '#475569' },
+          { text: texts.generatedAtValue, color: '#0F172A' },
         ],
+        style: 'metaText',
         margin: [0, 4, 0, 6],
       },
       {
@@ -266,7 +254,7 @@ export class PdfExportService {
       footer: (currentPage: number, pageCount: number): Content => ({
         columns: [
           {
-            text: `${texts.title} — v${schema.schemaVersion}`,
+            text: texts.title,
             style: 'footerText',
             alignment: 'left',
           },

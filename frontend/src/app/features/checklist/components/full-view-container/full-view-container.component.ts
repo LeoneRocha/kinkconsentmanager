@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject, input, output } from '@angular/core';
 import { DOCUMENT } from '@angular/common';
-import { ButtonModule } from 'primeng/button';
+import { MatButtonModule } from '@angular/material/button';
 import {
   GroupDefinition,
   ItemDefinition,
@@ -26,7 +26,7 @@ import {
  */
 @Component({
   selector: 'app-full-view-container',
-  imports: [ButtonModule, DynamicQuestionItemComponent],
+  imports: [MatButtonModule, DynamicQuestionItemComponent],
   templateUrl: './full-view-container.component.html',
   styleUrl: './full-view-container.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

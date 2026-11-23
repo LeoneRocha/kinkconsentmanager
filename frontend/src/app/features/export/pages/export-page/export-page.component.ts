@@ -10,11 +10,10 @@ import {
   viewChild,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { MatButtonModule } from '@angular/material/button';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
-import { MessageService } from 'primeng/api';
-import { ButtonModule } from 'primeng/button';
-import { MessageModule } from 'primeng/message';
-import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { take } from 'rxjs';
 import { ExportFormat, ExportResult, ResolvedPreviewTexts } from '../../../../core/models';
 import { SCHEMA_REPOSITORY_TOKEN } from '../../../../core/repositories';
@@ -23,7 +22,7 @@ import {
   ChecklistStateService,
   I18nService,
 } from '../../../../core/services';
-import { FullGridPreviewComponent } from '../../../../shared/components';
+import { ExportPreviewLayout, FullGridPreviewComponent } from '../../../../shared/components';
 import { ExportActionsToolbarComponent } from '../../components/export-actions-toolbar';
 import {
   ChecklistFlattenService,
@@ -39,9 +38,8 @@ import {
 @Component({
   selector: 'app-export-page',
   imports: [
-    ButtonModule,
-    MessageModule,
-    ProgressSpinnerModule,
+    MatButtonModule,
+    MatProgressSpinnerModule,
     ExportActionsToolbarComponent,
     FullGridPreviewComponent,
   ],
@@ -54,7 +52,7 @@ export class ExportPageComponent implements OnInit {
   private readonly autosave = inject(ChecklistAutosaveService);
   private readonly i18n = inject(I18nService);
   private readonly schemaRepository = inject(SCHEMA_REPOSITORY_TOKEN);
-  private readonly messageService = inject(MessageService);
+  private readonly snackBar = inject(MatSnackBar);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
   private readonly checklistFlatten = inject(ChecklistFlattenService);
@@ -69,6 +67,8 @@ export class ExportPageComponent implements OnInit {
   protected readonly isLoadingSchema = signal<boolean>(false);
   protected readonly loadError = signal<boolean>(false);
   protected readonly busyFormat = signal<ExportFormat | null>(null);
+  protected readonly previewLayout = signal<ExportPreviewLayout | null>(null);
+  protected readonly hasSelectedLayout = computed<boolean>(() => this.previewLayout() !== null);
 
   protected readonly schema = this.checklistState.schema;
   protected readonly answers = this.checklistState.answers;
@@ -112,6 +112,10 @@ export class ExportPageComponent implements OnInit {
     void this.router.navigate(['/checklist']);
   }
 
+  protected onPreviewLayoutChange(layout: ExportPreviewLayout): void {
+    this.previewLayout.set(layout);
+  }
+
   protected async onExportPng(): Promise<void> {
     const captureElement = this.pngCaptureContainer()?.nativeElement;
     if (!captureElement || !this.hasSchema() || this.busyFormat() !== null) {
@@ -120,7 +124,10 @@ export class ExportPageComponent implements OnInit {
 
     this.busyFormat.set('png');
     try {
-      const result = await this.pngExport.exportElementAsPng(captureElement);
+      const result = await this.pngExport.exportElementAsPng(
+        captureElement,
+        this.buildExportFilename(),
+      );
       this.notifyExportResult(result);
     } finally {
       this.busyFormat.set(null);
@@ -137,7 +144,12 @@ export class ExportPageComponent implements OnInit {
     this.busyFormat.set('pdf');
     try {
       const rows = this.checklistFlatten.flatten(activeSchema, this.answers(), texts);
-      const result = await this.pdfExport.exportPdf(activeSchema, rows, texts);
+      const result = await this.pdfExport.exportPdf(
+        activeSchema,
+        rows,
+        texts,
+        this.buildExportFilename(),
+      );
       this.notifyExportResult(result);
     } finally {
       this.busyFormat.set(null);
@@ -152,7 +164,7 @@ export class ExportPageComponent implements OnInit {
     this.busyFormat.set('json');
     try {
       const draft = this.checklistState.exportDraftSnapshot(this.i18n.currentLang());
-      const result = this.jsonDraft.exportDraft(draft);
+      const result = this.jsonDraft.exportDraft(draft, this.buildExportFilename());
       this.notifyExportResult(result);
     } finally {
       this.busyFormat.set(null);
@@ -176,11 +188,9 @@ export class ExportPageComponent implements OnInit {
       if (validation.valid && validation.draft) {
         this.checklistState.importDraft(validation.draft);
         this.generatedAtDate.set(new Date());
-        this.messageService.add({
-          severity: 'success',
-          summary: this.t('importJson'),
-          detail: this.t('importSuccess'),
-          life: 4000,
+        this.snackBar.open(`${this.t('importJson')} — ${this.t('importSuccess')}`, 'OK', {
+          duration: 4000,
+          panelClass: ['kcm-snackbar-success'],
         });
         return;
       }
@@ -188,21 +198,27 @@ export class ExportPageComponent implements OnInit {
       const isIncompatibleVersion = validation.errors.some((error) =>
         error.toLowerCase().includes('incompatible'),
       );
-      this.messageService.add({
-        severity: 'error',
-        summary: this.t('importJson'),
-        detail: isIncompatibleVersion
-          ? this.t('importErrorIncompatibleVersion')
-          : this.t('importErrorInvalidJson'),
-        life: 5000,
-      });
+      this.snackBar.open(
+        `${this.t('importJson')} — ${
+          isIncompatibleVersion
+            ? this.t('importErrorIncompatibleVersion')
+            : this.t('importErrorInvalidJson')
+        }`,
+        'OK',
+        {
+          duration: 5000,
+          panelClass: ['kcm-snackbar-error'],
+        },
+      );
     } catch {
-      this.messageService.add({
-        severity: 'error',
-        summary: this.t('importJson'),
-        detail: this.t('importErrorInvalidJson'),
-        life: 5000,
-      });
+      this.snackBar.open(
+        `${this.t('importJson')} — ${this.t('importErrorInvalidJson')}`,
+        'OK',
+        {
+          duration: 5000,
+          panelClass: ['kcm-snackbar-error'],
+        },
+      );
     } finally {
       this.busyFormat.set(null);
     }
@@ -218,11 +234,17 @@ export class ExportPageComponent implements OnInit {
     this.busyFormat.set('csv');
     try {
       const rows = this.checklistFlatten.flatten(activeSchema, this.answers(), texts);
-      const result = this.csvExport.exportCsv(rows);
+      const result = this.csvExport.exportCsv(rows, this.buildExportFilename());
       this.notifyExportResult(result);
     } finally {
       this.busyFormat.set(null);
     }
+  }
+
+  private buildExportFilename(): string {
+    const mode = this.previewLayout() ?? 'modern';
+    const dateStamp = new Date().toISOString().slice(0, 10);
+    return `kink-consent-checklist-${mode}-${dateStamp}`;
   }
 
   private loadSchemaIfNeeded(forceReload = false): void {
@@ -250,21 +272,21 @@ export class ExportPageComponent implements OnInit {
 
   private notifyExportResult(result: ExportResult): void {
     if (result.success) {
-      this.messageService.add({
-        severity: 'success',
-        summary: result.filename,
-        detail: this.t('exportSuccess'),
-        life: 4000,
+      this.snackBar.open(`${result.filename} — ${this.t('exportSuccess')}`, 'OK', {
+        duration: 4000,
+        panelClass: ['kcm-snackbar-success'],
       });
       return;
     }
 
-    this.messageService.add({
-      severity: 'error',
-      summary: result.filename,
-      detail: result.errorMessage || this.t('exportError'),
-      life: 5000,
-    });
+    this.snackBar.open(
+      `${result.filename} — ${result.errorMessage || this.t('exportError')}`,
+      'OK',
+      {
+        duration: 5000,
+        panelClass: ['kcm-snackbar-error'],
+      },
+    );
   }
 
   private readFileAsText(file: File): Promise<string> {

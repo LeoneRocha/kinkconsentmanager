@@ -4,7 +4,7 @@
 .export-page {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 1.5rem;
   width: 100%;
 
   &__header {
@@ -80,15 +80,177 @@
     @include m.card-surface;
   }
 
+  &__error-banner {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.625rem;
+    padding: 0.75rem 1rem;
+    border: 1px solid rgba(211, 47, 47, 0.35);
+    border-radius: v.$radius-sm;
+    background-color: rgba(211, 47, 47, 0.1);
+    color: v.$scale-hard-limit;
+    font-weight: 500;
+  }
+
   &__retry-btn {
     min-height: v.$min-touch-target;
     gap: 0.5rem;
   }
 
-  &__preview {
+  &__step-card {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1.25rem;
+    @include m.card-surface;
+
+    @include m.respond-md {
+      padding: 1.5rem;
+    }
+  }
+
+  &__step-section {
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
+  }
+
+  &__step-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  &__step-badge {
+    width: 1.875rem;
+    height: 1.875rem;
+    border-radius: 9999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 0.875rem;
+    font-weight: 700;
+    background-color: v.$accent-soft;
+    border: 1.5px solid v.$accent-primary;
+    color: v.$text-primary;
+    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+
+    &--done {
+      background-color: #16a34a;
+      border-color: #16a34a;
+      color: #ffffff;
+    }
+  }
+
+  &__step-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+  }
+
+  &__step-title {
+    margin: 0;
+    font-size: 1.0625rem;
+    font-weight: 700;
+    color: v.$text-primary;
+  }
+
+  &__step-hint {
+    margin: 0;
+    font-size: 0.875rem;
+    color: v.$text-secondary;
+  }
+
+  &__layout-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+
+    @include m.respond-md {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  &__layout-card {
+    display: flex;
+    align-items: center;
+    gap: 0.875rem;
+    padding: 1rem 1.125rem;
+    border: 1.5px solid v.$border-color;
+    border-radius: v.$radius-md;
+    background-color: v.$surface-subtle;
+    color: v.$text-primary;
+    text-align: left;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+
+    &:hover {
+      border-color: v.$border-strong;
+      background-color: v.$surface-card;
+    }
+
+    &:focus-visible {
+      @include m.focus-ring(v.$accent-primary);
+    }
+
+    &--selected {
+      border-color: #16a34a;
+      background-color: rgba(22, 163, 74, 0.14);
+      box-shadow: 0 0 0 1px #16a34a;
+    }
+  }
+
+  &__layout-icon {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: v.$radius-sm;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    background-color: v.$surface-card;
+    border: 1px solid v.$border-color;
+    color: v.$text-primary;
+    font-size: 1.125rem;
+
+    .export-page__layout-card--selected & {
+      background-color: #16a34a;
+      border-color: #16a34a;
+      color: #ffffff;
+    }
+  }
+
+  &__layout-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  &__layout-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: v.$text-primary;
+  }
+
+  &__layout-desc {
+    font-size: 0.8125rem;
+    line-height: 1.4;
+    color: v.$text-secondary;
+  }
+
+  &__layout-check {
+    color: #22c55e;
+    font-size: 1.25rem;
+    flex-shrink: 0;
+  }
+
+  &__preview {
+    display: flex;
+    flex-direction: column;
+    gap: 0.875rem;
   }
 
   &__preview-heading {
@@ -98,18 +260,50 @@
     color: v.$text-primary;
   }
 
+  &__preview-empty {
+    @include m.card-surface;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    padding: 2.5rem 1.25rem;
+    text-align: center;
+    border-style: dashed;
+  }
+
+  &__preview-empty-icon {
+    font-size: 2rem;
+    color: v.$text-muted;
+  }
+
+  &__preview-empty-text {
+    margin: 0;
+    max-width: 36rem;
+    font-size: 0.9375rem;
+    color: v.$text-secondary;
+  }
+
   &__preview-scroll {
     width: 100%;
     overflow-x: auto;
     border-radius: v.$radius-md;
   }
 
-  &__offscreen-capture {
+  &__offscreen-host {
     position: fixed;
     left: -9999px;
     top: 0;
-    width: 1200px;
     pointer-events: none;
+    overflow: visible;
+  }
+
+  &__capture-surface {
+    width: 1200px;
     background-color: #ffffff;
+
+    &--classic {
+      width: 1360px;
+    }
   }
 }

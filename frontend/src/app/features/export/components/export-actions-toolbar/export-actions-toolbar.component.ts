@@ -7,7 +7,7 @@ import {
   output,
   viewChild,
 } from '@angular/core';
-import { ButtonModule } from 'primeng/button';
+import { MatButtonModule } from '@angular/material/button';
 import { ExportFormat } from '../../../../core/models';
 
 /**
@@ -15,7 +15,7 @@ import { ExportFormat } from '../../../../core/models';
  */
 @Component({
   selector: 'app-export-actions-toolbar',
-  imports: [ButtonModule],
+  imports: [MatButtonModule],
   templateUrl: './export-actions-toolbar.component.html',
   styleUrl: './export-actions-toolbar.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -23,6 +23,7 @@ import { ExportFormat } from '../../../../core/models';
 export class ExportActionsToolbarComponent {
   readonly busyFormat = input<ExportFormat | null>(null);
   readonly hasSchema = input<boolean>(false);
+  readonly exportReady = input<boolean>(true);
 
   readonly backLabel = input<string>('Voltar ao Checklist');
   readonly pngLabel = input<string>('Baixar PNG');
@@ -42,27 +43,30 @@ export class ExportActionsToolbarComponent {
 
   protected readonly isBusy = computed<boolean>(() => this.busyFormat() !== null);
   protected readonly actionsDisabled = computed<boolean>(() => !this.hasSchema() || this.isBusy());
+  protected readonly exportActionsDisabled = computed<boolean>(
+    () => !this.hasSchema() || !this.exportReady() || this.isBusy(),
+  );
 
   protected onBackClick(): void {
     this.backToChecklist.emit();
   }
 
   protected onExportPngClick(): void {
-    if (this.actionsDisabled()) {
+    if (this.exportActionsDisabled()) {
       return;
     }
     this.exportPng.emit();
   }
 
   protected onExportPdfClick(): void {
-    if (this.actionsDisabled()) {
+    if (this.exportActionsDisabled()) {
       return;
     }
     this.exportPdf.emit();
   }
 
   protected onExportJsonClick(): void {
-    if (this.actionsDisabled()) {
+    if (this.exportActionsDisabled()) {
       return;
     }
     this.exportJson.emit();
@@ -76,7 +80,7 @@ export class ExportActionsToolbarComponent {
   }
 
   protected onExportCsvClick(): void {
-    if (this.actionsDisabled()) {
+    if (this.exportActionsDisabled()) {
       return;
     }
     this.exportCsv.emit();

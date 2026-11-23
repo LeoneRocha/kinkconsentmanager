@@ -61,6 +61,19 @@
     "importErrorInvalidJson": "Arquivo inválido: não foi possível ler um rascunho JSON válido.",
     "importErrorIncompatibleVersion": "Versão do schema incompatível com este checklist.",
     "previewHeading": "Resumo Completo das Respostas",
+    "exportLayoutLabel": "Estilo da prévia",
+    "exportLayoutModern": "Visualização Moderna",
+    "exportLayoutClassic": "Visualização Clássica",
+    "exportStep1Title": "1. Escolha o estilo do resumo",
+    "exportStep1Hint": "Selecione Visualização Moderna ou Visualização Clássica para ver o resumo e liberar os botões de exportação.",
+    "exportStep2Title": "2. Exporte seu checklist",
+    "exportLayoutModernDesc": "Tabelas detalhadas por categoria com pílulas coloridas e leitura facilitada.",
+    "exportLayoutClassicDesc": "Folha compacta em múltiplas colunas com círculos coloridos no estilo tradicional.",
+    "exportSelectLayoutPrompt": "Escolha acima entre Visualização Moderna ou Visualização Clássica para visualizar o resumo completo e habilitar os botões de exportação.",
+    "stepIncompleteAlert": "Preencha todos os itens deste passo antes de avançar.",
+    "saveButton": "Salvar",
+    "autosaveToggleLabel": "Salvamento automático",
+    "autosaveDisabled": "Salvamento automático desativado",
     "roleHeader": "Papel",
     "valueHeader": "Resposta",
     "notesHeader": "Observações",
@@ -110,12 +123,15 @@
     "a11yClosePanel": "Fechar painel de acessibilidade",
     "autosaveActive": "Autosave criptografado ativo (a cada 1 min)",
     "autosaveSaving": "Salvando preenchimento criptografado...",
-    "autosaveSavedAt": "Salvo automaticamente (criptografado) às"
+    "autosaveSavedAt": "Salvo automaticamente (criptografado) às",
+    "autosaveSaveNow": "Salvar agora (criptografado)",
+    "autosaveSavedNow": "Preenchimento salvo com criptografia no navegador.",
+    "headerControlsSection": "Visualização, Filtros e Ações"
   },
   "roles": {
     "giving_receiving": {
-      "primary": "Ativo / Aplicando",
-      "secondary": "Passivo / Recebendo"
+      "primary": "Dar",
+      "secondary": "Receber"
     },
     "dominant_submissive": {
       "primary": "Dominante (Dom)",
