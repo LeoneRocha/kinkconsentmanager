@@ -2,6 +2,8 @@
 
 Documento consolidando todas as alterações funcionais, melhorias de interface (UI/UX), ajustes visuais, exportação/impressão e qualidade implementadas no frontend do **KinkConsentManager**.
 
+> **Documentação relacionada:** [Índice Geral](./README.md) · [Arquitetura](./ARCHITECTURE.md) · [Diretrizes do Projeto](./PROJECT_GUIDELINES.md) · [Blueprint](./Bueprint.md)
+
 ---
 
 ## 1. Visão Geral da Base Atual

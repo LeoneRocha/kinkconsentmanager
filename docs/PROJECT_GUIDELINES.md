@@ -3,7 +3,7 @@
 Documento normativo de referência para desenvolvedores e agentes de IA do **KinkConsentManager**.
 Consolida os padrões técnicos, regras de arquitetura, qualidade e governança aplicáveis à base de código atual (V1 Checklist em `frontend/`) e às diretrizes preparatórias genéricas para a futura evolução do Backend (**Coming Soon**).
 
-**Último alinhamento documental:** `2026-11-22` (Angular 22 zoneless, PrimeNG 22, Jest 30 + `jest-preset-angular` 17, camada genérica CRUD e Backend marcado como Coming Soon).
+**Último alinhamento documental:** `2026-11-22` (Angular 22 zoneless, Angular Material 22.3, Font Awesome 7, Web Crypto AES-GCM, Jest 30 + `jest-preset-angular` 17, camada genérica CRUD e Backend marcado como Coming Soon).
 
 ---
 
@@ -12,7 +12,7 @@ Consolida os padrões técnicos, regras de arquitetura, qualidade e governança 
 1. [Introdução](#1-introdução)
 2. [Estrutura do Repositório e Stack de Referência](#2-estrutura-do-repositório-e-stack-de-referência)
 3. [Backend (Genérico — Coming Soon)](#3-backend-genérico--coming-soon)
-4. [Frontend (Angular 22 + PrimeNG 22 — Ativo na V1)](#4-frontend-angular-22--primeng-22--ativo-na-v1)
+4. [Frontend (Angular 22 + Angular Material 22.3 — Ativo na V1)](#4-frontend-angular-22--angular-material-223--ativo-na-v1)
 5. [Testes e Qualidade (Jest 30 + Sonar)](#5-testes-e-qualidade-jest-30--sonar)
 6. [Padrões Obrigatórios](#6-padrões-obrigatórios)
 7. [Checklist Rápido de Entrega](#7-checklist-rápido-de-entrega)
@@ -72,14 +72,16 @@ kinkconsentmanager/
 ├── docs/                                # Documentação técnica, specs V1, testes e atualização de pacotes
 │   ├── ARCHITECTURE.md
 │   ├── PROJECT_GUIDELINES.md
+│   ├── CHANGELOG_MELHORIAS.md
 │   ├── README.md
 │   ├── Bueprint.md
 │   ├── Features/
 │   └── Frontend/
-├── frontend/                            # SPA Angular 22 + PrimeNG 22 (V1 Checklist & Export)
-│   ├── src/app/core/                    # Models, Repositories (Schema + BaseCrud) e Services (State, Data, Crud, I18n, Storage)
-│   ├── src/app/shared/                  # Dumb Components (4+1) e SchemaTranslatePipe
-│   ├── src/app/features/                # Features lazy: checklist e export
+├── frontend/                            # SPA Angular 22 + Angular Material 22.3 (V1 Checklist & Export)
+│   ├── public/                          # Favicons (silhueta de usuário SVG/ICO/PNG), manifest PWA e og-image.png
+│   ├── src/app/core/                    # Models, Repositories (Schema, BrowserStorage, UserPreferences, BaseCrud) e Services (State, Autosave, Crypto, I18n, Theme, Accessibility, Storage)
+│   ├── src/app/shared/                  # Dumb Components (6 componentes 4+1) e SchemaTranslatePipe
+│   ├── src/app/features/                # Features lazy: checklist (mode selector, stepper, classic, full, quick_fill) e export
 │   ├── src/assets/                      # checklist-v1.json e i18n/{pt-BR,en-US}.json
 │   ├── src/setup-jest.ts                # Setup zoneless e polyfills jsdom para Jest 30
 │   ├── jest.config.js                   # Configuração Jest + jest-preset-angular + 6 reporters
@@ -107,9 +109,9 @@ kinkconsentmanager/
 | ---- | ---------- |
 | Angular & CLI | Angular `^22.1.0` (Standalone + Signals + **zoneless**), `@angular/build` / `@angular/cli` `^22.1.2` |
 | Linguagem & Reatividade | TypeScript `~6.0.2` (`strict: true`, `strictTemplates: true`), RxJS `~7.8.0` |
-| Design System & UI | PrimeNG `^22.1.5`, `@primeuix/themes` `^3.1.1` (Aura), PrimeIcons `^8.0.2`, `@angular/cdk` `^22.3.0` |
+| Design System & UI | **Angular Material** `^22.3.0`, `@angular/cdk` `^22.3.0`, **Font Awesome Free** `^7.0.1`, fonte `Nunito` |
 | Internacionalização | `@ngx-translate/core` `^18.1.0`, `@ngx-translate/http-loader` `^18.1.0` (`pt-BR`, `en-US`) |
-| Exportação Client-Side | `html-to-image` `^1.11.13`, `pdfmake` `^0.3.15`, `@types/pdfmake` `^0.3.3` |
+| Exportação & Impressão Client-Side | `html-to-image` `^1.11.13`, `pdfmake` `^0.3.15`, `@types/pdfmake` `^0.3.3`, `@media print` (`window.print()`) |
 | Testes & Coverage | **Jest** `^30.5.2`, `jest-preset-angular` `^17.0.3`, `jest-environment-jsdom` `^30.5.2`, `jsdom` `^28.0.0`, `@types/jest` `^30.0.0` |
 | Reporters & Qualidade | `jest-junit`, `jest-html-reporter`, `jest-sonar`, `jest-stare`, `jest-html-reporters`, Prettier `^3.8.1`, SonarCloud |
 | Runtime Verificado | Node `24.16.0` · npm `11.14.1` · Angular CLI `22.1.2` |
@@ -119,9 +121,9 @@ kinkconsentmanager/
 
 | Módulo / Recurso | Status | Onde Vive |
 | ---------------- | ------ | --------- |
-| Checklist Interativo (Accordion, View Full, Quick-Fill Wizard) | **Entregue (V1)** | `frontend/src/app/features/checklist/` |
-| Persistência Local (`localStorage`) e i18n (`pt-BR` / `en-US`) | **Entregue (V1)** | `frontend/src/app/core/services/` |
-| Exportação Client-Side (PNG `1200px`, PDF `pdfmake`, JSON Draft import/export, CSV BOM) | **Entregue (V1)** | `frontend/src/app/features/export/` |
+| Seleção Inicial de Modo, Checklist Interativo (Passos, Clássico, Completo, Rápido Inline), Acessibilidade & Tema | **Entregue (V1)** | `frontend/src/app/features/checklist/` |
+| Persistência Local Criptografada (Web Crypto AES-GCM), Autosave e i18n (`pt-BR` / `en-US`) | **Entregue (V1)** | `frontend/src/app/core/services/` |
+| Exportação & Impressão Client-Side (Prévia Moderna/Clássica, PNG, PDF `pdfmake`, Imprimir `@media print`, JSON import/export, CSV BOM) | **Entregue (V1)** | `frontend/src/app/features/export/` |
 | Abstração Genérica CRUD (`BaseDataService`, `BaseCrudService`, `BaseCrudRepository`) | **Entregue (V1)** | `frontend/src/app/core/{repositories,services}/` |
 | Backend REST / Persistência Remota / E2E Compartilhamento / Contas | **Coming Soon (V2+)** | Fora do escopo da V1 (ver [Bueprint.md](./Bueprint.md)) |
 
@@ -155,7 +157,7 @@ O frontend já expõe contratos genéricos em [crud.model.ts](../frontend/src/ap
 
 ---
 
-## 4. Frontend (Angular 22 + PrimeNG 22 — Ativo na V1)
+## 4. Frontend (Angular 22 + Angular Material 22.3 — Ativo na V1)
 
 ### 4.1 Camada de Dados, Repositórios e Serviços Genéricos
 
@@ -183,7 +185,7 @@ O frontend já expõe contratos genéricos em [crud.model.ts](../frontend/src/ap
    meu-componente/
    ├── meu-componente.component.ts       # Apenas Signals, inputs/outputs, inject() e orquestração
    ├── meu-componente.component.html     # Template acessível e semântico (zero [innerHTML] bruto)
-   ├── meu-componente.component.scss     # Estilos isolados respeitando tokens PrimeNG / CSS custom properties
+   ├── meu-componente.component.scss     # Estilos isolados respeitando tokens Material e variáveis CSS `--kcm-*`
    ├── meu-componente.component.spec.ts  # Testes unitários Jest 30 + TestBed zoneless
    └── index.ts                          # Barrel export da pasta do componente
    ```
@@ -270,10 +272,10 @@ npm.cmd audit --omit=dev
 
 ### 5.3 Baseline Verificado (V1 Checklist)
 
-- **Suíte:** `29 passed, 29 total` arquivos `.spec.ts` · `150 passed, 150 total` testes unitários (`0` falhas).
-- **Cobertura Global Jest:** Statements **`92,18%`** · Branches **`75,38%`** · Functions **`89,40%`** · Lines **`91,84%`** (`core/repositories` e `core/services` acima de `95%`).
+- **Suíte:** `41 passed, 41 total` arquivos `.spec.ts` · `201 passed, 201 total` testes unitários (`0` falhas).
+- **Cobertura Global Jest:** Statements **`90,3%`** · Branches **`74,32%`** · Functions **`90,52%`** · Lines **`90,04%`**.
 - **Relatórios Sonar:** [sonar-project.properties](../frontend/sonar-project.properties) aponta para `frontend/coverage/lcov.info` e `frontend/coverage/sonar/sonar-report.xml`.
-- Detalhes completos em [Diretrizes-Coverage-Frontend-KinkConsentManager.md](./Frontend/COVERAGE%20AND%20TEST/Diretrizes-Coverage-Frontend-KinkConsentManager.md) e [Diretrizes-CodeSmell-KinkConsentManagerUI.md](./Frontend/COVERAGE%20AND%20TEST/Diretrizes-CodeSmell-KinkConsentManagerUI.md).
+- Detalhes completos em [CHANGELOG_MELHORIAS.md](./CHANGELOG_MELHORIAS.md), [Diretrizes-Coverage-Frontend-KinkConsentManager.md](./Frontend/COVERAGE%20AND%20TEST/Diretrizes-Coverage-Frontend-KinkConsentManager.md) e [Diretrizes-CodeSmell-KinkConsentManagerUI.md](./Frontend/COVERAGE%20AND%20TEST/Diretrizes-CodeSmell-KinkConsentManagerUI.md).
 
 ### 5.4 Testes Backend (Coming Soon)
 
@@ -307,7 +309,7 @@ Quando o backend for iniciado na V2+, deverá acompanhar testes automatizados eq
 - [ ] Nenhum `[innerHTML]` inseguro ou vazamento de subscrição RxJS foi introduzido.
 - [ ] `npx.cmd tsc -p tsconfig.app.json --noEmit` e `tsconfig.spec.json` passam com `0` erros.
 - [ ] `npx.cmd prettier --check "src/**/*.{ts,html,scss,json}"` conclui sem violações.
-- [ ] `npm.cmd run test:ci` e `npm.cmd run test:coverage` passam 100% (**29/29 suítes · 150/150 testes**).
+- [ ] `npm.cmd run test:ci` e `npm.cmd run test:coverage` passam 100% (**41/41 suítes · 201/201 testes**).
 - [ ] `npm.cmd run build:prod` conclui sem erros gerando artefatos e assets esperados.
 - [ ] `npm.cmd audit --omit=dev` reporta `0` vulnerabilidades em dependências de produção.
 - [ ] Configurações `nginx.conf`, `Dockerfile`, `docker-compose*.yml` e `sonar-project.properties` permanecem consistentes.
@@ -321,6 +323,7 @@ Quando o backend for iniciado na V2+, deverá acompanhar testes automatizados eq
 | --------- | ---------------------- |
 | [README.md](./README.md) | Índice geral, stack atual, URLs e mapa da documentação |
 | [ARCHITECTURE.md](./ARCHITECTURE.md) | Arquitetura em camadas V1, diagramas, decisões técnicas e Backend Coming Soon |
+| [CHANGELOG_MELHORIAS.md](./CHANGELOG_MELHORIAS.md) | Resumo consolidado das melhorias de UX/UI, ícones, impressão e testes |
 | [Bueprint.md](./Bueprint.md) | Visão de produto completa, arquitetura Zero-Knowledge e roadmap pós-V1 |
 | [LEVANTAMENTO_FUNCIONAL_TECNICO.md](./Features/LEVANTAMENTO_FUNCIONAL_TECNICO.md) | Requisitos funcionais/técnicos e fronteira oficial do escopo V1 Checklist |
 | [PLANO_IMPLEMENTACAO_FRONTEND.md](./Features/PLANO_IMPLEMENTACAO_FRONTEND.md) | Plano modular e arquitetura detalhada da entrega V1 Frontend |
@@ -328,8 +331,8 @@ Quando o backend for iniciado na V2+, deverá acompanhar testes automatizados eq
 | [Diretrizes-CodeSmell-Frontend-Generico.md](./Frontend/COVERAGE%20AND%20TEST/Diretrizes-CodeSmell-Frontend-Generico.md) | Guia genérico TypeScript/JS para saneamento de Code Smells e Sonar |
 | [Diretrizes-CodeSmell-KinkConsentManagerUI.md](./Frontend/COVERAGE%20AND%20TEST/Diretrizes-CodeSmell-KinkConsentManagerUI.md) | Diretrizes específicas de Code Smells, `OnPush`, 4+1, Sonar e segurança no projeto |
 | [Diretrizes-Coverage-Frontend-Generico.md](./Frontend/COVERAGE%20AND%20TEST/Diretrizes-Coverage-Frontend-Generico.md) | Padrões genéricos AAA, mocking e cobertura Jest / Vitest |
-| [Diretrizes-Coverage-Frontend-KinkConsentManager.md](./Frontend/COVERAGE%20AND%20TEST/Diretrizes-Coverage-Frontend-KinkConsentManager.md) | Mapa real da suíte Jest (29 arquivos / 150 testes) e metas de cobertura |
+| [Diretrizes-Coverage-Frontend-KinkConsentManager.md](./Frontend/COVERAGE%20AND%20TEST/Diretrizes-Coverage-Frontend-KinkConsentManager.md) | Mapa da suíte Jest (evoluída para 41 suítes / 201 testes) e metas de cobertura |
 | [GuiaGenericoAtualizacaoPacotesFrontend.md](./Frontend/UpdatePackages/GuiaGenericoAtualizacaoPacotesFrontend.md) | Processo genérico de governança e atualização de pacotes npm |
-| [GuiaAtualizacaoPacotes-KinkConsentManagerUI.md](./Frontend/UpdatePackages/GuiaAtualizacaoPacotes-KinkConsentManagerUI.md) | Procedimento operacional de atualização de blocos Angular/PrimeNG/Jest no projeto |
+| [GuiaAtualizacaoPacotes-KinkConsentManagerUI.md](./Frontend/UpdatePackages/GuiaAtualizacaoPacotes-KinkConsentManagerUI.md) | Procedimento operacional de atualização de blocos Angular/Material/Jest no projeto |
 | [2026-11-22-ConjuntoHomologado-Frontend.md](./Frontend/UpdatePackages/2026-11-22-ConjuntoHomologado-Frontend.md) | Baseline homologado de versões, build prod, testes Jest e `npm audit` |
 | [frontend/README.md](../frontend/README.md) | Guia rápido do pacote Angular CLI e comandos locais |

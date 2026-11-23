@@ -16,17 +16,17 @@ As versões vivas constam em [frontend/package.json](../frontend/package.json), 
 | Área | O que o repositório usa hoje |
 | ---- | ---------------------------- |
 | Frontend (V1 ativo) | Angular `^22.1.0` (Standalone, Signals, **zoneless**, `OnPush`), TypeScript `~6.0.2`, RxJS `~7.8.0` |
-| Design System & UI | PrimeNG `^22.1.5`, `@primeuix/themes` `^3.1.1` (Aura), PrimeIcons `^8.0.2`, `@angular/cdk` `^22.3.0` |
+| Design System & UI | **Angular Material** `^22.3.0`, `@angular/cdk` `^22.3.0`, **Font Awesome Free** `^7.0.1` e tipografia `Nunito` |
 | Internacionalização | `@ngx-translate/core` `^18.1.0` e `@ngx-translate/http-loader` `^18.1.0` (`pt-BR`, `en-US`) |
-| Schema & Persistência Local | Schema declarativo `checklist-v1.json` via `ISchemaRepository` + `localStorage` protegido (`LocalStoragePersistenceService`) |
-| Exportação Client-Side | PNG (`html-to-image` `^1.11.13`, `1200px`), PDF (`pdfmake` `^0.3.15` em *chunk lazy*), JSON Draft (export/import) e CSV UTF-8 BOM |
+| Schema, Segurança & Preferências | Schema `checklist-v1.json` (`ISchemaRepository`) + autosave criptografado Web Crypto AES-GCM (`CryptoService`, `ChecklistAutosaveService`, `BrowserStorageRepository`) + `UserPreferencesRepository`, `ThemeService` e `AccessibilityService` |
+| Exportação & Impressão Client-Side | **PNG** (`html-to-image` `^1.11.13`, `1200px` Moderna / `1360px` Clássica), **PDF** (`pdfmake` `^0.3.15` em *chunk lazy*), **Imprimir** (`window.print()` + `@media print`), **JSON Draft** (export/import) e **CSV** UTF-8 BOM (`kink-consent-checklist-<modern|classic>-YYYY-MM-DD.<ext>`) |
 | Camada Genérica CRUD | `ICrudOperations`, `BaseDataService`, `BaseCrudService`, `ICrudRepository`, `BaseCrudRepository`, `API_BASE_URL` |
 | Testes & Cobertura | **Jest** `^30.5.2`, `jest-preset-angular` `^17.0.3`, `jest-environment-jsdom` `^30.5.2`, `jsdom` `^28.0.0` |
 | Qualidade & Reporters | Prettier `^3.8.1`, SonarCloud (`sonar-project.properties`), `jest-junit`, `jest-sonar`, `jest-stare`, `jest-html-reporter`, `jest-html-reporters` |
 | Infraestrutura & Containers | Docker multi-stage ([Dockerfile](../frontend/Dockerfile)), Nginx Alpine com CSP e `/health` ([nginx.conf](../frontend/nginx.conf)), Compose e DevContainers |
 | **Backend** | **Coming Soon (Roadmap V2+)** — sem implementação na V1; contrato preparatório genérico documentado |
 
-**Baseline verificado da V1 (`2026-11-22`):** **29 arquivos `.spec.ts`** / **150 testes unitários aprovados (100%)**, cobertura global Jest de **92,18% Statements** / **91,84% Lines**, `build:prod` limpo e **0 vulnerabilidades** em `npm.cmd audit --omit=dev`.
+**Baseline verificado da V1 (`2026-11-22`):** **41 arquivos `.spec.ts`** / **201 testes unitários aprovados (100%)**, cobertura global Jest de **90,3% Statements** / **90,04% Lines**, `tsc` (`app` e `spec`) sem erros e `npm.cmd run build:prod` limpo.
 
 ---
 
@@ -62,6 +62,7 @@ As versões vivas constam em [frontend/package.json](../frontend/package.json), 
 | Visão Conceitual e Roadmap Futuro | [Bueprint.md](./Bueprint.md) |
 | Arquitetura em Camadas e Decisões Técnicas | [ARCHITECTURE.md](./ARCHITECTURE.md) |
 | Diretrizes Normativas do Projeto | [PROJECT_GUIDELINES.md](./PROJECT_GUIDELINES.md) |
+| Resumo de Alterações e Melhorias Recentes | [CHANGELOG_MELHORIAS.md](./CHANGELOG_MELHORIAS.md) |
 
 ### Especificação, Planejamento e Progresso V1
 
@@ -109,8 +110,8 @@ As versões vivas constam em [frontend/package.json](../frontend/package.json), 
 
 | Recurso | Caminho / URL | Descrição |
 | ------- | ------------- | --------- |
-| Checklist Interativo (Rota padrão) | `/checklist` | Preenchimento em Accordion + *Próxima Categoria*, *View Full* e *Quick-Fill Wizard* |
-| Prévia e Exportação | `/export` | Prévia *Full Grid* (`1200px`), PNG, PDF, JSON Draft (export/import) e CSV BOM |
+| Checklist Interativo (Rota padrão) | `/checklist` | Tela inicial de seleção de modo + Importar JSON, modos *Guiado (Passos)*, *Modo Clássico*, *Visão Completa* e *Preenchimento Rápido* inline |
+| Prévia e Exportação | `/export` | Seleção de estilo (*Visualização Moderna* ou *Visualização Clássica*) + **PNG**, **PDF**, **Imprimir** (`@media print`), **JSON Draft** (export/import) e **CSV BOM** |
 | Healthcheck Nginx (Docker) | `/health` | Resposta `200 OK` de disponibilidade do container frontend |
 
 ### Portas por Contexto

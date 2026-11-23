@@ -24,12 +24,15 @@ Documentação centralizada da arquitetura, princípios, camadas, padrões, deci
 O **KinkConsentManager** é uma plataforma *privacy-first* (arquitetura **Zero-Knowledge** no cliente) voltada para preenchimento guiado, visualização estruturada e exportação segura de checklists de limites e consentimento.
 
 - **Escopo oficial da V1 (implementado em `frontend/`):**
-  - Aplicação SPA **100% client-side** em **Angular 22** (Standalone Components, Signals e execução *zoneless*), com **PrimeNG 22** (tema Aura) e **PrimeIcons 8**.
+  - Aplicação SPA **100% client-side** em **Angular 22** (Standalone Components, Signals e execução *zoneless*), com **Angular Material 22.3**, **Font Awesome 7** e tipografia `Nunito`.
   - Rotas principais carregadas sob demanda (*lazy loading*): `/checklist` e `/export`.
+  - Tela inicial de entrada em `/checklist` (`ChecklistModeSelectorComponent`) com descrição e guia **Como preencher** dos 4 modos e opção de **Importar JSON**.
   - Arquitetura **Schema-Driven UI** (`checklist-v1.json`), completamente separada dos dicionários de internacionalização (`@ngx-translate/core` 18 em `pt-BR` e `en-US`).
-  - Três modos complementares de preenchimento: *Accordion + Próxima Categoria*, *View Full* e *Quick-Fill Wizard*.
-  - Persistência local resiliente em `localStorage` (`LocalStoragePersistenceService`), sem envio de respostas a servidores.
-  - Exportação e portabilidade 100% no navegador: **PNG (`1200px`)**, **PDF programático** (`pdfmake` em *chunk lazy*), **JSON Draft** (exportação e reimportação com validação de `schemaVersion`) e **CSV UTF-8 com BOM** (`\uFEFF`, compatível com Excel).
+  - Quatro modos complementares de preenchimento inline: *Guiado (Passos)* (`ChecklistStepperComponent` + `ChecklistStepRailComponent` com validação de conclusão e Revisão Final), *Modo Clássico* (`ClassicKinkSheetComponent`), *Visão Completa* (`FullViewContainerComponent`) e *Preenchimento Rápido* (`QuickFillWizardModalComponent` com atalhos `1–5`).
+  - Cabeçalho, barra de **Progresso**, **Steps** e **Legenda da Escala** unificados em bloco `sticky` único no topo com rolagem externa nativa do navegador em telas `>= 768px`.
+  - Controles globais de acessibilidade (`AccessibilityService`: leitura em voz alta, legendas visuais ao vivo, alto contraste WCAG AAA, tamanho de fonte e redução de animações) e alternância de tema claro/escuro (`ThemeService`).
+  - Persistência local resiliente com criptografia Web Crypto AES-GCM 256-bit (`CryptoService`, `ChecklistAutosaveService`, `BrowserStorageRepository`, `LocalStoragePersistenceService`), salvamento condicional apenas quando há alterações pendentes e zero envio de respostas a servidores.
+  - Prévia em 2 etapas (**Visualização Moderna** ou **Visualização Clássica**) e exportação/impressão 100% no navegador: **PNG (`1200px` / `1360px`)**, **PDF programático** (`pdfmake` em *chunk lazy*), **Imprimir** (`window.print()` + `@media print`), **JSON Draft** (exportação e reimportação com validação de `schemaVersion`) e **CSV UTF-8 com BOM** (`\uFEFF`), nomeados com `kink-consent-checklist-<modern|classic>-YYYY-MM-DD.<ext>`.
   - Camada genérica de contratos e acesso a dados já preparada (`ICrudOperations`, `BaseDataService`, `BaseCrudService`, `BaseCrudRepository`, `ISchemaRepository`) para futura evolução modular.
 - **Backend — Coming Soon (Roadmap V2+):**
   - Ainda **não existe implementação de backend** neste repositório na V1.
@@ -65,19 +68,19 @@ kinkconsentmanager/
 
 ```text
 frontend/src/app/
-├── app.component.{ts,html,scss,spec.ts}   # App Shell (alternância de idioma, toast/mensageria e RouterOutlet)
+├── app.component.{ts,html,scss,spec.ts}   # App Shell (topbar com ícone de usuário SVG, tema, idioma, acessibilidade, legendas ao vivo e RouterOutlet)
 ├── app.config.ts                          # Providers globais (Router, HttpClient, TranslateService, SCHEMA_REPOSITORY_TOKEN)
 ├── app.routes.ts                          # Roteamento raiz lazy (/checklist, /export)
 ├── core/
-│   ├── models/                            # Contratos IMutáveis, Schema, Respostas, ExportConfig, CrudModels e __tests__
-│   ├── repositories/                      # ISchemaRepository, StaticJsonSchemaRepository, ICrudRepository, BaseCrudRepository
-│   └── services/                          # BaseStateService, BaseDataService, BaseCrudService, ChecklistStateService, I18nService, LocalStoragePersistenceService
+│   ├── models/                            # Contratos imutáveis, Schema, Respostas/ChecklistViewMode, ExportConfig, CrudModels e __tests__
+│   ├── repositories/                      # ISchemaRepository, StaticJsonSchemaRepository, BrowserStorageRepository, UserPreferencesRepository, ICrudRepository, BaseCrudRepository
+│   └── services/                          # BaseStateService, BaseDataService, BaseCrudService, ChecklistStateService, ChecklistAutosaveService, CryptoService, I18nService, LocaleCatalogService, ThemeService, AccessibilityService, StorageService, LocalStoragePersistenceService
 ├── shared/
-│   ├── components/                        # 5 Dumb Components (4+1): dynamic-question-item, full-grid-preview, legend-bar, progress-indicator, scale-selector
+│   ├── components/                        # 6 Dumb Components (4+1): confirm-dialog, dynamic-question-item, full-grid-preview, legend-bar, progress-indicator, scale-selector
 │   └── pipes/                             # SchemaTranslatePipe (resolução reativa de chaves do schema)
 └── features/
-    ├── checklist/                         # Rotas, ChecklistPageComponent, CategoryAccordion, ChecklistHeader, FullViewContainer, QuickFillWizardModal e helpers
-    └── export/                            # Rotas, ExportPageComponent, ExportActionsToolbar e serviços (Flatten, PNG, PDF, JSON Draft, CSV, FileDownload)
+    ├── checklist/                         # Rotas, ChecklistPageComponent, ChecklistModeSelector, ChecklistHeader, ChecklistStepRail, ChecklistStepper, ClassicKinkSheet, FullViewContainer, QuickFillWizardModal, CategoryAccordion e helpers
+    └── export/                            # Rotas, ExportPageComponent, ExportActionsToolbar (PNG, PDF, Imprimir, JSON, CSV) e serviços (Flatten, PNG, PDF, JSON Draft, CSV, FileDownload)
 ```
 
 ---
@@ -92,14 +95,14 @@ flowchart TD
     Shell --> ChecklistRoute["/checklist (Lazy Feature)"]
     Shell --> ExportRoute["/export (Lazy Feature)"]
 
-    ChecklistRoute --> DumbKit["Shared Atomic UI Kit (5 Dumb Components + SchemaTranslatePipe)"]
+    ChecklistRoute --> DumbKit["Shared Atomic UI Kit (6 Dumb Components + SchemaTranslatePipe)"]
     ExportRoute --> DumbKit
 
-    ChecklistRoute --> CoreState["ChecklistStateService + BaseStateService + I18nService"]
+    ChecklistRoute --> CoreState["ChecklistStateService + ChecklistAutosaveService + CryptoService + I18nService"]
     ExportRoute --> CoreState
-    ExportRoute --> ExportServices["Export Services (Flatten, PNG, PDF Lazy, JSON Draft, CSV, Download)"]
+    ExportRoute --> ExportServices["Export Services (Flatten, PNG, PDF Lazy, Print, JSON Draft, CSV, Download)"]
 
-    CoreState --> Storage["LocalStoragePersistenceService (try/catch local)"]
+    CoreState --> Storage["BrowserStorageRepository + LocalStoragePersistenceService (AES-GCM local)"]
     ChecklistRoute --> RepoLayer["ISchemaRepository / StaticJsonSchemaRepository"]
     ExportRoute --> RepoLayer
 
@@ -116,30 +119,34 @@ flowchart TD
 - **Models (`core/models/`):** contratos tipados para schema (`ChecklistSchema`), respostas (`ChecklistAnswer`, `ChecklistDraft`), exportação (`ExportConfig`, `ExportResult`), paginação/CRUD genérico (`EntityId`, `QueryParams`, `PageRequest`, `PageResult<T>`, `ICrudOperations`) e suíte de integridade estrutural (`__tests__/schema-integrity.spec.ts`).
 - **Repositories (`core/repositories/`):**
   - `ISchemaRepository` + `SCHEMA_REPOSITORY_TOKEN`: abstrai a origem do checklist schema. Na V1 é provido por `StaticJsonSchemaRepository` (com cache e evicção de erro antes do `shareReplay(1)`).
+  - `BrowserStorageRepository` & `UserPreferencesRepository`: persistência tipada com escopo para respostas e preferências locais do usuário (tema, acessibilidade e modo de visualização).
   - `ICrudRepository<T, TId, TCreate, TUpdate>` + `BaseCrudRepository` + `createCrudRepositoryToken`: repositório genérico que delega persistência a um serviço `ICrudOperations` (ex.: `BaseDataService` ou `BaseCrudService`), com cache opcional em memória e invalidação automática em mutações.
 - **Services (`core/services/`):**
   - `BaseStateService<T>`: container reativo genérico baseado em Angular Signals (`state`, `select()`, `setState()`, `resetState()`).
   - `BaseDataService<T, ...>`: cliente HTTP genérico baseado em `HttpClient` e `API_BASE_URL`, padronizando `getAll`, `getPage`, `getById`, `create`, `update`, `patch` e `delete`.
   - `BaseCrudService<T, ...>`: camada de aplicação/domínio genérica sobre `ICrudOperations` com hooks de ciclo de vida (`beforeCreate`, `afterLoadList`, etc.).
-  - `ChecklistStateService`: gerencia schema ativo, respostas, progresso, seleção de modo de visualização, restauração automática do `localStorage` e importação de rascunhos.
-  - `I18nService`: coordena `@ngx-translate/core` (`pt-BR` / `en-US`) preservando intactas as respostas ao alternar idioma em tempo real.
-  - `LocalStoragePersistenceService`: leitura e escrita seguras protegidas por `try/catch` (resiliente a modo anônimo, SSR/jsdom e `QuotaExceededError`).
+  - `ChecklistStateService`: gerencia schema ativo, respostas, progresso, seleção de modo de visualização (`stepper`, `classic`, `full`, `quick_fill`), restauração local e importação de rascunhos.
+  - `ChecklistAutosaveService` & `CryptoService`: criptografia client-side via Web Crypto API (AES-GCM 256-bit) e salvamento automático condicional (somente com alterações pendentes e respeitando ativação pelo usuário).
+  - `I18nService` & `LocaleCatalogService`: coordenam `@ngx-translate/core` (`pt-BR` / `en-US`) preservando intactas as respostas ao alternar idioma em tempo real e resolvendo títulos de prévia/exportação (`Checklist`).
+  - `ThemeService` & `AccessibilityService`: gerenciam tema claro/escuro, leitura em voz alta (Web Speech API), barra de legendas visuais ao vivo, alto contraste WCAG AAA, tamanho do texto e redução de animações.
+  - `StorageService` & `LocalStoragePersistenceService`: leitura e escrita seguras protegidas por `try/catch` (resiliente a modo anônimo, SSR/jsdom e `QuotaExceededError`).
 
 ### 5.2 Shared UI Kit & Pipes (`src/app/shared/`)
 
 - **Componentes Dumb (regra 4+1 arquivos, `OnPush`, sem estado global):**
   - `ScaleSelectorComponent`: seletor acessível de escalas com navegação por teclado e tokens visuais.
-  - `DynamicQuestionItemComponent`: renderização orientada ao tipo do item (`scale_matrix`, opções simples/múltiplas, texto livre/outro, modo dual-role).
+  - `DynamicQuestionItemComponent`: renderização orientada ao tipo do item (`scale_matrix`, opções simples/múltiplas, texto livre/outro, modo dual-role e ícone informativo `i` com popup descritivo).
+  - `ConfirmDialogComponent`: diálogo modal reutilizável (`MatDialog`) para confirmações destrutivas e popups informativos (`OK`).
   - `LegendBarComponent`: legenda dinâmica das escalas e cores do schema ativo.
   - `ProgressIndicatorComponent`: indicador de progresso respondido vs. total.
-  - `FullGridPreviewComponent`: prévia consolidada vertical (`1200px` para captura/impressão e leitura).
+  - `FullGridPreviewComponent`: prévia consolidada nos layouts **Visualização Moderna** (tabelas detalhadas) e **Visualização Clássica** (folha compacta em colunas), com modo de captura/impressão (`printMode`).
 - **Pipes (`shared/pipes/`):**
   - `SchemaTranslatePipe`: traduz dinamicamente chaves de categorias, itens, escalas, papéis (*roles*) e opções.
 
 ### 5.3 Features V1 (`src/app/features/`)
 
-- **Feature `checklist/`:** página inteligente `ChecklistPageComponent`, cabeçalho `ChecklistHeaderComponent`, navegação por categoria em acordeão `CategoryAccordionComponent`, modo completo `FullViewContainerComponent`, preenchimento guiado `QuickFillWizardModalComponent` e utilitários puros em `checklist-view.helpers.ts`.
-- **Feature `export/`:** página inteligente `ExportPageComponent`, barra `ExportActionsToolbarComponent` e serviços especializados: `ChecklistFlattenService`, `PngExportService` (com token injetável `PNG_RENDERER` sobre `html-to-image`), `PdfExportService` (carregamento dinâmico via `PDF_MAKER_LOADER` sobre `pdfmake` 0.3 + `addVirtualFileSystem`), `JsonDraftService`, `CsvExportService` e `FileDownloadService`.
+- **Feature `checklist/`:** página inteligente `ChecklistPageComponent`, tela inicial `ChecklistModeSelectorComponent`, cabeçalho compacto `ChecklistHeaderComponent`, barra fixa de passos e legenda `ChecklistStepRailComponent`, assistente guiado com validação e Revisão Final `ChecklistStepperComponent`, folha clássica `ClassicKinkSheetComponent`, visão completa `FullViewContainerComponent`, preenchimento rápido inline `QuickFillWizardModalComponent`, acordeão auxiliar `CategoryAccordionComponent` e utilitários puros em `checklist-view.helpers.ts`.
+- **Feature `export/`:** página inteligente `ExportPageComponent` (fluxo guiado em 2 etapas), barra `ExportActionsToolbarComponent` (PNG, PDF, Imprimir, Exportar/Importar JSON e CSV) e serviços especializados: `ChecklistFlattenService`, `PngExportService` (com token injetável `PNG_RENDERER` sobre `html-to-image` e fallback sem fontes remotas), `PdfExportService` (carregamento dinâmico via `PDF_MAKER_LOADER` sobre `pdfmake` 0.3 + `addVirtualFileSystem`), `JsonDraftService`, `CsvExportService` e `FileDownloadService`.
 
 ### 5.4 Infraestrutura, Containers e Hosting (`frontend/` e `.devcontainer/`)
 
@@ -162,7 +169,7 @@ Quando o backend for introduzido em ciclos futuros (V2+), deverá seguir diretri
 ### 5.6 Testes e Qualidade (`Jest 30` + `SonarCloud`)
 
 - **Runner:** **Jest 30** com **`jest-preset-angular` 17** (`setupZonelessTestEnv()`) e **`jest-environment-jsdom`**.
-- **Suíte Baseline V1 (2026-11-22):** **29 arquivos `.spec.ts`**, **150 testes unitários aprovados (100%)**, cobertura global de **92,18% Statements** / **91,84% Lines** (`>= 95%` em repositórios e serviços core).
+- **Suíte Verificada V1 (2026-11-22):** **41 arquivos `.spec.ts`**, **201 testes unitários aprovados (100%)**, cobertura global de **90,3% Statements** / **90,04% Lines** (`npm.cmd run test:ci`).
 - **Relatórios e Governança Estática:** `lcov.info`, `sonar-report.xml`, `junit/test-results.xml` e relatórios HTML (`coverage/html`, `coverage/jest-stare`, `coverage/jest-html-reporters`), alinhados a [sonar-project.properties](../frontend/sonar-project.properties) e Prettier.
 
 ---
@@ -249,6 +256,7 @@ it('should serialize current state into a versioned JSON Blob', async () => {
 ## 9. Links Úteis
 
 - [Índice Geral da Documentação](./README.md)
+- [Resumo de Alterações e Melhorias (CHANGELOG)](./CHANGELOG_MELHORIAS.md)
 - [Diretrizes do Projeto (PROJECT_GUIDELINES)](./PROJECT_GUIDELINES.md)
 - [Blueprint Conceitual e Roadmap Futuro](./Bueprint.md)
 - [Levantamento Funcional e Técnico V1](./Features/LEVANTAMENTO_FUNCIONAL_TECNICO.md)
@@ -271,9 +279,10 @@ Fontes vivas: [frontend/package.json](../frontend/package.json), [frontend/jest.
 | ---- | ----------------------------- |
 | Framework & Runtime | Angular `^22.1.0` (Standalone, Signals, **zoneless**), `@angular/cli` / `@angular/build` `^22.1.2`, Node `24` |
 | Linguagem & Reatividade | TypeScript `~6.0.2` (`strict: true`, `strictTemplates: true`), RxJS `~7.8.0` |
-| Design System & UI | PrimeNG `^22.1.5`, `@primeuix/themes` `^3.1.1` (Aura), PrimeIcons `^8.0.2`, `@angular/cdk` `^22.3.0` |
+| Design System & UI | **Angular Material** `^22.3.0`, `@angular/cdk` `^22.3.0`, **Font Awesome Free** `^7.0.1`, fonte `Nunito` |
 | Internacionalização | `@ngx-translate/core` `^18.1.0`, `@ngx-translate/http-loader` `^18.1.0` (`pt-BR`, `en-US`) |
-| Exportação Client-Side | `html-to-image` `^1.11.13` (PNG `1200px`), `pdfmake` `^0.3.15` + `@types/pdfmake` `^0.3.3` (PDF lazy chunk), CSV RFC-4180 + BOM, JSON Draft |
+| Segurança & Armazenamento Local | Web Crypto API (AES-GCM 256-bit via `CryptoService`), `BrowserStorageRepository`, `ChecklistAutosaveService` |
+| Exportação & Impressão Client-Side | `html-to-image` `^1.11.13` (PNG `1200px` / `1360px`), `pdfmake` `^0.3.15` + `@types/pdfmake` `^0.3.3` (PDF lazy chunk), `@media print` / `window.print()`, CSV RFC-4180 + BOM, JSON Draft |
 | Testes & Cobertura | **Jest** `^30.5.2`, `jest-preset-angular` `^17.0.3`, `jest-environment-jsdom` `^30.5.2`, `jsdom` `^28.0.0`, `@types/jest` `^30.0.0` |
 | Relatórios de Teste & Qualidade | `jest-junit`, `jest-html-reporter`, `jest-sonar`, `jest-stare`, `jest-html-reporters`, Prettier `^3.8.1`, SonarCloud (`sonar-project.properties`) |
 | Infraestrutura & Serving | Docker multi-stage, Nginx Alpine (`nginx.conf` com CSP, `/health` e cache policy), DevContainers |
