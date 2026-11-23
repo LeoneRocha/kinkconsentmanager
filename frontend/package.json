@@ -1,12 +1,15 @@
 {
   "name": "kinkconsentmanager",
-  "version": "0.0.0",
+  "version": "1.0.2",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
+    "prebuild": "node ./scripts/environment-build-orchestrator.js",
     "build": "ng build",
+    "prebuild:prod": "node ./scripts/environment-build-orchestrator.js --prod",
     "build:prod": "ng build --configuration production",
     "watch": "ng build --watch --configuration development",
+    "check:i18n": "node ./scripts/check-i18n-keys.mjs",
     "test": "jest",
     "test:ci": "jest --ci",
     "test:watch": "jest --watch",

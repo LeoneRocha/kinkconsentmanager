@@ -80,6 +80,8 @@
     "notesHeader": "Notes",
     "loadingSchema": "Loading checklist...",
     "privacyNotice": "Local privacy: your responses never leave your browser.",
+    "footerCopyright": "All rights reserved.",
+    "footerVersionLabel": "Version",
     "legendTitle": "Scale Legend",
     "quickNavTitle": "Categories",
     "clearSelection": "Clear selection",

@@ -1,0 +1,72 @@
+@use 'variables' as v;
+
+:host {
+  display: block;
+}
+
+.app-shell__caption-bar {
+  position: fixed;
+  left: 50%;
+  bottom: 1rem;
+  transform: translateX(-50%);
+  z-index: 60;
+  width: min(94vw, 44rem);
+  padding: 0.75rem 1rem;
+  border-radius: v.$radius-md;
+  border: 2px solid v.$accent-primary;
+  background-color: v.$surface-elevated;
+  box-shadow: v.$shadow-lg;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.app-shell__caption-content,
+.app-shell__caption-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.app-shell__caption-content {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.app-shell__caption-badge {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 9999px;
+  background-color: v.$accent-soft;
+  color: v.$accent-text;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  &--pulse {
+    box-shadow: 0 0 0 4px v.$accent-soft;
+  }
+}
+
+.app-shell__caption-text {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  word-break: break-word;
+}
+
+.app-shell__caption-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 9999px;
+  border: 1px solid v.$border-color;
+  background-color: v.$surface-card;
+  color: v.$text-primary;
+  cursor: pointer;
+}

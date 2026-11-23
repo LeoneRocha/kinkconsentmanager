@@ -1,0 +1,13 @@
+<footer class="app-shell__footer" role="contentinfo">
+  <div class="app-shell__footer-inner">
+    <p class="app-shell__privacy">
+      <i class="fa-solid fa-lock" aria-hidden="true"></i>
+      <span>{{ 'privacyNotice' | schemaTranslate: 'ui' }}</span>
+    </p>
+    <p class="app-shell__meta">
+      <span>&copy; {{ currentYear() }} {{ appName() }} &middot; {{ 'footerCopyright' | schemaTranslate: 'ui' }}</span>
+      <span class="app-shell__meta-sep" aria-hidden="true">|</span>
+      <span class="app-shell__version">{{ 'footerVersionLabel' | schemaTranslate: 'ui' }} {{ appVersion() }} (build {{ buildDate() }})</span>
+    </p>
+  </div>
+</footer>

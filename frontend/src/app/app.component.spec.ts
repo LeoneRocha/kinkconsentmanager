@@ -4,6 +4,7 @@ import { provideTranslateService, TranslateService } from '@ngx-translate/core';
 import { App } from './app.component';
 import { routes } from './app.routes';
 import { AccessibilityService, I18nService, ThemeService } from './core/services';
+import { environment } from '../environments/environment';
 
 describe('App', () => {
   const clearRootClasses = (): void => {
@@ -36,6 +37,8 @@ describe('App', () => {
         navChecklist: 'Checklist',
         navExport: 'Exportar',
         privacyNotice: 'Privacidade local: seus dados permanecem exclusivamente no seu navegador.',
+        footerCopyright: 'Todos os direitos reservados.',
+        footerVersionLabel: 'Versão',
         skipToContent: 'Ir direto para o conteúdo principal',
         themeToggleToDark: 'Ativar tema escuro',
         themeToggleToLight: 'Ativar tema claro',
@@ -96,7 +99,7 @@ describe('App', () => {
     expect(el.querySelector('.app-shell__utilities')).not.toBeNull();
   });
 
-  it('should include main landmark, router-outlet, live status region, and privacy notice', async () => {
+  it('should include main landmark, router-outlet, live status region, and privacy notice with copyright and version', async () => {
     const fixture = TestBed.createComponent(App);
     fixture.detectChanges();
     await fixture.whenStable();
@@ -106,6 +109,11 @@ describe('App', () => {
     expect(el.querySelector('main#main-content')).not.toBeNull();
     expect(el.querySelector('[role="status"]')).not.toBeNull();
     expect(el.textContent).toContain('Privacidade local');
+    const footer = el.querySelector('footer.app-shell__footer');
+    expect(footer?.textContent).toContain(String(new Date().getFullYear()));
+    expect(footer?.textContent).toContain(environment.appName);
+    expect(footer?.textContent).toContain('Todos os direitos reservados.');
+    expect(footer?.textContent).toContain(`Versão ${environment.version} (build ${environment.buildDate})`);
   });
 
   it('should configure lazy routes for checklist and export with fallback redirect', () => {

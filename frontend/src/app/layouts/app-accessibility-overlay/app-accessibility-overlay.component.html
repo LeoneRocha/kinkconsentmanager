@@ -1,0 +1,28 @@
+<div class="sr-only" role="status" aria-live="polite" aria-atomic="true">
+  {{ accessibility.liveAnnouncement() }}
+</div>
+
+@if (accessibility.showCaptionBar()) {
+<aside class="app-shell__caption-bar" role="region" [attr.aria-label]="'a11yCaptionTitle' | schemaTranslate: 'ui'">
+  <div class="app-shell__caption-content">
+    <span class="app-shell__caption-badge" [class.app-shell__caption-badge--pulse]="accessibility.isSpeaking()"
+      aria-hidden="true">
+      <i class="fa-solid fa-volume-high"></i>
+    </span>
+    <p class="app-shell__caption-text">{{ accessibility.liveAnnouncement() }}</p>
+  </div>
+
+  <div class="app-shell__caption-actions">
+    @if (accessibility.isSpeaking()) {
+    <button type="button" class="app-shell__caption-btn" [attr.aria-label]="'a11yStopReading' | schemaTranslate: 'ui'"
+      (click)="accessibility.stopSpeaking()">
+      <i class="fa-solid fa-stop" aria-hidden="true"></i>
+    </button>
+    }
+    <button type="button" class="app-shell__caption-btn"
+      [attr.aria-label]="'a11yCaptionDismiss' | schemaTranslate: 'ui'" (click)="accessibility.dismissCaption()">
+      <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+    </button>
+  </div>
+</aside>
+}

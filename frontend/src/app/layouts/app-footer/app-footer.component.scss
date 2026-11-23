@@ -1,0 +1,55 @@
+@use 'variables' as v;
+@use 'mixins' as m;
+
+:host {
+  display: block;
+}
+
+.app-shell__footer {
+  border-top: 1px solid v.$border-color;
+  background-color: v.$surface-card;
+  padding: 0.85rem 1rem;
+  text-align: center;
+}
+
+.app-shell__footer-inner {
+  width: 100%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.45rem 1rem;
+
+  @include m.respond-md {
+    width: 90%;
+    flex-direction: row;
+    text-align: left;
+  }
+}
+
+.app-shell__privacy {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.85rem;
+  color: v.$text-secondary;
+}
+
+.app-shell__meta {
+  margin: 0;
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  color: v.$text-muted;
+}
+
+.app-shell__version {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: v.$text-secondary;
+}
