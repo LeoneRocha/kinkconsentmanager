@@ -37,6 +37,7 @@ As versões vivas constam em [frontend/package.json](../frontend/package.json), 
 | [`PROJECT_GUIDELINES.md`](./PROJECT_GUIDELINES.md) | Diretrizes normativas transversais, padrões 4+1, Jest, Git (`R-GOV-GIT`) e Backend genérico |
 | [`ARCHITECTURE.md`](./ARCHITECTURE.md) | Arquitetura em camadas, diagramas Mermaid, fluxos, exemplos e catálogo técnico |
 | [`Bueprint.md`](./Bueprint.md) | Blueprint conceitual do produto e visão de roadmap futuro (pós-V1) |
+| [`CHANGELOG_MELHORIAS.md`](./CHANGELOG_MELHORIAS.md) | Resumo consolidado das melhorias de UX, layout, fluxo de entrada e conformidade técnica |
 | [`Features/`](./Features/) | Levantamento funcional/técnico, plano modular de implementação e checklist da V1 |
 | [`Frontend/COVERAGE AND TEST/`](./Frontend/COVERAGE%20AND%20TEST/) | Diretrizes de cobertura Jest/Vitest, metas por camada e saneamento de Code Smells |
 | [`Frontend/UpdatePackages/`](./Frontend/UpdatePackages/) | Guias de governança/atualização de pacotes npm e conjunto homologado atual |
@@ -89,15 +90,16 @@ As versões vivas constam em [frontend/package.json](../frontend/package.json), 
 | Atualização de Pacotes (KinkConsentManager UI) | [GuiaAtualizacaoPacotes-KinkConsentManagerUI.md](./Frontend/UpdatePackages/GuiaAtualizacaoPacotes-KinkConsentManagerUI.md) |
 | Conjunto Homologado Frontend (`2026-11-22`) | [2026-11-22-ConjuntoHomologado-Frontend.md](./Frontend/UpdatePackages/2026-11-22-ConjuntoHomologado-Frontend.md) |
 
-### Infraestrutura, Testes e Qualidade (`frontend/` e `.devcontainer/`)
+### Infraestrutura, Testes, CI/CD e Qualidade (`frontend/`, `ci-cd/` e `.devcontainer/`)
 
 | Recurso | Arquivo |
 | ------- | ------- |
 | Manifesto npm e Scripts | [frontend/package.json](../frontend/package.json) |
 | Guia Angular CLI do Frontend | [frontend/README.md](../frontend/README.md) |
-| Configuração Jest 30 + Reporters | [frontend/jest.config.js](../frontend/jest.config.js) |
+| Configuração Jest 30 + Reporters (JUnit, Cobertura, LCOV, Sonar) | [frontend/jest.config.js](../frontend/jest.config.js) |
 | Setup Zoneless + Polyfills `jsdom` | [frontend/src/setup-jest.ts](../frontend/src/setup-jest.ts) |
 | Configuração SonarCloud | [frontend/sonar-project.properties](../frontend/sonar-project.properties) |
+| Pipelines CI/CD (Azure DevOps, GitHub, GitLab & Scripts — desativados por padrão) | [ci-cd/README.md](../ci-cd/README.md) · [Guia GitHub -> Azure](../ci-cd/GUIA_GITHUB_ACTIONS_AZURE.md) · [Guia Deploy Manual Azure](../ci-cd/manualdeploy/GUIA_PUBLICACAO_MANUAL_AZURE.md) · [azure-pipelines.yml](../ci-cd/azure-devops/azure-pipelines.yml) · [kinkconsentmanager-ci-cd.yml](../ci-cd/github/kinkconsentmanager-ci-cd.yml) |
 | Dockerfile Multi-Stage & Nginx CSP | [Dockerfile](../frontend/Dockerfile) · [nginx.conf](../frontend/nginx.conf) |
 | Docker Compose (Dev/Local & Prod) | [docker-compose.yml](../frontend/docker-compose.yml) · [dockercompose.prod.yml](../frontend/dockercompose.prod.yml) |
 | DevContainers (Frontend + Backend Placeholder) | [.devcontainer/docker-compose.yml](../.devcontainer/docker-compose.yml) |

@@ -1,0 +1,152 @@
+# ==============================================================================
+# KinkConsentManager UI — Pipeline Multiestágio de CI/CD (GitLab CI/CD)
+# ==============================================================================
+# ESTADO ATUAL: DESATIVADO POR PADRÃO
+# - `PIPELINE_ENABLED: "false"` impede qualquer disparo automático.
+# - Para utilizar no GitLab, crie/referencie `.gitlab-ci.yml` na raiz apontando
+#   para este arquivo (`include: local: '/ci-cd/gitlab/.gitlab-ci.yml'`) e ajuste
+#   `PIPELINE_ENABLED: "true"` quando desejar ativar.
+# - Deploy em `production` exige execução manual (`when: manual`), branch única
+#   `main` e GitLab Protected Environment com aprovadores configurados.
+# ==============================================================================
+
+variables:
+  PIPELINE_ENABLED: "false"
+  ENABLE_SONARCLOUD: "true"
+  ENABLE_DOCKER_PUBLISH: "false"
+  ENABLE_AZURE_DEPLOY: "false"
+  FRONTEND_DIR: "frontend"
+  DIST_BROWSER_DIR: "frontend/dist/kinkconsentmanager/browser"
+  AZURE_WEBAPP_NAME: "kinkconsentmanagerapp"
+  AZURE_RESOURCE_GROUP: "kinkconsentmanagerrg"
+  DOCKER_IMAGE: "leonecr/kinkconsentmanager-ui"
+  GIT_DEPTH: "0"
+
+workflow:
+  rules:
+    - if: '$PIPELINE_ENABLED != "true"'
+      when: never
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH == "main"'
+    - when: never
+
+stages:
+  - build_test
+  - quality_security
+  - docker_image
+  - deploy_azure
+
+# ==============================================================================
+# ESTÁGIO 1 — Build Angular, Testes Jest, JUnit e Cobertura XML
+# ==============================================================================
+ci_build_and_test:
+  stage: build_test
+  image: node:24-alpine
+  cache:
+    key:
+      files:
+        - frontend/package-lock.json
+    paths:
+      - frontend/.npm/
+  script:
+    - cd "$FRONTEND_DIR"
+    - npm ci --cache .npm --prefer-offline
+    - npm run build:prod
+    - npm run test:ci
+    - test -f coverage/junit/test-results.xml
+    - test -f coverage/cobertura-coverage.xml
+    - test -f coverage/lcov.info
+    - test -f coverage/sonar/sonar-report.xml
+    - test -f dist/kinkconsentmanager/browser/index.html
+  coverage: '/Statements\s*:\s*([\d.]+)%/'
+  artifacts:
+    when: always
+    expire_in: 14 days
+    paths:
+      - frontend/dist/kinkconsentmanager/browser/
+      - frontend/coverage/
+      - frontend/dockercompose.prod.yml
+    reports:
+      junit: frontend/coverage/junit/test-results.xml
+      coverage_report:
+        coverage_format: cobertura
+        path: frontend/coverage/cobertura-coverage.xml
+
+# ==============================================================================
+# ESTÁGIO 2 — SonarCloud & Auditoria de Dependências
+# ==============================================================================
+ci_npm_audit:
+  stage: quality_security
+  image: node:24-alpine
+  needs: []
+  allow_failure: true
+  script:
+    - cd "$FRONTEND_DIR"
+    - npm ci --ignore-scripts
+    - npm audit --audit-level=high --omit=dev
+
+ci_sonarcloud:
+  stage: quality_security
+  image:
+    name: sonarsource/sonar-scanner-cli:latest
+    entrypoint: [""]
+  needs:
+    - ci_build_and_test
+  rules:
+    - if: '$ENABLE_SONARCLOUD == "true" && $SONAR_TOKEN'
+  variables:
+    SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"
+  cache:
+    key: "${CI_JOB_NAME}"
+    paths:
+      - .sonar/cache
+  script:
+    - sonar-scanner -Dproject.settings=frontend/sonar-project.properties -Dsonar.host.url=https://sonarcloud.io -Dsonar.qualitygate.wait=true
+
+# ==============================================================================
+# ESTÁGIO 3 — CD: Build, Smoke Test & Push da Imagem Docker (separado)
+# ==============================================================================
+cd_docker_build_push:
+  stage: docker_image
+  image: docker:27-cli
+  services:
+    - docker:27-dind
+  needs:
+    - ci_build_and_test
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main" && $ENABLE_DOCKER_PUBLISH == "true"'
+      when: on_success
+    - when: never
+  script:
+    - docker build -f frontend/Dockerfile -t "$DOCKER_IMAGE:$CI_COMMIT_SHORT_SHA" -t "$DOCKER_IMAGE:latest" frontend
+    - docker run -d --name kcm-smoke -p 18080:80 "$DOCKER_IMAGE:$CI_COMMIT_SHORT_SHA"
+    - sleep 3
+    - wget -q -O- http://docker:18080/health || wget -q -O- http://127.0.0.1:18080/health
+    - docker rm -f kcm-smoke
+    - echo "$DOCKER_PASSWORD" | docker login "${DOCKER_REGISTRY:-docker.io}" -u "$DOCKER_USERNAME" --password-stdin
+    - docker push "$DOCKER_IMAGE:$CI_COMMIT_SHORT_SHA"
+    - docker push "$DOCKER_IMAGE:latest"
+
+# ==============================================================================
+# ESTÁGIO 4 — CD: Deploy no Azure Web App Linux (Aprovação Manual + main)
+# ==============================================================================
+cd_deploy_azure_webapp:
+  stage: deploy_azure
+  image: mcr.microsoft.com/azure-cli:latest
+  needs:
+    - ci_build_and_test
+  environment:
+    name: production
+    url: https://kinkconsentmanagerapp.azurewebsites.net
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main" && $ENABLE_AZURE_DEPLOY == "true"'
+      when: manual
+    - when: never
+  script:
+    - apk add --no-cache zip curl
+    - cd "$DIST_BROWSER_DIR"
+    - zip -r "${CI_PROJECT_DIR}/webapp-dist.zip" .
+    - az login --service-principal -u "$AZURE_CLIENT_ID" -p "$AZURE_CLIENT_SECRET" --tenant "$AZURE_TENANT_ID"
+    - az account set --subscription "$AZURE_SUBSCRIPTION_ID"
+    - az webapp deploy --resource-group "$AZURE_RESOURCE_GROUP" --name "$AZURE_WEBAPP_NAME" --src-path "${CI_PROJECT_DIR}/webapp-dist.zip" --type zip
+    - az logout

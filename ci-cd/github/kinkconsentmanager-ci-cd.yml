@@ -1,0 +1,274 @@
+# ==============================================================================
+# KinkConsentManager UI — Pipeline Multiestágio de CI/CD (GitHub Actions)
+# ==============================================================================
+# ESTADO ATUAL: DESATIVADO PARA EXECUÇÕES AUTOMÁTICAS
+# - Mantido fora de `.github/workflows/` e configurado apenas com
+#   `workflow_dispatch` (execução manual) para não disparar automaticamente.
+# - Os estágios de CD exigem flag explícita (`true`), execução na branch `main`
+#   e aprovação humana configurada no Environment `production` do GitHub.
+#
+# ATENÇÃO SOBRE WORKFLOW EXISTENTE:
+# - Já existe `.github/workflows/main_kinkconsentmanagerapp.yml` gerado pelo
+#   Azure QuickDeploy. Antes de ativar este workflow em `.github/workflows/`,
+#   revise ou substitua o workflow antigo para evitar deploys duplicados.
+#
+# COMO ATIVAR NO FUTURO:
+# 1. Copie este arquivo para `.github/workflows/kinkconsentmanager-ci-cd.yml`.
+# 2. Configure Secrets/Variables e o Environment `production` no repositório
+#    com "Required reviewers" e "Deployment branches -> main" (ver `ci-cd/README.md`).
+# 3. Quando desejar CI automático, descomente os blocos `push` e `pull_request`.
+# ==============================================================================
+
+name: KinkConsentManager CI/CD
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_sonarcloud:
+        description: 'Executar análise e Quality Gate no SonarCloud'
+        type: boolean
+        required: true
+        default: true
+      run_docker_publish:
+        description: 'Executar estágio CD — Build & Push da imagem Docker (somente main)'
+        type: boolean
+        required: false
+        default: false
+      run_azure_deploy:
+        description: 'Executar estágio CD — Deploy no Azure Web App com aprovação (somente main)'
+        type: boolean
+        required: false
+        default: false
+
+  # Para habilitar CI automático em commits/PRs para a branch única `main`:
+  # push:
+  #   branches: [ main ]
+  #   paths:
+  #     - 'frontend/**'
+  #     - 'ci-cd/**'
+  #     - '.github/workflows/kinkconsentmanager-ci-cd.yml'
+  # pull_request:
+  #   branches: [ main ]
+  #   paths:
+  #     - 'frontend/**'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: '24'
+  FRONTEND_DIR: 'frontend'
+  DIST_BROWSER_DIR: 'frontend/dist/kinkconsentmanager/browser'
+
+jobs:
+  # ============================================================================
+  # ESTÁGIO 1 — CI: Build, Segurança, Testes Jest, Cobertura e SonarCloud
+  # ============================================================================
+  ci_build_quality:
+    name: 'CI — Build, Testes, Cobertura & SonarCloud'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout completo do repositório (fetch-depth 0 para SonarCloud)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configurar Node.js ${{ env.NODE_VERSION }} com cache npm
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: 'frontend/package-lock.json'
+
+      - name: Instalar dependências (npm ci)
+        working-directory: ${{ env.FRONTEND_DIR }}
+        run: npm ci
+
+      - name: Auditoria de vulnerabilidades npm (high/critical)
+        working-directory: ${{ env.FRONTEND_DIR }}
+        continue-on-error: true
+        run: npm audit --audit-level=high --omit=dev
+
+      - name: Snyk Security Scan (opcional se SNYK_TOKEN estiver configurado)
+        if: ${{ secrets.SNYK_TOKEN != '' }}
+        uses: snyk/actions/node@master
+        continue-on-error: true
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --file=frontend/package.json --severity-threshold=high
+
+      - name: Build de produção Angular (build:prod)
+        working-directory: ${{ env.FRONTEND_DIR }}
+        run: npm run build:prod
+
+      - name: Executar testes unitários e cobertura Jest (test:ci)
+        working-directory: ${{ env.FRONTEND_DIR }}
+        run: npm run test:ci
+
+      - name: Validar artefatos de cobertura e bundle SPA
+        run: |
+          test -f "${{ env.FRONTEND_DIR }}/coverage/junit/test-results.xml"
+          test -f "${{ env.FRONTEND_DIR }}/coverage/cobertura-coverage.xml"
+          test -f "${{ env.FRONTEND_DIR }}/coverage/lcov.info"
+          test -f "${{ env.FRONTEND_DIR }}/coverage/sonar/sonar-report.xml"
+          test -f "${{ env.DIST_BROWSER_DIR }}/index.html"
+
+      - name: Publicar resumo de testes Jest (JUnit) no PR / Workflow
+        if: always()
+        uses: dorny/test-reporter@v1
+        with:
+          name: Jest Unit Tests (KinkConsentManager UI)
+          path: frontend/coverage/junit/test-results.xml
+          reporter: java-junit
+          fail-on-error: true
+
+      - name: Análise & Quality Gate no SonarCloud
+        if: ${{ inputs.run_sonarcloud == true && secrets.SONAR_TOKEN != '' }}
+        uses: SonarSource/sonarqube-scan-action@v5
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          args: >
+            -Dproject.settings=frontend/sonar-project.properties
+
+      - name: Aguardar Quality Gate do SonarCloud
+        if: ${{ inputs.run_sonarcloud == true && secrets.SONAR_TOKEN != '' }}
+        uses: SonarSource/sonarqube-quality-gate-action@v1
+        timeout-minutes: 5
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+      - name: Upload do artefato SPA para Deploy (webapp-dist)
+        uses: actions/upload-artifact@v4
+        with:
+          name: webapp-dist
+          path: ${{ env.DIST_BROWSER_DIR }}/
+          retention-days: 14
+
+      - name: Upload dos relatórios de testes e cobertura (Jest / Cobertura / LCOV)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-coverage-reports
+          path: |
+            frontend/coverage/cobertura-coverage.xml
+            frontend/coverage/lcov.info
+            frontend/coverage/junit/test-results.xml
+            frontend/coverage/sonar/sonar-report.xml
+          retention-days: 14
+
+      - name: Upload de dockercompose.prod.yml
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-compose-prod
+          path: frontend/dockercompose.prod.yml
+          retention-days: 14
+
+  # ============================================================================
+  # ESTÁGIO 2 — CD: Build, Smoke Test e Push da Imagem Docker (separado)
+  # ============================================================================
+  cd_docker_image:
+    name: 'CD — Build, Smoke Test & Push Docker Image'
+    needs: ci_build_quality
+    if: ${{ github.ref == 'refs/heads/main' && inputs.run_docker_publish == true }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Configurar Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build local da imagem Docker para smoke test
+        uses: docker/build-push-action@v6
+        with:
+          context: frontend
+          file: frontend/Dockerfile
+          load: true
+          tags: ${{ vars.DOCKER_IMAGE || 'leonecr/kinkconsentmanager-ui' }}:smoke
+
+      - name: Smoke test do container Nginx (/health e SPA)
+        run: |
+          set -euo pipefail
+          IMAGE="${{ vars.DOCKER_IMAGE || 'leonecr/kinkconsentmanager-ui' }}:smoke"
+          docker run -d --name kcm-smoke -p 18080:80 "$IMAGE"
+          trap 'docker rm -f kcm-smoke >/dev/null 2>&1 || true' EXIT
+          sleep 3
+          curl -fsS http://127.0.0.1:18080/health
+          curl -fsS -o /dev/null http://127.0.0.1:18080/
+
+      - name: Login no Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ vars.DOCKER_REGISTRY || 'docker.io' }}
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build e Push da imagem Docker (tag SHA + latest)
+        uses: docker/build-push-action@v6
+        with:
+          context: frontend
+          file: frontend/Dockerfile
+          push: true
+          tags: |
+            ${{ vars.DOCKER_IMAGE || 'leonecr/kinkconsentmanager-ui' }}:${{ github.sha }}
+            ${{ vars.DOCKER_IMAGE || 'leonecr/kinkconsentmanager-ui' }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # ============================================================================
+  # ESTÁGIO 3 — CD: Deploy no Azure Web App Linux (Aprovação + Branch main)
+  # ============================================================================
+  cd_deploy_azure:
+    name: 'CD — Deploy Azure Web App (com Aprovação)'
+    needs: ci_build_quality
+    if: ${{ github.ref == 'refs/heads/main' && inputs.run_azure_deploy == true }}
+    runs-on: ubuntu-latest
+    # Environment `production` no GitHub Settings -> Environments:
+    # - Habilitar "Required reviewers" (aprovação manual obrigatória)
+    # - Habilitar "Deployment branches and tags" -> apenas `main`
+    environment:
+      name: production
+      url: ${{ vars.AZURE_WEBAPP_URL || 'https://kinkconsentmanagerapp.azurewebsites.net' }}
+
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Baixar artefato SPA compilado (webapp-dist)
+        uses: actions/download-artifact@v4
+        with:
+          name: webapp-dist
+          path: ./webapp-dist
+
+      - name: Autenticar no Azure via OIDC (sem credenciais hardcoded)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Deploy no Azure Web App Linux (Production)
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ vars.AZURE_WEBAPP_NAME || 'kinkconsentmanagerapp' }}
+          slot-name: 'Production'
+          package: ./webapp-dist
+
+      - name: Smoke test pós-deploy
+        continue-on-error: true
+        run: |
+          URL="${{ vars.AZURE_WEBAPP_URL || 'https://kinkconsentmanagerapp.azurewebsites.net' }}"
+          curl -fsS --retry 3 --retry-delay 5 -o /dev/null "$URL"
+
+      - name: Encerrar sessão Azure CLI
+        if: always()
+        run: az logout || true

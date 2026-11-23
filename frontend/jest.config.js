@@ -5,7 +5,7 @@ module.exports = {
   cacheDirectory: '<rootDir>/.jest-cache',
   collectCoverage: true,
   coverageDirectory: 'coverage',
-  coverageReporters: ['html', 'text-summary', 'lcov'],
+  coverageReporters: ['html', 'text-summary', 'lcov', 'cobertura'],
   collectCoverageFrom: [
     'src/app/**/*.ts',
     '!src/app/**/*.module.ts',
