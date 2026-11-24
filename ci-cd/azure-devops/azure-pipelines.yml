@@ -39,6 +39,11 @@ parameters:
     type: string
     default: '24.x'
 
+  - name: useLegacyPeerDeps
+    displayName: 'Usar --legacy-peer-deps no npm ci'
+    type: boolean
+    default: true
+
   - name: enableSonarCloud
     displayName: 'Executar análise e Quality Gate no SonarCloud'
     type: boolean
@@ -111,24 +116,26 @@ stages:
                 npm | "$(Agent.OS)"
               path: '$(npmCacheFolder)'
 
-          - task: CmdLine@2
+          - task: Npm@1
             displayName: 'npm ci (instalação determinística em frontend/)'
             inputs:
-              workingDirectory: '$(frontendDir)'
-              script: |
-                set -euo pipefail
-                echo "Node: $(node -v) | npm atual: $(npm -v)"
-                npm install -g npm@11.14.1
-                echo "npm alinhado (packageManager): $(npm -v)"
-                npm ci --cache "$(npmCacheFolder)" --prefer-offline
+              command: 'custom'
+              workingDir: '$(frontendDir)'
+              ${{ if eq(parameters.useLegacyPeerDeps, true) }}:
+                customCommand: 'ci --legacy-peer-deps'
+              ${{ else }}:
+                customCommand: 'ci'
+            env:
+              NPM_CONFIG_CACHE: '$(npmCacheFolder)'
+              NPM_CONFIG_PREFER_OFFLINE: 'true'
 
-          - task: CmdLine@2
+          - task: Npm@1
             displayName: 'Auditoria de dependências npm (aviso high/critical)'
             continueOnError: true
             inputs:
-              workingDirectory: '$(frontendDir)'
-              script: |
-                npm audit --audit-level=high --omit=dev
+              command: 'custom'
+              workingDir: '$(frontendDir)'
+              customCommand: 'audit --audit-level=high --omit=dev'
 
           - task: SnykSecurityScan@1
             displayName: 'Snyk Scan de vulnerabilidades Open Source'
@@ -140,17 +147,19 @@ stages:
               additionalArguments: '--severity-threshold=high'
               failOnIssues: false
 
-          - task: CmdLine@2
+          - task: Npm@1
             displayName: 'Build de produção Angular (build:prod)'
             inputs:
-              workingDirectory: '$(frontendDir)'
-              script: npm run build:prod
+              command: 'custom'
+              workingDir: '$(frontendDir)'
+              customCommand: 'run build:prod'
 
-          - task: CmdLine@2
+          - task: Npm@1
             displayName: 'Testes unitários e cobertura Jest (test:ci)'
             inputs:
-              workingDirectory: '$(frontendDir)'
-              script: npm run test:ci
+              command: 'custom'
+              workingDir: '$(frontendDir)'
+              customCommand: 'run test:ci'
 
           - task: SonarCloudPrepare@3
             displayName: 'SonarCloud — Preparar análise (CLI)'

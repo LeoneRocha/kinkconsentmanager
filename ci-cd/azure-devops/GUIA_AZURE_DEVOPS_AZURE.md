@@ -52,7 +52,7 @@ Organizações novas do Azure DevOps vêm com **0 parallel jobs gratuitos** por 
                        ▼
   1. CI_Build_Quality (Job: BuildAndTestFrontend)
      ├── checkout: self (fetchDepth: 0 para SonarCloud)
-     ├── NodeTool@0 (24.x) + Cache@2 + npm@11.14.1 + npm ci (em frontend/)
+     ├── NodeTool@0 (24.x) + Cache@2 + Npm@1 ci (em frontend/)
      ├── npm audit + SnykSecurityScan@1 (se enableSnykScan == true)
      ├── npm run build:prod  ──► frontend/dist/kinkconsentmanager/browser/
      ├── npm run test:ci     ──► JUnit + Cobertura + LCOV + Sonar XML

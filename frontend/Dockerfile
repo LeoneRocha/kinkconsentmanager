@@ -7,7 +7,7 @@ WORKDIR /app/frontend
 
 # Copia manifests primeiro para otimizar cache de camadas do Docker
 COPY package*.json ./
-RUN npm ci
+RUN npm ci --legacy-peer-deps
 
 # Copia restante do codigo-fonte e gera build minificado de producao
 COPY . .
@@ -21,7 +21,7 @@ FROM node:24-alpine AS development
 WORKDIR /app/frontend
 
 COPY package*.json ./
-RUN npm ci
+RUN npm ci --legacy-peer-deps
 
 COPY . .
 
