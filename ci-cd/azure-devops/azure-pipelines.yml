@@ -19,6 +19,8 @@
 #    - Approvals and checks -> Branch control -> `refs/heads/main`
 # ==============================================================================
 
+name: 'KinkConsentManager-UI$(Rev:.r)'
+
 trigger:
   branches:
     include:
@@ -74,50 +76,27 @@ variables:
     value: 'pm2 serve /home/site/wwwroot --no-daemon --spa'
   - name: dockerImageRepository
     value: 'leonecr/kinkconsentmanager-ui'
-  - group: kinkconsentmanager-ci-vars
   - name: frontendDir
     value: '$(Build.SourcesDirectory)/frontend'
   - name: distBrowserDir
     value: '$(Build.SourcesDirectory)/frontend/dist/kinkconsentmanager/browser'
   - name: npmCacheFolder
     value: '$(Pipeline.Workspace)/.npm'
-  # Precedência: 1º Parâmetro alterado -> 2º Variável (Pipeline UI / Variable Group) -> 3º Default
-  - ${{ if ne(parameters.nodeVersion, '24.x') }}:
-    - name: resolvedNodeVersion
-      value: '${{ parameters.nodeVersion }}'
-  - ${{ else }}:
-    - name: resolvedNodeVersion
-      value: $[ coalesce(variables['nodeVersion'], '24.x') ]
-  - ${{ if eq(parameters.useLegacyPeerDeps, false) }}:
-    - name: resolvedUseLegacyPeerDeps
-      value: 'false'
-  - ${{ else }}:
-    - name: resolvedUseLegacyPeerDeps
-      value: $[ coalesce(variables['useLegacyPeerDeps'], 'true') ]
-  - ${{ if eq(parameters.enableSonarCloud, true) }}:
-    - name: resolvedEnableSonarCloud
-      value: 'true'
-  - ${{ else }}:
-    - name: resolvedEnableSonarCloud
-      value: $[ coalesce(variables['enableSonarCloud'], 'false') ]
-  - ${{ if eq(parameters.enableSnykScan, true) }}:
-    - name: resolvedEnableSnykScan
-      value: 'true'
-  - ${{ else }}:
-    - name: resolvedEnableSnykScan
-      value: $[ coalesce(variables['enableSnykScan'], 'false') ]
-  - ${{ if eq(parameters.enableDockerPublish, true) }}:
-    - name: resolvedEnableDockerPublish
-      value: 'true'
-  - ${{ else }}:
-    - name: resolvedEnableDockerPublish
-      value: $[ coalesce(variables['enableDockerPublish'], 'false') ]
-  - ${{ if eq(parameters.enableAzureDeploy, true) }}:
-    - name: resolvedEnableAzureDeploy
-      value: 'true'
-  - ${{ else }}:
-    - name: resolvedEnableAzureDeploy
-      value: $[ coalesce(variables['enableAzureDeploy'], 'false') ]
+  - group: kinkconsentmanager-ci-vars
+  # Precedência final (ambiente prevalece se existir):
+  # Variável cadastrada em `kinkconsentmanager-ci-vars`/Pipeline UI -> Parâmetro no Run -> Default do parâmetro
+  - name: resolvedNodeVersion
+    value: $[ coalesce(variables['nodeVersion'], '${{ parameters.nodeVersion }}') ]
+  - name: resolvedUseLegacyPeerDeps
+    value: $[ coalesce(variables['useLegacyPeerDeps'], '${{ parameters.useLegacyPeerDeps }}') ]
+  - name: resolvedEnableSonarCloud
+    value: $[ coalesce(variables['enableSonarCloud'], '${{ parameters.enableSonarCloud }}') ]
+  - name: resolvedEnableSnykScan
+    value: $[ coalesce(variables['enableSnykScan'], '${{ parameters.enableSnykScan }}') ]
+  - name: resolvedEnableDockerPublish
+    value: $[ coalesce(variables['enableDockerPublish'], '${{ parameters.enableDockerPublish }}') ]
+  - name: resolvedEnableAzureDeploy
+    value: $[ coalesce(variables['enableAzureDeploy'], '${{ parameters.enableAzureDeploy }}') ]
 
 stages:
   # ============================================================================
@@ -282,6 +261,20 @@ stages:
               artifact: 'drop-docker-compose'
               publishLocation: 'pipeline'
 
+          - task: CmdLine@2
+            name: ResolveCdFlags
+            displayName: 'Exibir configuração efetiva e propagar flags para CD'
+            inputs:
+              script: |
+                echo "nodeVersion=$(resolvedNodeVersion)"
+                echo "useLegacyPeerDeps=$(resolvedUseLegacyPeerDeps)"
+                echo "enableSonarCloud=$(resolvedEnableSonarCloud)"
+                echo "enableSnykScan=$(resolvedEnableSnykScan)"
+                echo "enableDockerPublish=$(resolvedEnableDockerPublish)"
+                echo "enableAzureDeploy=$(resolvedEnableAzureDeploy)"
+                echo "##vso[task.setvariable variable=enableDockerPublish;isOutput=true]$(resolvedEnableDockerPublish)"
+                echo "##vso[task.setvariable variable=enableAzureDeploy;isOutput=true]$(resolvedEnableAzureDeploy)"
+
   # ============================================================================
   # ESTÁGIO 2 — CD: Build, Smoke Test e Push da Imagem Docker (separado)
   # ============================================================================
@@ -291,7 +284,7 @@ stages:
     condition: |
       and(
         succeeded(),
-        eq(variables['resolvedEnableDockerPublish'], 'true'),
+        eq(stageDependencies.CI_Build_Quality.BuildAndTestFrontend.outputs['ResolveCdFlags.enableDockerPublish'], 'true'),
         eq(variables['Build.SourceBranch'], 'refs/heads/main')
       )
     pool:
@@ -344,7 +337,7 @@ stages:
     condition: |
       and(
         succeeded(),
-        eq(variables['resolvedEnableAzureDeploy'], 'true'),
+        eq(stageDependencies.CI_Build_Quality.BuildAndTestFrontend.outputs['ResolveCdFlags.enableAzureDeploy'], 'true'),
         eq(variables['Build.SourceBranch'], 'refs/heads/main')
       )
     pool:
