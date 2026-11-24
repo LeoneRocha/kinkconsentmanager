@@ -1,0 +1,50 @@
+@if (notifications.toasts().length > 0) {
+<section
+  class="kcm-toast-container"
+  [class]="containerPositionClass()"
+  [attr.aria-label]="'notificationsRegionLabel' | schemaTranslate: 'ui'"
+  aria-live="polite"
+>
+  @for (toast of notifications.toasts(); track toast.id) {
+  <div
+    class="kcm-toast"
+    [class]="'kcm-toast--' + toast.type"
+    [attr.role]="toast.type === 'error' || toast.type === 'warning' ? 'alert' : 'status'"
+  >
+    <span class="kcm-toast__icon" aria-hidden="true">
+      <i class="fa-solid" [class]="iconFor(toast.type)"></i>
+    </span>
+
+    <span class="kcm-toast__message">{{ toast.message }}</span>
+
+    <div class="kcm-toast__actions">
+      @if (toast.actionLabel) {
+      <button
+        type="button"
+        class="kcm-toast__action-btn"
+        (click)="notifications.triggerAction(toast.id)"
+      >
+        {{ toast.actionLabel }}
+      </button>
+      }
+      <button
+        type="button"
+        class="kcm-toast__close-btn"
+        [attr.aria-label]="'notificationCloseLabel' | schemaTranslate: 'ui'"
+        (click)="notifications.dismiss(toast.id)"
+      >
+        <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+      </button>
+    </div>
+
+    @if (toast.duration > 0) {
+    <span
+      class="kcm-toast__timer"
+      [style.animation-duration.ms]="toast.duration"
+      aria-hidden="true"
+    ></span>
+    }
+  </div>
+  }
+</section>
+}

@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { MatDialog } from '@angular/material/dialog';
+import { provideTranslateService, TranslateService } from '@ngx-translate/core';
+import { of } from 'rxjs';
 import {
   GroupDefinition,
   ItemDefinition,
@@ -7,7 +8,7 @@ import {
   ResolvedPreviewTexts,
   ScaleOption,
 } from '../../../../core/models';
-import { ConfirmDialogComponent } from '../../../../shared/components';
+import { UiFeedbackHostService } from '../../../../core/services';
 import { ClassicKinkSheetComponent } from './classic-kink-sheet.component';
 
 const MOCK_SCALES: readonly ScaleOption[] = [
@@ -100,7 +101,15 @@ describe('ClassicKinkSheetComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [ClassicKinkSheetComponent],
+      providers: [provideTranslateService({ lang: 'pt-BR', fallbackLang: 'en-US' })],
     }).compileComponents();
+
+    const translate = TestBed.inject(TranslateService);
+    translate.setTranslation('pt-BR', {
+      ui: {
+        notificationOkAction: 'OK',
+      },
+    });
 
     fixture = TestBed.createComponent(ClassicKinkSheetComponent);
     component = fixture.componentInstance;
@@ -170,23 +179,20 @@ describe('ClassicKinkSheetComponent', () => {
     expect(hostEl.querySelector('.classic-block')).toBeNull();
   });
 
-  it('should open ConfirmDialog popup with category description when clicking group info button', () => {
-    const dialog = fixture.debugElement.injector.get(MatDialog);
-    const openSpy = jest.spyOn(dialog, 'open').mockReturnValue({} as ReturnType<MatDialog['open']>);
+  it('should open feedback modal popup via UiFeedbackHostService with category description when clicking group info button', () => {
+    const feedbackHost = fixture.debugElement.injector.get(UiFeedbackHostService);
+    const modalSpy = jest.spyOn(feedbackHost, 'modalAlert').mockReturnValue(of(true));
 
     const hostEl = fixture.nativeElement as HTMLElement;
     const infoBtn = hostEl.querySelector<HTMLButtonElement>('.classic-block__info-btn');
     expect(infoBtn).not.toBeNull();
     infoBtn!.click();
 
-    expect(openSpy).toHaveBeenCalledWith(
-      ConfirmDialogComponent,
+    expect(modalSpy).toHaveBeenCalledWith(
       expect.objectContaining({
-        data: expect.objectContaining({
-          header: 'Safety',
-          message: 'Pre-scene rules.',
-          acceptLabel: 'OK',
-        }),
+        title: 'Safety',
+        message: 'Pre-scene rules.',
+        icon: 'fa-solid fa-circle-info',
       }),
     );
   });

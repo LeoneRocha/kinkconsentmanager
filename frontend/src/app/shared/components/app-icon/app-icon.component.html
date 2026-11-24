@@ -1,0 +1,23 @@
+@if (svgDefinition(); as def) {
+<svg
+  [class]="wrapperClasses()"
+  [attr.viewBox]="svgViewBox()"
+  [attr.data-icon]="def.iconName"
+  [attr.data-prefix]="def.prefix"
+  [attr.aria-hidden]="ariaLabel() ? null : 'true'"
+  [attr.role]="ariaLabel() ? 'img' : null"
+  [attr.aria-label]="ariaLabel() || null"
+  focusable="false"
+>
+  @for (d of svgPaths(); track $index) {
+  <path [attr.d]="d" />
+  }
+</svg>
+} @else {
+<i
+  [class]="wrapperClasses() + ' ' + cssIconClasses()"
+  [attr.aria-hidden]="ariaLabel() ? null : 'true'"
+  [attr.role]="ariaLabel() ? 'img' : null"
+  [attr.aria-label]="ariaLabel() || null"
+></i>
+}

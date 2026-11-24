@@ -1,6 +1,4 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { MatDialog } from '@angular/material/dialog';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { provideRouter, Router } from '@angular/router';
 import { provideTranslateService, TranslateService } from '@ngx-translate/core';
 import { Observable, Subject, of, throwError } from 'rxjs';
@@ -10,6 +8,7 @@ import {
   ChecklistAutosaveService,
   ChecklistStateService,
   I18nService,
+  UiFeedbackHostService,
 } from '../../../../core/services';
 import { ChecklistPageComponent } from './checklist-page.component';
 
@@ -94,6 +93,7 @@ const PT_BR_TRANSLATIONS = {
     quickNavTitle: 'Categorias',
     clearSelection: 'Limpar seleção',
     importJson: 'Importar JSON',
+    notificationOkAction: 'OK',
     importSuccess: 'Rascunho JSON importado e restaurado com sucesso.',
     importErrorInvalidJson: 'Arquivo inválido.',
     importErrorIncompatibleVersion: 'Versão do schema incompatível.',
@@ -161,6 +161,7 @@ const EN_US_TRANSLATIONS = {
     quickNavTitle: 'Categories',
     clearSelection: 'Clear selection',
     importJson: 'Import JSON',
+    notificationOkAction: 'OK',
     importSuccess: 'JSON draft imported and restored successfully.',
     importErrorInvalidJson: 'Invalid file.',
     importErrorIncompatibleVersion: 'Schema version incompatible.',
@@ -195,7 +196,7 @@ describe('ChecklistPageComponent', () => {
   let checklistState: ChecklistStateService;
   let autosaveService: ChecklistAutosaveService;
   let i18nService: I18nService;
-  let snackBar: MatSnackBar;
+  let feedbackHost: UiFeedbackHostService;
   let router: Router;
   let getChecklistSchemaMock: jest.Mock<Observable<ChecklistSchema>, [version?: string]>;
 
@@ -233,15 +234,14 @@ describe('ChecklistPageComponent', () => {
     checklistState = TestBed.inject(ChecklistStateService);
     autosaveService = TestBed.inject(ChecklistAutosaveService);
     i18nService = TestBed.inject(I18nService);
-    snackBar = TestBed.inject(MatSnackBar);
+    feedbackHost = TestBed.inject(UiFeedbackHostService);
     router = TestBed.inject(Router);
     fixture = TestBed.createComponent(ChecklistPageComponent);
   };
 
   afterEach(() => {
-    snackBar?.dismiss();
+    feedbackHost?.dismissAll();
     autosaveService?.stop();
-    TestBed.inject(MatDialog).closeAll();
     fixture?.destroy();
     TestBed.resetTestingModule();
     localStorage.clear();
@@ -406,22 +406,17 @@ describe('ChecklistPageComponent', () => {
     expect(navigateSpy).toHaveBeenCalledWith(['/export']);
   });
 
-  it('should open MatDialog confirmation on clearAll, support interactive saveNow button, and reset answers only when accepted', async () => {
+  it('should open confirmation modal via UiFeedbackHostService on clearAll, support interactive saveNow button, and reset answers only when accepted', async () => {
     await createTestModule(() => of(MOCK_SCHEMA));
     const hostEl = await startInMode('stepper');
 
     checklistState.setItemAnswer('item_safeword', { selectedOption: 'opt_traffic' });
     await fixture.whenStable();
 
-    const matDialog = fixture.debugElement.injector.get(MatDialog);
-    const openSpy = jest
-      .spyOn(matDialog, 'open')
-      .mockReturnValueOnce({ afterClosed: () => of(false) } as unknown as ReturnType<
-        MatDialog['open']
-      >)
-      .mockReturnValueOnce({ afterClosed: () => of(true) } as unknown as ReturnType<
-        MatDialog['open']
-      >);
+    const confirmSpy = jest
+      .spyOn(feedbackHost, 'confirm')
+      .mockReturnValueOnce(of(false))
+      .mockReturnValueOnce(of(true));
     const saveNowSpy = jest.spyOn(autosaveService, 'saveNow').mockResolvedValue(true);
     const clearAutosaveSpy = jest.spyOn(autosaveService, 'clearAutosave');
     const saveBtn = hostEl.querySelector<HTMLButtonElement>('.checklist-header__save-btn');
@@ -454,7 +449,7 @@ describe('ChecklistPageComponent', () => {
     clearBtn!.click();
     await fixture.whenStable();
 
-    expect(openSpy).toHaveBeenCalledTimes(1);
+    expect(confirmSpy).toHaveBeenCalledTimes(1);
     expect(checklistState.answers()['item_safeword']).toEqual({ selectedOption: 'opt_traffic' });
     expect(clearAutosaveSpy).not.toHaveBeenCalled();
 
@@ -462,7 +457,7 @@ describe('ChecklistPageComponent', () => {
     clearBtn!.click();
     await fixture.whenStable();
 
-    expect(openSpy).toHaveBeenCalledTimes(2);
+    expect(confirmSpy).toHaveBeenCalledTimes(2);
     expect(checklistState.answers()).toEqual({});
     expect(checklistState.answeredItemsCount()).toBe(0);
     expect(clearAutosaveSpy).toHaveBeenCalledTimes(1);
@@ -485,7 +480,8 @@ describe('ChecklistPageComponent', () => {
     await createTestModule(() => of(MOCK_SCHEMA));
     await fixture.whenStable();
 
-    const snackSpy = jest.spyOn(snackBar, 'open');
+    const errorSpy = jest.spyOn(feedbackHost, 'error');
+    const successSpy = jest.spyOn(feedbackHost, 'success');
     const hostEl = fixture.nativeElement as HTMLElement;
     const fileInput = hostEl.querySelector<HTMLInputElement>(
       'app-checklist-mode-selector input[type="file"]',
@@ -509,10 +505,9 @@ describe('ChecklistPageComponent', () => {
     await fixture.whenStable();
 
     expect(hostEl.querySelector('app-checklist-mode-selector')).not.toBeNull();
-    expect(snackSpy).toHaveBeenCalledWith(
+    expect(errorSpy).toHaveBeenCalledWith(
       expect.stringContaining('Arquivo inválido.'),
-      'OK',
-      expect.objectContaining({ panelClass: ['kcm-snackbar-error'] }),
+      expect.objectContaining({ actionLabel: 'OK', duration: 5000 }),
     );
 
     const validPayload = JSON.stringify({
@@ -534,10 +529,9 @@ describe('ChecklistPageComponent', () => {
     expect(checklistState.answers()['item_safeword']).toEqual({ selectedOption: 'opt_traffic' });
     expect(hostEl.querySelector('app-checklist-mode-selector')).toBeNull();
     expect(hostEl.querySelector('app-checklist-header')).not.toBeNull();
-    expect(snackSpy).toHaveBeenCalledWith(
+    expect(successSpy).toHaveBeenCalledWith(
       expect.stringContaining('Rascunho JSON importado e restaurado com sucesso.'),
-      'OK',
-      expect.objectContaining({ panelClass: ['kcm-snackbar-success'] }),
+      expect.objectContaining({ actionLabel: 'OK', duration: 4000 }),
     );
   });
 });

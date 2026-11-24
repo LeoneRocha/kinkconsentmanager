@@ -1,0 +1,24 @@
+<div
+  class="kcm-popper"
+  (mouseenter)="onMouseEnter()"
+  (mouseleave)="onMouseLeave()"
+>
+  <div
+    #triggerEl
+    class="kcm-popper__trigger"
+    [attr.aria-expanded]="isOpen()"
+    (click)="onTriggerClick()"
+  >
+    <ng-content select="[popperTrigger]" />
+  </div>
+
+  <div
+    #panelEl
+    class="kcm-popper__panel"
+    [hidden]="!isOpen()"
+    role="dialog"
+    [attr.aria-label]="ariaLabel() || ('popoverDefaultLabel' | schemaTranslate: 'ui')"
+  >
+    <ng-content />
+  </div>
+</div>

@@ -16,6 +16,7 @@ describe('AppFooterComponent', () => {
         privacyNotice: 'Privacidade local: seus dados permanecem exclusivamente no seu navegador.',
         footerCopyright: 'Todos os direitos reservados.',
         footerVersionLabel: 'Versão',
+        footerBuildLabel: 'build',
       },
     });
   });

@@ -292,6 +292,18 @@ html.app-reduced-motion {
   --mat-snack-bar-button-color: #fee2e2;
 }
 
+.kcm-snackbar-warning {
+  --mat-snack-bar-container-color: #b45309;
+  --mat-snack-bar-supporting-text-color: #ffffff;
+  --mat-snack-bar-button-color: #fef3c7;
+}
+
+.kcm-snackbar-info {
+  --mat-snack-bar-container-color: #1d4ed8;
+  --mat-snack-bar-supporting-text-color: #ffffff;
+  --mat-snack-bar-button-color: #dbeafe;
+}
+
 .sr-only {
   position: absolute;
   width: 1px;
@@ -323,6 +335,7 @@ html.app-reduced-motion {
 
   app-header,
   app-footer,
+  app-toast-container,
   app-accessibility-overlay,
   .app-shell__topbar,
   .app-shell__footer,

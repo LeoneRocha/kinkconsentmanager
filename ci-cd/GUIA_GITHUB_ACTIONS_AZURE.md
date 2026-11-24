@@ -120,6 +120,7 @@ Como o projeto utiliza **uma única branch (`main`)**, este passo garante que ne
 | `DOCKER_USERNAME` | Usuário do Docker Hub / Registry | Somente se `run_docker_publish: true` |
 | `DOCKER_PASSWORD` | Access Token do Docker Hub / Registry | Somente se `run_docker_publish: true` |
 | `SNYK_TOKEN` | Token de API do Snyk | Opcional |
+| `APPLICATIONINSIGHTS_CONNECTION_STRING` | Connection String do Azure Application Insights (injetada no build em `environment.prod.ts` para `AppEvents`/`AppMetrics`/`AppPageViews`) | Opcional (telemetria) |
 
 ### 4.3 Variables do Repositório ou Environment (`Settings → Secrets and variables → Actions → Variables`)
 

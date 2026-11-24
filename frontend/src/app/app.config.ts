@@ -1,7 +1,10 @@
 import { provideHttpClient } from '@angular/common/http';
 import {
   ApplicationConfig,
+  ErrorHandler,
   importProvidersFrom,
+  inject,
+  provideAppInitializer,
   provideBrowserGlobalErrorListeners,
 } from '@angular/core';
 import { MatDialogModule } from '@angular/material/dialog';
@@ -17,11 +20,14 @@ import {
   USER_PREFERENCES_REPOSITORY_TOKEN,
   UserPreferencesRepository,
 } from './core/repositories';
+import { TelemetryErrorHandler, TelemetryService } from './core/services';
 import { routes } from './app.routes';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
+    provideAppInitializer(() => inject(TelemetryService).initialize()),
+    { provide: ErrorHandler, useClass: TelemetryErrorHandler },
     provideRouter(routes),
     provideHttpClient(),
     importProvidersFrom(MatDialogModule, MatSnackBarModule),

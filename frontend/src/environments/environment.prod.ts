@@ -7,4 +7,9 @@ export const environment = {
     autogeneredKeyBuildDeploy: false,
     encryptionKeyBase64: '',
   },
+  telemetry: {
+    enabled: false,
+    connectionString: '',
+    cloudRole: 'kinkconsentmanager-ui',
+  },
 };

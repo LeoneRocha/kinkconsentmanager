@@ -24,7 +24,7 @@ export const LANGUAGE_STORAGE_KEY = PREF_LANGUAGE_KEY;
 @Injectable({ providedIn: 'root' })
 export class I18nService {
   private readonly document = inject(DOCUMENT);
-  private readonly translateService = inject(TranslateService);
+  private readonly translateService = inject(TranslateService, { optional: true });
   private readonly preferencesRepo = inject(USER_PREFERENCES_REPOSITORY_TOKEN);
   private readonly localeCatalog = inject(LocaleCatalogService);
 
@@ -35,7 +35,7 @@ export class I18nService {
   readonly currentLang = this.currentLangSignal.asReadonly();
 
   constructor() {
-    this.translateService.onLangChange
+    this.translateService?.onLangChange
       ?.pipe(takeUntilDestroyed())
       .subscribe((event) => {
         if (this.localeCatalog.isSupportedLocale(event.lang)) {
@@ -45,14 +45,14 @@ export class I18nService {
         this.translationRevisionSignal.update((rev) => rev + 1);
       });
 
-    this.translateService.onTranslationRefresh
+    this.translateService?.onTranslationRefresh
       ?.pipe(takeUntilDestroyed())
       .subscribe(() => {
         this.translationRevisionSignal.update((rev) => rev + 1);
       });
 
     const persistedLang = this.preferencesRepo.getLanguage();
-    const serviceLang = this.translateService.getCurrentLang();
+    const serviceLang = this.translateService?.getCurrentLang() ?? '';
     const initialLang: SupportedLanguage =
       persistedLang ??
       (this.localeCatalog.isSupportedLocale(serviceLang)
@@ -61,7 +61,7 @@ export class I18nService {
 
     this.currentLangSignal.set(initialLang);
     this.syncDocumentLang(initialLang);
-    if (serviceLang !== initialLang) {
+    if (this.translateService && serviceLang !== initialLang) {
       this.translateService.use(initialLang).pipe(take(1)).subscribe({ error: () => { } });
     }
   }
@@ -73,7 +73,7 @@ export class I18nService {
     this.currentLangSignal.set(lang);
     this.syncDocumentLang(lang);
     this.preferencesRepo.saveLanguage(lang);
-    this.translateService.use(lang).pipe(take(1)).subscribe({ error: () => { } });
+    this.translateService?.use(lang).pipe(take(1)).subscribe({ error: () => { } });
     this.translationRevisionSignal.update((rev) => rev + 1);
   }
 
@@ -252,6 +252,10 @@ export class I18nService {
   ): string | null {
     this.currentLangSignal();
     this.translationRevisionSignal();
+
+    if (!this.translateService) {
+      return null;
+    }
 
     if (
       typeof this.translateService.hasTranslationKey === 'function' &&

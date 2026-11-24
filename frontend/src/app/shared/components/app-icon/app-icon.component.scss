@@ -1,0 +1,58 @@
+:host {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.kcm-icon {
+  display: inline-block;
+  flex-shrink: 0;
+  fill: currentColor;
+
+  &--xs {
+    font-size: 0.75em;
+  }
+
+  &--sm {
+    font-size: 0.875em;
+  }
+
+  &--md {
+    font-size: 1em;
+  }
+
+  &--lg {
+    font-size: 1.25em;
+  }
+
+  &--xl {
+    font-size: 1.5em;
+  }
+
+  &--fw {
+    width: 1.25em;
+    text-align: center;
+  }
+
+  &--spin {
+    animation: kcm-icon-spin 1.4s linear infinite;
+  }
+}
+
+svg.kcm-icon {
+  width: 1em;
+  height: 1em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kcm-icon--spin {
+    animation: none;
+  }
+}
+
+@keyframes kcm-icon-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

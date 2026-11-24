@@ -3,7 +3,7 @@
 Documento normativo de referência para desenvolvedores e agentes de IA do **KinkConsentManager**.
 Consolida os padrões técnicos, regras de arquitetura, qualidade e governança aplicáveis à base de código atual (V1 Checklist em `frontend/`) e às diretrizes preparatórias genéricas para a futura evolução do Backend (**Coming Soon**).
 
-**Último alinhamento documental:** `2026-11-22` (Angular 22 zoneless, Angular Material 22.3, Font Awesome 7, Web Crypto AES-GCM, Jest 30 + `jest-preset-angular` 17, camada genérica CRUD e Backend marcado como Coming Soon).
+**Último alinhamento documental:** `2026-11-23` (Angular 22 zoneless, Angular Material 22.3, Font Awesome 7 SVG + CSS, Popper.js, SweetAlert2, Toast desacoplado, Web Crypto AES-GCM, Jest 30 + `jest-preset-angular` 17 e regra mandatória `R-GOV-GUIDELINES`).
 
 ---
 
@@ -57,6 +57,11 @@ Quando houver divergência entre documentos:
 - **Proibido** executar `git commit`, `git push`, criar/alternar `branch` ou abrir Pull Requests (PRs) de forma autônoma por assistentes ou automações.
 - **Isolamento Local Obrigatório:** todas as alterações permanecem exclusivamente na árvore de trabalho local (*working directory* / *stage*) para revisão, validação de diffs e versionamento pelo desenvolvedor responsável.
 
+### 1.6 Adesão Obrigatória às Diretrizes para Todo Novo Desenvolvimento (`R-GOV-GUIDELINES`)
+
+- **Escopo Universal:** qualquer **novo desenvolvimento, funcionalidade, serviço, utilitário ou criação/refatoração de componente** — seja por desenvolvedor ou agente de IA — **deve obrigatoriamente seguir todas as regras deste `PROJECT_GUIDELINES.md`**.
+- **Inconformidade Bloqueante:** componentes ou serviços criados fora do padrão **4+1**, sem `ChangeDetectionStrategy.OnPush`, com strings visíveis ou atributos de acessibilidade (`aria-label`, títulos, botões de confirmação/fechamento) **hardcoded fora de `assets/i18n/{lang}.json`**, sem encapsulamento de terceiros ou sem testes unitários Jest são considerados fora de conformidade e devem ser ajustados antes de concluir a entrega.
+
 ---
 
 ## 2. Estrutura do Repositório e Stack de Referência
@@ -79,9 +84,12 @@ kinkconsentmanager/
 │   └── Frontend/
 ├── frontend/                            # SPA Angular 22 + Angular Material 22.3 (V1 Checklist & Export)
 │   ├── public/                          # Favicons (silhueta de usuário SVG/ICO/PNG), manifest PWA e og-image.png
-│   ├── src/app/core/                    # Models, Repositories (Schema, BrowserStorage, UserPreferences, BaseCrud) e Services (State, Autosave, Crypto, I18n, Theme, Accessibility, Storage)
-│   ├── src/app/shared/                  # Dumb Components (6 componentes 4+1) e SchemaTranslatePipe
+│   ├── scripts/                         # Versionamento dinâmico amigável (X.Y.Z + buildDate), injeção de telemetria em build e check-i18n-keys.mjs
+│   ├── src/app/core/                    # Models, Repositories (Schema, BrowserStorage, UserPreferences, BaseCrud) e Services (State, Autosave, Crypto, I18n, Theme, Accessibility, Storage, Notification, SweetAlert, AlertFactory, ModalFactory, UiFeedbackHost, Telemetry)
+│   ├── src/app/layouts/                 # Shell layout desacoplado (AppHeaderComponent, AppFooterComponent, AppAccessibilityOverlayComponent)
+│   ├── src/app/shared/                  # Dumb Components 4+1 (scale, question, legend, progress, full-grid, confirm, toast-container, popper-popover, sweet-alert-trigger, popup-host, app-icon) e SchemaTranslatePipe
 │   ├── src/app/features/                # Features lazy: checklist (mode selector, stepper, classic, full, quick_fill) e export
+│   ├── src/environments/                # environment.ts e environment.prod.ts (version + buildDate dinâmicos)
 │   ├── src/assets/                      # checklist-v1.json e i18n/{pt-BR,en-US}.json
 │   ├── src/setup-jest.ts                # Setup zoneless e polyfills jsdom para Jest 30
 │   ├── jest.config.js                   # Configuração Jest + jest-preset-angular + 6 reporters
@@ -109,7 +117,8 @@ kinkconsentmanager/
 | ---- | ---------- |
 | Angular & CLI | Angular `^22.1.0` (Standalone + Signals + **zoneless**), `@angular/build` / `@angular/cli` `^22.1.2` |
 | Linguagem & Reatividade | TypeScript `~6.0.2` (`strict: true`, `strictTemplates: true`), RxJS `~7.8.0` |
-| Design System & UI | **Angular Material** `^22.3.0`, `@angular/cdk` `^22.3.0`, **Font Awesome Free** `^7.0.1`, fonte `Nunito` |
+| Design System & UI | **Angular Material** `^22.3.0`, `@angular/cdk` `^22.3.0`, **Font Awesome** `^7.0.1` (`fontawesome-free`, `free-solid-svg-icons`, `free-brands-svg-icons`), `@popperjs/core` `^2.11.8`, `sweetalert2`, fonte `Nunito` |
+| Telemetria & Monitoramento | `@microsoft/applicationinsights-web` (lazy-loaded via `TelemetryService` / `TelemetryErrorHandler`, Zero-Knowledge: apenas `AppPageViews`, `AppEvents`, `AppMetrics` e exceções sanitizadas, sem respostas/notas) |
 | Internacionalização | `@ngx-translate/core` `^18.1.0`, `@ngx-translate/http-loader` `^18.1.0` (`pt-BR`, `en-US`) |
 | Exportação & Impressão Client-Side | `html-to-image` `^1.11.13`, `pdfmake` `^0.3.15`, `@types/pdfmake` `^0.3.3`, `@media print` (`window.print()`) |
 | Testes & Coverage | **Jest** `^30.5.2`, `jest-preset-angular` `^17.0.3`, `jest-environment-jsdom` `^30.5.2`, `jsdom` `^28.0.0`, `@types/jest` `^30.0.0` |
@@ -172,7 +181,8 @@ O frontend já expõe contratos genéricos em [crud.model.ts](../frontend/src/ap
 ### 4.2 Arquitetura Schema-Driven e Internacionalização (i18n)
 
 - **Separação Obrigatória:** IDs estruturais pertencem ao schema (`checklist-v1.json`); textos legíveis pertencem exclusivamente a `assets/i18n/{lang}.json`.
-- **Resolução Reativa:** usar `SchemaTranslatePipe` e `I18nService` (`TranslateService` do `@ngx-translate/core` v18 com API standalone `provideTranslateService` + `provideTranslateHttpLoader`).
+- **Zero Strings Hardcoded (inclusive em ARIA e Alerts):** **100% dos textos de interface, tooltips, `aria-label`, botões de ação (`OK`, `Confirmar`, `Cancelar`, `Fechar`), títulos de alertas/modais e rótulos de versão** em qualquer componente ou serviço devem ser resolvidos via `SchemaTranslatePipe` (`'chave' | schemaTranslate: 'ui'`) ou `I18nService.translateUi('chave')` com chaves sincronizadas em `pt-BR.json` e `en-US.json`.
+- **Resolução Reativa e Validação Automática:** usar `provided` `SchemaTranslatePipe` / `I18nService` e validar paridade com `npm.cmd run check:i18n` antes de concluir qualquer entrega.
 - **Zero Perda na Troca de Idioma:** alternar entre `pt-BR` e `en-US` deve re-renderizar rótulos mantendo 100% das respostas e notas preenchidas no `ChecklistStateService`.
 
 ### 4.3 Governança Estrita de Componentes (Regra 4+1 e Zero Template Inline)
@@ -250,8 +260,9 @@ Set-Location "e:\git\kinkconsentmanager\frontend"
 npx.cmd tsc -p tsconfig.app.json --noEmit
 npx.cmd tsc -p tsconfig.spec.json --noEmit
 
-# 2. Verificação de formatação Prettier
+# 2. Verificação de formatação Prettier e paridade estática i18n
 npx.cmd prettier --check "src/**/*.{ts,html,scss,json}"
+npm.cmd run check:i18n
 
 # 3. Execução da suíte Jest completa (CI)
 npm.cmd run test:ci
@@ -272,8 +283,8 @@ npm.cmd audit --omit=dev
 
 ### 5.3 Baseline Verificado (V1 Checklist)
 
-- **Suíte:** `41 passed, 41 total` arquivos `.spec.ts` · `201 passed, 201 total` testes unitários (`0` falhas).
-- **Cobertura Global Jest:** Statements **`90,3%`** · Branches **`74,32%`** · Functions **`90,52%`** · Lines **`90,04%`**.
+- **Suíte:** `50 passed, 50 total` arquivos `.spec.ts` · `224 passed, 224 total` testes unitários (`0` falhas).
+- **Cobertura Global Jest:** Statements **`90,58%`** · Branches **`73,59%`** · Functions **`90,94%`** · Lines **`90,28%`**.
 - **Relatórios Sonar:** [sonar-project.properties](../frontend/sonar-project.properties) aponta para `frontend/coverage/lcov.info` e `frontend/coverage/sonar/sonar-report.xml`.
 - Detalhes completos em [CHANGELOG_MELHORIAS.md](./CHANGELOG_MELHORIAS.md), [Diretrizes-Coverage-Frontend-KinkConsentManager.md](./Frontend/COVERAGE%20AND%20TEST/Diretrizes-Coverage-Frontend-KinkConsentManager.md) e [Diretrizes-CodeSmell-KinkConsentManagerUI.md](./Frontend/COVERAGE%20AND%20TEST/Diretrizes-CodeSmell-KinkConsentManagerUI.md).
 
@@ -287,13 +298,15 @@ Quando o backend for iniciado na V2+, deverá acompanhar testes automatizados eq
 
 | Área / Camada | Padrão Obrigatório |
 | ------------- | ------------------ |
-| Schemas & i18n | Schema estrutural em `checklist-v1.json`; textos apenas em `assets/i18n/{lang}.json`; paridade validada por `schema-integrity.spec.ts` (**R-GOV-SCHEMA**). |
+| Adesão Geral | **Todo novo desenvolvimento e criação de componente deve seguir integralmente este `PROJECT_GUIDELINES.md` (`R-GOV-GUIDELINES`)**. |
+| Schemas & i18n | Schema estrutural em `checklist-v1.json`; **zero strings hardcoded** (UI/ARIA/alertas apenas em `assets/i18n/{lang}.json`); paridade validada por `check:i18n` e `schema-integrity.spec.ts` (**R-GOV-SCHEMA**). |
 | Componentes UI | Padrão **4+1 arquivos**, `ChangeDetectionStrategy.OnPush`, `inject()`, **proibido template inline** (`template:`). |
 | Shared Kit | Componentes em `src/app/shared/components/` 100% Dumb (`input()` / `output()`, zero dependência de estado global). |
 | Estado | Container imutável via Angular Signals estendendo `BaseStateService<T>`; persistência local protegida por `try/catch`. |
 | Repositórios & Serviços | Abstrações `ISchemaRepository`, `BaseCrudRepository`, `BaseDataService` e `BaseCrudService`; evicção de cache em `catchError`. |
+| Factories UI (Host -> Factory -> Adapter) | Telas e componentes chamam exclusivamente o Host central (`UiFeedbackHostService` / `<app-popup-host>`) informando `kind` e `provider`; os adaptadores especializados (`Toast`, `SnackBar`, `SweetAlert2`, `Material Dialog`, `Popper.js`) ficam registrados nas Factories (`AlertFactoryService`, `ModalFactoryService`), nunca acoplados diretamente às features. |
 | Assinaturas RxJS | `take(1)` em chamadas finitas; `takeUntilDestroyed()` em streams contínuos (`typescript:S3800`). |
-| Segurança & Privacidade | Zero `[innerHTML]` bruto; CSP em `nginx.conf`; validação de `schemaVersion` no JSON; UTF-8 BOM + escape RFC-4180 no CSV. |
+| Segurança & Privacidade | Zero `[innerHTML]` bruto; CSP em `nginx.conf`; validação de `schemaVersion` no JSON; UTF-8 BOM + escape RFC-4180 no CSV; telemetria Zero-Knowledge (`TelemetryService` nunca envia respostas/notas/rascunhos). |
 | Testes Frontend | **Jest 30 + `jest-preset-angular` 17** (zoneless), AAA, `jest.restoreAllMocks()`, `HttpTestingController` para HTTP. |
 | Backend | **Coming Soon (Roadmap V2+)** — manter contratos REST/JSON compatíveis com `BaseDataService` / `PageResult<T>` e privacidade E2E. |
 | Controle de Versão (Git) | **Proibido `git commit`, `git push`, criação/troca de `branch` ou abertura de `PR` autônomos (R-GOV-GIT)**. |
@@ -302,14 +315,15 @@ Quando o backend for iniciado na V2+, deverá acompanhar testes automatizados eq
 
 ## 7. Checklist Rápido de Entrega
 
+- [ ] Todo novo desenvolvimento ou criação de componente seguiu integralmente este `PROJECT_GUIDELINES.md` (**R-GOV-GUIDELINES**).
 - [ ] Alterações no schema preservam compatibilidade ou evoluem `schemaVersion`, mantendo paridade total com `pt-BR.json` e `en-US.json` (**R-GOV-SCHEMA**).
 - [ ] Todos os novos componentes seguem o padrão **4+1 arquivos**, usam `OnPush` e não possuem template inline (`template:`).
-- [ ] Componentes em `shared/components/` permanecem 100% Dumb.
-- [ ] Nenhuma string visível ao usuário está hardcoded fora de `assets/i18n/`.
+- [ ] Componentes em `shared/components/` permanecem 100% Dumb (bibliotecas de terceiros como Popper/SweetAlert2/Toast/FontAwesome permanecem encapsuladas).
+- [ ] Nenhuma string visível ao usuário ou `aria-label` está hardcoded fora de `assets/i18n/` (`npm.cmd run check:i18n` com `0` pendências).
 - [ ] Nenhum `[innerHTML]` inseguro ou vazamento de subscrição RxJS foi introduzido.
 - [ ] `npx.cmd tsc -p tsconfig.app.json --noEmit` e `tsconfig.spec.json` passam com `0` erros.
 - [ ] `npx.cmd prettier --check "src/**/*.{ts,html,scss,json}"` conclui sem violações.
-- [ ] `npm.cmd run test:ci` e `npm.cmd run test:coverage` passam 100% (**41/41 suítes · 201/201 testes**).
+- [ ] `npm.cmd run test:ci` e `npm.cmd run test:coverage` passam 100% (**50/50 suítes · 224/224 testes**).
 - [ ] `npm.cmd run build:prod` conclui sem erros gerando artefatos e assets esperados.
 - [ ] `npm.cmd audit --omit=dev` reporta `0` vulnerabilidades em dependências de produção.
 - [ ] Configurações `nginx.conf`, `Dockerfile`, `docker-compose*.yml` e `sonar-project.properties` permanecem consistentes.

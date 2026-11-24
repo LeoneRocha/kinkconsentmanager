@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { MatDialog } from '@angular/material/dialog';
+import { provideTranslateService, TranslateService } from '@ngx-translate/core';
+import { of } from 'rxjs';
 import {
   ItemDefinition,
   ItemResponseValue,
@@ -7,7 +8,7 @@ import {
   ResolvedRolePairLabels,
   ScaleOption,
 } from '../../../core/models';
-import { ConfirmDialogComponent } from '../confirm-dialog';
+import { UiFeedbackHostService } from '../../../core/services';
 import { DynamicQuestionItemComponent } from './dynamic-question-item.component';
 
 const MOCK_SCALES: readonly ScaleOption[] = [
@@ -90,7 +91,15 @@ describe('DynamicQuestionItemComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [DynamicQuestionItemComponent],
+      providers: [provideTranslateService({ lang: 'pt-BR', fallbackLang: 'en-US' })],
     }).compileComponents();
+
+    const translate = TestBed.inject(TranslateService);
+    translate.setTranslation('pt-BR', {
+      ui: {
+        notificationOkAction: 'OK',
+      },
+    });
 
     fixture = TestBed.createComponent(DynamicQuestionItemComponent);
     component = fixture.componentInstance;
@@ -326,14 +335,14 @@ describe('DynamicQuestionItemComponent', () => {
     expect(speakEmitSpy).toHaveBeenCalledTimes(1);
   });
 
-  it('should open ConfirmDialog popup with description when clicking the info button', async () => {
+  it('should open feedback modal popup via UiFeedbackHostService with description when clicking the info button', async () => {
     await setBaseInputs(
       { id: 'item_info_popup', type: 'scale_matrix' },
       { itemLabel: 'Rope Bondage', itemTooltip: 'Helpful safety explanation' },
     );
 
-    const dialog = fixture.debugElement.injector.get(MatDialog);
-    const openSpy = jest.spyOn(dialog, 'open').mockReturnValue({} as ReturnType<MatDialog['open']>);
+    const feedbackHost = fixture.debugElement.injector.get(UiFeedbackHostService);
+    const modalSpy = jest.spyOn(feedbackHost, 'modalAlert').mockReturnValue(of(true));
 
     const infoBtn = fixture.nativeElement.querySelector(
       '.question-item__tooltip-btn',
@@ -341,14 +350,11 @@ describe('DynamicQuestionItemComponent', () => {
     expect(infoBtn).not.toBeNull();
     infoBtn.click();
 
-    expect(openSpy).toHaveBeenCalledWith(
-      ConfirmDialogComponent,
+    expect(modalSpy).toHaveBeenCalledWith(
       expect.objectContaining({
-        data: expect.objectContaining({
-          header: 'Rope Bondage',
-          message: 'Helpful safety explanation',
-          acceptLabel: 'OK',
-        }),
+        title: 'Rope Bondage',
+        message: 'Helpful safety explanation',
+        icon: 'fa-solid fa-circle-info',
       }),
     );
   });

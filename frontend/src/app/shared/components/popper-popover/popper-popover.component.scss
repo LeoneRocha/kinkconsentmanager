@@ -1,0 +1,26 @@
+@use 'variables' as v;
+
+:host {
+  display: inline-block;
+}
+
+.kcm-popper {
+  display: inline-block;
+  position: relative;
+
+  &__trigger {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  &__panel {
+    z-index: 70;
+    min-width: 12rem;
+    padding: 0.75rem;
+    border-radius: v.$radius-md;
+    border: 1px solid v.$border-strong;
+    background-color: v.$surface-elevated;
+    color: v.$text-primary;
+    box-shadow: v.$shadow-lg;
+  }
+}

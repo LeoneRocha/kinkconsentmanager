@@ -18,6 +18,7 @@ import {
   I18nService,
   LocaleMetadata,
   SpeechRate,
+  TelemetryService,
   ThemeService,
 } from '../../core/services';
 import { SchemaTranslatePipe } from '../../shared/pipes';
@@ -52,6 +53,7 @@ export class AppHeaderComponent {
   protected readonly i18n = inject(I18nService);
   protected readonly theme = inject(ThemeService);
   protected readonly accessibility = inject(AccessibilityService);
+  private readonly telemetry = inject(TelemetryService);
 
   protected readonly langMenuOpen = signal(false);
   protected readonly a11yPanelOpen = signal(false);
@@ -97,6 +99,7 @@ export class AppHeaderComponent {
 
   protected onToggleTheme(): void {
     const nextMode = this.theme.toggleTheme();
+    this.telemetry.trackEvent('theme_changed', { theme: nextMode });
     const key = nextMode === 'dark' ? 'themeDarkActive' : 'themeLightActive';
     this.accessibility.announce(this.i18n.translateUi(key));
   }
@@ -112,6 +115,7 @@ export class AppHeaderComponent {
   protected selectLanguage(lang: SupportedLanguage): void {
     this.i18n.setLanguage(lang);
     this.langMenuOpen.set(false);
+    this.telemetry.trackEvent('language_changed', { language: lang });
     this.accessibility.announce(this.i18n.translateUi('languageChanged'));
   }
 

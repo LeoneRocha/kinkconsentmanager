@@ -33,7 +33,7 @@ module.exports = {
     ],
   },
   transformIgnorePatterns: [
-    'node_modules/(?!(.*\\.mjs$|@angular|@ngx-translate|primeng|@primeuix|@primeicons|rxjs))',
+    'node_modules/(?!(.*\\.mjs$|@angular|@microsoft|@ngx-translate|@fortawesome|@popperjs|sweetalert2|primeng|@primeuix|@primeicons|rxjs))',
   ],
   moduleFileExtensions: ['ts', 'html', 'js', 'json', 'mjs'],
   resolver: undefined,

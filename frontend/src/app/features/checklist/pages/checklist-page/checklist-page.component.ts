@@ -13,10 +13,8 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
-import { MatDialog } from '@angular/material/dialog';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
-import { Subscription } from 'rxjs';
+import { Subscription, take } from 'rxjs';
 import {
   ChecklistViewMode,
   ItemDefinition,
@@ -30,10 +28,10 @@ import {
   ChecklistAutosaveService,
   ChecklistStateService,
   I18nService,
+  TelemetryService,
+  UiFeedbackHostService,
 } from '../../../../core/services';
 import {
-  ConfirmDialogComponent,
-  ConfirmDialogData,
   LegendBarComponent,
   ProgressIndicatorComponent,
 } from '../../../../shared/components';
@@ -85,8 +83,8 @@ export class ChecklistPageComponent implements OnInit {
   protected readonly autosave = inject(ChecklistAutosaveService);
   protected readonly i18n = inject(I18nService);
   private readonly accessibility = inject(AccessibilityService);
-  private readonly dialog = inject(MatDialog);
-  private readonly snackBar = inject(MatSnackBar);
+  private readonly feedbackHost = inject(UiFeedbackHostService);
+  private readonly telemetry = inject(TelemetryService);
   private readonly jsonDraft = inject(JsonDraftService);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
@@ -427,12 +425,14 @@ export class ChecklistPageComponent implements OnInit {
 
   protected onViewModeChange(mode: ChecklistViewMode): void {
     this.checklistState.setViewMode(mode);
+    this.telemetry.trackEvent('checklist_mode_selected', { mode, source: 'toolbar' });
   }
 
   protected onStartModeSelected(mode: ChecklistViewMode): void {
     this.reviewStepActive.set(false);
     this.checklistState.setViewMode(mode);
     this.hasSelectedStartMode.set(true);
+    this.telemetry.trackEvent('checklist_mode_selected', { mode, source: 'mode_selector' });
     this.scrollToContentTop();
   }
 
@@ -457,15 +457,18 @@ export class ChecklistPageComponent implements OnInit {
         void this.autosave.saveNow();
         this.hasSelectedStartMode.set(true);
         this.scrollToContentTop();
-        this.snackBar.open(
+        this.telemetry.trackEvent('checklist_json_imported', {
+          source: 'mode_selector',
+          status: 'success',
+        });
+        this.feedbackHost.success(
           `${importTitle} — ${this.translateWithFallback(
             'importSuccess',
             'Rascunho JSON importado e restaurado com sucesso.',
           )}`,
-          'OK',
           {
+            actionLabel: this.translateWithFallback('notificationOkAction', 'OK'),
             duration: 4000,
-            panelClass: ['kcm-snackbar-success'],
           },
         );
         return;
@@ -474,34 +477,35 @@ export class ChecklistPageComponent implements OnInit {
       const isIncompatibleVersion = validation.errors.some((error) =>
         error.toLowerCase().includes('incompatible'),
       );
-      this.snackBar.open(
-        `${importTitle} — ${
-          isIncompatibleVersion
-            ? this.translateWithFallback(
-                'importErrorIncompatibleVersion',
-                'Versão do schema incompatível com este checklist.',
-              )
-            : this.translateWithFallback(
-                'importErrorInvalidJson',
-                'Arquivo inválido: não foi possível ler um rascunho JSON válido.',
-              )
+      this.telemetry.trackEvent('checklist_json_imported', {
+        source: 'mode_selector',
+        status: 'error',
+      });
+      this.feedbackHost.error(
+        `${importTitle} — ${isIncompatibleVersion
+          ? this.translateWithFallback(
+            'importErrorIncompatibleVersion',
+            'Versão do schema incompatível com este checklist.',
+          )
+          : this.translateWithFallback(
+            'importErrorInvalidJson',
+            'Arquivo inválido: não foi possível ler um rascunho JSON válido.',
+          )
         }`,
-        'OK',
         {
+          actionLabel: this.translateWithFallback('notificationOkAction', 'OK'),
           duration: 5000,
-          panelClass: ['kcm-snackbar-error'],
         },
       );
     } catch {
-      this.snackBar.open(
+      this.feedbackHost.error(
         `${importTitle} — ${this.translateWithFallback(
           'importErrorInvalidJson',
           'Arquivo inválido: não foi possível ler um rascunho JSON válido.',
         )}`,
-        'OK',
         {
+          actionLabel: this.translateWithFallback('notificationOkAction', 'OK'),
           duration: 5000,
-          panelClass: ['kcm-snackbar-error'],
         },
       );
     } finally {
@@ -570,31 +574,25 @@ export class ChecklistPageComponent implements OnInit {
   }
 
   protected onClearAll(): void {
-    const dialogRef = this.dialog.open<ConfirmDialogComponent, ConfirmDialogData, boolean>(
-      ConfirmDialogComponent,
-      {
-        width: 'min(92vw, 28rem)',
-        data: {
-          header: this.i18n.translateUi('clearConfirmTitle'),
-          message: this.i18n.translateUi('clearConfirmMessage'),
-          icon: 'fa-solid fa-triangle-exclamation',
-          acceptLabel: this.i18n.translateUi('confirmYes'),
-          rejectLabel: this.i18n.translateUi('confirmNo'),
-          danger: true,
-        },
-      },
-    );
-
-    dialogRef
-      .afterClosed()
-      .pipe(takeUntilDestroyed(this.destroyRef))
+    this.feedbackHost
+      .confirm({
+        title: this.i18n.translateUi('clearConfirmTitle'),
+        message: this.i18n.translateUi('clearConfirmMessage'),
+        icon: 'fa-solid fa-triangle-exclamation',
+        confirmLabel: this.i18n.translateUi('confirmYes'),
+        cancelLabel: this.i18n.translateUi('confirmNo'),
+        danger: true,
+      })
+      .pipe(take(1), takeUntilDestroyed(this.destroyRef))
       .subscribe((confirmed) => {
-        if (confirmed !== true) {
+        if (!confirmed) {
           return;
         }
+        const clearedCount = this.checklistState.answeredItemsCount();
         this.reviewStepActive.set(false);
         this.checklistState.resetAllAnswers();
         this.autosave.clearAutosave();
+        this.telemetry.trackEvent('checklist_cleared', { answeredCount: clearedCount });
         this.accessibility.announce(
           this.translateWithFallback('a11yClearedStatus', 'Todas as respostas foram limpas.'),
         );

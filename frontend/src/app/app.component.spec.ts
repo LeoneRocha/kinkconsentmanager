@@ -39,6 +39,9 @@ describe('App', () => {
         privacyNotice: 'Privacidade local: seus dados permanecem exclusivamente no seu navegador.',
         footerCopyright: 'Todos os direitos reservados.',
         footerVersionLabel: 'Versão',
+        footerBuildLabel: 'build',
+        notificationsRegionLabel: 'Notificações',
+        notificationCloseLabel: 'Fechar notificação',
         skipToContent: 'Ir direto para o conteúdo principal',
         themeToggleToDark: 'Ativar tema escuro',
         themeToggleToLight: 'Ativar tema claro',
@@ -107,6 +110,7 @@ describe('App', () => {
     const el = fixture.nativeElement as HTMLElement;
     expect(el.querySelector('router-outlet')).not.toBeNull();
     expect(el.querySelector('main#main-content')).not.toBeNull();
+    expect(el.querySelector('app-toast-container')).not.toBeNull();
     expect(el.querySelector('[role="status"]')).not.toBeNull();
     expect(el.textContent).toContain('Privacidade local');
     const footer = el.querySelector('footer.app-shell__footer');

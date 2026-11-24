@@ -12,7 +12,6 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
 import { take } from 'rxjs';
 import { ExportFormat, ExportResult, ResolvedPreviewTexts } from '../../../../core/models';
@@ -21,6 +20,8 @@ import {
   ChecklistAutosaveService,
   ChecklistStateService,
   I18nService,
+  TelemetryService,
+  UiFeedbackHostService,
 } from '../../../../core/services';
 import { ExportPreviewLayout, FullGridPreviewComponent } from '../../../../shared/components';
 import { ExportActionsToolbarComponent } from '../../components/export-actions-toolbar';
@@ -52,7 +53,8 @@ export class ExportPageComponent implements OnInit {
   private readonly autosave = inject(ChecklistAutosaveService);
   private readonly i18n = inject(I18nService);
   private readonly schemaRepository = inject(SCHEMA_REPOSITORY_TOKEN);
-  private readonly snackBar = inject(MatSnackBar);
+  private readonly feedbackHost = inject(UiFeedbackHostService);
+  private readonly telemetry = inject(TelemetryService);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
   private readonly checklistFlatten = inject(ChecklistFlattenService);
@@ -114,6 +116,7 @@ export class ExportPageComponent implements OnInit {
 
   protected onPreviewLayoutChange(layout: ExportPreviewLayout): void {
     this.previewLayout.set(layout);
+    this.telemetry.trackEvent('export_layout_selected', { layout });
   }
 
   protected async onExportPng(): Promise<void> {
@@ -123,12 +126,13 @@ export class ExportPageComponent implements OnInit {
     }
 
     this.busyFormat.set('png');
+    const startedAt = Date.now();
     try {
       const result = await this.pngExport.exportElementAsPng(
         captureElement,
         this.buildExportFilename(),
       );
-      this.notifyExportResult(result);
+      this.notifyExportResult(result, Date.now() - startedAt);
     } finally {
       this.busyFormat.set(null);
     }
@@ -142,6 +146,7 @@ export class ExportPageComponent implements OnInit {
     }
 
     this.busyFormat.set('pdf');
+    const startedAt = Date.now();
     try {
       const rows = this.checklistFlatten.flatten(activeSchema, this.answers(), texts);
       const result = await this.pdfExport.exportPdf(
@@ -150,7 +155,7 @@ export class ExportPageComponent implements OnInit {
         texts,
         this.buildExportFilename(),
       );
-      this.notifyExportResult(result);
+      this.notifyExportResult(result, Date.now() - startedAt);
     } finally {
       this.busyFormat.set(null);
     }
@@ -162,6 +167,7 @@ export class ExportPageComponent implements OnInit {
     }
 
     this.busyFormat.set('print');
+    const startedAt = Date.now();
     const previousTitle = typeof document !== 'undefined' ? document.title : '';
     try {
       if (typeof document !== 'undefined') {
@@ -170,6 +176,7 @@ export class ExportPageComponent implements OnInit {
       if (typeof window !== 'undefined' && typeof window.print === 'function') {
         window.print();
       }
+      this.trackExportTelemetry('print', 'success', Date.now() - startedAt);
     } finally {
       if (typeof document !== 'undefined') {
         document.title = previousTitle;
@@ -184,10 +191,11 @@ export class ExportPageComponent implements OnInit {
     }
 
     this.busyFormat.set('json');
+    const startedAt = Date.now();
     try {
       const draft = this.checklistState.exportDraftSnapshot(this.i18n.currentLang());
       const result = this.jsonDraft.exportDraft(draft, this.buildExportFilename());
-      this.notifyExportResult(result);
+      this.notifyExportResult(result, Date.now() - startedAt);
     } finally {
       this.busyFormat.set(null);
     }
@@ -210,9 +218,13 @@ export class ExportPageComponent implements OnInit {
       if (validation.valid && validation.draft) {
         this.checklistState.importDraft(validation.draft);
         this.generatedAtDate.set(new Date());
-        this.snackBar.open(`${this.t('importJson')} — ${this.t('importSuccess')}`, 'OK', {
+        this.telemetry.trackEvent('checklist_json_imported', {
+          source: 'export_page',
+          status: 'success',
+        });
+        this.feedbackHost.success(`${this.t('importJson')} — ${this.t('importSuccess')}`, {
+          actionLabel: this.t('notificationOkAction'),
           duration: 4000,
-          panelClass: ['kcm-snackbar-success'],
         });
         return;
       }
@@ -220,27 +232,25 @@ export class ExportPageComponent implements OnInit {
       const isIncompatibleVersion = validation.errors.some((error) =>
         error.toLowerCase().includes('incompatible'),
       );
-      this.snackBar.open(
-        `${this.t('importJson')} — ${
-          isIncompatibleVersion
-            ? this.t('importErrorIncompatibleVersion')
-            : this.t('importErrorInvalidJson')
+      this.telemetry.trackEvent('checklist_json_imported', {
+        source: 'export_page',
+        status: 'error',
+      });
+      this.feedbackHost.error(
+        `${this.t('importJson')} — ${isIncompatibleVersion
+          ? this.t('importErrorIncompatibleVersion')
+          : this.t('importErrorInvalidJson')
         }`,
-        'OK',
         {
+          actionLabel: this.t('notificationOkAction'),
           duration: 5000,
-          panelClass: ['kcm-snackbar-error'],
         },
       );
     } catch {
-      this.snackBar.open(
-        `${this.t('importJson')} — ${this.t('importErrorInvalidJson')}`,
-        'OK',
-        {
-          duration: 5000,
-          panelClass: ['kcm-snackbar-error'],
-        },
-      );
+      this.feedbackHost.error(`${this.t('importJson')} — ${this.t('importErrorInvalidJson')}`, {
+        actionLabel: this.t('notificationOkAction'),
+        duration: 5000,
+      });
     } finally {
       this.busyFormat.set(null);
     }
@@ -254,10 +264,11 @@ export class ExportPageComponent implements OnInit {
     }
 
     this.busyFormat.set('csv');
+    const startedAt = Date.now();
     try {
       const rows = this.checklistFlatten.flatten(activeSchema, this.answers(), texts);
       const result = this.csvExport.exportCsv(rows, this.buildExportFilename());
-      this.notifyExportResult(result);
+      this.notifyExportResult(result, Date.now() - startedAt);
     } finally {
       this.busyFormat.set(null);
     }
@@ -292,23 +303,43 @@ export class ExportPageComponent implements OnInit {
       });
   }
 
-  private notifyExportResult(result: ExportResult): void {
+  private notifyExportResult(result: ExportResult, durationMs: number): void {
+    this.trackExportTelemetry(result.format, result.success ? 'success' : 'error', durationMs);
+
     if (result.success) {
-      this.snackBar.open(`${result.filename} — ${this.t('exportSuccess')}`, 'OK', {
+      this.feedbackHost.success(`${result.filename} — ${this.t('exportSuccess')}`, {
+        actionLabel: this.t('notificationOkAction'),
         duration: 4000,
-        panelClass: ['kcm-snackbar-success'],
       });
       return;
     }
 
-    this.snackBar.open(
+    this.feedbackHost.error(
       `${result.filename} — ${result.errorMessage || this.t('exportError')}`,
-      'OK',
       {
+        actionLabel: this.t('notificationOkAction'),
         duration: 5000,
-        panelClass: ['kcm-snackbar-error'],
       },
     );
+  }
+
+  private trackExportTelemetry(
+    format: ExportFormat,
+    status: 'success' | 'error',
+    durationMs: number,
+  ): void {
+    const layout = this.previewLayout() ?? 'modern';
+    this.telemetry.trackEvent('export_completed', { format, layout, status });
+    this.telemetry.trackMetric({
+      name: 'export_duration_ms',
+      average: durationMs,
+      properties: { format, status },
+    });
+    this.telemetry.trackMetric({
+      name: 'checklist_completion_percent',
+      average: this.checklistState.progressPercentage(),
+      properties: { format },
+    });
   }
 
   private readFileAsText(file: File): Promise<string> {

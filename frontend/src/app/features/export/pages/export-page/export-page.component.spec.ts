@@ -1,11 +1,10 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { provideRouter, Router } from '@angular/router';
 import { provideTranslateService, TranslateService } from '@ngx-translate/core';
 import { Observable, of, throwError } from 'rxjs';
 import { ChecklistSchema } from '../../../../core/models';
 import { SCHEMA_REPOSITORY_TOKEN } from '../../../../core/repositories';
-import { ChecklistStateService } from '../../../../core/services';
+import { ChecklistStateService, UiFeedbackHostService } from '../../../../core/services';
 import {
   FileDownloadService,
   PDF_MAKER_LOADER,
@@ -77,6 +76,7 @@ const PT_BR_TRANSLATIONS = {
     retry: 'Tentar novamente',
     exportSuccess: 'Arquivo exportado com sucesso.',
     exportError: 'Erro na exportação.',
+    notificationOkAction: 'OK',
     importSuccess: 'Rascunho JSON importado e restaurado com sucesso.',
     importErrorInvalidJson: 'Arquivo inválido.',
     importErrorIncompatibleVersion: 'Versão do schema incompatível.',
@@ -114,7 +114,7 @@ function createFileWithText(content: string, filename: string): File {
 describe('ExportPageComponent', () => {
   let fixture: ComponentFixture<ExportPageComponent>;
   let checklistState: ChecklistStateService;
-  let snackBar: MatSnackBar;
+  let feedbackHost: UiFeedbackHostService;
   let router: Router;
 
   let schemaRepoMock: { getChecklistSchema: jest.Mock<Observable<ChecklistSchema>, [version?: string]> };
@@ -160,12 +160,12 @@ describe('ExportPageComponent', () => {
     translate.use('pt-BR');
 
     checklistState = TestBed.inject(ChecklistStateService);
-    snackBar = TestBed.inject(MatSnackBar);
+    feedbackHost = TestBed.inject(UiFeedbackHostService);
     router = TestBed.inject(Router);
   });
 
   afterEach(() => {
-    snackBar?.dismiss();
+    feedbackHost?.dismissAll();
     jest.restoreAllMocks();
     localStorage.clear();
   });
@@ -242,7 +242,7 @@ describe('ExportPageComponent', () => {
   });
 
   it('should capture the offscreen 1200px container for PNG export and display a success snackbar', async () => {
-    const snackSpy = jest.spyOn(snackBar, 'open');
+    const successSpy = jest.spyOn(feedbackHost, 'success');
     await createPage();
 
     const hostEl = fixture.nativeElement as HTMLElement;
@@ -259,16 +259,15 @@ describe('ExportPageComponent', () => {
       'data:image/png;base64,EXPORTED',
       expect.stringMatching(/^kink-consent-checklist-modern-\d{4}-\d{2}-\d{2}\.png$/),
     );
-    expect(snackSpy).toHaveBeenCalledWith(
+    expect(successSpy).toHaveBeenCalledWith(
       expect.stringContaining('Arquivo exportado com sucesso.'),
-      'OK',
-      expect.objectContaining({ panelClass: ['kcm-snackbar-success'] }),
+      expect.objectContaining({ actionLabel: 'OK', duration: 4000 }),
     );
   });
 
   it('should show an error snackbar when PNG export fails', async () => {
     pngRendererMock.mockRejectedValueOnce(new Error('PNG render crashed'));
-    const snackSpy = jest.spyOn(snackBar, 'open');
+    const errorSpy = jest.spyOn(feedbackHost, 'error');
     await createPage();
 
     const hostEl = fixture.nativeElement as HTMLElement;
@@ -278,15 +277,14 @@ describe('ExportPageComponent', () => {
     hostEl.querySelector<HTMLButtonElement>('button[data-action="png"]')?.click();
     await fixture.whenStable();
 
-    expect(snackSpy).toHaveBeenCalledWith(
+    expect(errorSpy).toHaveBeenCalledWith(
       expect.stringContaining('PNG render crashed'),
-      'OK',
-      expect.objectContaining({ panelClass: ['kcm-snackbar-error'] }),
+      expect.objectContaining({ actionLabel: 'OK', duration: 5000 }),
     );
   });
 
   it('should export PDF, JSON draft, and CSV with success snackbars', async () => {
-    const snackSpy = jest.spyOn(snackBar, 'open');
+    const successSpy = jest.spyOn(feedbackHost, 'success');
     checklistState.setItemAnswer('item_rope', { primaryScale: 'enjoy' });
     await createPage();
 
@@ -315,11 +313,11 @@ describe('ExportPageComponent', () => {
       expect.stringMatching(/^kink-consent-checklist-modern-\d{4}-\d{2}-\d{2}\.csv$/),
     );
 
-    expect(snackSpy).toHaveBeenCalledTimes(3);
+    expect(successSpy).toHaveBeenCalledTimes(3);
   });
 
   it('should import a valid JSON draft file, update ChecklistStateService, and show success snackbar', async () => {
-    const snackSpy = jest.spyOn(snackBar, 'open');
+    const successSpy = jest.spyOn(feedbackHost, 'success');
     await createPage();
 
     const payload = JSON.stringify({
@@ -347,16 +345,15 @@ describe('ExportPageComponent', () => {
       primaryScale: 'enjoy',
       secondaryScale: 'hard_limit',
     });
-    expect(snackSpy).toHaveBeenCalledWith(
+    expect(successSpy).toHaveBeenCalledWith(
       expect.stringContaining('Rascunho JSON importado e restaurado com sucesso.'),
-      'OK',
-      expect.objectContaining({ panelClass: ['kcm-snackbar-success'] }),
+      expect.objectContaining({ actionLabel: 'OK', duration: 4000 }),
     );
   });
 
   it('should show specific error snackbars for invalid JSON syntax vs incompatible schema version on import', async () => {
     checklistState.setItemAnswer('item_rope', { primaryScale: 'enjoy' });
-    const snackSpy = jest.spyOn(snackBar, 'open');
+    const errorSpy = jest.spyOn(feedbackHost, 'error');
     await createPage();
 
     const hostEl = fixture.nativeElement as HTMLElement;
@@ -370,10 +367,9 @@ describe('ExportPageComponent', () => {
     fileInput.dispatchEvent(new Event('change'));
     await fixture.whenStable();
 
-    expect(snackSpy).toHaveBeenCalledWith(
+    expect(errorSpy).toHaveBeenCalledWith(
       expect.stringContaining('Arquivo inválido.'),
-      'OK',
-      expect.objectContaining({ panelClass: ['kcm-snackbar-error'] }),
+      expect.objectContaining({ actionLabel: 'OK', duration: 5000 }),
     );
 
     const incompatibleFile = createFileWithText(
@@ -396,10 +392,9 @@ describe('ExportPageComponent', () => {
     fileInput.dispatchEvent(new Event('change'));
     await fixture.whenStable();
 
-    expect(snackSpy).toHaveBeenCalledWith(
+    expect(errorSpy).toHaveBeenCalledWith(
       expect.stringContaining('Versão do schema incompatível.'),
-      'OK',
-      expect.objectContaining({ panelClass: ['kcm-snackbar-error'] }),
+      expect.objectContaining({ actionLabel: 'OK', duration: 5000 }),
     );
     // Existing answers preserved on invalid import
     expect(checklistState.answers()['item_rope']).toEqual({ primaryScale: 'enjoy' });

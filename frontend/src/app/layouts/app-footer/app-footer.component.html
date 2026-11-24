@@ -7,7 +7,8 @@
     <p class="app-shell__meta">
       <span>&copy; {{ currentYear() }} {{ appName() }} &middot; {{ 'footerCopyright' | schemaTranslate: 'ui' }}</span>
       <span class="app-shell__meta-sep" aria-hidden="true">|</span>
-      <span class="app-shell__version">{{ 'footerVersionLabel' | schemaTranslate: 'ui' }} {{ appVersion() }} (build {{ buildDate() }})</span>
+      <span class="app-shell__version">{{ 'footerVersionLabel' | schemaTranslate: 'ui' }} {{ appVersion() }} ({{
+        'footerBuildLabel' | schemaTranslate: 'ui' }} {{ buildDate() }})</span>
     </p>
   </div>
 </footer>

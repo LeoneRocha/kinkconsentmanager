@@ -1,3 +1,9 @@
+export interface AppTelemetryConfig {
+  readonly enabled: boolean;
+  readonly connectionString: string;
+  readonly cloudRole: string;
+}
+
 export interface AppEnvironment {
   readonly production: boolean;
   readonly appName: string;
@@ -7,6 +13,7 @@ export interface AppEnvironment {
     readonly autogeneredKeyBuildDeploy: boolean;
     readonly encryptionKeyBase64: string;
   };
+  readonly telemetry: AppTelemetryConfig;
 }
 
 export const environment: AppEnvironment = {
@@ -17,5 +24,10 @@ export const environment: AppEnvironment = {
   crypto: {
     autogeneredKeyBuildDeploy: false,
     encryptionKeyBase64: '',
+  },
+  telemetry: {
+    enabled: false,
+    connectionString: '',
+    cloudRole: 'kinkconsentmanager-ui',
   },
 };

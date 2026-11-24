@@ -1,6 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject, input, output } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
-import { MatDialog } from '@angular/material/dialog';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import {
   GroupDefinition,
@@ -11,11 +10,8 @@ import {
   ScaleId,
   ScaleOption,
 } from '../../../../core/models';
-import {
-  ConfirmDialogComponent,
-  ConfirmDialogData,
-  DynamicQuestionItemComponent,
-} from '../../../../shared/components';
+import { UiFeedbackHostService } from '../../../../core/services';
+import { DynamicQuestionItemComponent } from '../../../../shared/components';
 import {
   countGroupAnsweredItems,
   getGroupDescription,
@@ -38,7 +34,7 @@ import {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ClassicKinkSheetComponent {
-  private readonly dialog = inject(MatDialog);
+  private readonly feedbackHost = inject(UiFeedbackHostService);
 
   readonly groups = input.required<readonly GroupDefinition[]>();
   readonly scales = input.required<readonly ScaleOption[]>();
@@ -61,18 +57,11 @@ export class ClassicKinkSheetComponent {
     if (trimmed.length === 0) {
       return;
     }
-    this.dialog.open<ConfirmDialogComponent, ConfirmDialogData, boolean>(
-      ConfirmDialogComponent,
-      {
-        width: 'min(92vw, 28rem)',
-        data: {
-          header: title,
-          message: trimmed,
-          icon: 'fa-solid fa-circle-info',
-          acceptLabel: 'OK',
-        },
-      },
-    );
+    this.feedbackHost.modalAlert({
+      title,
+      message: trimmed,
+      icon: 'fa-solid fa-circle-info',
+    });
   }
 
   protected orderedScales(): readonly ScaleOption[] {

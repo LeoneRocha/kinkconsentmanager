@@ -1,7 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatDialog } from '@angular/material/dialog';
 import { MatRadioModule } from '@angular/material/radio';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import {
@@ -12,7 +11,7 @@ import {
   ScaleId,
   ScaleOption,
 } from '../../../core/models';
-import { ConfirmDialogComponent, ConfirmDialogData } from '../confirm-dialog';
+import { UiFeedbackHostService } from '../../../core/services';
 import { ScaleSelectorComponent } from '../scale-selector';
 
 let nextQuestionUid = 0;
@@ -31,7 +30,7 @@ let nextQuestionUid = 0;
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DynamicQuestionItemComponent {
-  private readonly dialog = inject(MatDialog);
+  private readonly feedbackHost = inject(UiFeedbackHostService);
   readonly item = input.required<ItemDefinition>();
   readonly scales = input.required<readonly ScaleOption[]>();
   readonly isDualRole = input.required<boolean>();
@@ -148,18 +147,11 @@ export class DynamicQuestionItemComponent {
     if (description.length === 0) {
       return;
     }
-    this.dialog.open<ConfirmDialogComponent, ConfirmDialogData, boolean>(
-      ConfirmDialogComponent,
-      {
-        width: 'min(92vw, 28rem)',
-        data: {
-          header: this.itemLabel(),
-          message: description,
-          icon: 'fa-solid fa-circle-info',
-          acceptLabel: 'OK',
-        },
-      },
-    );
+    this.feedbackHost.modalAlert({
+      title: this.itemLabel(),
+      message: description,
+      icon: 'fa-solid fa-circle-info',
+    });
   }
 
   protected onCustomTextChange(customText: string): void {

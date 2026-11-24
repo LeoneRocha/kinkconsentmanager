@@ -1,0 +1,176 @@
+@use 'variables' as v;
+
+:host {
+  display: block;
+}
+
+.kcm-toast-container {
+  position: fixed;
+  z-index: 90;
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  width: min(calc(100vw - 1.5rem), 30rem);
+  pointer-events: none;
+
+  &--top-right {
+    top: 0.75rem;
+    right: 1rem;
+  }
+
+  &--top-left {
+    top: 0.75rem;
+    left: 1rem;
+  }
+
+  &--top-center {
+    top: 0.75rem;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  &--bottom-right {
+    bottom: 1.25rem;
+    right: 1rem;
+  }
+
+  &--bottom-left {
+    bottom: 1.25rem;
+    left: 1rem;
+  }
+
+  &--bottom-center {
+    bottom: 1.25rem;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+}
+
+.kcm-toast {
+  position: relative;
+  overflow: hidden;
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 0.9rem;
+  border-radius: v.$radius-md;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+  box-shadow: v.$shadow-lg;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  animation: kcm-toast-enter 0.2s ease-out both;
+
+  &--success {
+    background-color: #15803d;
+  }
+
+  &--error {
+    background-color: #b91c1c;
+  }
+
+  &--warning {
+    background-color: #b45309;
+  }
+
+  &--info {
+    background-color: #1d4ed8;
+  }
+
+  &__icon {
+    font-size: 1rem;
+    flex-shrink: 0;
+  }
+
+  &__message {
+    flex: 1 1 auto;
+    font-weight: 500;
+    word-break: break-word;
+  }
+
+  &__actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    flex-shrink: 0;
+  }
+
+  &__action-btn,
+  &__close-btn {
+    border: none;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    border-radius: v.$radius-sm;
+  }
+
+  &__action-btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    text-transform: uppercase;
+
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.16);
+    }
+  }
+
+  &__close-btn {
+    width: 1.75rem;
+    height: 1.75rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.85;
+
+    &:hover {
+      opacity: 1;
+      background-color: rgba(255, 255, 255, 0.16);
+    }
+  }
+
+  &__timer {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 3px;
+    background-color: rgba(255, 255, 255, 0.65);
+    transform-origin: left center;
+    animation-name: kcm-toast-countdown;
+    animation-timing-function: linear;
+    animation-fill-mode: forwards;
+    pointer-events: none;
+  }
+}
+
+@keyframes kcm-toast-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-0.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes kcm-toast-countdown {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kcm-toast {
+    animation: none;
+
+    &__timer {
+      animation: none;
+    }
+  }
+}
