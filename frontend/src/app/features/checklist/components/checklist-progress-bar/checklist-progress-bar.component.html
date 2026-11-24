@@ -23,9 +23,9 @@
       (click)="toggleCompactMode()"
     >
       <i
-        class="fa-solid"
-        [class.fa-compress]="!compactMode()"
-        [class.fa-expand]="compactMode()"
+        class="fa-solid checklist-progress-bar__compact-icon"
+        [class.fa-angles-up]="!compactMode()"
+        [class.fa-angles-down]="compactMode()"
         aria-hidden="true"
       ></i>
     </button>

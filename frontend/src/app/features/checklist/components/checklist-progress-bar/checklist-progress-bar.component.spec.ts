@@ -162,7 +162,7 @@ describe('ChecklistProgressBarComponent', () => {
       ),
     ).toBe(true);
     expect(compactBtn.getAttribute('aria-pressed')).toBe('false');
-    expect(compactBtn.querySelector('i.fa-compress')).not.toBeNull();
+    expect(compactBtn.querySelector('i.fa-angles-up')).not.toBeNull();
     expect(railContainer.hidden).toBe(false);
     expect(legendContainer.hidden).toBe(false);
 
@@ -171,7 +171,7 @@ describe('ChecklistProgressBarComponent', () => {
 
     expect(compactBtn.getAttribute('aria-pressed')).toBe('true');
     expect(compactBtn.classList.contains('checklist-progress-bar__compact-btn--active')).toBe(true);
-    expect(compactBtn.querySelector('i.fa-expand')).not.toBeNull();
+    expect(compactBtn.querySelector('i.fa-angles-down')).not.toBeNull();
     expect(sectionEl.classList.contains('checklist-progress-bar--compact')).toBe(true);
     expect(railContainer.hidden).toBe(true);
     expect(legendContainer.hidden).toBe(true);

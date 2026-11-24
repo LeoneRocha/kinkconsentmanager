@@ -93,6 +93,11 @@
     }
   }
 
+  &__compact-icon {
+    font-size: 0.9rem;
+    line-height: 1;
+  }
+
   &__autosave-row {
     display: inline-flex;
     flex-wrap: wrap;
