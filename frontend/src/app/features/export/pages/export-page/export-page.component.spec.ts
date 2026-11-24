@@ -17,7 +17,13 @@ const MOCK_SCHEMA: ChecklistSchema = {
   schemaVersion: '1.0.0',
   scales: [
     { id: 'hard_limit', order: 1, color: '#D32F2F', contrastColor: '#FFFFFF', icon: 'pi pi-ban' },
-    { id: 'enjoy', order: 2, color: '#388E3C', contrastColor: '#FFFFFF', icon: 'pi pi-check-circle' },
+    {
+      id: 'enjoy',
+      order: 2,
+      color: '#388E3C',
+      contrastColor: '#FFFFFF',
+      icon: 'pi pi-check-circle',
+    },
   ],
   groups: [
     {
@@ -25,25 +31,21 @@ const MOCK_SCHEMA: ChecklistSchema = {
       order: 1,
       defaultDualRole: false,
       rolePairId: 'general',
-      items: [
-        { id: 'item_safeword', type: 'single_choice', options: ['opt_traffic'] },
-      ],
+      items: [{ id: 'item_safeword', type: 'single_choice', options: ['opt_traffic'] }],
     },
     {
       id: 'grp_bondage',
       order: 2,
       defaultDualRole: true,
       rolePairId: 'giving_receiving',
-      items: [
-        { id: 'item_rope', type: 'scale_matrix' },
-      ],
+      items: [{ id: 'item_rope', type: 'scale_matrix' }],
     },
   ],
 };
 
 const PT_BR_TRANSLATIONS = {
   ui: {
-    title: 'KinkConsentManager',
+    title: 'Kink Consent Manager',
     exportTitle: 'Prévia e Exportação do Checklist',
     exportSubtitle: 'Revise suas respostas',
     privacyNotice: 'Privacidade local',
@@ -66,7 +68,8 @@ const PT_BR_TRANSLATIONS = {
     exportStep1Hint:
       'Selecione Visualização Moderna ou Visualização Clássica para ver o resumo e liberar os botões de exportação.',
     exportStep2Title: '2. Exporte seu checklist',
-    exportLayoutModernDesc: 'Tabelas detalhadas por categoria com pílulas coloridas e leitura facilitada.',
+    exportLayoutModernDesc:
+      'Tabelas detalhadas por categoria com pílulas coloridas e leitura facilitada.',
     exportLayoutClassicDesc:
       'Folha compacta em múltiplas colunas com círculos coloridos no estilo tradicional.',
     exportSelectLayoutPrompt:
@@ -117,7 +120,9 @@ describe('ExportPageComponent', () => {
   let feedbackHost: UiFeedbackHostService;
   let router: Router;
 
-  let schemaRepoMock: { getChecklistSchema: jest.Mock<Observable<ChecklistSchema>, [version?: string]> };
+  let schemaRepoMock: {
+    getChecklistSchema: jest.Mock<Observable<ChecklistSchema>, [version?: string]>;
+  };
   let fileDownloadMock: { downloadBlob: jest.Mock; downloadDataUrl: jest.Mock };
   let pngRendererMock: jest.Mock<Promise<string>, [HTMLElement]>;
   let pdfDownloadMock: jest.Mock<Promise<void>, [string?]>;
@@ -127,9 +132,9 @@ describe('ExportPageComponent', () => {
     localStorage.clear();
 
     schemaRepoMock = {
-      getChecklistSchema: jest.fn<Observable<ChecklistSchema>, [string?]>().mockReturnValue(
-        of(MOCK_SCHEMA),
-      ),
+      getChecklistSchema: jest
+        .fn<Observable<ChecklistSchema>, [string?]>()
+        .mockReturnValue(of(MOCK_SCHEMA)),
     };
     fileDownloadMock = {
       downloadBlob: jest.fn(),
@@ -422,7 +427,9 @@ describe('ExportPageComponent', () => {
 
     captureSurface = hostEl.querySelector<HTMLElement>('.export-page__capture-surface')!;
     expect(captureSurface.classList.contains('export-page__capture-surface--classic')).toBe(true);
-    expect(hostEl.querySelector('.export-page__preview .full-grid-preview--classic')).not.toBeNull();
+    expect(
+      hostEl.querySelector('.export-page__preview .full-grid-preview--classic'),
+    ).not.toBeNull();
     expect(captureSurface.querySelector('.full-grid-preview--classic')).not.toBeNull();
 
     hostEl.querySelector<HTMLButtonElement>('button[data-action="png"]')?.click();

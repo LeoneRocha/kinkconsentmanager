@@ -31,14 +31,8 @@ import {
   TelemetryService,
   UiFeedbackHostService,
 } from '../../../../core/services';
-import {
-  LegendBarComponent,
-  ProgressIndicatorComponent,
-} from '../../../../shared/components';
-import {
-  ChecklistHeaderComponent,
-  ChecklistHeaderLabels,
-} from '../../components/checklist-header';
+import { LegendBarComponent, ProgressIndicatorComponent } from '../../../../shared/components';
+import { ChecklistHeaderComponent, ChecklistHeaderLabels } from '../../components/checklist-header';
 import {
   ChecklistModeSelectorComponent,
   ChecklistModeSelectorLabels,
@@ -110,9 +104,7 @@ export class ChecklistPageComponent implements OnInit {
   protected readonly totalCount = this.checklistState.totalItemsCount;
   protected readonly progressPercentage = this.checklistState.progressPercentage;
 
-  protected readonly hasAnswers = computed<boolean>(
-    () => Object.keys(this.answers()).length > 0,
-  );
+  protected readonly hasAnswers = computed<boolean>(() => Object.keys(this.answers()).length > 0);
 
   protected readonly activeStepperStep = computed<number>(() => {
     const groups = this.filteredGroups();
@@ -157,14 +149,21 @@ export class ChecklistPageComponent implements OnInit {
         'headerControlsSection',
         'Visualização, Filtros e Ações',
       ),
-      saveNowTooltip: this.translateWithFallback(
-        'autosaveSaveNow',
-        'Salvar agora (criptografado)',
-      ),
+      saveNowTooltip: this.translateWithFallback('autosaveSaveNow', 'Salvar agora (criptografado)'),
       saveButton: this.translateWithFallback('saveButton', 'Salvar'),
       autosaveToggleLabel: this.translateWithFallback(
         'autosaveToggleLabel',
         'Salvamento automático',
+      ),
+      hideHeaderLabel: this.translateWithFallback('headerHide', 'Ocultar'),
+      showHeaderLabel: this.translateWithFallback('headerShow', 'Mostrar'),
+      hideHeaderAriaLabel: this.translateWithFallback(
+        'headerHideAriaLabel',
+        'Ocultar cabeçalho do checklist',
+      ),
+      showHeaderAriaLabel: this.translateWithFallback(
+        'headerShowAriaLabel',
+        'Mostrar cabeçalho do checklist',
       ),
     };
   });
@@ -219,7 +218,6 @@ export class ChecklistPageComponent implements OnInit {
   protected readonly modeSelectorLabels = computed<ChecklistModeSelectorLabels>(() => {
     this.i18n.currentLang();
     return {
-      brandTitle: this.i18n.translateUi('title'),
       pageTitle: this.translateWithFallback(
         'modePickerTitle',
         'Como você prefere preencher o checklist?',
@@ -228,10 +226,12 @@ export class ChecklistPageComponent implements OnInit {
         'modePickerSubtitle',
         'Escolha o formato mais confortável para o seu ritmo. Você poderá alternar de modo a qualquer momento sem perder suas respostas.',
       ),
-      privacyNotice: this.i18n.translateUi('privacyNotice'),
       howToFillLabel: this.translateWithFallback('modePickerHowToFillLabel', 'Como preencher'),
       startButton: this.translateWithFallback('modePickerStartButton', 'Começar neste modo'),
-      continueButton: this.translateWithFallback('modePickerContinueButton', 'Continuar neste modo'),
+      continueButton: this.translateWithFallback(
+        'modePickerContinueButton',
+        'Continuar neste modo',
+      ),
       existingProgressLabel: this.translateWithFallback(
         'modePickerExistingProgress',
         'Progresso local encontrado',
@@ -343,9 +343,7 @@ export class ChecklistPageComponent implements OnInit {
         'autosaveDisabled',
         'Salvamento automático desativado',
       );
-      return savedAt
-        ? `${disabledLabel} • ${this.formatSavedTime(savedAt, lang)}`
-        : disabledLabel;
+      return savedAt ? `${disabledLabel} • ${this.formatSavedTime(savedAt, lang)}` : disabledLabel;
     }
 
     if (savedAt) {

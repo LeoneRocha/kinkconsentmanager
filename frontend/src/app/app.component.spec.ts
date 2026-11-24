@@ -33,7 +33,7 @@ describe('App', () => {
     const translate = TestBed.inject(TranslateService);
     translate.setTranslation('pt-BR', {
       ui: {
-        title: 'KinkConsentManager',
+        title: 'Kink Consent Manager',
         navChecklist: 'Checklist',
         navExport: 'Exportar',
         privacyNotice: 'Privacidade local: seus dados permanecem exclusivamente no seu navegador.',
@@ -117,7 +117,9 @@ describe('App', () => {
     expect(footer?.textContent).toContain(String(new Date().getFullYear()));
     expect(footer?.textContent).toContain(environment.appName);
     expect(footer?.textContent).toContain('Todos os direitos reservados.');
-    expect(footer?.textContent).toContain(`Versão ${environment.version} (build ${environment.buildDate})`);
+    expect(footer?.textContent).toContain(
+      `Versão ${environment.version} (build ${environment.buildDate})`,
+    );
   });
 
   it('should configure lazy routes for checklist and export with fallback redirect', () => {

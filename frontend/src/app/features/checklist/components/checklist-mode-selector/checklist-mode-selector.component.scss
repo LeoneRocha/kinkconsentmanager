@@ -41,14 +41,6 @@
     max-width: 48rem;
   }
 
-  &__brand {
-    font-size: 0.8125rem;
-    font-weight: 700;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    color: v.$text-muted;
-  }
-
   &__title {
     margin: 0;
     font-size: 1.45rem;
@@ -78,7 +70,6 @@
     }
   }
 
-  &__privacy,
   &__saved-banner {
     display: inline-flex;
     align-items: center;
@@ -87,15 +78,6 @@
     padding: 0.5rem 0.875rem;
     border-radius: v.$radius-sm;
     font-size: 0.8125rem;
-  }
-
-  &__privacy {
-    background-color: v.$surface-subtle;
-    border: 1px solid v.$border-color;
-    color: v.$text-secondary;
-  }
-
-  &__saved-banner {
     background-color: rgba(22, 163, 74, 0.14);
     border: 1px solid rgba(22, 163, 74, 0.45);
     color: v.$text-primary;
@@ -121,7 +103,10 @@
     text-align: left;
     color: v.$text-primary;
     cursor: pointer;
-    transition: border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+    transition:
+      border-color 0.15s ease,
+      transform 0.15s ease,
+      box-shadow 0.15s ease;
 
     &:hover {
       border-color: v.$accent-primary;

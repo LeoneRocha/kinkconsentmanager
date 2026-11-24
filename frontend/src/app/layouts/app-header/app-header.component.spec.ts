@@ -31,7 +31,7 @@ describe('AppHeaderComponent', () => {
     const translate = TestBed.inject(TranslateService);
     translate.setTranslation('pt-BR', {
       ui: {
-        title: 'KinkConsentManager',
+        title: 'Kink Consent Manager',
         themeToggleToDark: 'Ativar tema escuro',
         themeToggleToLight: 'Ativar tema claro',
         themeDarkActive: 'Tema escuro ativado.',
@@ -79,7 +79,7 @@ describe('AppHeaderComponent', () => {
     const brandLink = el.querySelector<HTMLAnchorElement>('a.app-shell__brand');
     expect(brandLink?.getAttribute('href')).toBe('/checklist');
     expect(el.querySelector('.app-shell__brand-title')?.textContent?.trim()).toBe(
-      'KinkConsentManager',
+      'Kink Consent Manager',
     );
     expect(el.querySelector('.app-shell__lang-pill')?.textContent?.trim()).toBe('PT');
   });

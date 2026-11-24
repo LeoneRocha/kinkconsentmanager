@@ -1,7 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
-import { MatExpansionModule } from '@angular/material/expansion';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { ChecklistViewMode, ScaleOption, SupportedLanguage } from '../../../../core/models';
@@ -27,6 +26,10 @@ export interface ChecklistHeaderLabels {
   readonly saveNowTooltip?: string;
   readonly saveButton?: string;
   readonly autosaveToggleLabel?: string;
+  readonly hideHeaderLabel?: string;
+  readonly showHeaderLabel?: string;
+  readonly hideHeaderAriaLabel?: string;
+  readonly showHeaderAriaLabel?: string;
 }
 
 export const DEFAULT_CHECKLIST_HEADER_LABELS: ChecklistHeaderLabels = {
@@ -50,6 +53,10 @@ export const DEFAULT_CHECKLIST_HEADER_LABELS: ChecklistHeaderLabels = {
   saveNowTooltip: 'Salvar agora (criptografado)',
   saveButton: 'Salvar',
   autosaveToggleLabel: 'Salvamento automático',
+  hideHeaderLabel: 'Ocultar',
+  showHeaderLabel: 'Mostrar',
+  hideHeaderAriaLabel: 'Ocultar cabeçalho do checklist',
+  showHeaderAriaLabel: 'Mostrar cabeçalho do checklist',
 };
 
 interface SelectOption<T> {
@@ -58,18 +65,12 @@ interface SelectOption<T> {
 }
 
 /**
- * Modular checklist header with clean identity bar, interactive encrypted save button,
- * and a collapsible controls section for view mode selection, filters, and actions.
+ * Modular checklist header with collapsible content body (Ocultar/Mostrar),
+ * view mode selection, filters, and encrypted save/export actions.
  */
 @Component({
   selector: 'app-checklist-header',
-  imports: [
-    MatButtonModule,
-    MatButtonToggleModule,
-    MatExpansionModule,
-    MatSlideToggleModule,
-    MatTooltipModule,
-  ],
+  imports: [MatButtonModule, MatButtonToggleModule, MatSlideToggleModule, MatTooltipModule],
   templateUrl: './checklist-header.component.html',
   styleUrl: './checklist-header.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -99,9 +100,38 @@ export class ChecklistHeaderComponent {
   readonly saveNow = output<void>();
   readonly autosaveEnabledChange = output<boolean>();
 
-  protected readonly controlsExpanded = signal(true);
+  protected readonly headerExpanded = signal(true);
   protected readonly isChecklistComplete = computed<boolean>(
     () => this.totalCount() > 0 && this.answeredCount() >= this.totalCount(),
+  );
+
+  protected readonly controlsSectionTitle = computed<string>(
+    () =>
+      this.labels().controlsSectionTitle ?? DEFAULT_CHECKLIST_HEADER_LABELS.controlsSectionTitle!,
+  );
+
+  protected readonly saveNowTooltip = computed<string>(
+    () => this.labels().saveNowTooltip ?? DEFAULT_CHECKLIST_HEADER_LABELS.saveNowTooltip!,
+  );
+
+  protected readonly saveButtonLabel = computed<string>(
+    () => this.labels().saveButton ?? DEFAULT_CHECKLIST_HEADER_LABELS.saveButton!,
+  );
+
+  protected readonly autosaveToggleLabel = computed<string>(
+    () => this.labels().autosaveToggleLabel ?? DEFAULT_CHECKLIST_HEADER_LABELS.autosaveToggleLabel!,
+  );
+
+  protected readonly toggleHeaderLabel = computed<string>(() =>
+    this.headerExpanded()
+      ? (this.labels().hideHeaderLabel ?? DEFAULT_CHECKLIST_HEADER_LABELS.hideHeaderLabel!)
+      : (this.labels().showHeaderLabel ?? DEFAULT_CHECKLIST_HEADER_LABELS.showHeaderLabel!),
+  );
+
+  protected readonly toggleHeaderAriaLabel = computed<string>(() =>
+    this.headerExpanded()
+      ? (this.labels().hideHeaderAriaLabel ?? DEFAULT_CHECKLIST_HEADER_LABELS.hideHeaderAriaLabel!)
+      : (this.labels().showHeaderAriaLabel ?? DEFAULT_CHECKLIST_HEADER_LABELS.showHeaderAriaLabel!),
   );
 
   protected readonly viewModeOptions = computed<SelectOption<ChecklistViewMode>[]>(() => [
@@ -110,6 +140,10 @@ export class ChecklistHeaderComponent {
     { label: this.labels().fullMode, value: 'full' },
     { label: this.labels().quickFillButton, value: 'quick_fill' },
   ]);
+
+  protected toggleHeaderExpanded(): void {
+    this.headerExpanded.update((expanded) => !expanded);
+  }
 
   protected onViewModeModelChange(value: ChecklistViewMode | null): void {
     if (value === 'stepper' || value === 'classic' || value === 'full' || value === 'quick_fill') {

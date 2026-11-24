@@ -31,7 +31,13 @@ const MOCK_SCHEMA: ChecklistSchema = {
       icon: 'pi pi-question-circle',
     },
     { id: 'enjoy', order: 4, color: '#388E3C', contrastColor: '#FFFFFF', icon: 'pi pi-thumbs-up' },
-    { id: 'favorite', order: 5, color: '#7B1FA2', contrastColor: '#FFFFFF', icon: 'pi pi-heart-fill' },
+    {
+      id: 'favorite',
+      order: 5,
+      color: '#7B1FA2',
+      contrastColor: '#FFFFFF',
+      icon: 'pi pi-heart-fill',
+    },
   ],
   groups: [
     {
@@ -39,25 +45,21 @@ const MOCK_SCHEMA: ChecklistSchema = {
       order: 1,
       defaultDualRole: false,
       rolePairId: 'general',
-      items: [
-        { id: 'item_safeword', type: 'single_choice', options: ['opt_traffic', 'opt_word'] },
-      ],
+      items: [{ id: 'item_safeword', type: 'single_choice', options: ['opt_traffic', 'opt_word'] }],
     },
     {
       id: 'grp_bondage',
       order: 2,
       defaultDualRole: true,
       rolePairId: 'giving_receiving',
-      items: [
-        { id: 'item_rope', type: 'scale_matrix', dualRole: true },
-      ],
+      items: [{ id: 'item_rope', type: 'scale_matrix', dualRole: true }],
     },
   ],
 };
 
 const PT_BR_TRANSLATIONS = {
   ui: {
-    title: 'KinkConsentManager',
+    title: 'Kink Consent Manager',
     subtitle: 'Checklist de Limites',
     languageLabel: 'Idioma',
     accordionMode: 'Guiado (Accordion)',
@@ -125,7 +127,7 @@ const PT_BR_TRANSLATIONS = {
 
 const EN_US_TRANSLATIONS = {
   ui: {
-    title: 'KinkConsentManager',
+    title: 'Kink Consent Manager',
     subtitle: 'Limits Checklist',
     languageLabel: 'Language',
     accordionMode: 'Guided (Accordion)',
@@ -279,9 +281,7 @@ describe('ChecklistPageComponent', () => {
     let attempt = 0;
     await createTestModule(() => {
       attempt += 1;
-      return attempt === 1
-        ? throwError(() => new Error('Network failure'))
-        : of(MOCK_SCHEMA);
+      return attempt === 1 ? throwError(() => new Error('Network failure')) : of(MOCK_SCHEMA);
     });
 
     await fixture.whenStable();
@@ -307,7 +307,9 @@ describe('ChecklistPageComponent', () => {
   it('should propagate item answers to ChecklistStateService and switch across stepper, classic, and full views', async () => {
     await createTestModule(() => of(MOCK_SCHEMA));
     const hostEl = await startInMode('stepper');
-    const radios = hostEl.querySelectorAll<HTMLInputElement>('mat-radio-button input[type="radio"]');
+    const radios = hostEl.querySelectorAll<HTMLInputElement>(
+      'mat-radio-button input[type="radio"]',
+    );
     radios[0].click();
     await fixture.whenStable();
 

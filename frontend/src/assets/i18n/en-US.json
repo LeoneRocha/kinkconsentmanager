@@ -1,6 +1,6 @@
 {
   "ui": {
-    "title": "KinkConsentManager",
+    "title": "Kink Consent Manager",
     "subtitle": "Consensual BDSM, Limits & Boundaries Checklist",
     "languageLabel": "Language",
     "accordionMode": "Guided (Accordion)",
@@ -142,6 +142,10 @@
     "autosaveSaveNow": "Save now (encrypted)",
     "autosaveSavedNow": "Responses saved encrypted in your browser.",
     "headerControlsSection": "View, Filters & Actions",
+    "headerHide": "Hide",
+    "headerShow": "Show",
+    "headerHideAriaLabel": "Hide checklist header",
+    "headerShowAriaLabel": "Show checklist header",
     "modePickerTitle": "How would you like to fill out the checklist?",
     "modePickerSubtitle": "Choose the layout that best fits your pace. You can switch modes at any time without losing your answers.",
     "modePickerHowToFillLabel": "How to fill",

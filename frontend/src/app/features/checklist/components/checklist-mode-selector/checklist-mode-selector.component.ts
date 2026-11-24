@@ -11,10 +11,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { ChecklistViewMode } from '../../../../core/models';
 
 export interface ChecklistModeSelectorLabels {
-  readonly brandTitle: string;
   readonly pageTitle: string;
   readonly pageSubtitle: string;
-  readonly privacyNotice: string;
   readonly howToFillLabel: string;
   readonly startButton: string;
   readonly continueButton: string;

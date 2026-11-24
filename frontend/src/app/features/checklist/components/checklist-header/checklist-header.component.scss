@@ -1,6 +1,18 @@
 @use 'variables' as v;
 @use 'mixins' as m;
 
+@keyframes checklistHeaderReveal {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .checklist-header {
   @include m.card-surface;
   position: relative;
@@ -22,17 +34,34 @@
     padding: 1.125rem 1.5rem;
   }
 
+  &--collapsed {
+    gap: 0;
+    padding: 0.625rem 1.25rem;
+
+    @include m.respond-md {
+      padding: 0.6875rem 1.5rem;
+    }
+  }
+
   &__top {
     display: flex;
-    flex-direction: column;
-    align-items: flex-start;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
     gap: 0.75rem;
+    flex-wrap: wrap;
   }
 
   &__brand {
+    flex: 1 1 auto;
+    min-width: 0;
     display: flex;
     flex-direction: column;
     gap: 0.35rem;
+  }
+
+  &__toggle-wrap {
+    flex-shrink: 0;
   }
 
   &__title {
@@ -53,60 +82,21 @@
     color: v.$text-secondary;
   }
 
-  &__top-actions {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.75rem;
-  }
-
-  &__save-box {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.625rem;
-
-    @include m.respond-md {
-      flex-direction: row;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 1rem;
-    }
-  }
-
-  &__save-actions {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.75rem;
-  }
-
-  &__autosave-row {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.45rem;
-
-    @include m.respond-md {
-      flex-direction: row;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 0.75rem;
-    }
-  }
-
-  &__save-meta {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.75rem;
-    color: v.$text-secondary;
-  }
-
-  &__accordion {
+  &__body {
     display: flex;
     flex-direction: column;
     gap: 0.875rem;
+    animation: checklistHeaderReveal 0.18s ease-out;
+  }
+
+  &__controls-panel {
+    border: 1px solid v.$border-color;
+    border-radius: v.$radius-md;
+    background-color: v.$surface-subtle;
+    padding: 0.75rem 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
   }
 
   &__section-title {
@@ -116,13 +106,6 @@
     font-size: 0.875rem;
     font-weight: 600;
     color: v.$text-primary;
-  }
-
-  &__controls-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    padding-top: 0.375rem;
   }
 
   &__controls-row {
@@ -166,18 +149,89 @@
     align-items: center;
     width: auto;
   }
+
+  &__top-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    border-top: 1px solid v.$border-color;
+    padding-top: 0.75rem;
+    width: 100%;
+  }
+
+  &__save-box {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.625rem;
+
+    @include m.respond-md {
+      flex-direction: row;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+  }
+
+  &__save-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  &__autosave-row {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.45rem;
+
+    @include m.respond-md {
+      flex-direction: row;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.75rem;
+    }
+  }
+
+  &__save-meta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.35rem 0.75rem;
+    border-radius: 9999px;
+    background-color: v.$surface-subtle;
+    border: 1px solid v.$border-color;
+    font-size: 0.75rem;
+    color: v.$text-secondary;
+  }
+}
+
+:host-context(html.app-reduced-motion) .checklist-header__body {
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .checklist-header__body {
+    animation: none;
+  }
 }
 
 :host ::ng-deep {
-  .checklist-header__accordion {
-    --mat-expansion-header-collapsed-state-height: 44px;
-    --mat-expansion-header-expanded-state-height: 44px;
+  .checklist-header__toggle-btn {
+    min-height: v.$min-touch-target;
+    padding: 0 1rem;
+    border-radius: 9999px;
+    font-weight: 600;
+    --mat-button-outlined-outline-color: var(--kcm-border-strong);
+    --mat-button-outlined-label-text-color: var(--kcm-text-primary);
 
-    .mat-expansion-panel {
-      border: 1px solid v.$border-color;
-      border-radius: v.$radius-md !important;
-      background-color: v.$surface-subtle;
-      box-shadow: none !important;
+    &:hover {
+      background-color: var(--kcm-accent-soft);
+      --mat-button-outlined-outline-color: var(--kcm-accent-primary);
     }
   }
 

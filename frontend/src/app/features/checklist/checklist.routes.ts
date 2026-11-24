@@ -4,7 +4,7 @@ import { ChecklistPageComponent } from './pages/checklist-page';
 export const CHECKLIST_ROUTES: Routes = [
   {
     path: '',
-    title: 'KinkConsentManager — Checklist de Limites e Consentimento',
+    title: 'Kink Consent Manager — Checklist de Limites e Consentimento',
     component: ChecklistPageComponent,
   },
 ];

@@ -3,7 +3,13 @@ import { ChecklistViewMode, ScaleOption } from '../../../../core/models';
 import { ChecklistHeaderComponent } from './checklist-header.component';
 
 const MOCK_SCALES: readonly ScaleOption[] = [
-  { id: 'hard_limit', order: 1, color: '#D32F2F', contrastColor: '#FFFFFF', icon: 'fa-solid fa-ban' },
+  {
+    id: 'hard_limit',
+    order: 1,
+    color: '#D32F2F',
+    contrastColor: '#FFFFFF',
+    icon: 'fa-solid fa-ban',
+  },
   {
     id: 'soft_limit',
     order: 2,
@@ -18,8 +24,20 @@ const MOCK_SCALES: readonly ScaleOption[] = [
     contrastColor: '#111827',
     icon: 'fa-solid fa-circle-question',
   },
-  { id: 'enjoy', order: 4, color: '#388E3C', contrastColor: '#FFFFFF', icon: 'fa-solid fa-circle-check' },
-  { id: 'favorite', order: 5, color: '#7B1FA2', contrastColor: '#FFFFFF', icon: 'fa-solid fa-heart' },
+  {
+    id: 'enjoy',
+    order: 4,
+    color: '#388E3C',
+    contrastColor: '#FFFFFF',
+    icon: 'fa-solid fa-circle-check',
+  },
+  {
+    id: 'favorite',
+    order: 5,
+    color: '#7B1FA2',
+    contrastColor: '#FFFFFF',
+    icon: 'fa-solid fa-heart',
+  },
 ];
 
 const MOCK_SCALE_LABELS: Readonly<Record<string, string>> = {
@@ -75,21 +93,38 @@ describe('ChecklistHeaderComponent', () => {
     await setBaseInputs();
   });
 
-  it('should render a single collapsible accordion section for controls without search input or scale legend', async () => {
+  it('should render a collapsible header with Ocultar/Mostrar toggle and without search input or scale legend', async () => {
     const hostEl = fixture.nativeElement as HTMLElement;
-    const panels = hostEl.querySelectorAll('.checklist-header__section-panel');
-    expect(panels.length).toBe(1);
-    expect(panels[0].classList.contains('mat-expanded')).toBe(true);
+    const headerEl = hostEl.querySelector('.checklist-header');
+    const toggleBtn = hostEl.querySelector<HTMLButtonElement>('.checklist-header__toggle-btn');
+
+    expect(headerEl).not.toBeNull();
+    expect(toggleBtn).not.toBeNull();
+    expect(toggleBtn?.getAttribute('aria-expanded')).toBe('true');
+    expect(toggleBtn?.textContent).toContain('Ocultar');
+    expect(hostEl.querySelector('#checklist-header-body')).not.toBeNull();
+    expect(hostEl.querySelector('.checklist-header__subtitle')).not.toBeNull();
+    expect(hostEl.querySelector('mat-expansion-panel')).toBeNull();
     expect(hostEl.querySelector('app-legend-bar')).toBeNull();
     expect(hostEl.querySelector('.checklist-header__search-input')).toBeNull();
     expect(hostEl.querySelector('.checklist-header__lang-select')).toBeNull();
 
-    const headers = hostEl.querySelectorAll<HTMLElement>(
-      '.checklist-header__section-panel mat-expansion-panel-header',
-    );
-    headers[0].click();
+    toggleBtn!.click();
     await fixture.whenStable();
-    expect(panels[0].classList.contains('mat-expanded')).toBe(false);
+
+    expect(toggleBtn?.getAttribute('aria-expanded')).toBe('false');
+    expect(toggleBtn?.textContent).toContain('Mostrar');
+    expect(headerEl?.classList.contains('checklist-header--collapsed')).toBe(true);
+    expect(hostEl.querySelector('#checklist-header-body')).toBeNull();
+    expect(hostEl.querySelector('.checklist-header__subtitle')).toBeNull();
+
+    toggleBtn!.click();
+    await fixture.whenStable();
+
+    expect(toggleBtn?.getAttribute('aria-expanded')).toBe('true');
+    expect(toggleBtn?.textContent).toContain('Ocultar');
+    expect(headerEl?.classList.contains('checklist-header--collapsed')).toBe(false);
+    expect(hostEl.querySelector('#checklist-header-body')).not.toBeNull();
   });
 
   it('should disable Save button (gray) when clean and enable green button (saveNow) when dirty, plus toggle autosave', async () => {

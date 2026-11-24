@@ -1,6 +1,6 @@
 {
   "ui": {
-    "title": "KinkConsentManager",
+    "title": "Kink Consent Manager",
     "subtitle": "Checklist de Limites, Práticas e Consentimento Consensual",
     "languageLabel": "Idioma",
     "accordionMode": "Guiado (Accordion)",
@@ -142,6 +142,10 @@
     "autosaveSaveNow": "Salvar agora (criptografado)",
     "autosaveSavedNow": "Preenchimento salvo com criptografia no navegador.",
     "headerControlsSection": "Visualização, Filtros e Ações",
+    "headerHide": "Ocultar",
+    "headerShow": "Mostrar",
+    "headerHideAriaLabel": "Ocultar cabeçalho do checklist",
+    "headerShowAriaLabel": "Mostrar cabeçalho do checklist",
     "modePickerTitle": "Como você prefere preencher o checklist?",
     "modePickerSubtitle": "Escolha o formato mais confortável para o seu ritmo. Você poderá alternar de modo a qualquer momento sem perder suas respostas.",
     "modePickerHowToFillLabel": "Como preencher",

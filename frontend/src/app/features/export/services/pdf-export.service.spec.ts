@@ -1,18 +1,26 @@
 import { TestBed } from '@angular/core/testing';
 import type { Content, ContentTable, TDocumentDefinitions } from 'pdfmake/interfaces';
-import {
-  ChecklistSchema,
-  FlattenedChecklistRow,
-  ResolvedPreviewTexts,
-} from '../../../core/models';
+import { ChecklistSchema, FlattenedChecklistRow, ResolvedPreviewTexts } from '../../../core/models';
 import { PDF_MAKER_LOADER, PdfExportService, PdfMakerInstance } from './pdf-export.service';
 
 const MOCK_SCHEMA: ChecklistSchema = {
   schemaVersion: '1.0.0',
   scales: [
     { id: 'hard_limit', order: 1, color: '#D32F2F', contrastColor: '#FFFFFF', icon: 'pi pi-ban' },
-    { id: 'curious', order: 3, color: '#FBC02D', contrastColor: '#111827', icon: 'pi pi-question-circle' },
-    { id: 'enjoy', order: 4, color: '#388E3C', contrastColor: '#FFFFFF', icon: 'pi pi-check-circle' },
+    {
+      id: 'curious',
+      order: 3,
+      color: '#FBC02D',
+      contrastColor: '#111827',
+      icon: 'pi pi-question-circle',
+    },
+    {
+      id: 'enjoy',
+      order: 4,
+      color: '#388E3C',
+      contrastColor: '#FFFFFF',
+      icon: 'pi pi-check-circle',
+    },
   ],
   groups: [
     {
@@ -39,7 +47,7 @@ const MOCK_SCHEMA: ChecklistSchema = {
 };
 
 const MOCK_TEXTS: ResolvedPreviewTexts = {
-  title: 'KinkConsentManager Report',
+  title: 'Kink Consent Manager Report',
   schemaVersionLabel: 'Schema Version',
   generatedAtLabel: 'Generated at',
   generatedAtValue: '2026-11-22 18:45',
@@ -147,10 +155,10 @@ describe('PdfExportService', () => {
     const content = docDef.content as Content[];
 
     expect(docDef.pageSize).toBe('A4');
-    expect(docDef.info?.title).toBe('KinkConsentManager Report');
+    expect(docDef.info?.title).toBe('Kink Consent Manager Report');
 
     const serialized = JSON.stringify(content);
-    expect(serialized).toContain('KinkConsentManager Report');
+    expect(serialized).toContain('Kink Consent Manager Report');
     expect(serialized).not.toContain('Schema Version');
     expect(serialized).not.toContain('1.0.0');
     expect(serialized).toContain('2026-11-22 18:45');
@@ -161,8 +169,7 @@ describe('PdfExportService', () => {
     expect(serialized).toContain('#111827');
 
     const tables = content.filter(
-      (node): node is ContentTable =>
-        typeof node === 'object' && node !== null && 'table' in node,
+      (node): node is ContentTable => typeof node === 'object' && node !== null && 'table' in node,
     );
     // 1 legend table + 2 group tables
     expect(tables.length).toBe(3);

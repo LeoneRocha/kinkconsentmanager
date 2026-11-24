@@ -18,7 +18,7 @@ export interface AppEnvironment {
 
 export const environment: AppEnvironment = {
   production: false,
-  appName: 'KinkConsentManager',
+  appName: 'Kink Consent Manager',
   version: '1.0.4',
   buildDate: '2026.11.24',
   crypto: {

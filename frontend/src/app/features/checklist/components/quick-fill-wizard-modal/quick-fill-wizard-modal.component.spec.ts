@@ -24,7 +24,13 @@ const MOCK_SCALES: readonly ScaleOption[] = [
     icon: 'pi pi-question-circle',
   },
   { id: 'enjoy', order: 4, color: '#388E3C', contrastColor: '#FFFFFF', icon: 'pi pi-thumbs-up' },
-  { id: 'favorite', order: 5, color: '#7B1FA2', contrastColor: '#FFFFFF', icon: 'pi pi-heart-fill' },
+  {
+    id: 'favorite',
+    order: 5,
+    color: '#7B1FA2',
+    contrastColor: '#FFFFFF',
+    icon: 'pi pi-heart-fill',
+  },
 ];
 
 const MOCK_GROUPS: readonly GroupDefinition[] = [
@@ -51,7 +57,7 @@ const MOCK_GROUPS: readonly GroupDefinition[] = [
 ];
 
 const MOCK_TEXTS: ResolvedPreviewTexts = {
-  title: 'KinkConsentManager',
+  title: 'Kink Consent Manager',
   schemaVersionLabel: 'Schema Version',
   generatedAtLabel: 'Generated at',
   generatedAtValue: '2026-11-22',

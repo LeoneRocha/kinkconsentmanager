@@ -4,7 +4,7 @@ import { ExportPageComponent } from './pages/export-page';
 export const EXPORT_ROUTES: Routes = [
   {
     path: '',
-    title: 'Exportar Checklist — KinkConsentManager',
+    title: 'Exportar Checklist — Kink Consent Manager',
     component: ExportPageComponent,
   },
 ];
