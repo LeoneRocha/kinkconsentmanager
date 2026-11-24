@@ -75,15 +75,19 @@ describe('ChecklistHeaderComponent', () => {
     await setBaseInputs();
   });
 
-  it('should render a collapsible header with Ocultar/Mostrar toggle and without save/export/autosave, search input, or scale legend', async () => {
+  it('should render a collapsible header with icon toggle and clickable title row without save/export/autosave, search input, or scale legend', async () => {
     const hostEl = fixture.nativeElement as HTMLElement;
     const headerEl = hostEl.querySelector('.checklist-header');
-    const toggleBtn = hostEl.querySelector<HTMLButtonElement>('.checklist-header__toggle-btn');
+    const topBarEl = hostEl.querySelector<HTMLElement>('.checklist-header__top')!;
+    const titleEl = hostEl.querySelector<HTMLElement>('.checklist-header__title')!;
+    const toggleBtn = hostEl.querySelector<HTMLButtonElement>('.checklist-header__toggle-btn')!;
 
     expect(headerEl).not.toBeNull();
     expect(toggleBtn).not.toBeNull();
-    expect(toggleBtn?.getAttribute('aria-expanded')).toBe('true');
-    expect(toggleBtn?.textContent).toContain('Ocultar');
+    expect(toggleBtn.getAttribute('aria-expanded')).toBe('true');
+    expect(toggleBtn.getAttribute('aria-label')).toBe('Ocultar cabeçalho do checklist');
+    expect(toggleBtn.textContent?.trim()).toBe('');
+    expect(toggleBtn.querySelector('i.fa-chevron-up')).not.toBeNull();
     expect(hostEl.querySelector('#checklist-header-body')).not.toBeNull();
     expect(hostEl.querySelector('.checklist-header__subtitle')).not.toBeNull();
     expect(hostEl.querySelector('mat-expansion-panel')).toBeNull();
@@ -94,22 +98,31 @@ describe('ChecklistHeaderComponent', () => {
     expect(hostEl.querySelector('.checklist-header__export-btn')).toBeNull();
     expect(hostEl.querySelector('.checklist-header__autosave-toggle')).toBeNull();
 
-    toggleBtn!.click();
+    toggleBtn.click();
     await fixture.whenStable();
 
-    expect(toggleBtn?.getAttribute('aria-expanded')).toBe('false');
-    expect(toggleBtn?.textContent).toContain('Mostrar');
+    expect(toggleBtn.getAttribute('aria-expanded')).toBe('false');
+    expect(toggleBtn.getAttribute('aria-label')).toBe('Mostrar cabeçalho do checklist');
+    expect(toggleBtn.querySelector('i.fa-chevron-down')).not.toBeNull();
     expect(headerEl?.classList.contains('checklist-header--collapsed')).toBe(true);
     expect(hostEl.querySelector('#checklist-header-body')).toBeNull();
     expect(hostEl.querySelector('.checklist-header__subtitle')).toBeNull();
 
-    toggleBtn!.click();
+    titleEl.click();
     await fixture.whenStable();
 
-    expect(toggleBtn?.getAttribute('aria-expanded')).toBe('true');
-    expect(toggleBtn?.textContent).toContain('Ocultar');
+    expect(toggleBtn.getAttribute('aria-expanded')).toBe('true');
+    expect(toggleBtn.getAttribute('aria-label')).toBe('Ocultar cabeçalho do checklist');
+    expect(toggleBtn.querySelector('i.fa-chevron-up')).not.toBeNull();
     expect(headerEl?.classList.contains('checklist-header--collapsed')).toBe(false);
     expect(hostEl.querySelector('#checklist-header-body')).not.toBeNull();
+
+    topBarEl.click();
+    await fixture.whenStable();
+
+    expect(toggleBtn.getAttribute('aria-expanded')).toBe('false');
+    expect(headerEl?.classList.contains('checklist-header--collapsed')).toBe(true);
+    expect(hostEl.querySelector('#checklist-header-body')).toBeNull();
   });
 
   it('should emit viewModeChange when switching across stepper, classic, full, and quick_fill modes', async () => {

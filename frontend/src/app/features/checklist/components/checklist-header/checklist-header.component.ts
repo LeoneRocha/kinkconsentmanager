@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, input, output, signal } f
 import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { ChecklistViewMode, ScaleOption, SupportedLanguage } from '../../../../core/models';
 
 export interface ChecklistHeaderLabels {
@@ -57,7 +58,7 @@ interface SelectOption<T> {
  */
 @Component({
   selector: 'app-checklist-header',
-  imports: [MatButtonModule, MatButtonToggleModule, MatSlideToggleModule],
+  imports: [MatButtonModule, MatButtonToggleModule, MatSlideToggleModule, MatTooltipModule],
   templateUrl: './checklist-header.component.html',
   styleUrl: './checklist-header.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -105,6 +106,11 @@ export class ChecklistHeaderComponent {
 
   protected toggleHeaderExpanded(): void {
     this.headerExpanded.update((expanded) => !expanded);
+  }
+
+  protected onToggleButtonClick(event: Event): void {
+    event.stopPropagation();
+    this.toggleHeaderExpanded();
   }
 
   protected onViewModeModelChange(value: ChecklistViewMode | null): void {
