@@ -157,5 +157,15 @@
     @include m.respond-sm {
       width: auto;
     }
+
+    &.full-view__finish-btn--ready:not(:disabled) {
+      --mat-button-filled-container-color: #16a34a;
+      --mat-button-filled-label-text-color: #ffffff;
+      --mat-sys-primary: #16a34a;
+
+      &:hover {
+        --mat-button-filled-container-color: #15803d;
+      }
+    }
   }
 }

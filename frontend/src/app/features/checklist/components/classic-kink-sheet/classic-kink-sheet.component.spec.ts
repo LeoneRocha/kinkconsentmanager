@@ -184,8 +184,20 @@ describe('ClassicKinkSheetComponent', () => {
 
     const finishSpy = jest.fn<void, []>();
     component.finishChecklist.subscribe(finishSpy);
-    hostEl.querySelector<HTMLButtonElement>('.classic-sheet__finish-btn')?.click();
+    const finishBtn = hostEl.querySelector<HTMLButtonElement>('.classic-sheet__finish-btn')!;
+    expect(finishBtn.classList.contains('classic-sheet__finish-btn--ready')).toBe(false);
+
+    finishBtn.click();
     expect(finishSpy).toHaveBeenCalledTimes(1);
+
+    await setBaseInputs({
+      answers: {
+        item_safeword: { selectedOption: 'opt_traffic' },
+        item_rope: { primaryScale: 'enjoy' },
+        item_cuffs: { primaryScale: 'enjoy' },
+      },
+    });
+    expect(finishBtn.classList.contains('classic-sheet__finish-btn--ready')).toBe(true);
   });
 
   // Cenário: Lista vazia após filtragem no modo Clássico.

@@ -63,6 +63,7 @@ export class FullViewContainerComponent {
   readonly expandCategoryLabel = input<string>('Expandir categoria');
   readonly collapseCategoryLabel = input<string>('Recolher categoria');
   readonly showQuickNav = input<boolean>(true);
+  readonly isComplete = input<boolean | undefined>(undefined);
 
   readonly answerChange = output<{ itemId: string; patch: Partial<ItemResponseValue> }>();
   readonly readItemAloud = output<ItemDefinition>();
@@ -75,6 +76,20 @@ export class FullViewContainerComponent {
     const groups = this.groups();
     const collapsed = this.collapsedGroupIds();
     return groups.length > 0 && groups.every((group) => !collapsed.has(group.id));
+  });
+
+  protected readonly isReadyToFinish = computed<boolean>(() => {
+    const explicit = this.isComplete();
+    if (explicit !== undefined) {
+      return explicit;
+    }
+    const groups = this.groups();
+    return (
+      groups.length > 0 &&
+      groups.every(
+        (group) => group.items.length > 0 && this.groupAnsweredCount(group) >= group.items.length,
+      )
+    );
   });
 
   jumpToGroup(groupId: string): void {

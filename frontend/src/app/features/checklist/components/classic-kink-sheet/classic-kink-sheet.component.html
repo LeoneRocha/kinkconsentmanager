@@ -247,6 +247,7 @@
         mat-flat-button
         type="button"
         class="classic-sheet__finish-btn"
+        [class.classic-sheet__finish-btn--ready]="isReadyToFinish()"
         (click)="finishChecklist.emit()"
       >
         <span>{{ finishLabel() }}</span>

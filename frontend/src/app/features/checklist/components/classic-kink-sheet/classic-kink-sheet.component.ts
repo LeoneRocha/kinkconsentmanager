@@ -56,6 +56,7 @@ export class ClassicKinkSheetComponent {
   readonly collapseAllLabel = input<string>('Recolher tudo');
   readonly expandCategoryLabel = input<string>('Expandir categoria');
   readonly collapseCategoryLabel = input<string>('Recolher categoria');
+  readonly isComplete = input<boolean | undefined>(undefined);
   readonly classicHint = input<string>(
     'Visualização clássica em blocos por categoria: clique nos círculos para marcar ou desmarcar cada escala.',
   );
@@ -70,6 +71,20 @@ export class ClassicKinkSheetComponent {
     const groups = this.groups();
     const collapsed = this.collapsedGroupIds();
     return groups.length > 0 && groups.every((group) => !collapsed.has(group.id));
+  });
+
+  protected readonly isReadyToFinish = computed<boolean>(() => {
+    const explicit = this.isComplete();
+    if (explicit !== undefined) {
+      return explicit;
+    }
+    const groups = this.groups();
+    return (
+      groups.length > 0 &&
+      groups.every(
+        (group) => group.items.length > 0 && this.groupAnsweredCount(group) >= group.items.length,
+      )
+    );
   });
 
   protected readonly toggleAllLabel = computed<string>(() =>

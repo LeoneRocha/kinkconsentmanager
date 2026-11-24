@@ -149,10 +149,19 @@ describe('FullViewContainerComponent', () => {
     const hostEl = fixture.nativeElement as HTMLElement;
     const finishBtn = hostEl.querySelector<HTMLButtonElement>('.full-view__finish-btn');
     expect(finishBtn).not.toBeNull();
+    expect(finishBtn!.classList.contains('full-view__finish-btn--ready')).toBe(false);
     finishBtn!.click();
     await fixture.whenStable();
 
     expect(finishSpy).toHaveBeenCalledTimes(1);
+
+    await setBaseInputs({
+      answers: {
+        item_safeword: { customText: 'Vermelho' },
+        item_rope: { primaryScale: 'enjoy' },
+      },
+    });
+    expect(finishBtn!.classList.contains('full-view__finish-btn--ready')).toBe(true);
   });
 
   it('should scroll smoothly to target group section when clicking a quick jump pill', () => {

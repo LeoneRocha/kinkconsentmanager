@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatExpansionModule } from '@angular/material/expansion';
 import {
@@ -42,12 +42,27 @@ export class CategoryAccordionComponent {
   readonly otherPlaceholder = input<string>('Descreva brevemente sua preferência...');
   readonly noResultsText = input<string>('Nenhum item encontrado para os filtros aplicados.');
   readonly readAloudLabel = input<string>('Ouvir leitura deste item');
+  readonly isComplete = input<boolean | undefined>(undefined);
 
   readonly activeIndexChange = output<number>();
   readonly answerChange = output<{ itemId: string; patch: Partial<ItemResponseValue> }>();
   readonly readItemAloud = output<ItemDefinition>();
   readonly nextCategory = output<void>();
   readonly finishChecklist = output<void>();
+
+  protected readonly isReadyToFinish = computed<boolean>(() => {
+    const explicit = this.isComplete();
+    if (explicit !== undefined) {
+      return explicit;
+    }
+    const groups = this.groups();
+    return (
+      groups.length > 0 &&
+      groups.every(
+        (group) => group.items.length > 0 && this.groupAnsweredCount(group) >= group.items.length,
+      )
+    );
+  });
 
   protected onAccordionValueChange(value: number): void {
     if (typeof value === 'number') {

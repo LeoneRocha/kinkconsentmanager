@@ -90,6 +90,7 @@
         mat-flat-button
         type="button"
         class="full-view__finish-btn"
+        [class.full-view__finish-btn--ready]="isReadyToFinish()"
         (click)="finishChecklist.emit()"
       >
         <span>{{ finishLabel() }}</span>

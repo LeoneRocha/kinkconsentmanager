@@ -115,6 +115,10 @@ export class ChecklistPageComponent implements OnInit {
 
   protected readonly hasAnswers = computed<boolean>(() => Object.keys(this.answers()).length > 0);
 
+  protected readonly isChecklistComplete = computed<boolean>(
+    () => this.totalCount() > 0 && this.answeredCount() >= this.totalCount(),
+  );
+
   protected readonly areFullViewGroupsExpanded = computed<boolean>(() => {
     const groups = this.filteredGroups();
     const collapsed = this.fullViewRef()?.collapsedIds();

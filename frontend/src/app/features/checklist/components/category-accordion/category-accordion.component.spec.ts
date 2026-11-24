@@ -174,11 +174,21 @@ describe('CategoryAccordionComponent', () => {
 
     expect(finishBtn).not.toBeNull();
     expect(nextBtnInLast).toBeNull();
+    expect(finishBtn!.classList.contains('category-accordion__finish-btn--ready')).toBe(false);
 
     finishBtn!.click();
     await fixture.whenStable();
 
     expect(finishSpy).toHaveBeenCalledTimes(1);
+
+    await setBaseInputs({
+      activeIndex: 1,
+      answers: {
+        item_safeword: { selectedOption: 'opt_traffic' },
+        item_rope: { primaryScale: 'enjoy' },
+      },
+    });
+    expect(finishBtn!.classList.contains('category-accordion__finish-btn--ready')).toBe(true);
   });
 
   it('should emit answerChange with itemId and patch when child question item changes', async () => {
