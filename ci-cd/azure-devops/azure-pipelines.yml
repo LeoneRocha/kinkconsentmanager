@@ -17,9 +17,9 @@
 # 3. Crie o Environment `production` no Azure DevOps com:
 #    - Approvals and checks -> Approvals (aprovadores obrigatórios)
 #    - Approvals and checks -> Branch control -> `refs/heads/main`
+#name: 'KinkConsentManager-UI$(Rev:.r)'
 # ==============================================================================
-
-name: 'KinkConsentManager-UI$(Rev:.r)'
+ 
 
 trigger:
   branches:
