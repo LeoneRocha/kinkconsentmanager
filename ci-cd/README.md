@@ -2,7 +2,7 @@
 
 Esta pasta centraliza os pipelines e scripts de **Integração Contínua (CI)** e **Entrega/Implantação Contínua (CD)** do **KinkConsentManager UI**, padronizados a partir da referência `SmartCoreHub-UI.yml`, com suporte multi-plataforma e **desativados por padrão** até ativação explícita.
 
-> **Links relacionados:** [Guia GitHub Actions -> Azure](./GUIA_GITHUB_ACTIONS_AZURE.md) · [Guia Publicação Manual Azure](./manualdeploy/GUIA_PUBLICACAO_MANUAL_AZURE.md) · [README da Documentação](../docs/README.md) · [Arquitetura](../docs/ARCHITECTURE.md) · [Diretrizes do Projeto](../docs/PROJECT_GUIDELINES.md) · [SonarCloud Config](../frontend/sonar-project.properties) · [Jest Config](../frontend/jest.config.js) · [Dockerfile](../frontend/Dockerfile)
+> **Links relacionados:** [Guia Azure DevOps -> Azure](./GUIA_AZURE_DEVOPS_AZURE.md) · [Guia GitHub Actions -> Azure](./GUIA_GITHUB_ACTIONS_AZURE.md) · [Guia Publicação Manual Azure](./manualdeploy/GUIA_PUBLICACAO_MANUAL_AZURE.md) · [README da Documentação](../docs/README.md) · [Arquitetura](../docs/ARCHITECTURE.md) · [Diretrizes do Projeto](../docs/PROJECT_GUIDELINES.md) · [SonarCloud Config](../frontend/sonar-project.properties) · [Jest Config](../frontend/jest.config.js) · [Dockerfile](../frontend/Dockerfile)
 
 ---
 
@@ -10,6 +10,7 @@ Esta pasta centraliza os pipelines e scripts de **Integração Contínua (CI)** 
 
 | Arquivo | Plataforma / Uso | Estado Padrão |
 | ------- | ---------------- | ------------- |
+| [`GUIA_AZURE_DEVOPS_AZURE.md`](./GUIA_AZURE_DEVOPS_AZURE.md) | Passo a passo completo para Azure DevOps Pipelines (projeto público vs. privado + repositório privado, OIDC, Service Connections, Variable Group e Environment `production`) | Guia de referência |
 | [`GUIA_GITHUB_ACTIONS_AZURE.md`](./GUIA_GITHUB_ACTIONS_AZURE.md) | Passo a passo completo de OIDC, Secrets, Environment `production`, SonarCloud e Deploy Azure no GitHub Actions | Guia de referência |
 | [`manualdeploy/GUIA_PUBLICACAO_MANUAL_AZURE.md`](./manualdeploy/GUIA_PUBLICACAO_MANUAL_AZURE.md) | Passo a passo de build, ZIP, deploy manual no Azure Portal/CLI, diagnóstico de `default-static-site.js` / `oryx-manifest.toml` e Plano B Node 26 | Guia de referência |
 | [`azure-devops/azure-pipelines.yml`](./azure-devops/azure-pipelines.yml) | Azure DevOps Pipelines (`CI_Build_Quality` -> `CD_Docker_Image` / `CD_Deploy_Azure`) | **Desativado** (`trigger: none`, `pr: none`, parâmetros CD `false`) |

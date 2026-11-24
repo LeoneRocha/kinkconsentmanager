@@ -99,7 +99,7 @@ As versões vivas constam em [frontend/package.json](../frontend/package.json), 
 | Configuração Jest 30 + Reporters (JUnit, Cobertura, LCOV, Sonar) | [frontend/jest.config.js](../frontend/jest.config.js) |
 | Setup Zoneless + Polyfills `jsdom` | [frontend/src/setup-jest.ts](../frontend/src/setup-jest.ts) |
 | Configuração SonarCloud | [frontend/sonar-project.properties](../frontend/sonar-project.properties) |
-| Pipelines CI/CD (Azure DevOps, GitHub, GitLab & Scripts — desativados por padrão) | [ci-cd/README.md](../ci-cd/README.md) · [Guia GitHub -> Azure](../ci-cd/GUIA_GITHUB_ACTIONS_AZURE.md) · [Guia Deploy Manual Azure](../ci-cd/manualdeploy/GUIA_PUBLICACAO_MANUAL_AZURE.md) · [azure-pipelines.yml](../ci-cd/azure-devops/azure-pipelines.yml) · [kinkconsentmanager-ci-cd.yml](../ci-cd/github/kinkconsentmanager-ci-cd.yml) |
+| Pipelines CI/CD (Azure DevOps, GitHub, GitLab & Scripts — desativados por padrão) | [ci-cd/README.md](../ci-cd/README.md) · [Guia Azure DevOps -> Azure](../ci-cd/GUIA_AZURE_DEVOPS_AZURE.md) · [Guia GitHub -> Azure](../ci-cd/GUIA_GITHUB_ACTIONS_AZURE.md) · [Guia Deploy Manual Azure](../ci-cd/manualdeploy/GUIA_PUBLICACAO_MANUAL_AZURE.md) · [azure-pipelines.yml](../ci-cd/azure-devops/azure-pipelines.yml) · [kinkconsentmanager-ci-cd.yml](../ci-cd/github/kinkconsentmanager-ci-cd.yml) |
 | Dockerfile Multi-Stage & Nginx CSP | [Dockerfile](../frontend/Dockerfile) · [nginx.conf](../frontend/nginx.conf) |
 | Docker Compose (Dev/Local & Prod) | [docker-compose.yml](../frontend/docker-compose.yml) · [dockercompose.prod.yml](../frontend/dockercompose.prod.yml) |
 | DevContainers (Frontend + Backend Placeholder) | [.devcontainer/docker-compose.yml](../.devcontainer/docker-compose.yml) |
