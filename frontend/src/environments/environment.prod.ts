@@ -1,7 +1,7 @@
 export const environment = {
   production: true,
   appName: 'KinkConsentManager',
-  version: '1.0.3',
+  version: '1.0.4',
   buildDate: '2026.11.24',
   crypto: {
     autogeneredKeyBuildDeploy: false,
