@@ -146,6 +146,8 @@
     "headerShow": "Mostrar",
     "headerHideAriaLabel": "Ocultar cabeçalho do checklist",
     "headerShowAriaLabel": "Mostrar cabeçalho do checklist",
+    "progressCompactEnable": "Modo compacto (ocultar passos e legenda)",
+    "progressCompactDisable": "Expandir progresso (mostrar passos e legenda)",
     "modePickerTitle": "Como você prefere preencher o checklist?",
     "modePickerSubtitle": "Escolha o formato mais confortável para o seu ritmo. Você poderá alternar de modo a qualquer momento sem perder suas respostas.",
     "modePickerHowToFillLabel": "Como preencher",

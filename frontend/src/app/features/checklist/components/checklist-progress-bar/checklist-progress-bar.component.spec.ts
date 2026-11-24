@@ -135,4 +135,46 @@ describe('ChecklistProgressBarComponent', () => {
     await fixture.whenStable();
     expect(toggleSpy).toHaveBeenCalledWith(false);
   });
+
+  // Cenário: Alternância do modo compacto pelo botão antes de Salvar.
+  // Objetivo: Garantir posicionamento antes de Salvar e ocultação da trilha de passos e legenda quando ativo.
+  it('should toggle compact mode via button before Save, hiding rail and legend while keeping progress bar visible', async () => {
+    const hostEl = fixture.nativeElement as HTMLElement;
+    const sectionEl = hostEl.querySelector('section.checklist-progress-bar')!;
+    const compactBtn = hostEl.querySelector<HTMLButtonElement>(
+      '.checklist-progress-bar__compact-btn',
+    )!;
+    const saveBtn = hostEl.querySelector<HTMLButtonElement>('.checklist-progress-bar__save-btn')!;
+    const railContainer = hostEl.querySelector<HTMLElement>('.checklist-progress-bar__rail')!;
+    const legendContainer = hostEl.querySelector<HTMLElement>('.checklist-progress-bar__legend')!;
+
+    expect(compactBtn).not.toBeNull();
+    expect(
+      Boolean(compactBtn.compareDocumentPosition(saveBtn) & Node.DOCUMENT_POSITION_FOLLOWING),
+    ).toBe(true);
+    expect(compactBtn.getAttribute('aria-pressed')).toBe('false');
+    expect(compactBtn.querySelector('i.fa-compress')).not.toBeNull();
+    expect(railContainer.hidden).toBe(false);
+    expect(legendContainer.hidden).toBe(false);
+
+    compactBtn.click();
+    await fixture.whenStable();
+
+    expect(compactBtn.getAttribute('aria-pressed')).toBe('true');
+    expect(compactBtn.classList.contains('checklist-progress-bar__compact-btn--active')).toBe(true);
+    expect(compactBtn.querySelector('i.fa-expand')).not.toBeNull();
+    expect(sectionEl.classList.contains('checklist-progress-bar--compact')).toBe(true);
+    expect(railContainer.hidden).toBe(true);
+    expect(legendContainer.hidden).toBe(true);
+    expect(hostEl.querySelector('app-progress-indicator')).not.toBeNull();
+    expect(saveBtn).not.toBeNull();
+
+    compactBtn.click();
+    await fixture.whenStable();
+
+    expect(compactBtn.getAttribute('aria-pressed')).toBe('false');
+    expect(sectionEl.classList.contains('checklist-progress-bar--compact')).toBe(false);
+    expect(railContainer.hidden).toBe(false);
+    expect(legendContainer.hidden).toBe(false);
+  });
 });

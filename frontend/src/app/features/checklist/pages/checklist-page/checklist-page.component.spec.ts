@@ -333,6 +333,23 @@ describe('ChecklistPageComponent', () => {
       Boolean(actionsEl!.compareDocumentPosition(legendEl!) & Node.DOCUMENT_POSITION_FOLLOWING),
     ).toBe(true);
 
+    // Compact mode toggle hides step rail & legend in stepper mode while keeping progress bar visible
+    const compactBtn = hostEl.querySelector<HTMLButtonElement>(
+      '.checklist-progress-bar__compact-btn',
+    )!;
+    const railSlot = hostEl.querySelector<HTMLElement>('.checklist-progress-bar__rail')!;
+    const legendSlot = hostEl.querySelector<HTMLElement>('.checklist-progress-bar__legend')!;
+    compactBtn.click();
+    await fixture.whenStable();
+    expect(railSlot.hidden).toBe(true);
+    expect(legendSlot.hidden).toBe(true);
+    expect(hostEl.querySelector('app-progress-indicator')).not.toBeNull();
+
+    compactBtn.click();
+    await fixture.whenStable();
+    expect(railSlot.hidden).toBe(false);
+    expect(legendSlot.hidden).toBe(false);
+
     // Switch to classic view, full view, and quick_fill view
     const modeButtons = hostEl.querySelectorAll<HTMLElement>(
       '.checklist-header__mode-select mat-button-toggle button',

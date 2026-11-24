@@ -1,4 +1,8 @@
-<section class="checklist-progress-bar" [attr.aria-label]="labels().progressLabel">
+<section
+  class="checklist-progress-bar"
+  [class.checklist-progress-bar--compact]="compactMode()"
+  [attr.aria-label]="labels().progressLabel"
+>
   <div class="checklist-progress-bar__progress">
     <app-progress-indicator
       [answered]="answeredCount()"
@@ -8,10 +12,30 @@
     />
   </div>
 
-  <ng-content select="[progressRail]" />
+  <div class="checklist-progress-bar__rail" [hidden]="compactMode()">
+    <ng-content select="[progressRail]" />
+  </div>
 
   <div class="checklist-progress-bar__actions">
     <div class="checklist-progress-bar__save-actions">
+      <button
+        type="button"
+        class="checklist-progress-bar__compact-btn"
+        [class.checklist-progress-bar__compact-btn--active]="compactMode()"
+        [attr.aria-pressed]="compactMode()"
+        [attr.aria-label]="compactToggleLabel()"
+        [matTooltip]="compactToggleLabel()"
+        matTooltipPosition="below"
+        (click)="toggleCompactMode()"
+      >
+        <i
+          class="fa-solid"
+          [class.fa-compress]="!compactMode()"
+          [class.fa-expand]="compactMode()"
+          aria-hidden="true"
+        ></i>
+      </button>
+
       <button
         mat-flat-button
         type="button"
@@ -63,7 +87,7 @@
     </div>
   </div>
 
-  <div class="checklist-progress-bar__legend">
+  <div class="checklist-progress-bar__legend" [hidden]="compactMode()">
     <ng-content select="[progressLegend]" />
   </div>
 </section>

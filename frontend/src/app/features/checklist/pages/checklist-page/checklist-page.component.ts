@@ -174,6 +174,14 @@ export class ChecklistPageComponent implements OnInit {
         'autosaveToggleLabel',
         'Salvamento automático',
       ),
+      compactEnableLabel: this.translateWithFallback(
+        'progressCompactEnable',
+        'Modo compacto (ocultar passos e legenda)',
+      ),
+      compactDisableLabel: this.translateWithFallback(
+        'progressCompactDisable',
+        'Expandir progresso (mostrar passos e legenda)',
+      ),
     };
   });
 

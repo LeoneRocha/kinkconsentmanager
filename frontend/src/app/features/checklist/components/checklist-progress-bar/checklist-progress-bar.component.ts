@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatTooltipModule } from '@angular/material/tooltip';
@@ -10,6 +10,8 @@ export interface ChecklistProgressBarLabels {
   readonly saveNowTooltip: string;
   readonly exportButton: string;
   readonly autosaveToggleLabel: string;
+  readonly compactEnableLabel?: string;
+  readonly compactDisableLabel?: string;
 }
 
 export const DEFAULT_CHECKLIST_PROGRESS_BAR_LABELS: ChecklistProgressBarLabels = {
@@ -18,11 +20,13 @@ export const DEFAULT_CHECKLIST_PROGRESS_BAR_LABELS: ChecklistProgressBarLabels =
   saveNowTooltip: 'Salvar agora (criptografado)',
   exportButton: 'Exportar',
   autosaveToggleLabel: 'Salvamento automático',
+  compactEnableLabel: 'Modo compacto (ocultar passos e legenda)',
+  compactDisableLabel: 'Expandir progresso (mostrar passos e legenda)',
 };
 
 /**
  * Always-visible checklist progress bar hosting encrypted Save, Export, and Autosave controls
- * alongside optional projected step-rail or scale-legend chrome.
+ * alongside optional projected step-rail or scale-legend chrome, with a compact-mode toggle.
  */
 @Component({
   selector: 'app-checklist-progress-bar',
@@ -45,9 +49,23 @@ export class ChecklistProgressBarComponent {
   readonly goToExport = output<void>();
   readonly autosaveEnabledChange = output<boolean>();
 
+  protected readonly compactMode = signal<boolean>(false);
+
   protected readonly isChecklistComplete = computed<boolean>(
     () => this.totalCount() > 0 && this.answeredCount() >= this.totalCount(),
   );
+
+  protected readonly compactToggleLabel = computed<string>(() =>
+    this.compactMode()
+      ? (this.labels().compactDisableLabel ??
+        DEFAULT_CHECKLIST_PROGRESS_BAR_LABELS.compactDisableLabel!)
+      : (this.labels().compactEnableLabel ??
+        DEFAULT_CHECKLIST_PROGRESS_BAR_LABELS.compactEnableLabel!),
+  );
+
+  protected toggleCompactMode(): void {
+    this.compactMode.update((compact) => !compact);
+  }
 
   protected onAutosaveEnabledModelChange(value: unknown): void {
     this.autosaveEnabledChange.emit(Boolean(value));
