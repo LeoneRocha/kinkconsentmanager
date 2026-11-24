@@ -54,6 +54,10 @@
     @include m.respond-md {
       padding: 1.5rem 1.75rem;
     }
+
+    &--collapsed {
+      gap: 0.875rem;
+    }
   }
 
   &__panel-header,
@@ -80,6 +84,44 @@
     width: 100%;
   }
 
+  &__panel-heading {
+    cursor: pointer;
+    user-select: none;
+
+    &:hover .stepper__group-toggle-btn {
+      border-color: v.$accent-primary;
+      background-color: v.$accent-soft;
+      color: v.$accent-text;
+    }
+  }
+
+  &__panel-meta,
+  &__acc-meta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
+  }
+
+  &__panel-heading {
+    cursor: pointer;
+    user-select: none;
+
+    &:hover .stepper__group-toggle-btn {
+      border-color: v.$accent-primary;
+      background-color: v.$accent-soft;
+      color: v.$accent-text;
+    }
+  }
+
+  &__panel-meta,
+  &__acc-meta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
+  }
+
   &__panel-title {
     margin: 0;
     font-size: 1.125rem;
@@ -99,9 +141,11 @@
     flex-shrink: 0;
   }
 
-  &__toggle-all-btn {
-    width: 38px;
-    height: 38px;
+  &__toggle-all-btn,
+  &__group-toggle-btn,
+  &__acc-toggle-icon {
+    width: 34px;
+    height: 34px;
     border-radius: 9999px;
     display: inline-flex;
     align-items: center;
@@ -110,13 +154,17 @@
     border: 1px solid v.$border-strong;
     background-color: v.$surface-subtle;
     color: v.$text-primary;
-    cursor: pointer;
     box-shadow: v.$shadow-sm;
     transition:
       background-color 0.15s ease,
       border-color 0.15s ease,
       color 0.15s ease,
       transform 0.15s ease;
+  }
+
+  &__toggle-all-btn,
+  &__group-toggle-btn {
+    cursor: pointer;
 
     &:hover {
       border-color: v.$accent-primary;
@@ -130,9 +178,53 @@
     }
   }
 
+  &__toggle-all-btn {
+    width: 38px;
+    height: 38px;
+  }
+
+  &__group-toggle-btn,
+  &__acc-toggle-icon {
+    width: 32px;
+    height: 32px;
+  }
+
   &__toggle-all-icon {
     font-size: 0.9rem;
     line-height: 1;
+  }
+
+  &__group-toggle-btn,
+  &__acc-toggle-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 9999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 1px solid v.$border-strong;
+    background-color: v.$surface-subtle;
+    color: v.$text-primary;
+    flex-shrink: 0;
+    transition:
+      background-color 0.15s ease,
+      border-color 0.15s ease,
+      color 0.15s ease;
+  }
+
+  &__group-toggle-btn {
+    cursor: pointer;
+
+    &:hover {
+      border-color: v.$accent-primary;
+      background-color: v.$accent-soft;
+      color: v.$accent-text;
+    }
+
+    &:focus-visible {
+      @include m.focus-ring(v.$accent-primary);
+    }
   }
 
   &__acc-title {

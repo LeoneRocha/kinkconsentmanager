@@ -42,6 +42,8 @@ export interface ChecklistStepperLabels {
   readonly reviewSubtitle: string;
   readonly expandAll: string;
   readonly collapseAll: string;
+  readonly expandCategory?: string;
+  readonly collapseCategory?: string;
   readonly finish: string;
   readonly otherPlaceholder: string;
   readonly noResults: string;
@@ -60,6 +62,8 @@ export const DEFAULT_CHECKLIST_STEPPER_LABELS: ChecklistStepperLabels = {
     'Todas as categorias estão abertas abaixo para revisão rápida. Você pode recolher ou expandir cada bloco e ajustar qualquer resposta antes de exportar.',
   expandAll: 'Expandir tudo',
   collapseAll: 'Recolher tudo',
+  expandCategory: 'Expandir categoria',
+  collapseCategory: 'Recolher categoria',
   finish: 'Finalizar e Exportar',
   otherPlaceholder: 'Descreva brevemente sua preferência...',
   noResults: 'Nenhum item encontrado para os filtros aplicados.',
@@ -102,6 +106,7 @@ export class ChecklistStepperComponent {
   readonly finishChecklist = output<void>();
 
   readonly invalidStepIds = signal<ReadonlySet<string>>(new Set());
+  protected readonly collapsedGroupIds = signal<ReadonlySet<string>>(new Set());
   protected readonly expandedReviewValues = signal<number[]>([]);
   protected readonly showIncompleteAlert = signal<boolean>(false);
   private wasOnReviewStep = false;
@@ -234,6 +239,13 @@ export class ChecklistStepperComponent {
           next.add(blockingGroup.id);
           return next;
         });
+        if (this.collapsedGroupIds().has(blockingGroup.id)) {
+          this.collapsedGroupIds.update((prev) => {
+            const next = new Set(prev);
+            next.delete(blockingGroup.id);
+            return next;
+          });
+        }
       }
       this.showIncompleteAlert.set(true);
       return;
@@ -298,6 +310,37 @@ export class ChecklistStepperComponent {
 
   protected onItemAnswerChange(itemId: string, patch: Partial<ItemResponseValue>): void {
     this.answerChange.emit({ itemId, patch });
+  }
+
+  protected isGroupCollapsed(groupId: string): boolean {
+    return this.collapsedGroupIds().has(groupId);
+  }
+
+  protected toggleGroupCollapsed(groupId: string): void {
+    this.collapsedGroupIds.update((prev) => {
+      const next = new Set(prev);
+      if (next.has(groupId)) {
+        next.delete(groupId);
+      } else {
+        next.add(groupId);
+      }
+      return next;
+    });
+  }
+
+  protected onGroupToggleButtonClick(event: MouseEvent, groupId: string): void {
+    event.stopPropagation();
+    this.toggleGroupCollapsed(groupId);
+  }
+
+  protected groupToggleTooltip(group: GroupDefinition): string {
+    return this.isGroupCollapsed(group.id)
+      ? (this.labels().expandCategory ?? DEFAULT_CHECKLIST_STEPPER_LABELS.expandCategory!)
+      : (this.labels().collapseCategory ?? DEFAULT_CHECKLIST_STEPPER_LABELS.collapseCategory!);
+  }
+
+  protected groupToggleAriaLabel(group: GroupDefinition): string {
+    return `${this.groupToggleTooltip(group)}: ${this.groupTitle(group)}`;
   }
 
   protected isGroupCompleted(group: GroupDefinition): boolean {

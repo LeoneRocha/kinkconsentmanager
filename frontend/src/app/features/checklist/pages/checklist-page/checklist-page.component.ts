@@ -185,6 +185,26 @@ export class ChecklistPageComponent implements OnInit {
     };
   });
 
+  protected readonly expandAllLabel = computed<string>(() => {
+    this.i18n.currentLang();
+    return this.translateWithFallback('expandAllCategories', 'Expandir tudo');
+  });
+
+  protected readonly collapseAllLabel = computed<string>(() => {
+    this.i18n.currentLang();
+    return this.translateWithFallback('collapseAllCategories', 'Recolher tudo');
+  });
+
+  protected readonly expandCategoryLabel = computed<string>(() => {
+    this.i18n.currentLang();
+    return this.translateWithFallback('expandCategory', 'Expandir categoria');
+  });
+
+  protected readonly collapseCategoryLabel = computed<string>(() => {
+    this.i18n.currentLang();
+    return this.translateWithFallback('collapseCategory', 'Recolher categoria');
+  });
+
   protected readonly stepperLabels = computed<ChecklistStepperLabels>(() => {
     this.i18n.currentLang();
     return {
@@ -198,8 +218,10 @@ export class ChecklistPageComponent implements OnInit {
         'reviewStepSubtitle',
         'Todas as categorias estão abertas abaixo para revisão rápida. Você pode recolher ou expandir cada bloco e ajustar qualquer resposta antes de exportar.',
       ),
-      expandAll: this.translateWithFallback('expandAllCategories', 'Expandir tudo'),
-      collapseAll: this.translateWithFallback('collapseAllCategories', 'Recolher tudo'),
+      expandAll: this.expandAllLabel(),
+      collapseAll: this.collapseAllLabel(),
+      expandCategory: this.expandCategoryLabel(),
+      collapseCategory: this.collapseCategoryLabel(),
       finish: this.finishLabel(),
       otherPlaceholder: this.otherPlaceholder(),
       noResults: this.noResultsText(),

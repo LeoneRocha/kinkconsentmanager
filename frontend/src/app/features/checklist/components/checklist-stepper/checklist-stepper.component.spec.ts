@@ -194,6 +194,9 @@ describe('ChecklistStepperComponent', () => {
     const panels = Array.from(hostEl.querySelectorAll('mat-expansion-panel'));
     expect(panels.length).toBe(2);
     expect(panels.every((p) => p.classList.contains('mat-expanded'))).toBe(true);
+    expect(
+      panels.every((p) => p.querySelector('.stepper__acc-toggle-icon i.fa-angles-up') !== null),
+    ).toBe(true);
 
     toggleAllBtn.click();
     await fixture.whenStable();
@@ -201,6 +204,9 @@ describe('ChecklistStepperComponent', () => {
     expect(toggleAllBtn.getAttribute('aria-label')).toBe('Expandir tudo');
     expect(toggleAllBtn.querySelector('i.fa-angles-down')).not.toBeNull();
     expect(panels.some((p) => p.classList.contains('mat-expanded'))).toBe(false);
+    expect(
+      panels.every((p) => p.querySelector('.stepper__acc-toggle-icon i.fa-angles-down') !== null),
+    ).toBe(true);
 
     toggleAllBtn.click();
     await fixture.whenStable();
@@ -227,6 +233,42 @@ describe('ChecklistStepperComponent', () => {
     component.finishChecklist.subscribe(finishSpy);
     finishBtn.click();
     expect(finishSpy).toHaveBeenCalledTimes(1);
+  });
+
+  // Cenário: Recolhimento e expansão da categoria do passo ativo no modo Guiado (Passos).
+  // Objetivo: Garantir alternância por botão/cabeçalho com ícone fa-angles-up/down e reexpansão automática ao tentar avançar passo incompleto.
+  it('should allow collapsing and expanding the active step category and auto-expand on incomplete advance', async () => {
+    const hostEl = fixture.nativeElement as HTMLElement;
+    const toggleBtn = hostEl.querySelector<HTMLButtonElement>('.stepper__group-toggle-btn')!;
+    const headingEl = hostEl.querySelector<HTMLElement>('.stepper__panel-heading')!;
+
+    expect(toggleBtn).not.toBeNull();
+    expect(toggleBtn.getAttribute('aria-expanded')).toBe('true');
+    expect(toggleBtn.querySelector('i.fa-angles-up')).not.toBeNull();
+    expect(hostEl.querySelector('.stepper__description')).not.toBeNull();
+    expect(hostEl.querySelector('.stepper__items')).not.toBeNull();
+
+    toggleBtn.click();
+    await fixture.whenStable();
+
+    expect(toggleBtn.getAttribute('aria-expanded')).toBe('false');
+    expect(toggleBtn.querySelector('i.fa-angles-down')).not.toBeNull();
+    expect(hostEl.querySelector('.stepper__description')).toBeNull();
+    expect(hostEl.querySelector('.stepper__items')).toBeNull();
+
+    // Tentar avançar com passo recolhido e incompleto deve reabrir automaticamente
+    hostEl.querySelector<HTMLButtonElement>('.stepper__next-btn')?.click();
+    await fixture.whenStable();
+
+    expect(toggleBtn.getAttribute('aria-expanded')).toBe('true');
+    expect(toggleBtn.querySelector('i.fa-angles-up')).not.toBeNull();
+    expect(hostEl.querySelector('.stepper__items')).not.toBeNull();
+
+    headingEl.click();
+    await fixture.whenStable();
+
+    expect(toggleBtn.getAttribute('aria-expanded')).toBe('false');
+    expect(hostEl.querySelector('.stepper__items')).toBeNull();
   });
 
   // Cenário: Filtro sem resultados no modo Stepper.

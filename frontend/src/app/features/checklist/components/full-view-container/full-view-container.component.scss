@@ -36,12 +36,52 @@
     padding: 0.875rem 1rem;
   }
 
+  &__quick-nav-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+
   &__quick-nav-label {
     font-size: 0.8125rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.04em;
     color: v.$text-muted;
+  }
+
+  &__toggle-all-btn,
+  &__toggle-btn {
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+    border-radius: 9999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 1px solid v.$border-strong;
+    background-color: v.$surface-subtle;
+    color: v.$text-primary;
+    cursor: pointer;
+    box-shadow: v.$shadow-sm;
+    transition:
+      background-color 0.15s ease,
+      border-color 0.15s ease,
+      color 0.15s ease,
+      transform 0.15s ease;
+
+    &:hover {
+      border-color: v.$accent-primary;
+      background-color: v.$accent-soft;
+      color: v.$accent-text;
+      transform: translateY(-1px);
+    }
+
+    &:focus-visible {
+      @include m.focus-ring(v.$accent-primary);
+    }
   }
 
   &__pills {
@@ -63,7 +103,10 @@
     font-size: 0.875rem;
     font-weight: 500;
     cursor: pointer;
-    transition: border-color 150ms ease, background-color 150ms ease, color 150ms ease;
+    transition:
+      border-color 150ms ease,
+      background-color 150ms ease,
+      color 150ms ease;
 
     &:hover {
       border-color: v.$accent-primary;
@@ -100,12 +143,24 @@
     @include m.respond-md {
       padding: 1.25rem 1.5rem;
     }
+
+    &--collapsed {
+      gap: 0;
+    }
   }
 
   &__section-header {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
+    cursor: pointer;
+    user-select: none;
+
+    &:hover .full-view__toggle-btn {
+      border-color: v.$accent-primary;
+      background-color: v.$accent-soft;
+      color: v.$accent-text;
+    }
   }
 
   &__section-heading {
@@ -113,6 +168,13 @@
     align-items: center;
     justify-content: space-between;
     gap: 0.75rem;
+  }
+
+  &__section-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
   }
 
   &__section-title {

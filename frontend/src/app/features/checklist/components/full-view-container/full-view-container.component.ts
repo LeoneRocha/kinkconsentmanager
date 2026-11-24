@@ -1,6 +1,15 @@
-import { ChangeDetectionStrategy, Component, inject, input, output } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  input,
+  output,
+  signal,
+} from '@angular/core';
 import { DOCUMENT } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import {
   GroupDefinition,
   ItemDefinition,
@@ -26,7 +35,7 @@ import {
  */
 @Component({
   selector: 'app-full-view-container',
-  imports: [MatButtonModule, DynamicQuestionItemComponent],
+  imports: [MatButtonModule, MatTooltipModule, DynamicQuestionItemComponent],
   templateUrl: './full-view-container.component.html',
   styleUrl: './full-view-container.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -43,16 +52,78 @@ export class FullViewContainerComponent {
   readonly quickNavTitle = input<string>('Categorias');
   readonly otherPlaceholder = input<string>('Descreva brevemente sua preferência...');
   readonly readAloudLabel = input<string>('Ouvir leitura deste item');
+  readonly expandAllLabel = input<string>('Expandir tudo');
+  readonly collapseAllLabel = input<string>('Recolher tudo');
+  readonly expandCategoryLabel = input<string>('Expandir categoria');
+  readonly collapseCategoryLabel = input<string>('Recolher categoria');
 
   readonly answerChange = output<{ itemId: string; patch: Partial<ItemResponseValue> }>();
   readonly readItemAloud = output<ItemDefinition>();
   readonly finishChecklist = output<void>();
 
+  protected readonly collapsedGroupIds = signal<ReadonlySet<string>>(new Set());
+
+  protected readonly areAllGroupsExpanded = computed<boolean>(() => {
+    const groups = this.groups();
+    const collapsed = this.collapsedGroupIds();
+    return groups.length > 0 && groups.every((group) => !collapsed.has(group.id));
+  });
+
+  protected readonly toggleAllLabel = computed<string>(() =>
+    this.areAllGroupsExpanded() ? this.collapseAllLabel() : this.expandAllLabel(),
+  );
+
   protected jumpToGroup(groupId: string): void {
+    if (this.isGroupCollapsed(groupId)) {
+      this.collapsedGroupIds.update((prev) => {
+        const next = new Set(prev);
+        next.delete(groupId);
+        return next;
+      });
+    }
     const target = this.document.getElementById(this.groupSectionId(groupId));
     if (target && typeof target.scrollIntoView === 'function') {
       target.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
+  }
+
+  protected isGroupCollapsed(groupId: string): boolean {
+    return this.collapsedGroupIds().has(groupId);
+  }
+
+  protected toggleGroupCollapsed(groupId: string): void {
+    this.collapsedGroupIds.update((prev) => {
+      const next = new Set(prev);
+      if (next.has(groupId)) {
+        next.delete(groupId);
+      } else {
+        next.add(groupId);
+      }
+      return next;
+    });
+  }
+
+  protected onGroupToggleButtonClick(event: MouseEvent, groupId: string): void {
+    event.stopPropagation();
+    this.toggleGroupCollapsed(groupId);
+  }
+
+  protected toggleAllGroups(): void {
+    if (this.areAllGroupsExpanded()) {
+      this.collapsedGroupIds.set(new Set(this.groups().map((group) => group.id)));
+      return;
+    }
+    this.collapsedGroupIds.set(new Set());
+  }
+
+  protected groupToggleTooltip(group: GroupDefinition): string {
+    return this.isGroupCollapsed(group.id)
+      ? this.expandCategoryLabel()
+      : this.collapseCategoryLabel();
+  }
+
+  protected groupToggleAriaLabel(group: GroupDefinition): string {
+    return `${this.groupToggleTooltip(group)}: ${this.groupTitle(group)}`;
   }
 
   protected groupSectionId(groupId: string): string {

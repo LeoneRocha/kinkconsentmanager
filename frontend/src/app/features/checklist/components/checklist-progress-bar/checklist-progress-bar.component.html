@@ -5,11 +5,30 @@
 >
   <div class="checklist-progress-bar__progress">
     <app-progress-indicator
+      class="checklist-progress-bar__indicator"
       [answered]="answeredCount()"
       [total]="totalCount()"
       [percentage]="progressPercentage()"
       [label]="labels().progressLabel"
     />
+
+    <button
+      type="button"
+      class="checklist-progress-bar__compact-btn"
+      [class.checklist-progress-bar__compact-btn--active]="compactMode()"
+      [attr.aria-pressed]="compactMode()"
+      [attr.aria-label]="compactToggleLabel()"
+      [matTooltip]="compactToggleLabel()"
+      matTooltipPosition="below"
+      (click)="toggleCompactMode()"
+    >
+      <i
+        class="fa-solid"
+        [class.fa-compress]="!compactMode()"
+        [class.fa-expand]="compactMode()"
+        aria-hidden="true"
+      ></i>
+    </button>
   </div>
 
   <div class="checklist-progress-bar__rail" [hidden]="compactMode()">
@@ -18,24 +37,6 @@
 
   <div class="checklist-progress-bar__actions">
     <div class="checklist-progress-bar__save-actions">
-      <button
-        type="button"
-        class="checklist-progress-bar__compact-btn"
-        [class.checklist-progress-bar__compact-btn--active]="compactMode()"
-        [attr.aria-pressed]="compactMode()"
-        [attr.aria-label]="compactToggleLabel()"
-        [matTooltip]="compactToggleLabel()"
-        matTooltipPosition="below"
-        (click)="toggleCompactMode()"
-      >
-        <i
-          class="fa-solid"
-          [class.fa-compress]="!compactMode()"
-          [class.fa-expand]="compactMode()"
-          aria-hidden="true"
-        ></i>
-      </button>
-
       <button
         mat-flat-button
         type="button"

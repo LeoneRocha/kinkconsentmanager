@@ -6,14 +6,28 @@
 } @else {
   <div class="full-view">
     <nav class="full-view__quick-nav" [attr.aria-label]="quickNavTitle()">
-      <span class="full-view__quick-nav-label">{{ quickNavTitle() }}</span>
+      <div class="full-view__quick-nav-header">
+        <span class="full-view__quick-nav-label">{{ quickNavTitle() }}</span>
+        <button
+          type="button"
+          class="full-view__toggle-all-btn"
+          [attr.aria-expanded]="areAllGroupsExpanded()"
+          [attr.aria-label]="toggleAllLabel()"
+          [matTooltip]="toggleAllLabel()"
+          matTooltipPosition="left"
+          (click)="toggleAllGroups()"
+        >
+          <i
+            class="fa-solid"
+            [class.fa-angles-up]="areAllGroupsExpanded()"
+            [class.fa-angles-down]="!areAllGroupsExpanded()"
+            aria-hidden="true"
+          ></i>
+        </button>
+      </div>
       <div class="full-view__pills">
         @for (group of groups(); track group.id) {
-          <button
-            type="button"
-            class="full-view__pill"
-            (click)="jumpToGroup(group.id)"
-          >
+          <button type="button" class="full-view__pill" (click)="jumpToGroup(group.id)">
             <span>{{ groupTitle(group) }}</span>
             <span class="full-view__pill-count">
               {{ groupAnsweredCount(group) }}/{{ group.items.length }}
@@ -25,40 +39,66 @@
 
     <div class="full-view__sections">
       @for (group of groups(); track group.id) {
-        <section class="full-view__section" [id]="groupSectionId(group.id)">
-          <header class="full-view__section-header">
+        <section
+          class="full-view__section"
+          [class.full-view__section--collapsed]="isGroupCollapsed(group.id)"
+          [id]="groupSectionId(group.id)"
+        >
+          <header class="full-view__section-header" (click)="toggleGroupCollapsed(group.id)">
             <div class="full-view__section-heading">
               <h2 class="full-view__section-title">{{ groupTitle(group) }}</h2>
-              <span class="full-view__section-count">
-                {{ groupAnsweredCount(group) }} / {{ group.items.length }}
-              </span>
+              <div class="full-view__section-actions">
+                <span class="full-view__section-count">
+                  {{ groupAnsweredCount(group) }} / {{ group.items.length }}
+                </span>
+                <button
+                  type="button"
+                  class="full-view__toggle-btn"
+                  [attr.aria-expanded]="!isGroupCollapsed(group.id)"
+                  [attr.aria-label]="groupToggleAriaLabel(group)"
+                  [matTooltip]="groupToggleTooltip(group)"
+                  matTooltipPosition="left"
+                  (click)="onGroupToggleButtonClick($event, group.id)"
+                >
+                  <i
+                    class="fa-solid"
+                    [class.fa-angles-up]="!isGroupCollapsed(group.id)"
+                    [class.fa-angles-down]="isGroupCollapsed(group.id)"
+                    aria-hidden="true"
+                  ></i>
+                </button>
+              </div>
             </div>
 
-            @if (groupDescription(group); as description) {
-              <p class="full-view__section-desc">{{ description }}</p>
+            @if (!isGroupCollapsed(group.id)) {
+              @if (groupDescription(group); as description) {
+                <p class="full-view__section-desc">{{ description }}</p>
+              }
             }
           </header>
 
-          <div class="full-view__items">
-            @for (item of group.items; track item.id) {
-              <app-dynamic-question-item
-                [item]="item"
-                [scales]="scales()"
-                [isDualRole]="isDualRole(group, item)"
-                [roleLabels]="roleLabels(group, item)"
-                [itemLabel]="itemLabel(item)"
-                [itemTooltip]="itemTooltip(item)"
-                [scaleLabels]="texts().scales"
-                [optionLabels]="texts().options"
-                [otherLabel]="texts().otherLabel"
-                [otherPlaceholder]="otherPlaceholder()"
-                [readAloudLabel]="readAloudLabel()"
-                [answer]="itemAnswer(item.id)"
-                (answerChange)="onItemAnswerChange(item.id, $event)"
-                (readAloud)="readItemAloud.emit(item)"
-              />
-            }
-          </div>
+          @if (!isGroupCollapsed(group.id)) {
+            <div class="full-view__items">
+              @for (item of group.items; track item.id) {
+                <app-dynamic-question-item
+                  [item]="item"
+                  [scales]="scales()"
+                  [isDualRole]="isDualRole(group, item)"
+                  [roleLabels]="roleLabels(group, item)"
+                  [itemLabel]="itemLabel(item)"
+                  [itemTooltip]="itemTooltip(item)"
+                  [scaleLabels]="texts().scales"
+                  [optionLabels]="texts().options"
+                  [otherLabel]="texts().otherLabel"
+                  [otherPlaceholder]="otherPlaceholder()"
+                  [readAloudLabel]="readAloudLabel()"
+                  [answer]="itemAnswer(item.id)"
+                  (answerChange)="onItemAnswerChange(item.id, $event)"
+                  (readAloud)="readItemAloud.emit(item)"
+                />
+              }
+            </div>
+          }
         </section>
       }
     </div>

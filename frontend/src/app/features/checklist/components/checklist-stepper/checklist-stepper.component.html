@@ -24,40 +24,67 @@
 } @else {
   <div class="stepper__card">
     @if (!isReviewStep() && currentGroup(); as group) {
-      <section class="stepper__panel" role="tabpanel" [attr.aria-label]="groupTitle(group)">
+      <section
+        class="stepper__panel"
+        [class.stepper__panel--collapsed]="isGroupCollapsed(group.id)"
+        role="tabpanel"
+        [attr.aria-label]="groupTitle(group)"
+      >
         <header class="stepper__panel-header">
-          <div class="stepper__panel-heading">
+          <div class="stepper__panel-heading" (click)="toggleGroupCollapsed(group.id)">
             <h2 class="stepper__panel-title">{{ groupTitle(group) }}</h2>
-            <span class="stepper__count">
-              {{ groupAnsweredCount(group) }} / {{ group.items.length }}
-            </span>
+            <div class="stepper__panel-meta">
+              <span class="stepper__count">
+                {{ groupAnsweredCount(group) }} / {{ group.items.length }}
+              </span>
+              <button
+                type="button"
+                class="stepper__group-toggle-btn"
+                [attr.aria-expanded]="!isGroupCollapsed(group.id)"
+                [attr.aria-label]="groupToggleAriaLabel(group)"
+                [matTooltip]="groupToggleTooltip(group)"
+                matTooltipPosition="left"
+                (click)="onGroupToggleButtonClick($event, group.id)"
+              >
+                <i
+                  class="fa-solid stepper__toggle-all-icon"
+                  [class.fa-angles-up]="!isGroupCollapsed(group.id)"
+                  [class.fa-angles-down]="isGroupCollapsed(group.id)"
+                  aria-hidden="true"
+                ></i>
+              </button>
+            </div>
           </div>
 
-          @if (groupDescription(group); as description) {
-            <p class="stepper__description">{{ description }}</p>
+          @if (!isGroupCollapsed(group.id)) {
+            @if (groupDescription(group); as description) {
+              <p class="stepper__description">{{ description }}</p>
+            }
           }
         </header>
 
-        <div class="stepper__items">
-          @for (item of group.items; track item.id) {
-            <app-dynamic-question-item
-              [item]="item"
-              [scales]="scales()"
-              [isDualRole]="isDualRole(group, item)"
-              [roleLabels]="roleLabels(group, item)"
-              [itemLabel]="itemLabel(item)"
-              [itemTooltip]="itemTooltip(item)"
-              [scaleLabels]="texts().scales"
-              [optionLabels]="texts().options"
-              [otherLabel]="texts().otherLabel"
-              [otherPlaceholder]="labels().otherPlaceholder"
-              [readAloudLabel]="labels().readAloud"
-              [answer]="itemAnswer(item.id)"
-              (answerChange)="onItemAnswerChange(item.id, $event)"
-              (readAloud)="readItemAloud.emit(item)"
-            />
-          }
-        </div>
+        @if (!isGroupCollapsed(group.id)) {
+          <div class="stepper__items">
+            @for (item of group.items; track item.id) {
+              <app-dynamic-question-item
+                [item]="item"
+                [scales]="scales()"
+                [isDualRole]="isDualRole(group, item)"
+                [roleLabels]="roleLabels(group, item)"
+                [itemLabel]="itemLabel(item)"
+                [itemTooltip]="itemTooltip(item)"
+                [scaleLabels]="texts().scales"
+                [optionLabels]="texts().options"
+                [otherLabel]="texts().otherLabel"
+                [otherPlaceholder]="labels().otherPlaceholder"
+                [readAloudLabel]="labels().readAloud"
+                [answer]="itemAnswer(item.id)"
+                (answerChange)="onItemAnswerChange(item.id, $event)"
+                (readAloud)="readItemAloud.emit(item)"
+              />
+            }
+          </div>
+        }
 
         @if (showIncompleteAlert() && !isCurrentStepCompleted()) {
           <p class="stepper__validation-alert" role="alert">
@@ -140,6 +167,7 @@
         <mat-accordion class="stepper__review-accordion" [multi]="true">
           @for (group of groups(); track group.id; let i = $index) {
             <mat-expansion-panel
+              [hideToggle]="true"
               [expanded]="isReviewPanelExpanded(i)"
               (opened)="onReviewPanelToggled(i, true)"
               (closed)="onReviewPanelToggled(i, false)"
@@ -148,9 +176,18 @@
                 <mat-panel-title>
                   <div class="stepper__acc-header">
                     <span class="stepper__acc-title">{{ groupTitle(group) }}</span>
-                    <span class="stepper__count">
-                      {{ groupAnsweredCount(group) }} / {{ group.items.length }}
-                    </span>
+                    <div class="stepper__acc-meta">
+                      <span class="stepper__count">
+                        {{ groupAnsweredCount(group) }} / {{ group.items.length }}
+                      </span>
+                      <span class="stepper__acc-toggle-icon" aria-hidden="true">
+                        <i
+                          class="fa-solid stepper__toggle-all-icon"
+                          [class.fa-angles-up]="isReviewPanelExpanded(i)"
+                          [class.fa-angles-down]="!isReviewPanelExpanded(i)"
+                        ></i>
+                      </span>
+                    </div>
                   </div>
                 </mat-panel-title>
               </mat-expansion-panel-header>

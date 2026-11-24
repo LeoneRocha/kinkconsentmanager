@@ -32,13 +32,32 @@
     justify-content: space-between;
     gap: 0.75rem;
     width: 100%;
-    padding-right: 0.5rem;
   }
 
   &__title {
     font-size: 1rem;
     font-weight: 600;
     color: v.$text-primary;
+  }
+
+  &__meta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
+  }
+
+  &__toggle-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 9999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid v.$border-strong;
+    background-color: v.$surface-subtle;
+    color: v.$text-primary;
+    font-size: 0.85rem;
   }
 
   &__count {

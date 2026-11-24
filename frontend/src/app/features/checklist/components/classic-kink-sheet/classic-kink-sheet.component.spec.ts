@@ -202,4 +202,59 @@ describe('ClassicKinkSheetComponent', () => {
       }),
     );
   });
+
+  // Cenário: Expansão e recolhimento individual e global das categorias no Modo Clássico.
+  // Objetivo: Garantir alternância pelo botão/cabeçalho sem colapsar ao abrir o botão de info, usando fa-angles-up/down.
+  it('should collapse and expand individual blocks and all blocks without collapsing on info button click', async () => {
+    const feedbackHost = fixture.debugElement.injector.get(UiFeedbackHostService);
+    jest.spyOn(feedbackHost, 'modalAlert').mockReturnValue(of(true));
+
+    const hostEl = fixture.nativeElement as HTMLElement;
+    const toggleAllBtn = hostEl.querySelector<HTMLButtonElement>('.classic-sheet__toggle-all-btn')!;
+    const blockToggleBtns = Array.from(
+      hostEl.querySelectorAll<HTMLButtonElement>('.classic-block__toggle-btn'),
+    );
+    const blockHeaders = Array.from(hostEl.querySelectorAll<HTMLElement>('.classic-block__header'));
+    const blocks = Array.from(hostEl.querySelectorAll<HTMLElement>('.classic-block'));
+
+    expect(toggleAllBtn.getAttribute('aria-expanded')).toBe('true');
+    expect(toggleAllBtn.querySelector('i.fa-angles-up')).not.toBeNull();
+    expect(blockToggleBtns.length).toBe(2);
+    expect(blockToggleBtns.every((b) => b.querySelector('i.fa-angles-up') !== null)).toBe(true);
+
+    // Clicar no botão info não deve recolher o bloco
+    hostEl.querySelector<HTMLButtonElement>('.classic-block__info-btn')!.click();
+    await fixture.whenStable();
+    expect(blockToggleBtns[0].getAttribute('aria-expanded')).toBe('true');
+    expect(blocks[0].querySelector('.classic-block__rows')).not.toBeNull();
+
+    // Recolher bloco individual pelo botão
+    blockToggleBtns[1].click();
+    await fixture.whenStable();
+    expect(blockToggleBtns[1].getAttribute('aria-expanded')).toBe('false');
+    expect(blockToggleBtns[1].querySelector('i.fa-angles-down')).not.toBeNull();
+    expect(blocks[1].querySelector('.classic-block__roles')).toBeNull();
+    expect(blocks[1].querySelector('.classic-block__rows')).toBeNull();
+    expect(toggleAllBtn.getAttribute('aria-expanded')).toBe('false');
+    expect(toggleAllBtn.querySelector('i.fa-angles-down')).not.toBeNull();
+
+    // Expandir novamente pelo cabeçalho do bloco
+    blockHeaders[1].click();
+    await fixture.whenStable();
+    expect(blockToggleBtns[1].getAttribute('aria-expanded')).toBe('true');
+    expect(blocks[1].querySelector('.classic-block__rows')).not.toBeNull();
+    expect(toggleAllBtn.getAttribute('aria-expanded')).toBe('true');
+    expect(toggleAllBtn.querySelector('i.fa-angles-up')).not.toBeNull();
+
+    // Recolher e expandir tudo pelo botão global
+    toggleAllBtn.click();
+    await fixture.whenStable();
+    expect(blocks.every((b) => b.querySelector('.classic-block__rows') === null)).toBe(true);
+    expect(toggleAllBtn.querySelector('i.fa-angles-down')).not.toBeNull();
+
+    toggleAllBtn.click();
+    await fixture.whenStable();
+    expect(blocks.every((b) => b.querySelector('.classic-block__rows') !== null)).toBe(true);
+    expect(toggleAllBtn.querySelector('i.fa-angles-up')).not.toBeNull();
+  });
 });

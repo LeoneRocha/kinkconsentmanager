@@ -136,21 +136,30 @@ describe('ChecklistProgressBarComponent', () => {
     expect(toggleSpy).toHaveBeenCalledWith(false);
   });
 
-  // Cenário: Alternância do modo compacto pelo botão antes de Salvar.
-  // Objetivo: Garantir posicionamento antes de Salvar e ocultação da trilha de passos e legenda quando ativo.
-  it('should toggle compact mode via button before Save, hiding rail and legend while keeping progress bar visible', async () => {
+  // Cenário: Alternância do modo compacto pelo botão no topo direito ao lado da barra de progresso.
+  // Objetivo: Garantir posicionamento após app-progress-indicator e ocultação da trilha de passos e legenda quando ativo.
+  it('should toggle compact mode via button beside progress indicator at top-right, hiding rail and legend while keeping progress bar visible', async () => {
     const hostEl = fixture.nativeElement as HTMLElement;
     const sectionEl = hostEl.querySelector('section.checklist-progress-bar')!;
+    const progressRow = hostEl.querySelector<HTMLElement>('.checklist-progress-bar__progress')!;
+    const saveActionsRow = hostEl.querySelector<HTMLElement>(
+      '.checklist-progress-bar__save-actions',
+    )!;
     const compactBtn = hostEl.querySelector<HTMLButtonElement>(
       '.checklist-progress-bar__compact-btn',
     )!;
+    const progressIndicator = hostEl.querySelector<HTMLElement>('app-progress-indicator')!;
     const saveBtn = hostEl.querySelector<HTMLButtonElement>('.checklist-progress-bar__save-btn')!;
     const railContainer = hostEl.querySelector<HTMLElement>('.checklist-progress-bar__rail')!;
     const legendContainer = hostEl.querySelector<HTMLElement>('.checklist-progress-bar__legend')!;
 
     expect(compactBtn).not.toBeNull();
+    expect(progressRow.contains(compactBtn)).toBe(true);
+    expect(saveActionsRow.contains(compactBtn)).toBe(false);
     expect(
-      Boolean(compactBtn.compareDocumentPosition(saveBtn) & Node.DOCUMENT_POSITION_FOLLOWING),
+      Boolean(
+        progressIndicator.compareDocumentPosition(compactBtn) & Node.DOCUMENT_POSITION_FOLLOWING,
+      ),
     ).toBe(true);
     expect(compactBtn.getAttribute('aria-pressed')).toBe('false');
     expect(compactBtn.querySelector('i.fa-compress')).not.toBeNull();

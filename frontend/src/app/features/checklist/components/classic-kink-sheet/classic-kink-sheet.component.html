@@ -5,15 +5,38 @@
   </div>
 } @else {
   <div class="classic-sheet">
-    <p class="classic-sheet__hint">
-      <i class="fa-solid fa-table-cells" aria-hidden="true"></i>
-      <span>{{ classicHint() }}</span>
-    </p>
+    <div class="classic-sheet__top-bar">
+      <p class="classic-sheet__hint">
+        <i class="fa-solid fa-table-cells" aria-hidden="true"></i>
+        <span>{{ classicHint() }}</span>
+      </p>
+
+      <button
+        type="button"
+        class="classic-sheet__toggle-all-btn"
+        [attr.aria-expanded]="areAllGroupsExpanded()"
+        [attr.aria-label]="toggleAllLabel()"
+        [matTooltip]="toggleAllLabel()"
+        matTooltipPosition="left"
+        (click)="toggleAllGroups()"
+      >
+        <i
+          class="fa-solid"
+          [class.fa-angles-up]="areAllGroupsExpanded()"
+          [class.fa-angles-down]="!areAllGroupsExpanded()"
+          aria-hidden="true"
+        ></i>
+      </button>
+    </div>
 
     <div class="classic-sheet__columns">
       @for (group of groups(); track group.id) {
-        <section class="classic-block" [attr.aria-label]="groupTitle(group)">
-          <header class="classic-block__header">
+        <section
+          class="classic-block"
+          [class.classic-block--collapsed]="isGroupCollapsed(group.id)"
+          [attr.aria-label]="groupTitle(group)"
+        >
+          <header class="classic-block__header" (click)="toggleGroupCollapsed(group.id)">
             <div class="classic-block__title-wrap">
               <h2 class="classic-block__title">{{ groupTitle(group) }}</h2>
               @if (groupDescription(group); as description) {
@@ -23,118 +46,109 @@
                   [matTooltip]="description"
                   matTooltipPosition="above"
                   [attr.aria-label]="description"
-                  (click)="openInfoPopup(groupTitle(group), description)"
+                  (click)="onInfoButtonClick($event, groupTitle(group), description)"
                 >
                   <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
                 </button>
               }
             </div>
-            <span class="classic-block__count">
-              {{ groupAnsweredCount(group) }}/{{ group.items.length }}
-            </span>
+            <div class="classic-block__header-actions">
+              <span class="classic-block__count">
+                {{ groupAnsweredCount(group) }}/{{ group.items.length }}
+              </span>
+              <button
+                type="button"
+                class="classic-block__toggle-btn"
+                [attr.aria-expanded]="!isGroupCollapsed(group.id)"
+                [attr.aria-label]="groupToggleAriaLabel(group)"
+                [matTooltip]="groupToggleTooltip(group)"
+                matTooltipPosition="above"
+                (click)="onGroupToggleButtonClick($event, group.id)"
+              >
+                <i
+                  class="fa-solid"
+                  [class.fa-angles-up]="!isGroupCollapsed(group.id)"
+                  [class.fa-angles-down]="isGroupCollapsed(group.id)"
+                  aria-hidden="true"
+                ></i>
+              </button>
+            </div>
           </header>
 
-          @if (hasScaleItems(group)) {
-            @let headerRoles = groupRoleHeader(group);
-            <div class="classic-block__roles" aria-hidden="true">
-              <span class="classic-block__role-tag">{{ headerRoles.primary }}</span>
-              @if (headerRoles.isDual && headerRoles.secondary) {
-                <span class="classic-block__role-tag">{{ headerRoles.secondary }}</span>
-              }
-            </div>
-          }
+          @if (!isGroupCollapsed(group.id)) {
+            @if (hasScaleItems(group)) {
+              @let headerRoles = groupRoleHeader(group);
+              <div class="classic-block__roles" aria-hidden="true">
+                <span class="classic-block__role-tag">{{ headerRoles.primary }}</span>
+                @if (headerRoles.isDual && headerRoles.secondary) {
+                  <span class="classic-block__role-tag">{{ headerRoles.secondary }}</span>
+                }
+              </div>
+            }
 
-          <div class="classic-block__rows">
-            @for (item of group.items; track item.id) {
-              @if (item.type === 'scale_matrix') {
-                @let itemRoles = roleLabels(group, item);
-                <div class="classic-row">
-                  <div class="classic-row__item-meta">
-                    <span class="classic-row__label">{{ itemLabel(item) }}</span>
-                    <div class="classic-row__item-actions">
-                      @if (itemTooltip(item); as tip) {
-                        <button
-                          type="button"
-                          class="classic-row__action-btn"
-                          [matTooltip]="tip"
-                          matTooltipPosition="above"
-                          [attr.aria-label]="tip"
-                          (click)="openInfoPopup(itemLabel(item), tip)"
-                        >
-                          <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
-                        </button>
-                      }
-                      <button
-                        type="button"
-                        class="classic-row__action-btn classic-row__speak-btn"
-                        [matTooltip]="readAloudLabel() + ': ' + itemLabel(item)"
-                        matTooltipPosition="above"
-                        [attr.aria-label]="readAloudLabel() + ': ' + itemLabel(item)"
-                        (click)="readItemAloud.emit(item)"
-                      >
-                        <i class="fa-solid fa-volume-high" aria-hidden="true"></i>
-                      </button>
-                    </div>
-                  </div>
-
-                  <div class="classic-row__scales">
-                    <div class="classic-row__role-col">
-                      <span class="classic-row__role-caption">{{ itemRoles.primary }}</span>
-                      <div
-                        class="classic-row__dot-group"
-                        role="radiogroup"
-                        [attr.aria-label]="itemLabel(item) + ' - ' + itemRoles.primary"
-                      >
-                        @for (scale of orderedScales(); track scale.id; let idx = $index) {
-                          @let selected = isRoleScaleSelected(item.id, 'primaryScale', scale.id);
+            <div class="classic-block__rows">
+              @for (item of group.items; track item.id) {
+                @if (item.type === 'scale_matrix') {
+                  @let itemRoles = roleLabels(group, item);
+                  <div class="classic-row">
+                    <div class="classic-row__item-meta">
+                      <span class="classic-row__label">{{ itemLabel(item) }}</span>
+                      <div class="classic-row__item-actions">
+                        @if (itemTooltip(item); as tip) {
                           <button
                             type="button"
-                            role="radio"
-                            class="classic-row__dot"
-                            [class.classic-row__dot--selected]="selected"
-                            [attr.aria-checked]="selected"
-                            [attr.aria-label]="itemLabel(item) + ' - ' + itemRoles.primary + ': ' + scaleLabel(scale.id)"
-                            [matTooltip]="itemRoles.primary + ': ' + scaleLabel(scale.id)"
+                            class="classic-row__action-btn"
+                            [matTooltip]="tip"
                             matTooltipPosition="above"
-                            [style.border-color]="scale.color"
-                            [style.background-color]="selected ? scale.color : null"
-                            [style.color]="selected ? scale.contrastColor : scale.color"
-                            (click)="selectRoleScale(item.id, 'primaryScale', scale.id)"
-                            (keydown)="onClassicDotKeydown($event, item.id, 'primaryScale', idx)"
+                            [attr.aria-label]="tip"
+                            (click)="openInfoPopup(itemLabel(item), tip)"
                           >
-                            @if (selected) {
-                              <i [class]="scale.icon" aria-hidden="true"></i>
-                            }
+                            <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
                           </button>
                         }
+                        <button
+                          type="button"
+                          class="classic-row__action-btn classic-row__speak-btn"
+                          [matTooltip]="readAloudLabel() + ': ' + itemLabel(item)"
+                          matTooltipPosition="above"
+                          [attr.aria-label]="readAloudLabel() + ': ' + itemLabel(item)"
+                          (click)="readItemAloud.emit(item)"
+                        >
+                          <i class="fa-solid fa-volume-high" aria-hidden="true"></i>
+                        </button>
                       </div>
                     </div>
 
-                    @if (isDualRole(group, item)) {
-                      <span class="classic-row__divider-v" aria-hidden="true"></span>
+                    <div class="classic-row__scales">
                       <div class="classic-row__role-col">
-                        <span class="classic-row__role-caption">{{ itemRoles.secondary ?? '' }}</span>
+                        <span class="classic-row__role-caption">{{ itemRoles.primary }}</span>
                         <div
                           class="classic-row__dot-group"
                           role="radiogroup"
-                          [attr.aria-label]="itemLabel(item) + ' - ' + (itemRoles.secondary ?? '')"
+                          [attr.aria-label]="itemLabel(item) + ' - ' + itemRoles.primary"
                         >
                           @for (scale of orderedScales(); track scale.id; let idx = $index) {
-                            @let selected = isRoleScaleSelected(item.id, 'secondaryScale', scale.id);
+                            @let selected = isRoleScaleSelected(item.id, 'primaryScale', scale.id);
                             <button
                               type="button"
                               role="radio"
                               class="classic-row__dot"
                               [class.classic-row__dot--selected]="selected"
                               [attr.aria-checked]="selected"
-                              [attr.aria-label]="itemLabel(item) + ' - ' + (itemRoles.secondary ?? '') + ': ' + scaleLabel(scale.id)"
-                              [matTooltip]="(itemRoles.secondary ?? '') + ': ' + scaleLabel(scale.id)"
+                              [attr.aria-label]="
+                                itemLabel(item) +
+                                ' - ' +
+                                itemRoles.primary +
+                                ': ' +
+                                scaleLabel(scale.id)
+                              "
+                              [matTooltip]="itemRoles.primary + ': ' + scaleLabel(scale.id)"
                               matTooltipPosition="above"
                               [style.border-color]="scale.color"
                               [style.background-color]="selected ? scale.color : null"
                               [style.color]="selected ? scale.contrastColor : scale.color"
-                              (click)="selectRoleScale(item.id, 'secondaryScale', scale.id)"
-                              (keydown)="onClassicDotKeydown($event, item.id, 'secondaryScale', idx)"
+                              (click)="selectRoleScale(item.id, 'primaryScale', scale.id)"
+                              (keydown)="onClassicDotKeydown($event, item.id, 'primaryScale', idx)"
                             >
                               @if (selected) {
                                 <i [class]="scale.icon" aria-hidden="true"></i>
@@ -143,31 +157,81 @@
                           }
                         </div>
                       </div>
-                    }
+
+                      @if (isDualRole(group, item)) {
+                        <span class="classic-row__divider-v" aria-hidden="true"></span>
+                        <div class="classic-row__role-col">
+                          <span class="classic-row__role-caption">{{
+                            itemRoles.secondary ?? ''
+                          }}</span>
+                          <div
+                            class="classic-row__dot-group"
+                            role="radiogroup"
+                            [attr.aria-label]="
+                              itemLabel(item) + ' - ' + (itemRoles.secondary ?? '')
+                            "
+                          >
+                            @for (scale of orderedScales(); track scale.id; let idx = $index) {
+                              @let selected =
+                                isRoleScaleSelected(item.id, 'secondaryScale', scale.id);
+                              <button
+                                type="button"
+                                role="radio"
+                                class="classic-row__dot"
+                                [class.classic-row__dot--selected]="selected"
+                                [attr.aria-checked]="selected"
+                                [attr.aria-label]="
+                                  itemLabel(item) +
+                                  ' - ' +
+                                  (itemRoles.secondary ?? '') +
+                                  ': ' +
+                                  scaleLabel(scale.id)
+                                "
+                                [matTooltip]="
+                                  (itemRoles.secondary ?? '') + ': ' + scaleLabel(scale.id)
+                                "
+                                matTooltipPosition="above"
+                                [style.border-color]="scale.color"
+                                [style.background-color]="selected ? scale.color : null"
+                                [style.color]="selected ? scale.contrastColor : scale.color"
+                                (click)="selectRoleScale(item.id, 'secondaryScale', scale.id)"
+                                (keydown)="
+                                  onClassicDotKeydown($event, item.id, 'secondaryScale', idx)
+                                "
+                              >
+                                @if (selected) {
+                                  <i [class]="scale.icon" aria-hidden="true"></i>
+                                }
+                              </button>
+                            }
+                          </div>
+                        </div>
+                      }
+                    </div>
                   </div>
-                </div>
-              } @else {
-                <div class="classic-row classic-row--complex">
-                  <app-dynamic-question-item
-                    [item]="item"
-                    [scales]="scales()"
-                    [isDualRole]="isDualRole(group, item)"
-                    [roleLabels]="roleLabels(group, item)"
-                    [itemLabel]="itemLabel(item)"
-                    [itemTooltip]="itemTooltip(item)"
-                    [scaleLabels]="texts().scales"
-                    [optionLabels]="texts().options"
-                    [otherLabel]="texts().otherLabel"
-                    [otherPlaceholder]="otherPlaceholder()"
-                    [readAloudLabel]="readAloudLabel()"
-                    [answer]="itemAnswer(item.id)"
-                    (answerChange)="onComplexAnswerChange(item.id, $event)"
-                    (readAloud)="readItemAloud.emit(item)"
-                  />
-                </div>
+                } @else {
+                  <div class="classic-row classic-row--complex">
+                    <app-dynamic-question-item
+                      [item]="item"
+                      [scales]="scales()"
+                      [isDualRole]="isDualRole(group, item)"
+                      [roleLabels]="roleLabels(group, item)"
+                      [itemLabel]="itemLabel(item)"
+                      [itemTooltip]="itemTooltip(item)"
+                      [scaleLabels]="texts().scales"
+                      [optionLabels]="texts().options"
+                      [otherLabel]="texts().otherLabel"
+                      [otherPlaceholder]="otherPlaceholder()"
+                      [readAloudLabel]="readAloudLabel()"
+                      [answer]="itemAnswer(item.id)"
+                      (answerChange)="onComplexAnswerChange(item.id, $event)"
+                      (readAloud)="readItemAloud.emit(item)"
+                    />
+                  </div>
+                }
               }
-            }
-          </div>
+            </div>
+          }
         </section>
       }
     </div>

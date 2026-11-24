@@ -168,4 +168,56 @@ describe('FullViewContainerComponent', () => {
 
     expect(scrollIntoViewMock).toHaveBeenCalledWith({ behavior: 'smooth', block: 'start' });
   });
+
+  // Cenário: Expansão e recolhimento de seções no modo Visão Completa e autoexpansão via atalho rápido.
+  // Objetivo: Garantir alternância por seção e botão global usando fa-angles-up/down e abertura automática ao clicar na pill.
+  it('should collapse and expand individual sections, toggle all, and auto-expand collapsed sections on quick-jump', async () => {
+    const hostEl = fixture.nativeElement as HTMLElement;
+    const toggleAllBtn = hostEl.querySelector<HTMLButtonElement>('.full-view__toggle-all-btn')!;
+    const sectionToggleBtns = Array.from(
+      hostEl.querySelectorAll<HTMLButtonElement>('.full-view__toggle-btn'),
+    );
+    const sectionHeaders = Array.from(
+      hostEl.querySelectorAll<HTMLElement>('.full-view__section-header'),
+    );
+    const sections = Array.from(hostEl.querySelectorAll<HTMLElement>('.full-view__section'));
+
+    expect(toggleAllBtn.getAttribute('aria-expanded')).toBe('true');
+    expect(toggleAllBtn.querySelector('i.fa-angles-up')).not.toBeNull();
+    expect(sectionToggleBtns.length).toBe(2);
+    expect(sectionToggleBtns.every((b) => b.querySelector('i.fa-angles-up') !== null)).toBe(true);
+
+    // Recolher uma seção pelo botão
+    sectionToggleBtns[1].click();
+    await fixture.whenStable();
+    expect(sectionToggleBtns[1].getAttribute('aria-expanded')).toBe('false');
+    expect(sectionToggleBtns[1].querySelector('i.fa-angles-down')).not.toBeNull();
+    expect(sections[1].querySelector('.full-view__section-desc')).toBeNull();
+    expect(sections[1].querySelector('.full-view__items')).toBeNull();
+    expect(toggleAllBtn.getAttribute('aria-expanded')).toBe('false');
+
+    // Clicar no atalho rápido deve expandir automaticamente a seção antes de rolar
+    const targetSection = hostEl.querySelector('#checklist-group-grp_bondage') as HTMLElement;
+    targetSection.scrollIntoView = jest.fn();
+    jest.spyOn(document, 'getElementById').mockReturnValue(targetSection);
+    hostEl.querySelectorAll<HTMLButtonElement>('.full-view__pill')[1].click();
+    await fixture.whenStable();
+
+    expect(sectionToggleBtns[1].getAttribute('aria-expanded')).toBe('true');
+    expect(sections[1].querySelector('.full-view__items')).not.toBeNull();
+
+    // Alternar seção pelo cabeçalho e recolher/expandir tudo
+    sectionHeaders[0].click();
+    await fixture.whenStable();
+    expect(sectionToggleBtns[0].getAttribute('aria-expanded')).toBe('false');
+
+    toggleAllBtn.click();
+    await fixture.whenStable();
+    expect(sections.every((s) => s.querySelector('.full-view__items') !== null)).toBe(true);
+
+    toggleAllBtn.click();
+    await fixture.whenStable();
+    expect(sections.every((s) => s.querySelector('.full-view__items') === null)).toBe(true);
+    expect(toggleAllBtn.querySelector('i.fa-angles-down')).not.toBeNull();
+  });
 });

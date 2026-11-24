@@ -1,19 +1,35 @@
 @if (groups().length === 0) {
   <div class="category-accordion__empty" role="status">
-    <i class="fa-solid fa-filter-circle-xmark category-accordion__empty-icon" aria-hidden="true"></i>
+    <i
+      class="fa-solid fa-filter-circle-xmark category-accordion__empty-icon"
+      aria-hidden="true"
+    ></i>
     <p class="category-accordion__empty-text">{{ noResultsText() }}</p>
   </div>
 } @else {
   <mat-accordion class="category-accordion" [multi]="false">
     @for (group of groups(); track group.id; let i = $index; let isLast = $last) {
-      <mat-expansion-panel [expanded]="activeIndex() === i" (opened)="onAccordionValueChange(i)">
+      <mat-expansion-panel
+        [hideToggle]="true"
+        [expanded]="activeIndex() === i"
+        (opened)="onAccordionValueChange(i)"
+      >
         <mat-expansion-panel-header>
           <mat-panel-title>
             <div class="category-accordion__header">
               <span class="category-accordion__title">{{ groupTitle(group) }}</span>
-              <span class="category-accordion__count">
-                {{ groupAnsweredCount(group) }} / {{ group.items.length }}
-              </span>
+              <div class="category-accordion__meta">
+                <span class="category-accordion__count">
+                  {{ groupAnsweredCount(group) }} / {{ group.items.length }}
+                </span>
+                <span class="category-accordion__toggle-icon" aria-hidden="true">
+                  <i
+                    class="fa-solid"
+                    [class.fa-angles-up]="activeIndex() === i"
+                    [class.fa-angles-down]="activeIndex() !== i"
+                  ></i>
+                </span>
+              </div>
             </div>
           </mat-panel-title>
         </mat-expansion-panel-header>

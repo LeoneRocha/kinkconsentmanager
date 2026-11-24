@@ -120,6 +120,12 @@ describe('CategoryAccordionComponent', () => {
     expect(titles).toEqual(['Safety & Health', 'Bondage']);
     expect(panels[0].classList.contains('mat-expanded')).toBe(true);
     expect(panels[1].classList.contains('mat-expanded')).toBe(false);
+    expect(
+      panels[0].querySelector('.category-accordion__toggle-icon i.fa-angles-up'),
+    ).not.toBeNull();
+    expect(
+      panels[1].querySelector('.category-accordion__toggle-icon i.fa-angles-down'),
+    ).not.toBeNull();
     expect(panels[0].textContent).toContain('Safewords and care.');
   });
 

@@ -1,4 +1,12 @@
-import { ChangeDetectionStrategy, Component, inject, input, output } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  input,
+  output,
+  signal,
+} from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import {
@@ -44,6 +52,10 @@ export class ClassicKinkSheetComponent {
   readonly finishLabel = input<string>('Finalizar e Exportar');
   readonly otherPlaceholder = input<string>('Descreva brevemente sua preferência...');
   readonly readAloudLabel = input<string>('Ouvir leitura deste item');
+  readonly expandAllLabel = input<string>('Expandir tudo');
+  readonly collapseAllLabel = input<string>('Recolher tudo');
+  readonly expandCategoryLabel = input<string>('Expandir categoria');
+  readonly collapseCategoryLabel = input<string>('Recolher categoria');
   readonly classicHint = input<string>(
     'Visualização clássica em blocos por categoria: clique nos círculos para marcar ou desmarcar cada escala.',
   );
@@ -51,6 +63,62 @@ export class ClassicKinkSheetComponent {
   readonly answerChange = output<{ itemId: string; patch: Partial<ItemResponseValue> }>();
   readonly readItemAloud = output<ItemDefinition>();
   readonly finishChecklist = output<void>();
+
+  protected readonly collapsedGroupIds = signal<ReadonlySet<string>>(new Set());
+
+  protected readonly areAllGroupsExpanded = computed<boolean>(() => {
+    const groups = this.groups();
+    const collapsed = this.collapsedGroupIds();
+    return groups.length > 0 && groups.every((group) => !collapsed.has(group.id));
+  });
+
+  protected readonly toggleAllLabel = computed<string>(() =>
+    this.areAllGroupsExpanded() ? this.collapseAllLabel() : this.expandAllLabel(),
+  );
+
+  protected isGroupCollapsed(groupId: string): boolean {
+    return this.collapsedGroupIds().has(groupId);
+  }
+
+  protected toggleGroupCollapsed(groupId: string): void {
+    this.collapsedGroupIds.update((prev) => {
+      const next = new Set(prev);
+      if (next.has(groupId)) {
+        next.delete(groupId);
+      } else {
+        next.add(groupId);
+      }
+      return next;
+    });
+  }
+
+  protected onGroupToggleButtonClick(event: MouseEvent, groupId: string): void {
+    event.stopPropagation();
+    this.toggleGroupCollapsed(groupId);
+  }
+
+  protected onInfoButtonClick(event: MouseEvent, title: string, description: string): void {
+    event.stopPropagation();
+    this.openInfoPopup(title, description);
+  }
+
+  protected toggleAllGroups(): void {
+    if (this.areAllGroupsExpanded()) {
+      this.collapsedGroupIds.set(new Set(this.groups().map((group) => group.id)));
+      return;
+    }
+    this.collapsedGroupIds.set(new Set());
+  }
+
+  protected groupToggleTooltip(group: GroupDefinition): string {
+    return this.isGroupCollapsed(group.id)
+      ? this.expandCategoryLabel()
+      : this.collapseCategoryLabel();
+  }
+
+  protected groupToggleAriaLabel(group: GroupDefinition): string {
+    return `${this.groupToggleTooltip(group)}: ${this.groupTitle(group)}`;
+  }
 
   protected openInfoPopup(title: string, description: string): void {
     const trimmed = description.trim();
@@ -100,7 +168,8 @@ export class ClassicKinkSheetComponent {
     const nextValue = active === scaleId ? undefined : scaleId;
     this.answerChange.emit({
       itemId,
-      patch: roleField === 'primaryScale' ? { primaryScale: nextValue } : { secondaryScale: nextValue },
+      patch:
+        roleField === 'primaryScale' ? { primaryScale: nextValue } : { secondaryScale: nextValue },
     });
   }
 

@@ -87,7 +87,7 @@ describe('ChecklistHeaderComponent', () => {
     expect(toggleBtn.getAttribute('aria-expanded')).toBe('true');
     expect(toggleBtn.getAttribute('aria-label')).toBe('Ocultar cabeçalho do checklist');
     expect(toggleBtn.textContent?.trim()).toBe('');
-    expect(toggleBtn.querySelector('i.fa-chevron-up')).not.toBeNull();
+    expect(toggleBtn.querySelector('i.fa-angles-up')).not.toBeNull();
     expect(hostEl.querySelector('#checklist-header-body')).not.toBeNull();
     expect(hostEl.querySelector('.checklist-header__subtitle')).not.toBeNull();
     expect(hostEl.querySelector('mat-expansion-panel')).toBeNull();
@@ -103,7 +103,7 @@ describe('ChecklistHeaderComponent', () => {
 
     expect(toggleBtn.getAttribute('aria-expanded')).toBe('false');
     expect(toggleBtn.getAttribute('aria-label')).toBe('Mostrar cabeçalho do checklist');
-    expect(toggleBtn.querySelector('i.fa-chevron-down')).not.toBeNull();
+    expect(toggleBtn.querySelector('i.fa-angles-down')).not.toBeNull();
     expect(headerEl?.classList.contains('checklist-header--collapsed')).toBe(true);
     expect(hostEl.querySelector('#checklist-header-body')).toBeNull();
     expect(hostEl.querySelector('.checklist-header__subtitle')).toBeNull();
@@ -113,7 +113,7 @@ describe('ChecklistHeaderComponent', () => {
 
     expect(toggleBtn.getAttribute('aria-expanded')).toBe('true');
     expect(toggleBtn.getAttribute('aria-label')).toBe('Ocultar cabeçalho do checklist');
-    expect(toggleBtn.querySelector('i.fa-chevron-up')).not.toBeNull();
+    expect(toggleBtn.querySelector('i.fa-angles-up')).not.toBeNull();
     expect(headerEl?.classList.contains('checklist-header--collapsed')).toBe(false);
     expect(hostEl.querySelector('#checklist-header-body')).not.toBeNull();
 

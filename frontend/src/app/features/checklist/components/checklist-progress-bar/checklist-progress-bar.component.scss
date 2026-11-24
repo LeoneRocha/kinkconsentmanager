@@ -8,11 +8,20 @@
   flex-direction: column;
 
   &__progress {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
     padding: 0.7rem 1.25rem;
 
     @include m.respond-md {
       padding: 0.7rem 1.5rem;
     }
+  }
+
+  &__indicator {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: block;
   }
 
   &--compact {
@@ -54,6 +63,7 @@
   }
 
   &__compact-btn {
+    flex: 0 0 auto;
     width: 32px;
     height: 32px;
     border-radius: 9999px;
