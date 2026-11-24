@@ -182,16 +182,31 @@ describe('ChecklistStepperComponent', () => {
     const hostEl = fixture.nativeElement as HTMLElement;
     expect(hostEl.querySelector('mat-accordion')).not.toBeNull();
 
+    expect(hostEl.querySelector('.stepper__expand-all-btn')).toBeNull();
+    expect(hostEl.querySelector('.stepper__collapse-all-btn')).toBeNull();
+
+    const toggleAllBtn = hostEl.querySelector<HTMLButtonElement>('.stepper__toggle-all-btn')!;
+    expect(toggleAllBtn).not.toBeNull();
+    expect(toggleAllBtn.getAttribute('aria-expanded')).toBe('true');
+    expect(toggleAllBtn.getAttribute('aria-label')).toBe('Recolher tudo');
+    expect(toggleAllBtn.querySelector('i.fa-angles-up')).not.toBeNull();
+
     const panels = Array.from(hostEl.querySelectorAll('mat-expansion-panel'));
     expect(panels.length).toBe(2);
     expect(panels.every((p) => p.classList.contains('mat-expanded'))).toBe(true);
 
-    hostEl.querySelector<HTMLButtonElement>('.stepper__collapse-all-btn')?.click();
+    toggleAllBtn.click();
     await fixture.whenStable();
+    expect(toggleAllBtn.getAttribute('aria-expanded')).toBe('false');
+    expect(toggleAllBtn.getAttribute('aria-label')).toBe('Expandir tudo');
+    expect(toggleAllBtn.querySelector('i.fa-angles-down')).not.toBeNull();
     expect(panels.some((p) => p.classList.contains('mat-expanded'))).toBe(false);
 
-    hostEl.querySelector<HTMLButtonElement>('.stepper__expand-all-btn')?.click();
+    toggleAllBtn.click();
     await fixture.whenStable();
+    expect(toggleAllBtn.getAttribute('aria-expanded')).toBe('true');
+    expect(toggleAllBtn.getAttribute('aria-label')).toBe('Recolher tudo');
+    expect(toggleAllBtn.querySelector('i.fa-angles-up')).not.toBeNull();
     expect(panels.every((p) => p.classList.contains('mat-expanded'))).toBe(true);
 
     const finishBtn = hostEl.querySelector<HTMLButtonElement>('.stepper__finish-btn')!;

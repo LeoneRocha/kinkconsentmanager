@@ -66,8 +66,9 @@
   &__review-header {
     @include m.respond-md {
       flex-direction: row;
-      align-items: flex-start;
+      align-items: center;
       justify-content: space-between;
+      gap: 1rem;
     }
   }
 
@@ -93,9 +94,45 @@
   }
 
   &__review-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  &__toggle-all-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: 9999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 1px solid v.$border-strong;
+    background-color: v.$surface-subtle;
+    color: v.$text-primary;
+    cursor: pointer;
+    box-shadow: v.$shadow-sm;
+    transition:
+      background-color 0.15s ease,
+      border-color 0.15s ease,
+      color 0.15s ease,
+      transform 0.15s ease;
+
+    &:hover {
+      border-color: v.$accent-primary;
+      background-color: v.$accent-soft;
+      color: v.$accent-text;
+      transform: translateY(-1px);
+    }
+
+    &:focus-visible {
+      @include m.focus-ring(v.$accent-primary);
+    }
+  }
+
+  &__toggle-all-icon {
+    font-size: 0.9rem;
+    line-height: 1;
   }
 
   &__acc-title {
@@ -169,7 +206,6 @@
 }
 
 :host ::ng-deep {
-
   .stepper__prev-btn,
   .stepper__next-btn,
   .stepper__finish-btn,

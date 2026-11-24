@@ -10,6 +10,7 @@ import {
 } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatExpansionModule } from '@angular/material/expansion';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import {
   GroupDefinition,
   ItemDefinition,
@@ -74,6 +75,7 @@ export const DEFAULT_CHECKLIST_STEPPER_LABELS: ChecklistStepperLabels = {
   imports: [
     MatExpansionModule,
     MatButtonModule,
+    MatTooltipModule,
     DynamicQuestionItemComponent,
     ChecklistStepRailComponent,
   ],
@@ -129,12 +131,18 @@ export class ChecklistStepperComponent {
     return group ? this.isGroupCompleted(group) : true;
   });
 
-  protected readonly canAdvanceCurrentStep = computed<boolean>(() =>
-    this.isCurrentStepCompleted(),
-  );
+  protected readonly canAdvanceCurrentStep = computed<boolean>(() => this.isCurrentStepCompleted());
 
   protected readonly areAllGroupsCompleted = computed<boolean>(
     () => this.groups().length > 0 && this.groups().every((group) => this.isGroupCompleted(group)),
+  );
+
+  protected readonly areAllReviewPanelsExpanded = computed<boolean>(
+    () => this.groups().length > 0 && this.expandedReviewValues().length >= this.groups().length,
+  );
+
+  protected readonly reviewToggleLabel = computed<string>(() =>
+    this.areAllReviewPanelsExpanded() ? this.labels().collapseAll : this.labels().expandAll,
   );
 
   constructor() {
@@ -169,7 +177,10 @@ export class ChecklistStepperComponent {
           let changed = false;
           const next = new Set(currentInvalid);
           for (const group of groups) {
-            if (next.has(group.id) && countGroupAnsweredItems(group, answers) >= group.items.length) {
+            if (
+              next.has(group.id) &&
+              countGroupAnsweredItems(group, answers) >= group.items.length
+            ) {
               next.delete(group.id);
               changed = true;
             }
@@ -258,6 +269,14 @@ export class ChecklistStepperComponent {
 
   protected collapseAllReviewPanels(): void {
     this.expandedReviewValues.set([]);
+  }
+
+  protected toggleAllReviewPanels(): void {
+    if (this.areAllReviewPanelsExpanded()) {
+      this.collapseAllReviewPanels();
+      return;
+    }
+    this.expandAllReviewPanels();
   }
 
   protected isReviewPanelExpanded(index: number): boolean {
