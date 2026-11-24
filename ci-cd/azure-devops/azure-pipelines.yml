@@ -173,6 +173,8 @@ stages:
               command: 'custom'
               workingDir: '$(frontendDir)'
               customCommand: 'run build:prod'
+            env:
+              BUILD_ID: '$(Build.BuildId)'
 
           - task: Npm@1
             displayName: 'Testes unitários e cobertura Jest (test:ci)'
@@ -303,6 +305,7 @@ stages:
               Dockerfile: '$(frontendDir)/Dockerfile'
               buildContext: '$(frontendDir)'
               repository: '$(dockerImageRepository)'
+              arguments: '--build-arg BUILD_ID=$(Build.BuildId)'
               tags: |
                 $(Build.BuildId)
                 latest

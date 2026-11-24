@@ -1,6 +1,9 @@
 {
   "name": "kinkconsentmanager",
   "version": "1.0.4",
+  "versioning": {
+    "baseBuildId": 5774
+  },
   "scripts": {
     "ng": "ng",
     "start": "ng serve",

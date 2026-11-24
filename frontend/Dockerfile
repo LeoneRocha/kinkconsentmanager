@@ -11,6 +11,10 @@ RUN npm ci --legacy-peer-deps
 
 # Copia restante do codigo-fonte e gera build minificado de producao
 COPY . .
+ARG BUILD_ID=""
+ARG VERSION_BASE_BUILD_ID=""
+ENV BUILD_ID=${BUILD_ID} \
+    VERSION_BASE_BUILD_ID=${VERSION_BASE_BUILD_ID}
 RUN npm run build:prod
 
 # ==============================================================================

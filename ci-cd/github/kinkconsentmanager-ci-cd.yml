@@ -108,6 +108,8 @@ jobs:
 
       - name: Build de produção Angular (build:prod)
         working-directory: ${{ env.FRONTEND_DIR }}
+        env:
+          BUILD_ID: ${{ github.run_number }}
         run: npm run build:prod
 
       - name: Executar testes unitários e cobertura Jest (test:ci)
@@ -196,6 +198,7 @@ jobs:
           file: frontend/Dockerfile
           load: true
           tags: ${{ vars.DOCKER_IMAGE || 'leonecr/kinkconsentmanager-ui' }}:smoke
+          build-args: BUILD_ID=${{ github.run_number }}
 
       - name: Smoke test do container Nginx (/health e SPA)
         run: |
@@ -223,6 +226,7 @@ jobs:
           tags: |
             ${{ vars.DOCKER_IMAGE || 'leonecr/kinkconsentmanager-ui' }}:${{ github.sha }}
             ${{ vars.DOCKER_IMAGE || 'leonecr/kinkconsentmanager-ui' }}:latest
+          build-args: BUILD_ID=${{ github.run_number }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 

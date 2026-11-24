@@ -1,8 +1,11 @@
+import { BUILD_INFO } from './build-info';
+
 export const environment = {
   production: true,
   appName: 'Kink Consent Manager',
-  version: '1.0.4',
-  buildDate: '2026.11.24',
+  version: BUILD_INFO.version,
+  buildDate: BUILD_INFO.buildDate,
+  buildId: BUILD_INFO.buildId,
   crypto: {
     autogeneredKeyBuildDeploy: false,
     encryptionKeyBase64: '',

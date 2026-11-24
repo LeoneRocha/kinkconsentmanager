@@ -118,7 +118,7 @@ cd_docker_build_push:
       when: on_success
     - when: never
   script:
-    - docker build -f frontend/Dockerfile -t "$DOCKER_IMAGE:$CI_COMMIT_SHORT_SHA" -t "$DOCKER_IMAGE:latest" frontend
+    - docker build --build-arg BUILD_ID="$CI_PIPELINE_IID" -f frontend/Dockerfile -t "$DOCKER_IMAGE:$CI_COMMIT_SHORT_SHA" -t "$DOCKER_IMAGE:latest" frontend
     - docker run -d --name kcm-smoke -p 18080:80 "$DOCKER_IMAGE:$CI_COMMIT_SHORT_SHA"
     - sleep 3
     - wget -q -O- http://docker:18080/health || wget -q -O- http://127.0.0.1:18080/health

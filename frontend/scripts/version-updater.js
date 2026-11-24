@@ -1,13 +1,14 @@
 /**
- * Atualiza dinamicamente a versão amigável (X.Y.Z com 1 casa decimal em minor/patch: 0..9)
- * e a data de build (YYYY.MM.DD) nos arquivos de environment, mantendo `package.json` sincronizado.
- * Progressão: 1.0.0 -> 1.0.1 -> ... -> 1.0.9 -> 1.1.0 -> ... -> 1.9.9 -> 2.0.0 -> 2.0.1
+ * Calcula a versão final amigável (X.Y.Z com virada 0..9 em minor/patch) a partir
+ * da única fonte da verdade (`frontend/package.json` -> `version` e `versioning.baseBuildId`)
+ * somada ao incremento do Build ID da pipeline de CI/CD, gravando apenas `src/environments/build-info.ts`.
+ *
+ * Exemplo com base 1.0.4 e baseBuildId 5774:
+ *   local (sem buildId) -> 1.0.4 (buildId: 'local')
+ *   5774 -> 1.0.4 | 5775 -> 1.0.5 | 5779 -> 1.0.9 | 5780 -> 1.1.0 | 5870 -> 2.0.0
  */
 const fs = require('fs');
 const path = require('path');
-
-const VERSION_PATTERN = /(\bversion:\s*)(['"])([^'"]*)\2([,;])/;
-const BUILD_DATE_PATTERN = /(\bbuildDate:\s*)(['"])([^'"]*)\2([,;])/;
 
 function formatBuildDate(date = new Date()) {
   const yyyy = date.getFullYear();
@@ -42,127 +43,170 @@ function parseFriendlyVersion(versionStr) {
   return [major, minor, patch];
 }
 
-function incrementFriendlyVersion(currentVersion) {
-  const [major, minor, patch] = parseFriendlyVersion(currentVersion);
-  const total = major * 100 + minor * 10 + patch + 1;
+function addFriendlyOffset(baseVersionStr, offset) {
+  const [major, minor, patch] = parseFriendlyVersion(baseVersionStr);
+  const safeOffset = Number.isFinite(offset) ? Math.max(0, Math.floor(offset)) : 0;
+  const total = major * 100 + minor * 10 + patch + safeOffset;
   const nextMajor = Math.floor(total / 100);
   const nextMinor = Math.floor((total % 100) / 10);
   const nextPatch = total % 10;
   return `${nextMajor}.${nextMinor}.${nextPatch}`;
 }
 
-function compareVersions(a, b) {
-  const [aMaj, aMin, aPat] = parseFriendlyVersion(a);
-  const [bMaj, bMin, bPat] = parseFriendlyVersion(b);
-  return aMaj * 100 + aMin * 10 + aPat - (bMaj * 100 + bMin * 10 + bPat);
-}
-
-function readEnvVersion(filePath) {
-  if (!fs.existsSync(filePath)) {
+function parsePositiveInt(rawValue) {
+  if (rawValue === undefined || rawValue === null) {
     return null;
   }
-  const content = fs.readFileSync(filePath, 'utf8');
-  const match = VERSION_PATTERN.exec(content);
-  return match ? match[3] : null;
-}
-
-function readPackageVersion(packageJsonPath) {
-  if (!fs.existsSync(packageJsonPath)) {
+  const trimmed = String(rawValue).trim();
+  if (!/^\d+$/.test(trimmed)) {
     return null;
   }
-  const pkg = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
-  return pkg.version || null;
+  const parsed = Number(trimmed);
+  return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : null;
 }
 
-function writeEnvMetadata(filePath, nextVersion, buildDate) {
-  if (!fs.existsSync(filePath)) {
-    return false;
-  }
-  let content = fs.readFileSync(filePath, 'utf8');
-  if (!VERSION_PATTERN.test(content)) {
-    return false;
-  }
-  content = content.replace(VERSION_PATTERN, `$1'${nextVersion}'$4`);
-  if (BUILD_DATE_PATTERN.test(content)) {
-    content = content.replace(BUILD_DATE_PATTERN, `$1'${buildDate}'$4`);
-  }
-  fs.writeFileSync(filePath, content, 'utf8');
-  return true;
-}
-
-function writePackageVersion(packageJsonPath, nextVersion) {
-  if (!fs.existsSync(packageJsonPath)) {
-    return;
-  }
-  const raw = fs.readFileSync(packageJsonPath, 'utf8');
-  const eol = raw.includes('\r\n') ? '\r\n' : '\n';
-  const pkg = JSON.parse(raw);
-  pkg.version = nextVersion;
-  fs.writeFileSync(packageJsonPath, `${JSON.stringify(pkg, null, 2)}${eol}`, 'utf8');
-}
-
-function updateVersion(envPath, envFile) {
-  if (!fs.existsSync(envPath)) {
-    console.error(`Environment file not found: ${envPath}`);
-    process.exitCode = 1;
-    return null;
+function resolvePipelineBuildId(env = process.env, argv = process.argv) {
+  for (const arg of argv) {
+    if (typeof arg === 'string' && arg.startsWith('--build-id=')) {
+      const cliBuildId = parsePositiveInt(arg.slice('--build-id='.length));
+      if (cliBuildId !== null) {
+        return { buildId: cliBuildId, source: '--build-id' };
+      }
+    }
   }
 
-  const envDir = path.dirname(envPath);
-  const packageJsonPath = path.resolve(envDir, '../../package.json');
-  const candidateFiles = [
-    envPath,
-    path.join(envDir, 'environment.ts'),
-    path.join(envDir, 'environment.prod.ts'),
+  const candidates = [
+    ['BUILD_ID', env.BUILD_ID],
+    ['BUILD_BUILDID', env.BUILD_BUILDID],
+    ['GITHUB_RUN_NUMBER', env.GITHUB_RUN_NUMBER],
+    ['CI_PIPELINE_IID', env.CI_PIPELINE_IID],
+    ['CI_PIPELINE_ID', env.CI_PIPELINE_ID],
   ];
 
-  const candidates = [];
-  for (const file of new Set(candidateFiles)) {
-    const v = readEnvVersion(file);
-    if (v && v !== '0.0.0') {
-      candidates.push(v);
-    }
-  }
-  const pkgVer = readPackageVersion(packageJsonPath);
-  if (pkgVer && pkgVer !== '0.0.0') {
-    candidates.push(pkgVer);
-  }
-
-  let baseVersion = '1.0.0';
-  for (const candidate of candidates) {
-    if (compareVersions(candidate, baseVersion) > 0) {
-      baseVersion = candidate;
+  for (const [source, rawValue] of candidates) {
+    const parsed = parsePositiveInt(rawValue);
+    if (parsed !== null) {
+      return { buildId: parsed, source };
     }
   }
 
-  const forcedVersion = process.env.APP_VERSION?.trim();
-  const buildVersion = forcedVersion
-    ? parseFriendlyVersion(forcedVersion).join('.')
-    : incrementFriendlyVersion(baseVersion);
+  return { buildId: null, source: null };
+}
+
+function calculateVersion({
+  baseVersion,
+  baseBuildId,
+  pipelineBuildId,
+  pipelineSource,
+  forcedVersion,
+  hasExplicitBaseOverride = false,
+}) {
+  const trimmedForced = typeof forcedVersion === 'string' ? forcedVersion.trim() : '';
+  if (trimmedForced) {
+    return {
+      version: parseFriendlyVersion(trimmedForced).join('.'),
+      buildId: pipelineBuildId !== null ? String(pipelineBuildId) : 'override',
+      delta: 0,
+    };
+  }
+
+  if (pipelineBuildId === null) {
+    return {
+      version: parseFriendlyVersion(baseVersion).join('.'),
+      buildId: 'local',
+      delta: 0,
+    };
+  }
+
+  const isOneBasedRunCounter =
+    pipelineSource === 'GITHUB_RUN_NUMBER' || pipelineSource === 'CI_PIPELINE_IID';
+  const effectiveBase =
+    isOneBasedRunCounter && !hasExplicitBaseOverride && pipelineBuildId < baseBuildId
+      ? 1
+      : baseBuildId;
+
+  const delta = Math.max(0, pipelineBuildId - effectiveBase);
+  return {
+    version: addFriendlyOffset(baseVersion, delta),
+    buildId: String(pipelineBuildId),
+    delta,
+  };
+}
+
+function readPackageVersionConfig(packageJsonPath) {
+  if (!fs.existsSync(packageJsonPath)) {
+    return { baseVersion: '1.0.0', baseBuildId: 1 };
+  }
+  const pkg = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+  const baseVersion = pkg.version || '1.0.0';
+  const configBaseBuildId = parsePositiveInt(pkg.versioning?.baseBuildId) ?? 1;
+  return { baseVersion, baseBuildId: configBaseBuildId };
+}
+
+function writeBuildInfoFile(buildInfoPath, { version, buildDate, buildId }) {
+  const content =
+    `// Gerado automaticamente por scripts/version-updater.js a partir de package.json + Build ID da pipeline.\n` +
+    `export interface BuildInfo {\n` +
+    `  readonly version: string;\n` +
+    `  readonly buildDate: string;\n` +
+    `  readonly buildId: string;\n` +
+    `}\n\n` +
+    `export const BUILD_INFO: BuildInfo = {\n` +
+    `  version: '${version}',\n` +
+    `  buildDate: '${buildDate}',\n` +
+    `  buildId: '${buildId}',\n` +
+    `};\n`;
+  fs.writeFileSync(buildInfoPath, content, 'utf8');
+}
+
+function updateVersion(envPath, _envFile) {
+  const envDir = path.dirname(envPath);
+  const packageJsonPath = path.resolve(envDir, '../../package.json');
+  const buildInfoPath = path.join(envDir, 'build-info.ts');
+
+  const { baseVersion, baseBuildId: pkgBaseBuildId } = readPackageVersionConfig(packageJsonPath);
+  const envBaseBuildId = parsePositiveInt(process.env.VERSION_BASE_BUILD_ID);
+  const hasExplicitBaseOverride = envBaseBuildId !== null;
+  const baseBuildId = envBaseBuildId ?? pkgBaseBuildId;
+
+  const { buildId: pipelineBuildId, source: pipelineSource } = resolvePipelineBuildId();
+  const resolved = calculateVersion({
+    baseVersion,
+    baseBuildId,
+    pipelineBuildId,
+    pipelineSource,
+    forcedVersion: process.env.APP_VERSION,
+    hasExplicitBaseOverride,
+  });
   const buildDate = formatBuildDate();
 
-  let updatedPrimary = false;
-  for (const file of new Set(candidateFiles)) {
-    const ok = writeEnvMetadata(file, buildVersion, buildDate);
-    if (file === envPath) {
-      updatedPrimary = ok;
-    }
-  }
-  writePackageVersion(packageJsonPath, buildVersion);
+  writeBuildInfoFile(buildInfoPath, {
+    version: resolved.version,
+    buildDate,
+    buildId: resolved.buildId,
+  });
 
-  if (updatedPrimary) {
-    console.log(`${envFile} version updated to ${buildVersion} (build ${buildDate})`);
+  if (pipelineBuildId !== null) {
+    console.log(
+      `build-info.ts updated to ${resolved.version} (buildDate ${buildDate}, buildId ${resolved.buildId} via ${pipelineSource}, base ${baseVersion} @ ${baseBuildId})`,
+    );
   } else {
-    console.error(`Version property not found in ${envFile}`);
+    console.log(
+      `build-info.ts updated to ${resolved.version} (buildDate ${buildDate}, local build from package.json)`,
+    );
   }
 
-  return buildVersion;
+  return resolved.version;
 }
 
 module.exports = {
   formatBuildDate,
   parseFriendlyVersion,
-  incrementFriendlyVersion,
-  compareVersions,
+  addFriendlyOffset,
+  parsePositiveInt,
+  resolvePipelineBuildId,
+  calculateVersion,
+  readPackageVersionConfig,
+  writeBuildInfoFile,
   updateVersion,
 };

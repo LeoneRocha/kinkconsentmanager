@@ -1,3 +1,5 @@
+import { BUILD_INFO } from './build-info';
+
 export interface AppTelemetryConfig {
   readonly enabled: boolean;
   readonly connectionString: string;
@@ -9,6 +11,7 @@ export interface AppEnvironment {
   readonly appName: string;
   readonly version: string;
   readonly buildDate: string;
+  readonly buildId: string;
   readonly crypto: {
     readonly autogeneredKeyBuildDeploy: boolean;
     readonly encryptionKeyBase64: string;
@@ -19,8 +22,9 @@ export interface AppEnvironment {
 export const environment: AppEnvironment = {
   production: false,
   appName: 'Kink Consent Manager',
-  version: '1.0.4',
-  buildDate: '2026.11.24',
+  version: BUILD_INFO.version,
+  buildDate: BUILD_INFO.buildDate,
+  buildId: BUILD_INFO.buildId,
   crypto: {
     autogeneredKeyBuildDeploy: false,
     encryptionKeyBase64: '',

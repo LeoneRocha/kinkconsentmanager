@@ -1,5 +1,6 @@
 // Orquestrador para atualizar metadados de build em arquivos de environment:
-// - Atualiza a versão amigável incremental (X.Y.Z, minor/patch 0..9) + buildDate (YYYY.MM.DD)
+// - Calcula versão amigável (X.Y.Z, minor/patch 0..9) + buildDate + buildId em src/environments/build-info.ts
+//   a partir de package.json (fonte única) + Build ID da pipeline de CI/CD
 // - Gera/atualiza crypto.encryptionKeyBase64 quando autogeneredKeyBuildDeploy === true
 // - Configura telemetry.connectionString via variável de ambiente de CI/CD quando definida
 
