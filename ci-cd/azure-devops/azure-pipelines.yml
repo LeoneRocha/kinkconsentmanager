@@ -3,9 +3,10 @@
 # ==============================================================================
 # ESTADO ATUAL: DESATIVADO POR PADRÃO
 # - `trigger: none` e `pr: none` garantem zero execução automática até ativação.
-# - Os estágios de CD (Docker e Azure Deploy) também ficam desativados por padrão
-#   via parâmetros booleanos (`false`) e protegidos por branch `refs/heads/main`
-#   e Environment `production` com aprovação manual obrigatória.
+# - Os estágios de CD (Docker e Azure Deploy) e os scans opcionais (SonarCloud
+#   e Snyk) ficam desativados por padrão (`false`) via parâmetros e variáveis
+#   da pipeline (`enableSonarCloud`, `enableSnykScan`), protegidos por branch
+#   `refs/heads/main` e Environment `production` com aprovação manual obrigatória.
 #
 # COMO ATIVAR NO FUTURO:
 # 1. Cadastre este arquivo no Azure DevOps Pipelines apontando para:
@@ -44,7 +45,7 @@ parameters:
   - name: enableSonarCloud
     displayName: 'Executar análise e Quality Gate no SonarCloud'
     type: boolean
-    default: true
+    default: false
 
   - name: enableSnykScan
     displayName: 'Executar Snyk Security Scan (requer extensão/conexão Snyk)'
@@ -62,14 +63,11 @@ parameters:
     default: false
 
 variables:
-  - group: kinkconsentmanager-ci-vars
-  - name: frontendDir
-    value: '$(Build.SourcesDirectory)/frontend'
-  - name: distBrowserDir
-    value: '$(Build.SourcesDirectory)/frontend/dist/kinkconsentmanager/browser'
-  - name: npmCacheFolder
-    value: '$(Pipeline.Workspace)/.npm'
-  # Fallback caso não definidos no Variable Group `kinkconsentmanager-ci-vars`:
+  # Defaults sobrescrevíveis via Variable Group `kinkconsentmanager-ci-vars` ou Variáveis da Pipeline:
+  - name: enableSonarCloud
+    value: 'false'
+  - name: enableSnykScan
+    value: 'false'
   - name: sonarOrganization
     value: 'lionscorp'
   - name: azureWebAppName
@@ -78,6 +76,13 @@ variables:
     value: 'pm2 serve /home/site/wwwroot --no-daemon --spa'
   - name: dockerImageRepository
     value: 'leonecr/kinkconsentmanager-ui'
+  - group: kinkconsentmanager-ci-vars
+  - name: frontendDir
+    value: '$(Build.SourcesDirectory)/frontend'
+  - name: distBrowserDir
+    value: '$(Build.SourcesDirectory)/frontend/dist/kinkconsentmanager/browser'
+  - name: npmCacheFolder
+    value: '$(Pipeline.Workspace)/.npm'
 
 stages:
   # ============================================================================
@@ -124,25 +129,25 @@ stages:
               script: |
                 npm audit --audit-level=high --omit=dev
 
-          - ${{ if eq(parameters.enableSnykScan, true) }}:
-              - task: SnykSecurityScan@1
-                displayName: 'Snyk Scan de vulnerabilidades Open Source'
-                inputs:
-                  serviceConnectionEndpoint: '$(snykServiceConnection)'
-                  testType: 'app'
-                  targetFile: '$(frontendDir)/package.json'
-                  additionalArguments: '--severity-threshold=high'
-                  failOnIssues: false
+          - task: SnykSecurityScan@1
+            displayName: 'Snyk Scan de vulnerabilidades Open Source'
+            condition: and(succeeded(), or(eq('${{ parameters.enableSnykScan }}', true), eq(variables['enableSnykScan'], 'true')))
+            inputs:
+              serviceConnectionEndpoint: '$(snykServiceConnection)'
+              testType: 'app'
+              targetFile: '$(frontendDir)/package.json'
+              additionalArguments: '--severity-threshold=high'
+              failOnIssues: false
 
-          - ${{ if eq(parameters.enableSonarCloud, true) }}:
-              - task: SonarCloudPrepare@3
-                displayName: 'SonarCloud — Preparar análise (CLI)'
-                inputs:
-                  SonarCloud: '$(sonarCloudServiceConnection)'
-                  organization: '$(sonarOrganization)'
-                  scannerMode: 'CLI'
-                  configMode: 'file'
-                  configFile: 'frontend/sonar-project.properties'
+          - task: SonarCloudPrepare@3
+            displayName: 'SonarCloud — Preparar análise (CLI)'
+            condition: and(succeeded(), or(eq('${{ parameters.enableSonarCloud }}', true), eq(variables['enableSonarCloud'], 'true')))
+            inputs:
+              SonarCloud: '$(sonarCloudServiceConnection)'
+              organization: '$(sonarOrganization)'
+              scannerMode: 'CLI'
+              configMode: 'file'
+              configFile: 'frontend/sonar-project.properties'
 
           - task: Npm@1
             displayName: 'Build de produção Angular (build:prod)'
@@ -184,14 +189,15 @@ stages:
               pathToSources: '$(frontendDir)/src'
               failIfCoverageEmpty: true
 
-          - ${{ if eq(parameters.enableSonarCloud, true) }}:
-              - task: SonarCloudAnalyze@3
-                displayName: 'SonarCloud — Executar análise de código e cobertura'
+          - task: SonarCloudAnalyze@3
+            displayName: 'SonarCloud — Executar análise de código e cobertura'
+            condition: and(succeeded(), or(eq('${{ parameters.enableSonarCloud }}', true), eq(variables['enableSonarCloud'], 'true')))
 
-              - task: SonarCloudPublish@3
-                displayName: 'SonarCloud — Publicar Quality Gate'
-                inputs:
-                  pollingTimeoutSec: '300'
+          - task: SonarCloudPublish@3
+            displayName: 'SonarCloud — Publicar Quality Gate'
+            condition: and(succeeded(), or(eq('${{ parameters.enableSonarCloud }}', true), eq(variables['enableSonarCloud'], 'true')))
+            inputs:
+              pollingTimeoutSec: '300'
 
           - task: CmdLine@2
             displayName: 'Validar saída SPA em dist/kinkconsentmanager/browser'

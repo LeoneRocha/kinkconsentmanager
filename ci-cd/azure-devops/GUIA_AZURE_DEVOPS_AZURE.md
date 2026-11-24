@@ -185,16 +185,20 @@ O arquivo [`azure-pipelines.yml`](./azure-devops/azure-pipelines.yml) referencia
 
 | Nome da Variável | Valor Exemplo / Referência | Marcar como Secret? | Obrigatória? |
 | ---------------- | -------------------------- | ------------------- | ------------ |
+| `enableSonarCloud` | `'false'` *(padrão desativado; mude para `'true'` quando quiser ativar via variável)* | Não | Opcional (sobrescreve o padrão `'false'` do YAML) |
+| `enableSnykScan` | `'false'` *(padrão desativado; mude para `'true'` quando quiser ativar via variável)* | Não | Opcional (sobrescreve o padrão `'false'` do YAML) |
 | `azureServiceConnection` | Nome exato da Service Connection criada no Passo 4.1 (ex.: `azure-kinkconsentmanager-oidc`) | Não | Sim (para `enableAzureDeploy: true`) |
-| `sonarCloudServiceConnection` | Nome exato da Service Connection criada no Passo 4.2 (ex.: `sonarcloud-lionscorp`) | Não | Sim (para `enableSonarCloud: true`) |
+| `sonarCloudServiceConnection` | Nome exato da Service Connection criada no Passo 4.2 (ex.: `sonarcloud-lionscorp`) | Não | Sim (mantenha cadastrada mesmo com Sonar desativado, para validação inicial do YAML) |
 | `AZURE_WEBAPP_URL` | URL exata exibida em *Domínios padrão* do Web App no Azure (ex.: `https://kinkconsentmanagerapp.azurewebsites.net`) | Não | Recomendada (usada no smoke test pós-deploy) |
 | `dockerRegistryServiceConnection` | Nome exato da Service Connection Docker do Passo 4.3 | Não | Somente se `enableDockerPublish: true` |
-| `snykServiceConnection` | Nome exato da Service Connection Snyk do Passo 4.4 | Não | Somente se `enableSnykScan: true` |
+| `snykServiceConnection` | Nome exato da Service Connection Snyk do Passo 4.4 | Não | Sim (mantenha cadastrada mesmo com Snyk desativado, para validação inicial do YAML) |
 
 4. Clique em **Save**.
 5. *(Opcional)* Após criar o pipeline no Passo 7, volte em **Pipelines → Library → `kinkconsentmanager-ci-vars` → Pipeline permissions** e autorize o pipeline (ou clique em **Authorize resources** na primeira execução).
 
-> **Atenção — Precedência de variáveis no YAML:** O [`azure-pipelines.yml`](./azure-devops/azure-pipelines.yml) declara valores padrão logo após `- group: kinkconsentmanager-ci-vars` (linhas 73–80): `sonarOrganization` (`lionscorp`), `azureWebAppName` (`kinkconsentmanagerapp`), `azureStartupCommand` (`pm2 serve /home/site/wwwroot --no-daemon --spa`) e `dockerImageRepository` (`leonecr/kinkconsentmanager-ui`). No Azure DevOps, variáveis definidas diretamente no arquivo sobrescrevem variáveis de mesmo nome vindas do Variable Group. Se precisar customizar alguma dessas quatro variáveis pelo painel, remova ou comente a respectiva linha no YAML.
+> **Atenção — Precedência e validação de conexões no YAML:**
+> - **Sobrescrita via Variable Group / UI:** No [`azure-pipelines.yml`](./azure-devops/azure-pipelines.yml), os padrões `enableSonarCloud` (`'false'`), `enableSnykScan` (`'false'`), `sonarOrganization` (`lionscorp`), `azureWebAppName` (`kinkconsentmanagerapp`), `azureStartupCommand` (`pm2 serve /home/site/wwwroot --no-daemon --spa`) e `dockerImageRepository` (`leonecr/kinkconsentmanager-ui`) são declarados **antes** de `- group: kinkconsentmanager-ci-vars`, permitindo sobrescrita direta pelo Variable Group ou pelas variáveis da pipeline na UI do Azure DevOps.
+> - **Validação das Service Connections:** Como os steps de Snyk (`SnykSecurityScan@1`) e SonarCloud (`SonarCloudPrepare@3`, `SonarCloudAnalyze@3`, `SonarCloudPublish@3`) são avaliados em tempo de execução via `condition:` (para responderem tanto a parâmetros quanto a variáveis da pipeline), o Azure DevOps valida que `sonarCloudServiceConnection` e `snykServiceConnection` apontam para Service Connections válidas no momento em que o run inicia, mesmo quando `enableSonarCloud` e `enableSnykScan` estiverem como `false`.
 
 ---
 
@@ -236,21 +240,21 @@ Como o repositório usa **branch única (`main`)**, o Environment `production` i
 
 ## Passo 8 — Testar Manualmente (CI) e Executar o Deploy Aprovado (CD)
 
-### 8.1 Primeiro teste apenas de CI (Build + Jest + Cobertura + SonarCloud)
+### 8.1 Primeiro teste apenas de CI (Build + Jest + Cobertura)
 1. Acesse **Pipelines → `KinkConsentManager-CI-CD` → Run pipeline**.
 2. Em **Branch/tag**, mantenha **`main`**.
-3. Ajuste os parâmetros de execução:
+3. Confira os parâmetros de execução (todos os opcionais vêm desmarcados por padrão):
    - **Versão do Node.js (`nodeVersion`):** `24.x`
-   - **Executar análise e Quality Gate no SonarCloud (`enableSonarCloud`):** marcado (`true`) *(ou desmarque se ainda não configurou o Passo 4.2)*
-   - **Executar Snyk Security Scan (`enableSnykScan`):** desmarcado (`false`)
+   - **Executar análise e Quality Gate no SonarCloud (`enableSonarCloud`):** desmarcado (`false`) *(padrão; pode ser ligado aqui ou pela variável `enableSonarCloud='true'`)*
+   - **Executar Snyk Security Scan (`enableSnykScan`):** desmarcado (`false`) *(padrão; pode ser ligado aqui ou pela variável `enableSnykScan='true'`)*
    - **Executar estágio CD — Build & Push da imagem Docker (`enableDockerPublish`):** desmarcado (`false`)
    - **Executar estágio CD — Deploy no Azure Web App (`enableAzureDeploy`):** desmarcado (`false`)
 4. Clique em **Run**.
-5. Se aparecer o aviso **"This pipeline needs permission to access a resource before this run can continue"**, clique em **View → Permit** para autorizar o Variable Group `kinkconsentmanager-ci-vars` e a Service Connection do SonarCloud.
+5. Se aparecer o aviso **"This pipeline needs permission to access a resource before this run can continue"**, clique em **View → Permit** para autorizar o Variable Group `kinkconsentmanager-ci-vars` e as Service Connections declaradas no pipeline.
 6. Ao finalizar o estágio `CI_Build_Quality`, confira:
    - Aba **Tests:** resultados JUnit do Jest (`Jest Unit Tests — KinkConsentManager UI`);
    - Aba **Code Coverage:** cobertura Cobertura XML + relatório consolidado do `ReportGenerator@5`;
-   - **SonarCloud:** métricas e Quality Gate de `lionscorp_kinkconsentmanager-ui`;
+   - **SonarCloud:** *(quando `enableSonarCloud` estiver `true`)* métricas e Quality Gate de `lionscorp_kinkconsentmanager-ui`;
    - **1 published / Artifacts:** `drop-webapp` (`kinkconsentmanager-ui-<BuildId>.zip`) e `drop-docker-compose` (`dockercompose.prod.yml`).
 
 ### 8.2 Segundo teste com Deploy Aprovado no Azure (e Docker opcional)
