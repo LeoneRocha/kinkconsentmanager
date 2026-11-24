@@ -72,6 +72,7 @@ As versões vivas constam em [frontend/package.json](../frontend/package.json), 
 | Levantamento Funcional e Técnico (V1 Checklist) | [LEVANTAMENTO_FUNCIONAL_TECNICO.md](./Features/LEVANTAMENTO_FUNCIONAL_TECNICO.md) |
 | Plano de Implementação Frontend | [PLANO_IMPLEMENTACAO_FRONTEND.md](./Features/PLANO_IMPLEMENTACAO_FRONTEND.md) |
 | Checklist de Implementação, Etapas e Progresso | [CHECKLIST_IMPLEMENTACAO_PROGRESSO.md](./Features/CHECKLIST_IMPLEMENTACAO_PROGRESSO.md) |
+| Notas Futuras — i18n de Questões & Checklist Personalizável | [ESPECIFICACAO_I18N_CHECKLIST_PERSONALIZAVEL.md](./Features/ESPECIFICACAO_I18N_CHECKLIST_PERSONALIZAVEL.md) |
 
 ### Frontend — Testes, Cobertura e Code Smells (`docs/Frontend/COVERAGE AND TEST/`)
 
