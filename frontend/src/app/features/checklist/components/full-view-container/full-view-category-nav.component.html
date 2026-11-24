@@ -1,0 +1,35 @@
+<nav
+  class="full-view__quick-nav"
+  [class.full-view__quick-nav--embedded]="embedded()"
+  [attr.aria-label]="title()"
+>
+  <div class="full-view__quick-nav-header">
+    <span class="full-view__quick-nav-label">{{ title() }}</span>
+    <button
+      type="button"
+      class="full-view__toggle-all-btn"
+      [attr.aria-expanded]="allExpanded()"
+      [attr.aria-label]="toggleAllLabel()"
+      [matTooltip]="toggleAllLabel()"
+      matTooltipPosition="left"
+      (click)="toggleAll.emit()"
+    >
+      <i
+        class="fa-solid"
+        [class.fa-angles-up]="allExpanded()"
+        [class.fa-angles-down]="!allExpanded()"
+        aria-hidden="true"
+      ></i>
+    </button>
+  </div>
+  <div class="full-view__pills">
+    @for (group of groups(); track group.id) {
+      <button type="button" class="full-view__pill" (click)="groupSelect.emit(group.id)">
+        <span>{{ groupTitle(group) }}</span>
+        <span class="full-view__pill-count">
+          {{ groupAnsweredCount(group) }}/{{ group.items.length }}
+        </span>
+      </button>
+    }
+  </div>
+</nav>

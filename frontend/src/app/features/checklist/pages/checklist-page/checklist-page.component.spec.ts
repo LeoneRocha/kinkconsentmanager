@@ -370,11 +370,33 @@ describe('ChecklistPageComponent', () => {
     expect(hostEl.querySelector('app-classic-kink-sheet')).toBeNull();
     expect(hostEl.querySelector('app-checklist-progress-bar')).not.toBeNull();
 
+    // Categories quick-nav is hosted inside Visualização, Filtros e Ações when in full view
+    const headerControlsPanel = hostEl.querySelector('.checklist-header__controls-panel')!;
+    const hostedCategoryNav = headerControlsPanel.querySelector('app-full-view-category-nav');
+    expect(hostedCategoryNav).not.toBeNull();
+    expect(hostEl.querySelector('app-full-view-container app-full-view-category-nav')).toBeNull();
+
+    const hostedToggleAllBtn = hostedCategoryNav!.querySelector<HTMLButtonElement>(
+      '.full-view__toggle-all-btn',
+    )!;
+    expect(hostedToggleAllBtn.getAttribute('aria-expanded')).toBe('true');
+    hostedToggleAllBtn.click();
+    await fixture.whenStable();
+    expect(hostedToggleAllBtn.getAttribute('aria-expanded')).toBe('false');
+    expect(hostEl.querySelectorAll('app-full-view-container .full-view__items').length).toBe(0);
+    hostedToggleAllBtn.click();
+    await fixture.whenStable();
+    expect(hostedToggleAllBtn.getAttribute('aria-expanded')).toBe('true');
+    expect(
+      hostEl.querySelectorAll('app-full-view-container .full-view__items').length,
+    ).toBeGreaterThan(0);
+
     modeButtons[3].click();
     await fixture.whenStable();
     expect(checklistState.viewMode()).toBe('quick_fill');
     expect(hostEl.querySelector('.quick-fill-inline')).not.toBeNull();
     expect(hostEl.querySelector('app-full-view-container')).toBeNull();
+    expect(headerControlsPanel.querySelector('app-full-view-category-nav')).toBeNull();
     expect(hostEl.querySelector('app-checklist-progress-bar')).not.toBeNull();
 
     // Collapse header controls -> progress bar and Save/Export/Autosave remain visible

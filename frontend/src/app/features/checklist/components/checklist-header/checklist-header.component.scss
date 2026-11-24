@@ -186,6 +186,15 @@
     align-items: center;
     width: auto;
   }
+
+  &__extra {
+    padding-top: 0.75rem;
+    border-top: 1px solid v.$border-color;
+
+    &:empty {
+      display: none;
+    }
+  }
 }
 
 :host-context(html.app-reduced-motion) .checklist-header__body {

@@ -43,7 +43,23 @@
             (viewModeChange)="onViewModeChange($event)"
             (onlyUnansweredChange)="onOnlyUnansweredChange($event)"
             (clearAll)="onClearAll()"
-          />
+          >
+            @if (viewMode() === 'full' && filteredGroups().length > 0) {
+              <app-full-view-category-nav
+                headerExtra
+                [groups]="filteredGroups()"
+                [answers]="answers()"
+                [texts]="texts"
+                [title]="quickNavTitle()"
+                [allExpanded]="areFullViewGroupsExpanded()"
+                [expandAllLabel]="expandAllLabel()"
+                [collapseAllLabel]="collapseAllLabel()"
+                [embedded]="true"
+                (groupSelect)="fullViewRef()?.jumpToGroup($event)"
+                (toggleAll)="fullViewRef()?.toggleAllGroups()"
+              />
+            }
+          </app-checklist-header>
 
           <app-checklist-progress-bar
             [answeredCount]="answeredCount()"
@@ -150,6 +166,7 @@
                 [collapseAllLabel]="collapseAllLabel()"
                 [expandCategoryLabel]="expandCategoryLabel()"
                 [collapseCategoryLabel]="collapseCategoryLabel()"
+                [showQuickNav]="false"
                 (answerChange)="onAnswerChange($event)"
                 (readItemAloud)="onReadItemAloud($event)"
                 (finishChecklist)="onFinishChecklist()"

@@ -48,7 +48,10 @@ import {
   ChecklistStepperLabels,
 } from '../../components/checklist-stepper';
 import { ClassicKinkSheetComponent } from '../../components/classic-kink-sheet';
-import { FullViewContainerComponent } from '../../components/full-view-container';
+import {
+  FullViewCategoryNavComponent,
+  FullViewContainerComponent,
+} from '../../components/full-view-container';
 import {
   QuickFillLabels,
   QuickFillWizardModalComponent,
@@ -68,6 +71,7 @@ import {
     ChecklistStepRailComponent,
     ChecklistStepperComponent,
     ClassicKinkSheetComponent,
+    FullViewCategoryNavComponent,
     FullViewContainerComponent,
     QuickFillWizardModalComponent,
   ],
@@ -89,6 +93,7 @@ export class ChecklistPageComponent implements OnInit {
 
   private readonly contentContainer = viewChild<ElementRef<HTMLElement>>('contentContainer');
   protected readonly stepperRef = viewChild(ChecklistStepperComponent);
+  protected readonly fullViewRef = viewChild(FullViewContainerComponent);
   private loadSubscription: Subscription | null = null;
 
   protected readonly isLoading = signal<boolean>(true);
@@ -109,6 +114,15 @@ export class ChecklistPageComponent implements OnInit {
   protected readonly progressPercentage = this.checklistState.progressPercentage;
 
   protected readonly hasAnswers = computed<boolean>(() => Object.keys(this.answers()).length > 0);
+
+  protected readonly areFullViewGroupsExpanded = computed<boolean>(() => {
+    const groups = this.filteredGroups();
+    const collapsed = this.fullViewRef()?.collapsedIds();
+    if (!collapsed) {
+      return true;
+    }
+    return groups.length > 0 && groups.every((group) => !collapsed.has(group.id));
+  });
 
   protected readonly activeStepperStep = computed<number>(() => {
     const groups = this.filteredGroups();

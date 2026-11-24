@@ -29,13 +29,19 @@ import {
   getItemTooltip,
   isDualRoleScaleItem,
 } from '../../utils/checklist-view.helpers';
+import { FullViewCategoryNavComponent } from './full-view-category-nav.component';
 
 /**
  * Full-page vertical checklist layout displaying all categories expanded with quick-jump navigation.
  */
 @Component({
   selector: 'app-full-view-container',
-  imports: [MatButtonModule, MatTooltipModule, DynamicQuestionItemComponent],
+  imports: [
+    MatButtonModule,
+    MatTooltipModule,
+    DynamicQuestionItemComponent,
+    FullViewCategoryNavComponent,
+  ],
   templateUrl: './full-view-container.component.html',
   styleUrl: './full-view-container.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -56,24 +62,22 @@ export class FullViewContainerComponent {
   readonly collapseAllLabel = input<string>('Recolher tudo');
   readonly expandCategoryLabel = input<string>('Expandir categoria');
   readonly collapseCategoryLabel = input<string>('Recolher categoria');
+  readonly showQuickNav = input<boolean>(true);
 
   readonly answerChange = output<{ itemId: string; patch: Partial<ItemResponseValue> }>();
   readonly readItemAloud = output<ItemDefinition>();
   readonly finishChecklist = output<void>();
 
   protected readonly collapsedGroupIds = signal<ReadonlySet<string>>(new Set());
+  readonly collapsedIds = this.collapsedGroupIds.asReadonly();
 
-  protected readonly areAllGroupsExpanded = computed<boolean>(() => {
+  readonly areAllGroupsExpanded = computed<boolean>(() => {
     const groups = this.groups();
     const collapsed = this.collapsedGroupIds();
     return groups.length > 0 && groups.every((group) => !collapsed.has(group.id));
   });
 
-  protected readonly toggleAllLabel = computed<string>(() =>
-    this.areAllGroupsExpanded() ? this.collapseAllLabel() : this.expandAllLabel(),
-  );
-
-  protected jumpToGroup(groupId: string): void {
+  jumpToGroup(groupId: string): void {
     if (this.isGroupCollapsed(groupId)) {
       this.collapsedGroupIds.update((prev) => {
         const next = new Set(prev);
@@ -108,7 +112,7 @@ export class FullViewContainerComponent {
     this.toggleGroupCollapsed(groupId);
   }
 
-  protected toggleAllGroups(): void {
+  toggleAllGroups(): void {
     if (this.areAllGroupsExpanded()) {
       this.collapsedGroupIds.set(new Set(this.groups().map((group) => group.id)));
       return;

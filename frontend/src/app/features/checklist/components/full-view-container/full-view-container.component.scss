@@ -28,30 +28,6 @@
     font-size: 1rem;
   }
 
-  &__quick-nav {
-    @include m.card-surface;
-    display: flex;
-    flex-direction: column;
-    gap: 0.625rem;
-    padding: 0.875rem 1rem;
-  }
-
-  &__quick-nav-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.75rem;
-  }
-
-  &__quick-nav-label {
-    font-size: 0.8125rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    color: v.$text-muted;
-  }
-
-  &__toggle-all-btn,
   &__toggle-btn {
     width: 32px;
     height: 32px;
@@ -82,48 +58,6 @@
     &:focus-visible {
       @include m.focus-ring(v.$accent-primary);
     }
-  }
-
-  &__pills {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-  }
-
-  &__pill {
-    @include m.touch-target(2.5rem);
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.375rem 0.75rem;
-    border: 1px solid v.$border-color;
-    border-radius: 9999px;
-    background-color: v.$surface-subtle;
-    color: v.$text-primary;
-    font-size: 0.875rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition:
-      border-color 150ms ease,
-      background-color 150ms ease,
-      color 150ms ease;
-
-    &:hover {
-      border-color: v.$accent-primary;
-      background-color: v.$accent-soft;
-      color: v.$accent-text;
-    }
-
-    &:focus-visible {
-      @include m.focus-ring(v.$accent-primary);
-    }
-  }
-
-  &__pill-count {
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: v.$text-secondary;
-    font-variant-numeric: tabular-nums;
   }
 
   &__sections {

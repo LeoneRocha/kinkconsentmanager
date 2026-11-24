@@ -220,4 +220,13 @@ describe('FullViewContainerComponent', () => {
     expect(sections.every((s) => s.querySelector('.full-view__items') === null)).toBe(true);
     expect(toggleAllBtn.querySelector('i.fa-angles-down')).not.toBeNull();
   });
+
+  it('should omit quick-nav bar when showQuickNav is false', async () => {
+    fixture.componentRef.setInput('showQuickNav', false);
+    await fixture.whenStable();
+
+    const hostEl = fixture.nativeElement as HTMLElement;
+    expect(hostEl.querySelector('app-full-view-category-nav')).toBeNull();
+    expect(hostEl.querySelectorAll('.full-view__section').length).toBe(2);
+  });
 });

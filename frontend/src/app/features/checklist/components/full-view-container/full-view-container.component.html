@@ -5,37 +5,19 @@
   </div>
 } @else {
   <div class="full-view">
-    <nav class="full-view__quick-nav" [attr.aria-label]="quickNavTitle()">
-      <div class="full-view__quick-nav-header">
-        <span class="full-view__quick-nav-label">{{ quickNavTitle() }}</span>
-        <button
-          type="button"
-          class="full-view__toggle-all-btn"
-          [attr.aria-expanded]="areAllGroupsExpanded()"
-          [attr.aria-label]="toggleAllLabel()"
-          [matTooltip]="toggleAllLabel()"
-          matTooltipPosition="left"
-          (click)="toggleAllGroups()"
-        >
-          <i
-            class="fa-solid"
-            [class.fa-angles-up]="areAllGroupsExpanded()"
-            [class.fa-angles-down]="!areAllGroupsExpanded()"
-            aria-hidden="true"
-          ></i>
-        </button>
-      </div>
-      <div class="full-view__pills">
-        @for (group of groups(); track group.id) {
-          <button type="button" class="full-view__pill" (click)="jumpToGroup(group.id)">
-            <span>{{ groupTitle(group) }}</span>
-            <span class="full-view__pill-count">
-              {{ groupAnsweredCount(group) }}/{{ group.items.length }}
-            </span>
-          </button>
-        }
-      </div>
-    </nav>
+    @if (showQuickNav()) {
+      <app-full-view-category-nav
+        [groups]="groups()"
+        [answers]="answers()"
+        [texts]="texts()"
+        [title]="quickNavTitle()"
+        [allExpanded]="areAllGroupsExpanded()"
+        [expandAllLabel]="expandAllLabel()"
+        [collapseAllLabel]="collapseAllLabel()"
+        (groupSelect)="jumpToGroup($event)"
+        (toggleAll)="toggleAllGroups()"
+      />
+    }
 
     <div class="full-view__sections">
       @for (group of groups(); track group.id) {
