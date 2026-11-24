@@ -1,63 +1,69 @@
 <section class="checklist-progress-bar" [attr.aria-label]="labels().progressLabel">
-  <div class="checklist-progress-bar__main">
+  <div class="checklist-progress-bar__progress">
     <app-progress-indicator
       [answered]="answeredCount()"
       [total]="totalCount()"
       [percentage]="progressPercentage()"
       [label]="labels().progressLabel"
     />
+  </div>
 
-    <div class="checklist-progress-bar__actions">
-      <div class="checklist-progress-bar__save-actions">
-        <button
-          mat-flat-button
-          type="button"
-          class="checklist-progress-bar__save-btn"
-          [class.checklist-progress-bar__save-btn--dirty]="hasUnsavedChanges()"
-          [disabled]="isAutosaving() || !hasUnsavedChanges()"
-          [matTooltip]="labels().saveNowTooltip"
-          matTooltipPosition="below"
-          (click)="saveNow.emit()"
-        >
-          <i
-            class="fa-solid"
-            [class.fa-spin]="isAutosaving()"
-            [class.fa-spinner]="isAutosaving()"
-            [class.fa-floppy-disk]="!isAutosaving()"
-            aria-hidden="true"
-          ></i>
-          <span>{{ labels().saveButton }}</span>
-        </button>
+  <ng-content select="[progressRail]" />
 
-        <button
-          mat-flat-button
-          type="button"
-          class="checklist-progress-bar__export-btn"
-          [class.checklist-progress-bar__export-btn--ready]="isChecklistComplete()"
-          [disabled]="!isChecklistComplete()"
-          (click)="goToExport.emit()"
-        >
-          <i class="fa-solid fa-file-export" aria-hidden="true"></i>
-          <span>{{ labels().exportButton }}</span>
-        </button>
-      </div>
+  <div class="checklist-progress-bar__actions">
+    <div class="checklist-progress-bar__save-actions">
+      <button
+        mat-flat-button
+        type="button"
+        class="checklist-progress-bar__save-btn"
+        [class.checklist-progress-bar__save-btn--dirty]="hasUnsavedChanges()"
+        [disabled]="isAutosaving() || !hasUnsavedChanges()"
+        [matTooltip]="labels().saveNowTooltip"
+        matTooltipPosition="below"
+        (click)="saveNow.emit()"
+      >
+        <i
+          class="fa-solid"
+          [class.fa-spin]="isAutosaving()"
+          [class.fa-spinner]="isAutosaving()"
+          [class.fa-floppy-disk]="!isAutosaving()"
+          aria-hidden="true"
+        ></i>
+        <span>{{ labels().saveButton }}</span>
+      </button>
 
-      <div class="checklist-progress-bar__autosave-row">
-        <mat-slide-toggle
-          class="checklist-progress-bar__autosave-toggle"
-          [checked]="autosaveEnabled()"
-          (change)="onAutosaveEnabledModelChange($event.checked)"
-        >
-          {{ labels().autosaveToggleLabel }}
-        </mat-slide-toggle>
+      <button
+        mat-flat-button
+        type="button"
+        class="checklist-progress-bar__export-btn"
+        [class.checklist-progress-bar__export-btn--ready]="isChecklistComplete()"
+        [disabled]="!isChecklistComplete()"
+        (click)="goToExport.emit()"
+      >
+        <i class="fa-solid fa-file-export" aria-hidden="true"></i>
+        <span>{{ labels().exportButton }}</span>
+      </button>
+    </div>
 
-        <span class="checklist-progress-bar__save-meta" role="status" aria-live="polite">
-          <i class="fa-solid fa-lock" aria-hidden="true"></i>
-          <span>{{ autosaveText() }}</span>
-        </span>
-      </div>
+    <div class="checklist-progress-bar__autosave-row">
+      <mat-slide-toggle
+        class="checklist-progress-bar__autosave-toggle"
+        [checked]="autosaveEnabled()"
+        (change)="onAutosaveEnabledModelChange($event.checked)"
+      >
+        {{ labels().autosaveToggleLabel }}
+      </mat-slide-toggle>
+
+      <span class="checklist-progress-bar__sep" aria-hidden="true"></span>
+
+      <span class="checklist-progress-bar__save-meta" role="status" aria-live="polite">
+        <i class="fa-solid fa-lock" aria-hidden="true"></i>
+        <span>{{ autosaveText() }}</span>
+      </span>
     </div>
   </div>
 
-  <ng-content />
+  <div class="checklist-progress-bar__legend">
+    <ng-content select="[progressLegend]" />
+  </div>
 </section>

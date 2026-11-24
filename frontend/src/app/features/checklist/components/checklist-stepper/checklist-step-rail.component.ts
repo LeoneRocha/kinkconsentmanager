@@ -32,6 +32,7 @@ export class ChecklistStepRailComponent {
   readonly progressPercentage = input<number>(0);
   readonly progressLabel = input<string>('Progresso');
   readonly showProgress = input<boolean>(true);
+  readonly showLegend = input<boolean>(true);
   readonly embedded = input<boolean>(false);
 
   readonly stepSelect = output<number>();

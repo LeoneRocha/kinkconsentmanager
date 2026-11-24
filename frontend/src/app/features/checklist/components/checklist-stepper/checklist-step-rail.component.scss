@@ -26,6 +26,10 @@
       border-radius: 0;
       box-shadow: none;
       border-top: 1px solid v.$border-color;
+
+      .stepper__chrome {
+        border-bottom: none;
+      }
     }
   }
 

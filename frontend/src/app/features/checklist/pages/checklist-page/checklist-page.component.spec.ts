@@ -320,6 +320,19 @@ describe('ChecklistPageComponent', () => {
     expect(hostEl.querySelector('.checklist-progress-bar__save-btn')).not.toBeNull();
     expect(hostEl.querySelector('.checklist-progress-bar__export-btn')).not.toBeNull();
 
+    const railEl = hostEl.querySelector('.stepper__rail');
+    const actionsEl = hostEl.querySelector('.checklist-progress-bar__actions');
+    const legendEl = hostEl.querySelector('app-legend-bar');
+    expect(railEl).not.toBeNull();
+    expect(actionsEl).not.toBeNull();
+    expect(legendEl).not.toBeNull();
+    expect(
+      Boolean(railEl!.compareDocumentPosition(actionsEl!) & Node.DOCUMENT_POSITION_FOLLOWING),
+    ).toBe(true);
+    expect(
+      Boolean(actionsEl!.compareDocumentPosition(legendEl!) & Node.DOCUMENT_POSITION_FOLLOWING),
+    ).toBe(true);
+
     // Switch to classic view, full view, and quick_fill view
     const modeButtons = hostEl.querySelectorAll<HTMLElement>(
       '.checklist-header__mode-select mat-button-toggle button',

@@ -55,16 +55,6 @@
     font-size: 1rem;
   }
 
-  &__legend-strip {
-    padding: 0.625rem 1.25rem;
-    border-top: 1px solid v.$border-color;
-    background-color: v.$surface-card;
-
-    @include m.respond-md {
-      padding: 0.55rem 1.5rem;
-    }
-  }
-
   &__content {
     display: block;
     scroll-margin-top: 5.5rem;

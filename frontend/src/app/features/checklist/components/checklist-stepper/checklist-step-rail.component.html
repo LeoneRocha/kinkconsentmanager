@@ -86,7 +86,9 @@
     </ol>
   </div>
 
-  <div class="stepper__legend">
-    <app-legend-bar [scales]="scales()" [scaleLabels]="texts().scales" />
-  </div>
+  @if (showLegend()) {
+    <div class="stepper__legend">
+      <app-legend-bar [scales]="scales()" [scaleLabels]="texts().scales" />
+    </div>
+  }
 </div>

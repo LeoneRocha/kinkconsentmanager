@@ -60,6 +60,7 @@
           >
             @if (viewMode() === 'stepper' && filteredGroups().length > 0) {
               <app-checklist-step-rail
+                progressRail
                 [groups]="filteredGroups()"
                 [scales]="activeSchema.scales"
                 [answers]="answers()"
@@ -72,15 +73,18 @@
                 [progressPercentage]="progressPercentage()"
                 [progressLabel]="progressBarLabels().progressLabel"
                 [showProgress]="false"
+                [showLegend]="false"
                 [embedded]="true"
                 (stepSelect)="stepperRef()?.selectStep($event)"
                 (reviewSelect)="stepperRef()?.goToReviewStep()"
               />
-            } @else {
-              <div class="checklist-page__legend-strip">
-                <app-legend-bar [scales]="activeSchema.scales" [scaleLabels]="texts.scales" />
-              </div>
             }
+
+            <app-legend-bar
+              progressLegend
+              [scales]="activeSchema.scales"
+              [scaleLabels]="texts.scales"
+            />
           </app-checklist-progress-bar>
         </div>
 
