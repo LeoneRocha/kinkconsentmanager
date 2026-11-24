@@ -284,7 +284,7 @@ stages:
     condition: |
       and(
         succeeded(),
-        eq(stageDependencies.CI_Build_Quality.BuildAndTestFrontend.outputs['ResolveCdFlags.enableDockerPublish'], 'true'),
+        eq(dependencies.CI_Build_Quality.outputs['BuildAndTestFrontend.ResolveCdFlags.enableDockerPublish'], 'true'),
         eq(variables['Build.SourceBranch'], 'refs/heads/main')
       )
     pool:
@@ -337,7 +337,7 @@ stages:
     condition: |
       and(
         succeeded(),
-        eq(stageDependencies.CI_Build_Quality.BuildAndTestFrontend.outputs['ResolveCdFlags.enableAzureDeploy'], 'true'),
+        eq(dependencies.CI_Build_Quality.outputs['BuildAndTestFrontend.ResolveCdFlags.enableAzureDeploy'], 'true'),
         eq(variables['Build.SourceBranch'], 'refs/heads/main')
       )
     pool:
