@@ -35,6 +35,9 @@ describe('QuestionTranslationsService', () => {
           tooltip: 'Descrição cadastrada pelo usuário.',
         },
       },
+      options: {
+        opt_custom_1: 'Opção customizada',
+      },
     };
 
     const getQuestionTranslationsMock = jest

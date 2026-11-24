@@ -60,6 +60,9 @@ describe('StaticJsonQuestionTranslationsRepository', () => {
           tooltip: 'Escolha o mecanismo principal.',
         },
       },
+      options: {
+        opt_sw_traffic_light: 'Semáforo (Verde = continuar / Amarelo = devagar / Vermelho = parar)',
+      },
     });
 
     expect(firstBundle).toEqual({
@@ -78,13 +81,16 @@ describe('StaticJsonQuestionTranslationsRepository', () => {
           tooltip: 'Escolha o mecanismo principal.',
         },
       },
+      options: {
+        opt_sw_traffic_light: 'Semáforo (Verde = continuar / Amarelo = devagar / Vermelho = parar)',
+      },
     });
     expect(secondBundle).toEqual(firstBundle);
   });
 
-  // Cenário: Payload inválido (sem mapa `items` ou `groups`) e limpeza de cache após falha.
+  // Cenário: Payload inválido (sem mapa `groups`, `items` ou `options`) e limpeza de cache após falha.
   // Objetivo: Rejeitar payloads malformados e remover o stream falho do cache para permitir nova tentativa.
-  it('should reject malformed payloads without groups or items and evict failed requests from cache on retry', () => {
+  it('should reject malformed payloads without groups, items, or options and evict failed requests from cache on retry', () => {
     let caughtError: Error | undefined;
     repository.getQuestionTranslations({ lang: 'en-US' }).subscribe({
       error: (err: Error) => {
@@ -123,14 +129,18 @@ describe('StaticJsonQuestionTranslationsRepository', () => {
           tooltip: 'Select the primary mechanism.',
         },
       },
+      options: {
+        opt_sw_traffic_light: 'Traffic Light',
+      },
     });
 
     expect(retriedBundle?.groups['grp_safety_health']?.title).toBe('Safety, Health & Aftercare');
     expect(retriedBundle?.items['item_safeword_system']?.label).toBe('Safeword System');
+    expect(retriedBundle?.options['opt_sw_traffic_light']).toBe('Traffic Light');
 
     repository.clearCache();
     repository.getQuestionTranslations({ lang: 'en-US' }).subscribe();
     httpMock.expectOne('./assets/i18n/groups/en-US.json').flush({ groups: {} });
-    httpMock.expectOne('./assets/i18n/questions/en-US.json').flush({ items: {} });
+    httpMock.expectOne('./assets/i18n/questions/en-US.json').flush({ items: {}, options: {} });
   });
 });

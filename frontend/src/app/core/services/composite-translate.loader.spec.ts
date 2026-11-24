@@ -44,7 +44,6 @@ describe('CompositeTranslateLoader', () => {
 
     baseReq.flush({
       ui: { title: 'Kink Consent Manager' },
-      options: { opt_sw_traffic_light: 'Semáforo' },
     });
     groupsReq.flush({
       groups: {
@@ -60,6 +59,9 @@ describe('CompositeTranslateLoader', () => {
           label: 'Sistema de Safeword',
           tooltip: 'Escolha o mecanismo principal.',
         },
+      },
+      options: {
+        opt_sw_traffic_light: 'Semáforo',
       },
     });
 
@@ -103,6 +105,9 @@ describe('CompositeTranslateLoader', () => {
               tooltip: 'Descrição carregada por provider customizado.',
             },
           },
+          options: {
+            opt_api_1: 'Opção vinda da API',
+          },
         }),
       ),
     };
@@ -144,11 +149,14 @@ describe('CompositeTranslateLoader', () => {
           tooltip: 'Descrição carregada por provider customizado.',
         },
       },
+      options: {
+        opt_api_1: 'Opção vinda da API',
+      },
     });
   });
 
   // Cenário: Lista vazia de fontes base combinada com provider de grupos/questões e mergeTranslationObjects.
-  // Objetivo: Garantir que o loader retorne `groups` e `items` mesmo sem fontes base e mescle dicionários sem mutação.
+  // Objetivo: Garantir que o loader retorne `groups`, `items` e `options` mesmo sem fontes base e mescle dicionários sem mutação.
   it('should still return groups and question items when base sources are empty and merge dictionaries cleanly', () => {
     const customRepo: IQuestionTranslationsRepository = {
       getQuestionTranslations: jest.fn(() =>
@@ -161,6 +169,9 @@ describe('CompositeTranslateLoader', () => {
           },
           items: {
             item_1: { label: 'Q1', tooltip: 'D1' },
+          },
+          options: {
+            opt_1: 'O1',
           },
         }),
       ),
@@ -191,6 +202,9 @@ describe('CompositeTranslateLoader', () => {
       },
       items: {
         item_1: { label: 'Q1', tooltip: 'D1' },
+      },
+      options: {
+        opt_1: 'O1',
       },
     });
 

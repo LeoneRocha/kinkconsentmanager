@@ -19,7 +19,7 @@ function isPlainRecord(value: unknown): value is Record<string, unknown> {
 
 /**
  * Implementação padrão que carrega as traduções isoladas dos grupos (`./assets/i18n/groups/{lang}.json`)
- * e das questões (`./assets/i18n/questions/{lang}.json`), com cache em memória e evicção automática
+ * e das questões e opções (`./assets/i18n/questions/{lang}.json`), com cache em memória e evicção automática
  * em caso de erro para permitir nova tentativa.
  */
 @Injectable({ providedIn: 'root' })
@@ -74,9 +74,13 @@ export class StaticJsonQuestionTranslationsRepository implements IQuestionTransl
       );
     }
 
-    if (!isPlainRecord(questionsPayload) || !isPlainRecord(questionsPayload['items'])) {
+    if (
+      !isPlainRecord(questionsPayload) ||
+      !isPlainRecord(questionsPayload['items']) ||
+      !isPlainRecord(questionsPayload['options'])
+    ) {
       throw new Error(
-        `Malformed question translations for language "${lang}": expected an object with an "items" map.`,
+        `Malformed question translations for language "${lang}": expected an object with "items" and "options" maps.`,
       );
     }
 
@@ -106,12 +110,22 @@ export class StaticJsonQuestionTranslationsRepository implements IQuestionTransl
       };
     }
 
+    const rawOptions = questionsPayload['options'];
+    const options: Record<string, string> = {};
+    for (const optionId of Object.keys(rawOptions)) {
+      const entry = rawOptions[optionId];
+      if (typeof entry === 'string') {
+        options[optionId] = entry;
+      }
+    }
+
     return {
       sourceKind,
       templateId,
       supportedLanguages: DEFAULT_SUPPORTED_LANGUAGES,
       groups,
       items,
+      options,
     };
   }
 }

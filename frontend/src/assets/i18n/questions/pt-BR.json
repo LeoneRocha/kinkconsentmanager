@@ -204,5 +204,30 @@
       "label": "Sangue e cutting (Bloodplay)",
       "tooltip": "ALERTA RACK (Alto Risco): Envolve risco de infecções, transmissão de patógenos sanguíneos, hemorragia e cicatrizes permanentes. Requer esterilização hospitalar, lâminas descartáveis e testagem prévia."
     }
+  },
+  "options": {
+    "opt_sw_traffic_light": "Semáforo (Verde = continuar / Amarelo = desacelerar / Vermelho = parar)",
+    "opt_sw_custom_word": "Palavra ou frase específica personalizada",
+    "opt_sw_nonverbal": "Sinal não-verbal (ex.: bater duas vezes / soltar objeto)",
+    "opt_sw_checkins": "Check-ins verbais periódicos combinados",
+    "opt_ac_cuddling": "Carinho, abraços e contato pele a pele",
+    "opt_ac_hydration_snacks": "Água, hidratação e lanche leve",
+    "opt_ac_blanket_warmth": "Cobertor e aquecimento corporal",
+    "opt_ac_quiet_space": "Tempo em silêncio e espaço para descomprimir",
+    "opt_ac_verbal_reassurance": "Conversa acolhedora e reafirmação emocional",
+    "opt_ac_wound_skin_care": "Cuidados com a pele, limpeza e primeiros socorros",
+    "opt_mat_cotton_rope": "Corda de algodão (macia)",
+    "opt_mat_jute_hemp": "Corda de juta ou cânhamo",
+    "opt_mat_leather": "Couro (algemas e tiras)",
+    "opt_mat_neoprene_padded": "Neoprene ou nylon acolchoado",
+    "opt_mat_silicone": "Silicone",
+    "opt_mat_metal": "Metal / aço inoxidável",
+    "opt_mat_bondage_tape": "Fita de bondage sem adesivo na pele",
+    "opt_tool_open_hand": "Mão aberta",
+    "opt_tool_leather_paddle": "Paddle (palmatória) de couro ou madeira",
+    "opt_tool_suede_flogger": "Flogger de camurça ou couro macio",
+    "opt_tool_riding_crop": "Crop / chibata curta",
+    "opt_tool_rattan_cane": "Vara de rattan (cane)",
+    "opt_tool_belt_strap": "Cinto ou tira de couro"
   }
 }

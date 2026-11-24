@@ -319,15 +319,17 @@ describe('Checklist Schema & i18n Integrity', () => {
     ).toBe(true);
   });
 
-  it('should guarantee 100% recursive key parity and non-empty strings between pt-BR.json and en-US.json, with groups/items isolated in groups/ and questions/', () => {
+  it('should guarantee 100% recursive key parity and non-empty strings between pt-BR.json and en-US.json, with groups in groups/ and items/options in questions/', () => {
     expect('groups' in rawPtBr).toBe(false);
     expect('groups' in rawEnUs).toBe(false);
     expect('items' in rawPtBr).toBe(false);
     expect('items' in rawEnUs).toBe(false);
+    expect('options' in rawPtBr).toBe(false);
+    expect('options' in rawEnUs).toBe(false);
     expect(Object.keys(rawPtBrGroups)).toEqual(['groups']);
     expect(Object.keys(rawEnUsGroups)).toEqual(['groups']);
-    expect(Object.keys(rawPtBrQuestions)).toEqual(['items']);
-    expect(Object.keys(rawEnUsQuestions)).toEqual(['items']);
+    expect(Object.keys(rawPtBrQuestions)).toEqual(['items', 'options']);
+    expect(Object.keys(rawEnUsQuestions)).toEqual(['items', 'options']);
 
     const ptStructure = collectKeyPaths(rawPtBr);
     const enStructure = collectKeyPaths(rawEnUs);

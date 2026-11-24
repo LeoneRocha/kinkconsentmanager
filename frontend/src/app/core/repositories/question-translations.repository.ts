@@ -26,10 +26,11 @@ export interface QuestionTranslationBundle {
   readonly supportedLanguages: readonly SupportedLanguage[];
   readonly groups: Readonly<Record<string, GroupTranslationEntry>>;
   readonly items: Readonly<Record<string, QuestionTranslationEntry>>;
+  readonly options: Readonly<Record<string, string>>;
 }
 
 /**
- * Contrato desacoplado para carregamento das traduções dos grupos (`groups`) e questões (`items`).
+ * Contrato desacoplado para carregamento das traduções dos grupos (`groups`), questões (`items`) e opções (`options`).
  * Permite trocar a origem estática por API (padrão, personalizado do usuário ou template customizado)
  * apenas substituindo o provider registrado em `QUESTION_TRANSLATIONS_REPOSITORY_TOKEN`.
  */
