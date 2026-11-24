@@ -1,7 +1,8 @@
 # Notas de Evolução — Separação de i18n (Questões) e Checklist Personalizável Multilíngue
 
-> **Status:** **Anotação para Levantamento Futuro (Pós-V1 / Roadmap V2+)**  
-> **Escopo atual:** Documento apenas de registro arquitetural e funcional. **Nenhuma implementação** foi iniciada no código nesta etapa.  
+> **Status:**  
+> - **Objetivo 1 (Isolamento dos Grupos `groups` e Questões `items` + Camada Extensível por Provider):** **Implementado** (`assets/i18n/groups/{pt-BR,en-US}.json`, `assets/i18n/questions/{pt-BR,en-US}.json`, `IQuestionTranslationsRepository`, `QUESTION_TRANSLATIONS_REPOSITORY_TOKEN`, `StaticJsonQuestionTranslationsRepository`, `QuestionTranslationsService` e `CompositeTranslateLoader`).  
+> - **Objetivo 2 (Checklist Personalizável Multilíngue):** **Anotação para Levantamento Futuro (Pós-V1 / Roadmap V2+)** — ainda não implementado no código.  
 > **Documentos relacionados:** [Blueprint](./../Bueprint.md) · [Levantamento Funcional e Técnico](./LEVANTAMENTO_FUNCIONAL_TECNICO.md) · [Arquitetura](./../ARCHITECTURE.md) · [PROJECT_GUIDELINES](./../PROJECT_GUIDELINES.md)
 
 ---

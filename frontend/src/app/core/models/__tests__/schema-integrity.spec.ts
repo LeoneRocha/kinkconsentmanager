@@ -1,12 +1,11 @@
 import rawSchema from '../../../../assets/schemas/checklist-v1.json';
 import rawPtBr from '../../../../assets/i18n/pt-BR.json';
 import rawEnUs from '../../../../assets/i18n/en-US.json';
-import {
-  ChecklistSchema,
-  QuestionType,
-  RolePairId,
-  ScaleId,
-} from '../checklist-schema.model';
+import rawPtBrGroups from '../../../../assets/i18n/groups/pt-BR.json';
+import rawEnUsGroups from '../../../../assets/i18n/groups/en-US.json';
+import rawPtBrQuestions from '../../../../assets/i18n/questions/pt-BR.json';
+import rawEnUsQuestions from '../../../../assets/i18n/questions/en-US.json';
+import { ChecklistSchema, QuestionType, RolePairId, ScaleId } from '../checklist-schema.model';
 
 interface RoleTranslation {
   readonly primary: string;
@@ -115,8 +114,7 @@ const REQUIRED_UI_KEYS: readonly string[] = [
   'notesHeader',
 ];
 
-const SEMVER_REGEX =
-  /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/;
+const SEMVER_REGEX = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/;
 const HEX_COLOR_REGEX = /^#[0-9A-Fa-f]{6}$/;
 const ICON_CLASS_REGEX = /^fa-(?:solid|regular|brands) fa-[a-z0-9-]+$/;
 
@@ -155,8 +153,16 @@ function collectKeyPaths(
 
 describe('Checklist Schema & i18n Integrity', () => {
   const schema = rawSchema as unknown as ChecklistSchema;
-  const ptBr = rawPtBr as unknown as TranslationDictionary;
-  const enUs = rawEnUs as unknown as TranslationDictionary;
+  const ptBr = {
+    ...rawPtBr,
+    ...rawPtBrGroups,
+    ...rawPtBrQuestions,
+  } as unknown as TranslationDictionary;
+  const enUs = {
+    ...rawEnUs,
+    ...rawEnUsGroups,
+    ...rawEnUsQuestions,
+  } as unknown as TranslationDictionary;
 
   it('should validate checklist-v1.json conforms to ChecklistSchema structure and semver', () => {
     expect(typeof schema.schemaVersion).toBe('string');
@@ -177,13 +183,7 @@ describe('Checklist Schema & i18n Integrity', () => {
       expect(scale.color).toMatch(HEX_COLOR_REGEX);
       expect(scale.contrastColor).toMatch(HEX_COLOR_REGEX);
       expect(scale.icon).toMatch(ICON_CLASS_REGEX);
-      expect(Object.keys(scale).sort()).toEqual([
-        'color',
-        'contrastColor',
-        'icon',
-        'id',
-        'order',
-      ]);
+      expect(Object.keys(scale).sort()).toEqual(['color', 'contrastColor', 'icon', 'id', 'order']);
     }
 
     expect(Array.isArray(schema.groups)).toBe(true);
@@ -295,9 +295,7 @@ describe('Checklist Schema & i18n Integrity', () => {
       ),
     ).toBe(true);
     expect(
-      safetyGroup?.items.some(
-        (item) => item.type === 'restricted_text' && item.maxLength === 300,
-      ),
+      safetyGroup?.items.some((item) => item.type === 'restricted_text' && item.maxLength === 300),
     ).toBe(true);
 
     const bondageGroup = schema.groups.find((g) => g.id === 'grp_bondage_restraint');
@@ -321,13 +319,34 @@ describe('Checklist Schema & i18n Integrity', () => {
     ).toBe(true);
   });
 
-  it('should guarantee 100% recursive key parity and non-empty strings between pt-BR.json and en-US.json', () => {
+  it('should guarantee 100% recursive key parity and non-empty strings between pt-BR.json and en-US.json, with groups/items isolated in groups/ and questions/', () => {
+    expect('groups' in rawPtBr).toBe(false);
+    expect('groups' in rawEnUs).toBe(false);
+    expect('items' in rawPtBr).toBe(false);
+    expect('items' in rawEnUs).toBe(false);
+    expect(Object.keys(rawPtBrGroups)).toEqual(['groups']);
+    expect(Object.keys(rawEnUsGroups)).toEqual(['groups']);
+    expect(Object.keys(rawPtBrQuestions)).toEqual(['items']);
+    expect(Object.keys(rawEnUsQuestions)).toEqual(['items']);
+
     const ptStructure = collectKeyPaths(rawPtBr);
     const enStructure = collectKeyPaths(rawEnUs);
+    const ptGroupsStructure = collectKeyPaths(rawPtBrGroups);
+    const enGroupsStructure = collectKeyPaths(rawEnUsGroups);
+    const ptQuestionsStructure = collectKeyPaths(rawPtBrQuestions);
+    const enQuestionsStructure = collectKeyPaths(rawEnUsQuestions);
 
     expect(ptStructure.paths).toEqual(enStructure.paths);
     expect(ptStructure.emptyLeaves).toEqual([]);
     expect(enStructure.emptyLeaves).toEqual([]);
+
+    expect(ptGroupsStructure.paths).toEqual(enGroupsStructure.paths);
+    expect(ptGroupsStructure.emptyLeaves).toEqual([]);
+    expect(enGroupsStructure.emptyLeaves).toEqual([]);
+
+    expect(ptQuestionsStructure.paths).toEqual(enQuestionsStructure.paths);
+    expect(ptQuestionsStructure.emptyLeaves).toEqual([]);
+    expect(enQuestionsStructure.emptyLeaves).toEqual([]);
 
     for (const uiKey of REQUIRED_UI_KEYS) {
       expect(ptBr.ui[uiKey]?.trim().length ?? 0).toBeGreaterThan(0);

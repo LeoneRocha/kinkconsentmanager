@@ -1,0 +1,36 @@
+{
+  "groups": {
+    "grp_safety_health": {
+      "title": "Safety, Health & Aftercare",
+      "description": "Essential upfront agreements covering safewords, post-scene care, medical allergies, and emotional triggers."
+    },
+    "grp_affection_general": {
+      "title": "Affection, Foreplay & General",
+      "description": "Physical affection, sensory intimacy, teasing, and pacing preferences during an encounter."
+    },
+    "grp_bondage_restraint": {
+      "title": "Bondage & Restraint",
+      "description": "Techniques, equipment, and preferred materials for physical restraint, confinement, or sensory deprivation."
+    },
+    "grp_impact_play": {
+      "title": "Impact Play",
+      "description": "Consensual physical impact activities delivered by hand or with specialized impact tools."
+    },
+    "grp_sensation_pain": {
+      "title": "Sensation & Pain Play",
+      "description": "Thermal play, pressure, skin sensation, and consensual intense sensation or pain exploration."
+    },
+    "grp_domination_power": {
+      "title": "Domination, Submission & Power Exchange",
+      "description": "Consensual power dynamics, protocols, discipline, control, and D/s role agreements."
+    },
+    "grp_roleplay_gear": {
+      "title": "Gear, Fetishwear & Toys",
+      "description": "Clothing aesthetics, fetish materials, costume roleplay, and intimate toys or accessories."
+    },
+    "grp_breath_edge": {
+      "title": "Edge Play & High-Risk Practices (RACK)",
+      "description": "High-risk activities requiring fully informed consent, technical preparation, and strict risk mitigation (RACK)."
+    }
+  }
+}

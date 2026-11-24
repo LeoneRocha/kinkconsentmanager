@@ -1,0 +1,36 @@
+{
+  "groups": {
+    "grp_safety_health": {
+      "title": "Segurança, Saúde e Aftercare",
+      "description": "Acordos prévios essenciais de comunicação, safewords, cuidados pós-cena, alergias médicas e gatilhos emocionais."
+    },
+    "grp_affection_general": {
+      "title": "Afeto, Preliminares e Geral",
+      "description": "Práticas de conexão afetiva, intimidade sensorial, provocação e controle de ritmo durante a interação."
+    },
+    "grp_bondage_restraint": {
+      "title": "Bondage e Contenção",
+      "description": "Técnicas, acessórios e materiais de imobilização física, privação sensorial ou restrição de movimento."
+    },
+    "grp_impact_play": {
+      "title": "Impact Play",
+      "description": "Estímulos de impacto físico consensual aplicados com as mãos ou instrumentos específicos."
+    },
+    "grp_sensation_pain": {
+      "title": "Sensação e Dor Consensual",
+      "description": "Jogos térmicos, pressão, estímulos cutâneos e práticas de sensação intensa ou dor erótica."
+    },
+    "grp_domination_power": {
+      "title": "Dominação, Submissão e Poder (D/s)",
+      "description": "Dinâmicas de troca de poder consensual, protocolos, disciplina, controle e papéis D/s."
+    },
+    "grp_roleplay_gear": {
+      "title": "Vestimenta, Fetiche e Brinquedos",
+      "description": "Preferências visuais, materiais fetiche, caracterização em roleplay e uso de acessórios íntimos."
+    },
+    "grp_breath_edge": {
+      "title": "Práticas de Borda e Alto Risco (RACK)",
+      "description": "Atividades de risco elevado que exigem consentimento plenamente informado, pesquisa técnica e protocolos rigorosos de mitigação (RACK)."
+    }
+  }
+}

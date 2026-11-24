@@ -8,6 +8,8 @@ export * from './local-storage-persistence.service';
 export * from './checklist-state.service';
 export * from './checklist-autosave.service';
 export * from './i18n.service';
+export * from './question-translations.service';
+export * from './composite-translate.loader';
 export * from './theme.service';
 export * from './accessibility.service';
 export * from './sweet-alert.service';
