@@ -62,7 +62,7 @@ parameters:
   - name: enableAzureDeploy
     displayName: 'Executar estágio CD — Deploy no Azure Web App com aprovação (somente main)'
     type: boolean
-    default: true
+    default: false
 
 variables:
   # Defaults sobrescrevíveis via Variable Group `kinkconsentmanager-ci-vars` ou Variáveis da Pipeline:
