@@ -1,14 +1,15 @@
 # ==============================================================================
 # KinkConsentManager UI — Pipeline Multiestágio de CI/CD (Azure DevOps)
 # ==============================================================================
-# ESTADO ATUAL: DESATIVADO POR PADRÃO
-# - `trigger: none` e `pr: none` garantem zero execução automática até ativação.
+# ESTADO ATUAL: CI AUTOMÁTICO ATIVO NA BRANCH `main` (CD DESATIVADO POR PADRÃO)
+# - `trigger` dispara automaticamente o estágio de CI em commits para `main`
+#   que alterem `frontend/**` ou `ci-cd/**` (ignorando `docs/**` e `**/*.md`).
 # - Os estágios de CD (Docker e Azure Deploy) e os scans opcionais (SonarCloud
 #   e Snyk) ficam desativados por padrão (`false`) via parâmetros e variáveis
 #   da pipeline (`enableSonarCloud`, `enableSnykScan`), protegidos por branch
 #   `refs/heads/main` e Environment `production` com aprovação manual obrigatória.
 #
-# COMO ATIVAR NO FUTURO:
+# COMO CONFIGURAR:
 # 1. Cadastre este arquivo no Azure DevOps Pipelines apontando para:
 #    `ci-cd/azure-devops/azure-pipelines.yml`
 # 2. Configure o Variable Group `kinkconsentmanager-ci-vars` (ou variáveis de pipeline)
@@ -16,25 +17,21 @@
 # 3. Crie o Environment `production` no Azure DevOps com:
 #    - Approvals and checks -> Approvals (aprovadores obrigatórios)
 #    - Approvals and checks -> Branch control -> `refs/heads/main`
-# 4. Quando quiser automatizar na branch única (`main`), descomente o bloco `trigger`
-#    abaixo e remova `trigger: none`.
 # ==============================================================================
 
-trigger: none
-pr: none
+trigger:
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - frontend/**
+      - ci-cd/**
+    exclude:
+      - docs/**
+      - '**/*.md'
 
-# Para ativar CI automático na branch única `main`, substitua as linhas acima por:
-# trigger:
-#   branches:
-#     include:
-#       - main
-#   paths:
-#     include:
-#       - frontend/**
-#       - ci-cd/**
-#     exclude:
-#       - docs/**
-#       - '**/*.md'
+pr: none
 
 parameters:
   - name: nodeVersion
@@ -114,12 +111,16 @@ stages:
                 npm | "$(Agent.OS)"
               path: '$(npmCacheFolder)'
 
-          - task: Npm@1
+          - task: CmdLine@2
             displayName: 'npm ci (instalação determinística em frontend/)'
             inputs:
-              command: 'custom'
-              workingDir: '$(frontendDir)'
-              customCommand: 'ci --cache $(npmCacheFolder) --prefer-offline'
+              workingDirectory: '$(frontendDir)'
+              script: |
+                set -euo pipefail
+                echo "Node: $(node -v) | npm atual: $(npm -v)"
+                npm install -g npm@11.14.1
+                echo "npm alinhado (packageManager): $(npm -v)"
+                npm ci --cache "$(npmCacheFolder)" --prefer-offline
 
           - task: CmdLine@2
             displayName: 'Auditoria de dependências npm (aviso high/critical)'
@@ -139,6 +140,18 @@ stages:
               additionalArguments: '--severity-threshold=high'
               failOnIssues: false
 
+          - task: CmdLine@2
+            displayName: 'Build de produção Angular (build:prod)'
+            inputs:
+              workingDirectory: '$(frontendDir)'
+              script: npm run build:prod
+
+          - task: CmdLine@2
+            displayName: 'Testes unitários e cobertura Jest (test:ci)'
+            inputs:
+              workingDirectory: '$(frontendDir)'
+              script: npm run test:ci
+
           - task: SonarCloudPrepare@3
             displayName: 'SonarCloud — Preparar análise (CLI)'
             condition: and(succeeded(), or(eq('${{ parameters.enableSonarCloud }}', true), eq(variables['enableSonarCloud'], 'true')))
@@ -149,46 +162,6 @@ stages:
               configMode: 'file'
               configFile: 'frontend/sonar-project.properties'
 
-          - task: Npm@1
-            displayName: 'Build de produção Angular (build:prod)'
-            inputs:
-              command: 'custom'
-              workingDir: '$(frontendDir)'
-              customCommand: 'run build:prod'
-
-          - task: Npm@1
-            displayName: 'Testes unitários e cobertura Jest (test:ci)'
-            inputs:
-              command: 'custom'
-              workingDir: '$(frontendDir)'
-              customCommand: 'run test:ci'
-
-          - task: PublishTestResults@2
-            displayName: 'Publicar resultados JUnit dos testes Jest'
-            condition: succeededOrFailed()
-            inputs:
-              testResultsFormat: 'JUnit'
-              testResultsFiles: 'frontend/coverage/junit/test-results.xml'
-              searchFolder: '$(Build.SourcesDirectory)'
-              testRunTitle: 'Jest Unit Tests — KinkConsentManager UI'
-              failTaskOnFailedTests: true
-
-          - task: ReportGenerator@5
-            displayName: 'Gerar relatório consolidado de cobertura (Cobertura + HTML)'
-            condition: succeededOrFailed()
-            inputs:
-              reports: '$(frontendDir)/coverage/cobertura-coverage.xml'
-              targetdir: '$(frontendDir)/coverage/reportgenerator'
-              reporttypes: 'HtmlInline_AzurePipelines;Cobertura'
-
-          - task: PublishCodeCoverageResults@2
-            displayName: 'Publicar cobertura no Azure Pipelines (Cobertura XML)'
-            condition: succeededOrFailed()
-            inputs:
-              summaryFileLocation: '$(frontendDir)/coverage/cobertura-coverage.xml'
-              pathToSources: '$(frontendDir)/src'
-              failIfCoverageEmpty: true
-
           - task: SonarCloudAnalyze@3
             displayName: 'SonarCloud — Executar análise de código e cobertura'
             condition: and(succeeded(), or(eq('${{ parameters.enableSonarCloud }}', true), eq(variables['enableSonarCloud'], 'true')))
@@ -198,6 +171,29 @@ stages:
             condition: and(succeeded(), or(eq('${{ parameters.enableSonarCloud }}', true), eq(variables['enableSonarCloud'], 'true')))
             inputs:
               pollingTimeoutSec: '300'
+
+          - task: PublishTestResults@2
+            displayName: 'Publicar resultados JUnit dos testes Jest'
+            inputs:
+              testResultsFormat: 'JUnit'
+              testResultsFiles: 'frontend/coverage/junit/test-results.xml'
+              searchFolder: '$(Build.SourcesDirectory)'
+              testRunTitle: 'Jest Unit Tests — KinkConsentManager UI'
+              failTaskOnFailedTests: true
+
+          - task: ReportGenerator@5
+            displayName: 'Gerar relatório consolidado de cobertura (Cobertura + HTML)'
+            inputs:
+              reports: '$(frontendDir)/coverage/cobertura-coverage.xml'
+              targetdir: '$(frontendDir)/coverage/reportgenerator'
+              reporttypes: 'HtmlInline_AzurePipelines;Cobertura'
+
+          - task: PublishCodeCoverageResults@2
+            displayName: 'Publicar cobertura no Azure Pipelines (Cobertura XML)'
+            inputs:
+              summaryFileLocation: '$(frontendDir)/coverage/cobertura-coverage.xml'
+              pathToSources: '$(frontendDir)/src'
+              failIfCoverageEmpty: true
 
           - task: CmdLine@2
             displayName: 'Validar saída SPA em dist/kinkconsentmanager/browser'

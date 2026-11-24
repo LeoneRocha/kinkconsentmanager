@@ -47,18 +47,17 @@ Organizações novas do Azure DevOps vêm com **0 parallel jobs gratuitos** por 
 ## Arquitetura do Pipeline no Azure DevOps
 
 ```text
-  [Disparo Manual (trigger: none / pr: none)]
+  [Push em main (frontend/** · ci-cd/**) ou Disparo Manual]
                        │
                        ▼
   1. CI_Build_Quality (Job: BuildAndTestFrontend)
      ├── checkout: self (fetchDepth: 0 para SonarCloud)
-     ├── NodeTool@0 (24.x) + Cache@2 + npm ci (em frontend/)
+     ├── NodeTool@0 (24.x) + Cache@2 + npm@11.14.1 + npm ci (em frontend/)
      ├── npm audit + SnykSecurityScan@1 (se enableSnykScan == true)
-     ├── SonarCloudPrepare@3 (se enableSonarCloud == true)
      ├── npm run build:prod  ──► frontend/dist/kinkconsentmanager/browser/
      ├── npm run test:ci     ──► JUnit + Cobertura + LCOV + Sonar XML
-     ├── PublishTestResults@2 + ReportGenerator@5 + PublishCodeCoverageResults@2
-     ├── SonarCloudAnalyze@3 + SonarCloudPublish@3 (se enableSonarCloud == true)
+     ├── SonarCloudPrepare@3 + SonarCloudAnalyze@3 + SonarCloudPublish@3 (se enableSonarCloud == true; só após build & testes)
+     ├── PublishTestResults@2 + ReportGenerator@5 + PublishCodeCoverageResults@2 (só após Quality Gate)
      └── ArchiveFiles@2 (.zip) + PublishPipelineArtifact@1 (drop-webapp · drop-docker-compose)
                        │
                        ├──► 2. CD_Docker_Image (se branch == main E enableDockerPublish == true)
