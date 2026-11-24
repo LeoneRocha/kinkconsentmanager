@@ -1,20 +1,25 @@
 <div class="checklist-page" [class.checklist-page--classic]="viewMode() === 'classic'">
   @if (isLoading()) {
-  <div class="checklist-page__loading" aria-busy="true" [attr.aria-label]="loadingSchemaLabel()">
-    <div class="kcm-skeleton" style="height: 8rem"></div>
-    <div class="kcm-skeleton" style="height: 3.5rem"></div>
-    <div class="kcm-skeleton" style="height: 14rem"></div>
-    <div class="kcm-skeleton" style="height: 4rem"></div>
-  </div>
+    <div class="checklist-page__loading" aria-busy="true" [attr.aria-label]="loadingSchemaLabel()">
+      <div class="kcm-skeleton" style="height: 8rem"></div>
+      <div class="kcm-skeleton" style="height: 3.5rem"></div>
+      <div class="kcm-skeleton" style="height: 14rem"></div>
+      <div class="kcm-skeleton" style="height: 4rem"></div>
+    </div>
   } @else if (loadError()) {
-  <div class="checklist-page__error" role="alert">
-    <i class="fa-solid fa-circle-exclamation checklist-page__error-icon" aria-hidden="true"></i>
-    <p class="checklist-page__error-text">{{ loadingErrorText() }}</p>
-    <button mat-flat-button type="button" class="checklist-page__retry-btn" (click)="loadSchema()">
-      <i class="fa-solid fa-arrows-rotate" aria-hidden="true"></i>
-      <span>{{ retryLabel() }}</span>
-    </button>
-  </div>
+    <div class="checklist-page__error" role="alert">
+      <i class="fa-solid fa-circle-exclamation checklist-page__error-icon" aria-hidden="true"></i>
+      <p class="checklist-page__error-text">{{ loadingErrorText() }}</p>
+      <button
+        mat-flat-button
+        type="button"
+        class="checklist-page__retry-btn"
+        (click)="loadSchema()"
+      >
+        <i class="fa-solid fa-arrows-rotate" aria-hidden="true"></i>
+        <span>{{ retryLabel() }}</span>
+      </button>
+    </div>
   } @else if (schema(); as activeSchema) {
     @if (resolvedTexts(); as texts) {
       @if (!hasSelectedStartMode()) {
@@ -28,107 +33,134 @@
           (importJsonFile)="onImportJsonFile($event)"
         />
       } @else {
-      <div class="checklist-page__sticky-top">
-        <app-checklist-header
-          [currentLang]="i18n.currentLang()"
-          [viewMode]="viewMode()"
-          [onlyUnanswered]="onlyUnanswered()"
-          [answeredCount]="answeredCount()"
-          [totalCount]="totalCount()"
-          [progressPercentage]="progressPercentage()"
-          [hasAnswers]="hasAnswers()"
-          [autosaveText]="autosaveStatusText()"
-          [isAutosaving]="autosave.isSaving()"
-          [hasUnsavedChanges]="autosave.hasUnsavedChanges()"
-          [autosaveEnabled]="autosave.isEnabled()"
-          [labels]="headerLabels()"
-          (viewModeChange)="onViewModeChange($event)"
-          (onlyUnansweredChange)="onOnlyUnansweredChange($event)"
-          (clearAll)="onClearAll()"
-          (goToExport)="onFinishChecklist()"
-          (saveNow)="onSaveNow()"
-          (autosaveEnabledChange)="onAutosaveEnabledChange($event)"
-        />
+        <div class="checklist-page__sticky-top">
+          <app-checklist-header
+            [currentLang]="i18n.currentLang()"
+            [viewMode]="viewMode()"
+            [onlyUnanswered]="onlyUnanswered()"
+            [hasAnswers]="hasAnswers()"
+            [labels]="headerLabels()"
+            (viewModeChange)="onViewModeChange($event)"
+            (onlyUnansweredChange)="onOnlyUnansweredChange($event)"
+            (clearAll)="onClearAll()"
+          />
 
-        @if (viewMode() === 'stepper') {
-          @if (filteredGroups().length > 0) {
-            <app-checklist-step-rail
-              [groups]="filteredGroups()"
-              [scales]="activeSchema.scales"
-              [answers]="answers()"
-              [activeStep]="activeStepperStep()"
-              [texts]="texts"
-              [labels]="stepperLabels()"
-              [invalidStepIds]="stepperRef()?.invalidStepIds() ?? emptyInvalidStepIds"
-              [answeredCount]="answeredCount()"
-              [totalCount]="totalCount()"
-              [progressPercentage]="progressPercentage()"
-              [progressLabel]="headerLabels().progressLabel"
-              (stepSelect)="stepperRef()?.selectStep($event)"
-              (reviewSelect)="stepperRef()?.goToReviewStep()"
-            />
+          <app-checklist-progress-bar
+            [answeredCount]="answeredCount()"
+            [totalCount]="totalCount()"
+            [progressPercentage]="progressPercentage()"
+            [autosaveText]="autosaveStatusText()"
+            [isAutosaving]="autosave.isSaving()"
+            [hasUnsavedChanges]="autosave.hasUnsavedChanges()"
+            [autosaveEnabled]="autosave.isEnabled()"
+            [labels]="progressBarLabels()"
+            (saveNow)="onSaveNow()"
+            (goToExport)="onFinishChecklist()"
+            (autosaveEnabledChange)="onAutosaveEnabledChange($event)"
+          >
+            @if (viewMode() === 'stepper' && filteredGroups().length > 0) {
+              <app-checklist-step-rail
+                [groups]="filteredGroups()"
+                [scales]="activeSchema.scales"
+                [answers]="answers()"
+                [activeStep]="activeStepperStep()"
+                [texts]="texts"
+                [labels]="stepperLabels()"
+                [invalidStepIds]="stepperRef()?.invalidStepIds() ?? emptyInvalidStepIds"
+                [answeredCount]="answeredCount()"
+                [totalCount]="totalCount()"
+                [progressPercentage]="progressPercentage()"
+                [progressLabel]="progressBarLabels().progressLabel"
+                [showProgress]="false"
+                [embedded]="true"
+                (stepSelect)="stepperRef()?.selectStep($event)"
+                (reviewSelect)="stepperRef()?.goToReviewStep()"
+              />
+            } @else {
+              <div class="checklist-page__legend-strip">
+                <app-legend-bar [scales]="activeSchema.scales" [scaleLabels]="texts.scales" />
+              </div>
+            }
+          </app-checklist-progress-bar>
+        </div>
+
+        <section
+          #contentContainer
+          class="checklist-page__content"
+          [attr.aria-label]="headerLabels().title"
+        >
+          @switch (viewMode()) {
+            @case ('stepper') {
+              <app-checklist-stepper
+                [externalChromeHost]="true"
+                [groups]="filteredGroups()"
+                [scales]="activeSchema.scales"
+                [answers]="answers()"
+                [activeStep]="activeStepperStep()"
+                [texts]="texts"
+                [labels]="stepperLabels()"
+                [answeredCount]="answeredCount()"
+                [totalCount]="totalCount()"
+                [progressPercentage]="progressPercentage()"
+                [progressLabel]="progressBarLabels().progressLabel"
+                (activeStepChange)="onActiveStepChange($event)"
+                (answerChange)="onAnswerChange($event)"
+                (readItemAloud)="onReadItemAloud($event)"
+                (finishChecklist)="onFinishChecklist()"
+              />
+            }
+
+            @case ('classic') {
+              <app-classic-kink-sheet
+                [groups]="filteredGroups()"
+                [scales]="activeSchema.scales"
+                [answers]="answers()"
+                [texts]="texts"
+                [noResultsText]="noResultsText()"
+                [finishLabel]="finishLabel()"
+                [otherPlaceholder]="otherPlaceholder()"
+                [readAloudLabel]="readAloudLabel()"
+                [classicHint]="classicHint()"
+                (answerChange)="onAnswerChange($event)"
+                (readItemAloud)="onReadItemAloud($event)"
+                (finishChecklist)="onFinishChecklist()"
+              />
+            }
+
+            @case ('full') {
+              <app-full-view-container
+                [groups]="filteredGroups()"
+                [scales]="activeSchema.scales"
+                [answers]="answers()"
+                [texts]="texts"
+                [noResultsText]="noResultsText()"
+                [finishLabel]="finishLabel()"
+                [quickNavTitle]="quickNavTitle()"
+                [otherPlaceholder]="otherPlaceholder()"
+                [readAloudLabel]="readAloudLabel()"
+                (answerChange)="onAnswerChange($event)"
+                (readItemAloud)="onReadItemAloud($event)"
+                (finishChecklist)="onFinishChecklist()"
+              />
+            }
+
+            @case ('quick_fill') {
+              <app-quick-fill-wizard-modal
+                [visible]="true"
+                [inline]="true"
+                [groups]="filteredGroups()"
+                [scales]="activeSchema.scales"
+                [answers]="answers()"
+                [texts]="texts"
+                [labels]="quickFillLabels()"
+                [readAloudLabel]="readAloudLabel()"
+                (answerChange)="onAnswerChange($event)"
+                (readAloud)="onReadTextAloud($event)"
+              />
+            }
           }
-        } @else {
-          <div class="checklist-page__body-progress">
-            <app-progress-indicator
-              [answered]="answeredCount()"
-              [total]="totalCount()"
-              [percentage]="progressPercentage()"
-              [label]="headerLabels().progressLabel"
-            />
-            <app-legend-bar [scales]="activeSchema.scales" [scaleLabels]="texts.scales" />
-          </div>
-        }
-      </div>
-
-      <section #contentContainer class="checklist-page__content" [attr.aria-label]="headerLabels().title">
-
-        @switch (viewMode()) {
-          @case ('stepper') {
-            <app-checklist-stepper
-              [externalChromeHost]="true"
-              [groups]="filteredGroups()"
-              [scales]="activeSchema.scales"
-              [answers]="answers()"
-              [activeStep]="activeStepperStep()"
-              [texts]="texts"
-              [labels]="stepperLabels()"
-              [answeredCount]="answeredCount()"
-              [totalCount]="totalCount()"
-              [progressPercentage]="progressPercentage()"
-              [progressLabel]="headerLabels().progressLabel"
-              (activeStepChange)="onActiveStepChange($event)"
-              (answerChange)="onAnswerChange($event)"
-              (readItemAloud)="onReadItemAloud($event)"
-              (finishChecklist)="onFinishChecklist()"
-            />
-          }
-
-    @case ('classic') {
-    <app-classic-kink-sheet [groups]="filteredGroups()" [scales]="activeSchema.scales" [answers]="answers()"
-      [texts]="texts" [noResultsText]="noResultsText()" [finishLabel]="finishLabel()"
-      [otherPlaceholder]="otherPlaceholder()" [readAloudLabel]="readAloudLabel()" [classicHint]="classicHint()"
-      (answerChange)="onAnswerChange($event)" (readItemAloud)="onReadItemAloud($event)"
-      (finishChecklist)="onFinishChecklist()" />
-    }
-
-    @case ('full') {
-    <app-full-view-container [groups]="filteredGroups()" [scales]="activeSchema.scales" [answers]="answers()"
-      [texts]="texts" [noResultsText]="noResultsText()" [finishLabel]="finishLabel()" [quickNavTitle]="quickNavTitle()"
-      [otherPlaceholder]="otherPlaceholder()" [readAloudLabel]="readAloudLabel()"
-      (answerChange)="onAnswerChange($event)" (readItemAloud)="onReadItemAloud($event)"
-      (finishChecklist)="onFinishChecklist()" />
-    }
-
-    @case ('quick_fill') {
-    <app-quick-fill-wizard-modal [visible]="true" [inline]="true" [groups]="filteredGroups()"
-      [scales]="activeSchema.scales" [answers]="answers()" [texts]="texts" [labels]="quickFillLabels()"
-      [readAloudLabel]="readAloudLabel()" (answerChange)="onAnswerChange($event)"
-      (readAloud)="onReadTextAloud($event)" />
-    }
-    }
-  </section>
+        </section>
       }
-  }
+    }
   }
 </div>

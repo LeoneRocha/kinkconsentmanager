@@ -1,6 +1,7 @@
 export * from './checklist.routes';
 export * from './pages/checklist-page';
 export * from './components/checklist-header';
+export * from './components/checklist-progress-bar';
 export * from './components/category-accordion';
 export * from './components/checklist-stepper';
 export * from './components/classic-kink-sheet';

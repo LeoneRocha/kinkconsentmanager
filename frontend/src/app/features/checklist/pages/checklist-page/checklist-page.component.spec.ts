@@ -316,6 +316,9 @@ describe('ChecklistPageComponent', () => {
     expect(checklistState.answers()['item_safeword']).toEqual({ selectedOption: 'opt_traffic' });
     expect(checklistState.answeredItemsCount()).toBe(1);
     expect(checklistState.progressPercentage()).toBe(50);
+    expect(hostEl.querySelector('app-checklist-progress-bar')).not.toBeNull();
+    expect(hostEl.querySelector('.checklist-progress-bar__save-btn')).not.toBeNull();
+    expect(hostEl.querySelector('.checklist-progress-bar__export-btn')).not.toBeNull();
 
     // Switch to classic view, full view, and quick_fill view
     const modeButtons = hostEl.querySelectorAll<HTMLElement>(
@@ -328,18 +331,30 @@ describe('ChecklistPageComponent', () => {
     expect(checklistState.viewMode()).toBe('classic');
     expect(hostEl.querySelector('app-classic-kink-sheet')).not.toBeNull();
     expect(hostEl.querySelector('app-checklist-stepper')).toBeNull();
+    expect(hostEl.querySelector('app-checklist-progress-bar')).not.toBeNull();
 
     modeButtons[2].click();
     await fixture.whenStable();
     expect(checklistState.viewMode()).toBe('full');
     expect(hostEl.querySelector('app-full-view-container')).not.toBeNull();
     expect(hostEl.querySelector('app-classic-kink-sheet')).toBeNull();
+    expect(hostEl.querySelector('app-checklist-progress-bar')).not.toBeNull();
 
     modeButtons[3].click();
     await fixture.whenStable();
     expect(checklistState.viewMode()).toBe('quick_fill');
     expect(hostEl.querySelector('.quick-fill-inline')).not.toBeNull();
     expect(hostEl.querySelector('app-full-view-container')).toBeNull();
+    expect(hostEl.querySelector('app-checklist-progress-bar')).not.toBeNull();
+
+    // Collapse header controls -> progress bar and Save/Export/Autosave remain visible
+    hostEl.querySelector<HTMLButtonElement>('.checklist-header__toggle-btn')?.click();
+    await fixture.whenStable();
+    expect(hostEl.querySelector('#checklist-header-body')).toBeNull();
+    expect(hostEl.querySelector('app-checklist-progress-bar')).not.toBeNull();
+    expect(hostEl.querySelector('.checklist-progress-bar__save-btn')).not.toBeNull();
+    expect(hostEl.querySelector('.checklist-progress-bar__export-btn')).not.toBeNull();
+    expect(hostEl.querySelector('.checklist-progress-bar__autosave-toggle')).not.toBeNull();
   });
 
   it('should switch language without losing answers and update searchable labels via effect', async () => {
@@ -421,9 +436,9 @@ describe('ChecklistPageComponent', () => {
       .mockReturnValueOnce(of(true));
     const saveNowSpy = jest.spyOn(autosaveService, 'saveNow').mockResolvedValue(true);
     const clearAutosaveSpy = jest.spyOn(autosaveService, 'clearAutosave');
-    const saveBtn = hostEl.querySelector<HTMLButtonElement>('.checklist-header__save-btn');
+    const saveBtn = hostEl.querySelector<HTMLButtonElement>('.checklist-progress-bar__save-btn');
     expect(saveBtn?.textContent).toContain('Salvar');
-    expect(hostEl.querySelector('.checklist-header__save-meta')?.textContent).toContain(
+    expect(hostEl.querySelector('.checklist-progress-bar__save-meta')?.textContent).toContain(
       'Autosave criptografado ativo',
     );
     saveBtn!.click();
@@ -431,13 +446,13 @@ describe('ChecklistPageComponent', () => {
     expect(saveNowSpy).toHaveBeenCalledTimes(1);
 
     const autosaveToggle = hostEl.querySelector<HTMLButtonElement>(
-      '.checklist-header__autosave-toggle button[role="switch"]',
+      '.checklist-progress-bar__autosave-toggle button[role="switch"]',
     );
     expect(autosaveToggle).not.toBeNull();
     autosaveToggle!.click();
     await fixture.whenStable();
     expect(autosaveService.isEnabled()).toBe(false);
-    expect(hostEl.querySelector('.checklist-header__save-meta')?.textContent).toContain(
+    expect(hostEl.querySelector('.checklist-progress-bar__save-meta')?.textContent).toContain(
       'Salvamento automático desativado',
     );
     autosaveToggle!.click();

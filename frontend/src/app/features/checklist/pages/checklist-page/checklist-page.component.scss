@@ -55,12 +55,14 @@
     font-size: 1rem;
   }
 
-  &__body-progress {
-    @include m.card-surface;
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-    padding: 0.75rem 1.25rem;
+  &__legend-strip {
+    padding: 0.625rem 1.25rem;
+    border-top: 1px solid v.$border-color;
+    background-color: v.$surface-card;
+
+    @include m.respond-md {
+      padding: 0.55rem 1.5rem;
+    }
   }
 
   &__content {

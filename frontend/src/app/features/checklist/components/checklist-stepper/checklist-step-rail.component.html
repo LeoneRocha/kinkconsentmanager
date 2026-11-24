@@ -1,6 +1,6 @@
-<div class="stepper__chrome-card">
+<div class="stepper__chrome-card" [class.stepper__chrome-card--embedded]="embedded()">
   <div class="stepper__chrome">
-    @if (totalCount() > 0) {
+    @if (showProgress() && totalCount() > 0) {
       <app-progress-indicator
         [answered]="answeredCount()"
         [total]="totalCount()"
@@ -14,7 +14,9 @@
         {{ labels().stepLabel }} {{ safeStep() + 1 }} {{ labels().stepOfLabel }} {{ totalSteps() }}
       </span>
       <strong>
-        {{ isReviewStep() ? labels().reviewTitle : (currentGroup() ? groupTitle(currentGroup()!) : '') }}
+        {{
+          isReviewStep() ? labels().reviewTitle : currentGroup() ? groupTitle(currentGroup()!) : ''
+        }}
       </strong>
     </div>
 

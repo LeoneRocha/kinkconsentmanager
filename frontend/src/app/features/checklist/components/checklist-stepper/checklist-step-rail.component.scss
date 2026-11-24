@@ -20,6 +20,13 @@
     @include m.card-surface;
     overflow: hidden;
     @extend %col;
+
+    &--embedded {
+      border: none;
+      border-radius: 0;
+      box-shadow: none;
+      border-top: 1px solid v.$border-color;
+    }
   }
 
   &__chrome {
@@ -127,7 +134,9 @@
     color: v.$text-secondary;
     cursor: pointer;
     text-align: center;
-    transition: color 0.15s ease, opacity 0.15s ease;
+    transition:
+      color 0.15s ease,
+      opacity 0.15s ease;
 
     &:hover {
       color: v.$text-primary;

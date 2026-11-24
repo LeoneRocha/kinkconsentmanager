@@ -1,0 +1,106 @@
+@use 'variables' as v;
+@use 'mixins' as m;
+
+.checklist-progress-bar {
+  @include m.card-surface;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+
+  &__main {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 0.875rem 1.25rem;
+
+    @include m.respond-md {
+      padding: 0.875rem 1.5rem;
+    }
+  }
+
+  &__actions {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.625rem;
+    padding-top: 0.625rem;
+    border-top: 1px solid v.$border-color;
+
+    @include m.respond-md {
+      flex-direction: row;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+  }
+
+  &__save-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  &__autosave-row {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.45rem;
+
+    @include m.respond-md {
+      flex-direction: row;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.75rem;
+    }
+  }
+
+  &__save-meta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.35rem 0.75rem;
+    border-radius: 9999px;
+    background-color: v.$surface-subtle;
+    border: 1px solid v.$border-color;
+    font-size: 0.75rem;
+    color: v.$text-secondary;
+  }
+}
+
+:host ::ng-deep {
+  .checklist-progress-bar__save-btn,
+  .checklist-progress-bar__export-btn {
+    min-height: v.$min-touch-target;
+    gap: 0.5rem;
+    --mat-button-filled-container-color: var(--kcm-surface-subtle);
+    --mat-button-filled-label-text-color: var(--kcm-text-muted);
+    --mat-button-filled-disabled-container-color: var(--kcm-surface-subtle);
+    --mat-button-filled-disabled-label-text-color: var(--kcm-text-muted);
+
+    &:disabled {
+      border: 1px solid var(--kcm-border-color);
+      opacity: 0.72;
+    }
+  }
+
+  .checklist-progress-bar__save-btn--dirty:not(:disabled),
+  .checklist-progress-bar__export-btn--ready:not(:disabled) {
+    --mat-button-filled-container-color: #16a34a;
+    --mat-button-filled-label-text-color: #ffffff;
+    --mat-sys-primary: #16a34a;
+
+    &:hover {
+      --mat-button-filled-container-color: #15803d;
+    }
+  }
+
+  .checklist-progress-bar__autosave-toggle {
+    font-size: 0.8rem;
+    --mat-slide-toggle-selected-track-color: #16a34a;
+    --mat-slide-toggle-selected-hover-track-color: #15803d;
+    --mat-slide-toggle-selected-focus-track-color: #16a34a;
+  }
+}

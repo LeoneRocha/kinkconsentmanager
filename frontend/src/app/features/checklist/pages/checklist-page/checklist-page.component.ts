@@ -31,8 +31,12 @@ import {
   TelemetryService,
   UiFeedbackHostService,
 } from '../../../../core/services';
-import { LegendBarComponent, ProgressIndicatorComponent } from '../../../../shared/components';
+import { LegendBarComponent } from '../../../../shared/components';
 import { ChecklistHeaderComponent, ChecklistHeaderLabels } from '../../components/checklist-header';
+import {
+  ChecklistProgressBarComponent,
+  ChecklistProgressBarLabels,
+} from '../../components/checklist-progress-bar';
 import {
   ChecklistModeSelectorComponent,
   ChecklistModeSelectorLabels,
@@ -58,8 +62,8 @@ import {
   imports: [
     MatButtonModule,
     LegendBarComponent,
-    ProgressIndicatorComponent,
     ChecklistHeaderComponent,
+    ChecklistProgressBarComponent,
     ChecklistModeSelectorComponent,
     ChecklistStepRailComponent,
     ChecklistStepperComponent,
@@ -140,20 +144,11 @@ export class ChecklistPageComponent implements OnInit {
       searchPlaceholder: this.i18n.translateUi('searchPlaceholder'),
       onlyUnanswered: this.i18n.translateUi('onlyUnanswered'),
       clearAll: this.i18n.translateUi('clearAll'),
-      progressLabel: this.i18n.translateUi('progressLabel'),
-      exportButton: this.i18n.translateUi('navExport'),
       legendTitle: this.i18n.translateUi('legendTitle'),
-      privacyNotice: this.i18n.translateUi('privacyNotice'),
       clearSearch: this.i18n.translateUi('clearSelection'),
       controlsSectionTitle: this.translateWithFallback(
         'headerControlsSection',
         'Visualização, Filtros e Ações',
-      ),
-      saveNowTooltip: this.translateWithFallback('autosaveSaveNow', 'Salvar agora (criptografado)'),
-      saveButton: this.translateWithFallback('saveButton', 'Salvar'),
-      autosaveToggleLabel: this.translateWithFallback(
-        'autosaveToggleLabel',
-        'Salvamento automático',
       ),
       hideHeaderLabel: this.translateWithFallback('headerHide', 'Ocultar'),
       showHeaderLabel: this.translateWithFallback('headerShow', 'Mostrar'),
@@ -164,6 +159,20 @@ export class ChecklistPageComponent implements OnInit {
       showHeaderAriaLabel: this.translateWithFallback(
         'headerShowAriaLabel',
         'Mostrar cabeçalho do checklist',
+      ),
+    };
+  });
+
+  protected readonly progressBarLabels = computed<ChecklistProgressBarLabels>(() => {
+    this.i18n.currentLang();
+    return {
+      progressLabel: this.i18n.translateUi('progressLabel'),
+      saveButton: this.translateWithFallback('saveButton', 'Salvar'),
+      saveNowTooltip: this.translateWithFallback('autosaveSaveNow', 'Salvar agora (criptografado)'),
+      exportButton: this.i18n.translateUi('navExport'),
+      autosaveToggleLabel: this.translateWithFallback(
+        'autosaveToggleLabel',
+        'Salvamento automático',
       ),
     };
   });
