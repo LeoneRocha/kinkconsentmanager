@@ -76,11 +76,16 @@
           </header>
 
           @if (!isGroupCollapsed(group.id)) {
+            @let headerRoles = groupRoleHeader(group);
             @if (hasScaleItems(group)) {
-              @let headerRoles = groupRoleHeader(group);
-              <div class="classic-block__roles" aria-hidden="true">
+              <div
+                class="classic-block__roles"
+                [class.classic-block__roles--dual]="headerRoles.isDual && !!headerRoles.secondary"
+                aria-hidden="true"
+              >
                 <span class="classic-block__role-tag">{{ headerRoles.primary }}</span>
                 @if (headerRoles.isDual && headerRoles.secondary) {
+                  <span class="classic-block__roles-divider" aria-hidden="true"></span>
                   <span class="classic-block__role-tag">{{ headerRoles.secondary }}</span>
                 }
               </div>
@@ -119,9 +124,13 @@
                       </div>
                     </div>
 
-                    <div class="classic-row__scales">
+                    <div
+                      class="classic-row__scales"
+                      [class.classic-row__scales--dual]="
+                        headerRoles.isDual || isDualRole(group, item)
+                      "
+                    >
                       <div class="classic-row__role-col">
-                        <span class="classic-row__role-caption">{{ itemRoles.primary }}</span>
                         <div
                           class="classic-row__dot-group"
                           role="radiogroup"
@@ -161,9 +170,6 @@
                       @if (isDualRole(group, item)) {
                         <span class="classic-row__divider-v" aria-hidden="true"></span>
                         <div class="classic-row__role-col">
-                          <span class="classic-row__role-caption">{{
-                            itemRoles.secondary ?? ''
-                          }}</span>
                           <div
                             class="classic-row__dot-group"
                             role="radiogroup"

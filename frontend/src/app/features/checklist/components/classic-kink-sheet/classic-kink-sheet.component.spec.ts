@@ -122,14 +122,24 @@ describe('ClassicKinkSheetComponent', () => {
     await setBaseInputs();
   });
 
-  // Cenário: Renderização clássica em blocos agrupados com divisores e papéis.
-  // Objetivo: Garantir que cada categoria seja renderizada em bloco com seletores compactos e itens complexos integrados.
-  it('should render grouped category blocks, item title before Giving/Receiving dots, and complex items', () => {
+  // Cenário: Renderização clássica em blocos agrupados com cabeçalho tabular único por grupo e sem repetição nas linhas.
+  // Objetivo: Garantir que Giving/Receiving apareçam alinhados apenas no cabeçalho tabular e os grupos de escala mantenham aria-labels acessíveis.
+  it('should render grouped category blocks with tabular Giving/Receiving header without repeating captions per row', () => {
     const hostEl = fixture.nativeElement as HTMLElement;
     const blocks = hostEl.querySelectorAll('.classic-block');
     expect(blocks.length).toBe(2);
 
-    expect(hostEl.querySelectorAll('.classic-block__roles').length).toBe(1);
+    const roleHeader = hostEl.querySelector('.classic-block__roles');
+    expect(roleHeader).not.toBeNull();
+    expect(roleHeader?.classList.contains('classic-block__roles--dual')).toBe(true);
+    expect(roleHeader?.querySelector('.classic-block__roles-divider')).not.toBeNull();
+    expect(
+      Array.from(roleHeader?.querySelectorAll('.classic-block__role-tag') ?? []).map((el) =>
+        el.textContent?.trim(),
+      ),
+    ).toEqual(['Giving', 'Receiving']);
+
+    expect(hostEl.querySelectorAll('.classic-row__role-caption').length).toBe(0);
     expect(hostEl.querySelectorAll('app-dynamic-question-item').length).toBe(1);
     expect(hostEl.querySelectorAll('.classic-row__dot-group').length).toBe(3);
 
@@ -137,8 +147,11 @@ describe('ClassicKinkSheetComponent', () => {
     const children = Array.from(firstMatrixRow.children).map((el) => el.className);
     expect(children[0]).toContain('classic-row__item-meta');
     expect(children[1]).toContain('classic-row__scales');
-    expect(firstMatrixRow.textContent).toContain('Giving');
-    expect(firstMatrixRow.textContent).toContain('Receiving');
+    expect(children[1]).toContain('classic-row__scales--dual');
+
+    const radiogroups = firstMatrixRow.querySelectorAll('[role="radiogroup"]');
+    expect(radiogroups[0].getAttribute('aria-label')).toContain('Giving');
+    expect(radiogroups[1].getAttribute('aria-label')).toContain('Receiving');
   });
 
   // Cenário: Clique nos círculos de escala no modo Clássico para marcar e limpar resposta.
