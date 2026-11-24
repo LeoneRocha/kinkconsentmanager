@@ -480,15 +480,16 @@ export class ChecklistPageComponent implements OnInit {
         status: 'error',
       });
       this.feedbackHost.error(
-        `${importTitle} — ${isIncompatibleVersion
-          ? this.translateWithFallback(
-            'importErrorIncompatibleVersion',
-            'Versão do schema incompatível com este checklist.',
-          )
-          : this.translateWithFallback(
-            'importErrorInvalidJson',
-            'Arquivo inválido: não foi possível ler um rascunho JSON válido.',
-          )
+        `${importTitle} — ${
+          isIncompatibleVersion
+            ? this.translateWithFallback(
+                'importErrorIncompatibleVersion',
+                'Versão do schema incompatível com este checklist.',
+              )
+            : this.translateWithFallback(
+                'importErrorInvalidJson',
+                'Arquivo inválido: não foi possível ler um rascunho JSON válido.',
+              )
         }`,
         {
           actionLabel: this.translateWithFallback('notificationOkAction', 'OK'),
