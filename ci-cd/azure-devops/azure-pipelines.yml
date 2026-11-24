@@ -66,10 +66,6 @@ parameters:
 
 variables:
   # Defaults sobrescrevíveis via Variable Group `kinkconsentmanager-ci-vars` ou Variáveis da Pipeline:
-  - name: enableSonarCloud
-    value: 'false'
-  - name: enableSnykScan
-    value: 'false'
   - name: sonarOrganization
     value: 'lionscorp'
   - name: azureWebAppName
@@ -85,6 +81,43 @@ variables:
     value: '$(Build.SourcesDirectory)/frontend/dist/kinkconsentmanager/browser'
   - name: npmCacheFolder
     value: '$(Pipeline.Workspace)/.npm'
+  # Precedência: 1º Parâmetro alterado -> 2º Variável (Pipeline UI / Variable Group) -> 3º Default
+  - ${{ if ne(parameters.nodeVersion, '24.x') }}:
+    - name: resolvedNodeVersion
+      value: '${{ parameters.nodeVersion }}'
+  - ${{ else }}:
+    - name: resolvedNodeVersion
+      value: $[ coalesce(variables['nodeVersion'], '24.x') ]
+  - ${{ if eq(parameters.useLegacyPeerDeps, false) }}:
+    - name: resolvedUseLegacyPeerDeps
+      value: 'false'
+  - ${{ else }}:
+    - name: resolvedUseLegacyPeerDeps
+      value: $[ coalesce(variables['useLegacyPeerDeps'], 'true') ]
+  - ${{ if eq(parameters.enableSonarCloud, true) }}:
+    - name: resolvedEnableSonarCloud
+      value: 'true'
+  - ${{ else }}:
+    - name: resolvedEnableSonarCloud
+      value: $[ coalesce(variables['enableSonarCloud'], 'false') ]
+  - ${{ if eq(parameters.enableSnykScan, true) }}:
+    - name: resolvedEnableSnykScan
+      value: 'true'
+  - ${{ else }}:
+    - name: resolvedEnableSnykScan
+      value: $[ coalesce(variables['enableSnykScan'], 'false') ]
+  - ${{ if eq(parameters.enableDockerPublish, true) }}:
+    - name: resolvedEnableDockerPublish
+      value: 'true'
+  - ${{ else }}:
+    - name: resolvedEnableDockerPublish
+      value: $[ coalesce(variables['enableDockerPublish'], 'false') ]
+  - ${{ if eq(parameters.enableAzureDeploy, true) }}:
+    - name: resolvedEnableAzureDeploy
+      value: 'true'
+  - ${{ else }}:
+    - name: resolvedEnableAzureDeploy
+      value: $[ coalesce(variables['enableAzureDeploy'], 'false') ]
 
 stages:
   # ============================================================================
@@ -104,9 +137,9 @@ stages:
             displayName: 'Checkout completo (fetchDepth: 0 para SonarCloud)'
 
           - task: NodeTool@0
-            displayName: 'Instalar Node.js ${{ parameters.nodeVersion }}'
+            displayName: 'Instalar Node.js'
             inputs:
-              versionSpec: '${{ parameters.nodeVersion }}'
+              versionSpec: '$(resolvedNodeVersion)'
 
           - task: Cache@2
             displayName: 'Cache de pacotes npm'
@@ -117,14 +150,22 @@ stages:
               path: '$(npmCacheFolder)'
 
           - task: Npm@1
-            displayName: 'npm ci (instalação determinística em frontend/)'
+            displayName: 'npm ci --legacy-peer-deps (instalação determinística em frontend/)'
+            condition: and(succeeded(), eq(variables['resolvedUseLegacyPeerDeps'], 'true'))
             inputs:
               command: 'custom'
               workingDir: '$(frontendDir)'
-              ${{ if eq(parameters.useLegacyPeerDeps, true) }}:
-                customCommand: 'ci --legacy-peer-deps'
-              ${{ else }}:
-                customCommand: 'ci'
+              customCommand: 'ci --legacy-peer-deps'
+            env:
+              NPM_CONFIG_CACHE: '$(npmCacheFolder)'
+              NPM_CONFIG_PREFER_OFFLINE: 'true'
+
+          - task: Npm@1
+            displayName: 'npm ci (instalação determinística em frontend/)'
+            condition: and(succeeded(), ne(variables['resolvedUseLegacyPeerDeps'], 'true'))
+            inputs:
+              command: 'ci'
+              workingDir: '$(frontendDir)'
             env:
               NPM_CONFIG_CACHE: '$(npmCacheFolder)'
               NPM_CONFIG_PREFER_OFFLINE: 'true'
@@ -139,7 +180,7 @@ stages:
 
           - task: SnykSecurityScan@1
             displayName: 'Snyk Scan de vulnerabilidades Open Source'
-            condition: and(succeeded(), or(eq('${{ parameters.enableSnykScan }}', true), eq(variables['enableSnykScan'], 'true')))
+            condition: and(succeeded(), eq(variables['resolvedEnableSnykScan'], 'true'))
             inputs:
               serviceConnectionEndpoint: '$(snykServiceConnection)'
               testType: 'app'
@@ -163,7 +204,7 @@ stages:
 
           - task: SonarCloudPrepare@3
             displayName: 'SonarCloud — Preparar análise (CLI)'
-            condition: and(succeeded(), or(eq('${{ parameters.enableSonarCloud }}', true), eq(variables['enableSonarCloud'], 'true')))
+            condition: and(succeeded(), eq(variables['resolvedEnableSonarCloud'], 'true'))
             inputs:
               SonarCloud: '$(sonarCloudServiceConnection)'
               organization: '$(sonarOrganization)'
@@ -173,11 +214,11 @@ stages:
 
           - task: SonarCloudAnalyze@3
             displayName: 'SonarCloud — Executar análise de código e cobertura'
-            condition: and(succeeded(), or(eq('${{ parameters.enableSonarCloud }}', true), eq(variables['enableSonarCloud'], 'true')))
+            condition: and(succeeded(), eq(variables['resolvedEnableSonarCloud'], 'true'))
 
           - task: SonarCloudPublish@3
             displayName: 'SonarCloud — Publicar Quality Gate'
-            condition: and(succeeded(), or(eq('${{ parameters.enableSonarCloud }}', true), eq(variables['enableSonarCloud'], 'true')))
+            condition: and(succeeded(), eq(variables['resolvedEnableSonarCloud'], 'true'))
             inputs:
               pollingTimeoutSec: '300'
 
@@ -250,7 +291,7 @@ stages:
     condition: |
       and(
         succeeded(),
-        eq('${{ parameters.enableDockerPublish }}', true),
+        eq(variables['resolvedEnableDockerPublish'], 'true'),
         eq(variables['Build.SourceBranch'], 'refs/heads/main')
       )
     pool:
@@ -303,7 +344,7 @@ stages:
     condition: |
       and(
         succeeded(),
-        eq('${{ parameters.enableAzureDeploy }}', true),
+        eq(variables['resolvedEnableAzureDeploy'], 'true'),
         eq(variables['Build.SourceBranch'], 'refs/heads/main')
       )
     pool:

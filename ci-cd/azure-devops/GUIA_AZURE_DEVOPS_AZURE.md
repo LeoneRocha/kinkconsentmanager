@@ -176,28 +176,67 @@ Necessária apenas quando você quiser rodar com `enableSnykScan: true`:
 
 ## Passo 5 — Criar o Variable Group `kinkconsentmanager-ci-vars`
 
-O arquivo [`azure-pipelines.yml`](./azure-devops/azure-pipelines.yml) referencia explicitamente `- group: kinkconsentmanager-ci-vars`. Sem esse Variable Group criado e autorizado, o Azure DevOps recusa iniciar o pipeline.
+O arquivo [`azure-pipelines.yml`](./azure-pipelines.yml) referencia explicitamente `- group: kinkconsentmanager-ci-vars`. Sem esse Variable Group criado e autorizado, o Azure DevOps recusa iniciar o pipeline.
 
 1. No Azure DevOps, acesse **Pipelines → Library → + Variable group**.
 2. Em **Variable group name**, digite exatamente: **`kinkconsentmanager-ci-vars`**.
-3. Adicione as variáveis abaixo na seção **Variables**:
+3. Cadastre as variáveis conforme as subseções abaixo:
+
+### 5.1 Service Connections e URL (Cadastrar em `kinkconsentmanager-ci-vars`)
 
 | Nome da Variável | Valor Exemplo / Referência | Marcar como Secret? | Obrigatória? |
 | ---------------- | -------------------------- | ------------------- | ------------ |
-| `enableSonarCloud` | `'false'` *(padrão desativado; mude para `'true'` quando quiser ativar via variável)* | Não | Opcional (sobrescreve o padrão `'false'` do YAML) |
-| `enableSnykScan` | `'false'` *(padrão desativado; mude para `'true'` quando quiser ativar via variável)* | Não | Opcional (sobrescreve o padrão `'false'` do YAML) |
 | `azureServiceConnection` | Nome exato da Service Connection criada no Passo 4.1 (ex.: `azure-kinkconsentmanager-oidc`) | Não | Sim (para `enableAzureDeploy: true`) |
 | `sonarCloudServiceConnection` | Nome exato da Service Connection criada no Passo 4.2 (ex.: `sonarcloud-lionscorp`) | Não | Sim (mantenha cadastrada mesmo com Sonar desativado, para validação inicial do YAML) |
+| `snykServiceConnection` | Nome exato da Service Connection Snyk do Passo 4.4 (ex.: `snyk-kinkconsentmanager`) | Não | Sim (mantenha cadastrada mesmo com Snyk desativado, para validação inicial do YAML) |
+| `dockerRegistryServiceConnection` | Nome exato da Service Connection Docker do Passo 4.3 (ex.: `dockerhub-leonecr`) | Não | Somente se `enableDockerPublish: true` |
 | `AZURE_WEBAPP_URL` | URL exata exibida em *Domínios padrão* do Web App no Azure (ex.: `https://kinkconsentmanagerapp.azurewebsites.net`) | Não | Recomendada (usada no smoke test pós-deploy) |
-| `dockerRegistryServiceConnection` | Nome exato da Service Connection Docker do Passo 4.3 | Não | Somente se `enableDockerPublish: true` |
-| `snykServiceConnection` | Nome exato da Service Connection Snyk do Passo 4.4 | Não | Sim (mantenha cadastrada mesmo com Snyk desativado, para validação inicial do YAML) |
 
-4. Clique em **Save**.
+### 5.2 Variáveis de Controle / Parâmetros (Precedência: 1º Parâmetro no Run → 2º Variável → 3º Default)
+
+Estas variáveis espelham os 6 parâmetros de execução do pipeline. Cadastre no Variable Group ou nas **Variáveis da Pipeline** apenas as que desejar controlar sem editar o YAML:
+
+| Nome da Variável | Valor Padrão (Default) | Descrição |
+| ---------------- | ---------------------- | --------- |
+| `nodeVersion` | `'24.x'` | Versão do Node.js instalada pelo `NodeTool@0` |
+| `useLegacyPeerDeps` | `'true'` | Quando `'true'`, executa `npm ci --legacy-peer-deps`; quando `'false'`, executa `npm ci` estrito |
+| `enableSonarCloud` | `'false'` | Liga/desliga análise e Quality Gate no SonarCloud |
+| `enableSnykScan` | `'false'` | Liga/desliga a task `SnykSecurityScan@1` |
+| `enableDockerPublish` | `'false'` | Liga/desliga o estágio `CD_Docker_Image` (somente `refs/heads/main`) |
+| `enableAzureDeploy` | `'false'` | Liga/desliga o estágio `CD_Deploy_Azure` (somente `refs/heads/main` com aprovação) |
+
+### 5.3 Variáveis de Infraestrutura com Valor Padrão no YAML (Sobrescrevíveis via Variable Group / UI)
+
+Declaradas **antes** de `- group: kinkconsentmanager-ci-vars` no YAML, portanto assumem o valor padrão abaixo automaticamente e podem ser sobrescritas pelo Variable Group ou pelas Variáveis da Pipeline quando necessário:
+
+| Nome da Variável | Valor Padrão no YAML | Descrição |
+| ---------------- | -------------------- | --------- |
+| `sonarOrganization` | `'lionscorp'` | Organização do SonarCloud |
+| `azureWebAppName` | `'kinkconsentmanagerapp'` | Nome do Azure App Service Linux de destino |
+| `azureStartupCommand` | `'pm2 serve /home/site/wwwroot --no-daemon --spa'` | Comando de inicialização SPA aplicado pelo `AzureWebApp@1` |
+| `dockerImageRepository` | `'leonecr/kinkconsentmanager-ui'` | Repositório da imagem Docker publicada em `CD_Docker_Image` |
+
+### 5.4 Variáveis Internas do Pipeline (Definidas no YAML — não precisam ser cadastradas)
+
+Geradas e mantidas diretamente no [`azure-pipelines.yml`](./azure-pipelines.yml) após `- group: kinkconsentmanager-ci-vars`:
+
+| Nome da Variável | Valor no YAML | Finalidade |
+| ---------------- | ------------- | ---------- |
+| `frontendDir` | `'$(Build.SourcesDirectory)/frontend'` | Diretório de trabalho do projeto Angular |
+| `distBrowserDir` | `'$(Build.SourcesDirectory)/frontend/dist/kinkconsentmanager/browser'` | Pasta de saída do bundle SPA (`build:prod`) |
+| `npmCacheFolder` | `'$(Pipeline.Workspace)/.npm'` | Pasta usada pelo `Cache@2` e por `NPM_CONFIG_CACHE` |
+| `resolvedNodeVersion` | Resolutivo (`parameters.nodeVersion` → `variables['nodeVersion']` → `'24.x'`) | Versão efetiva aplicada ao `NodeTool@0` |
+| `resolvedUseLegacyPeerDeps` | Resolutivo (`parameters.useLegacyPeerDeps` → `variables['useLegacyPeerDeps']` → `'true'`) | Define qual step `Npm@1` de `ci` executará |
+| `resolvedEnableSonarCloud` | Resolutivo (`parameters.enableSonarCloud` → `variables['enableSonarCloud']` → `'false'`) | Controla execução das tasks do SonarCloud |
+| `resolvedEnableSnykScan` | Resolutivo (`parameters.enableSnykScan` → `variables['enableSnykScan']` → `'false'`) | Controla execução da task `SnykSecurityScan@1` |
+| `resolvedEnableDockerPublish` | Resolutivo (`parameters.enableDockerPublish` → `variables['enableDockerPublish']` → `'false'`) | Controla execução do estágio `CD_Docker_Image` |
+| `resolvedEnableAzureDeploy` | Resolutivo (`parameters.enableAzureDeploy` → `variables['enableAzureDeploy']` → `'false'`) | Controla execução do estágio `CD_Deploy_Azure` |
+
+4. Clique em **Save** no Variable Group `kinkconsentmanager-ci-vars`.
 5. *(Opcional)* Após criar o pipeline no Passo 7, volte em **Pipelines → Library → `kinkconsentmanager-ci-vars` → Pipeline permissions** e autorize o pipeline (ou clique em **Authorize resources** na primeira execução).
 
-> **Atenção — Precedência e validação de conexões no YAML:**
-> - **Sobrescrita via Variable Group / UI:** No [`azure-pipelines.yml`](./azure-devops/azure-pipelines.yml), os padrões `enableSonarCloud` (`'false'`), `enableSnykScan` (`'false'`), `sonarOrganization` (`lionscorp`), `azureWebAppName` (`kinkconsentmanagerapp`), `azureStartupCommand` (`pm2 serve /home/site/wwwroot --no-daemon --spa`) e `dockerImageRepository` (`leonecr/kinkconsentmanager-ui`) são declarados **antes** de `- group: kinkconsentmanager-ci-vars`, permitindo sobrescrita direta pelo Variable Group ou pelas variáveis da pipeline na UI do Azure DevOps.
-> - **Validação das Service Connections:** Como os steps de Snyk (`SnykSecurityScan@1`) e SonarCloud (`SonarCloudPrepare@3`, `SonarCloudAnalyze@3`, `SonarCloudPublish@3`) são avaliados em tempo de execução via `condition:` (para responderem tanto a parâmetros quanto a variáveis da pipeline), o Azure DevOps valida que `sonarCloudServiceConnection` e `snykServiceConnection` apontam para Service Connections válidas no momento em que o run inicia, mesmo quando `enableSonarCloud` e `enableSnykScan` estiverem como `false`.
+> **Atenção — Validação das Service Connections em tempo de inicialização:**
+> Como os steps de Snyk (`SnykSecurityScan@1`) e SonarCloud (`SonarCloudPrepare@3`, `SonarCloudAnalyze@3`, `SonarCloudPublish@3`) são avaliados em tempo de execução via `condition:` (para responderem tanto a parâmetros quanto a variáveis da pipeline), o Azure DevOps valida que `sonarCloudServiceConnection` e `snykServiceConnection` apontam para Service Connections válidas no momento em que o run inicia, mesmo quando `enableSonarCloud` e `enableSnykScan` estiverem como `false`.
 
 ---
 
