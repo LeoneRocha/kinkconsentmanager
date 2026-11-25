@@ -1,4 +1,6 @@
-export type ExportFormat = 'png' | 'pdf' | 'print' | 'json' | 'csv';
+export type ExportFormat = 'png' | 'pdf' | 'print' | 'json' | 'csv' | 'xlsx';
+
+export type ExportSummaryLayout = 'modern' | 'classic';
 
 export interface ExportResult {
   readonly format: ExportFormat;
@@ -37,7 +39,9 @@ export interface ResolvedPreviewTexts {
   readonly otherLabel: string;
   readonly scales: Readonly<Record<string, string>>;
   readonly roles: Readonly<Record<string, ResolvedRolePairLabels>>;
-  readonly groups: Readonly<Record<string, { readonly title: string; readonly description?: string }>>;
+  readonly groups: Readonly<
+    Record<string, { readonly title: string; readonly description?: string }>
+  >;
   readonly items: Readonly<Record<string, { readonly label: string; readonly tooltip?: string }>>;
   readonly options: Readonly<Record<string, string>>;
 }

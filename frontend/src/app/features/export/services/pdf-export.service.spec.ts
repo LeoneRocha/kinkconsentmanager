@@ -1,6 +1,8 @@
 import { TestBed } from '@angular/core/testing';
 import type { Content, ContentTable, TDocumentDefinitions } from 'pdfmake/interfaces';
 import { ChecklistSchema, FlattenedChecklistRow, ResolvedPreviewTexts } from '../../../core/models';
+import { BackgroundWorkerMessage, DRAFT_IMPORT_WORKER_FACTORY } from '../../../core/services';
+import { FileDownloadService } from './file-download.service';
 import { PDF_MAKER_LOADER, PdfExportService, PdfMakerInstance } from './pdf-export.service';
 
 const MOCK_SCHEMA: ChecklistSchema = {
@@ -207,6 +209,77 @@ describe('PdfExportService', () => {
       filename: 'failed.pdf',
       success: false,
       errorMessage: 'Failed to load vfs_fonts',
+    });
+  });
+
+  // Cenário: Construção de PDF seguindo o layout Clássico.
+  // Objetivo: Garantir paleta carmesim clássica, títulos em caixa alta e omissão da descrição das categorias.
+  it('should apply classic crimson header styles when layout is classic', () => {
+    const docDef = service.buildDocumentDefinition(MOCK_SCHEMA, MOCK_ROWS, MOCK_TEXTS, 'classic');
+    const serialized = JSON.stringify(docDef.content);
+
+    expect(serialized).toContain('KINK CONSENT MANAGER REPORT');
+    expect(serialized).toContain('#DC2626');
+    expect(serialized).toContain('#FEE2E2');
+    expect(serialized).not.toContain('Essential protocols');
+  });
+
+  // Cenário: Geração de PDF acelerada por Web Worker transferindo bytes prontos.
+  // Objetivo: Confirmar uso do worker quando disponível e download direto do Blob sem chamar o loader principal.
+  it('should download worker-generated PDF Blob directly when Web Worker returns PDF bytes', async () => {
+    const listeners = new Map<string, ((event: unknown) => void)[]>();
+    const downloadBlobMock = jest.fn();
+    const fakeWorker = {
+      postMessage: jest.fn((req: { requestId: string }) => {
+        queueMicrotask(() => {
+          const msg: BackgroundWorkerMessage = {
+            type: 'result',
+            requestId: req.requestId,
+            task: 'export_pdf',
+            buffer: new Uint8Array([0x25, 0x50, 0x44, 0x46]).buffer,
+          };
+          (listeners.get('message') ?? []).forEach((cb) => cb({ data: msg }));
+        });
+      }),
+      terminate: jest.fn(),
+      addEventListener: jest.fn((type: string, cb: (event: unknown) => void) => {
+        listeners.set(type, [...(listeners.get(type) ?? []), cb]);
+      }),
+      removeEventListener: jest.fn((type: string, cb: (event: unknown) => void) => {
+        listeners.set(
+          type,
+          (listeners.get(type) ?? []).filter((entry) => entry !== cb),
+        );
+      }),
+    } as unknown as Worker;
+
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      providers: [
+        { provide: PDF_MAKER_LOADER, useValue: loaderMock },
+        { provide: DRAFT_IMPORT_WORKER_FACTORY, useValue: () => fakeWorker },
+        {
+          provide: FileDownloadService,
+          useValue: { downloadBlob: downloadBlobMock, downloadDataUrl: jest.fn() },
+        },
+      ],
+    });
+
+    const workerPdfService = TestBed.inject(PdfExportService);
+    const result = await workerPdfService.exportPdf(
+      MOCK_SCHEMA,
+      MOCK_ROWS,
+      MOCK_TEXTS,
+      'worker-report',
+      'classic',
+    );
+
+    expect(loaderMock).not.toHaveBeenCalled();
+    expect(downloadBlobMock).toHaveBeenCalledWith(expect.any(Blob), 'worker-report.pdf');
+    expect(result).toEqual({
+      format: 'pdf',
+      filename: 'worker-report.pdf',
+      success: true,
     });
   });
 });

@@ -42,8 +42,8 @@ module.exports = {
   moduleNameMapper: {
     '^src/(.*)$': '<rootDir>/src/$1',
     '^@app/(.*)$': '<rootDir>/src/app/$1',
-    '^.*/draft-import-worker\\.factory$':
-      '<rootDir>/src/app/core/services/draft-import-worker.factory.mock.ts',
+    '^.*/background-task-worker\\.factory$':
+      '<rootDir>/src/app/core/workers/background-task-worker.factory.mock.ts',
   },
   reporters: [
     'default',

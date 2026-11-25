@@ -139,7 +139,29 @@
     height: 100%;
     border-radius: 9999px;
     background: linear-gradient(90deg, v.$accent-primary, #16a34a);
-    transition: width 0.22s ease-out;
+    transition: width 0.14s linear;
+
+    &--completed {
+      background: #16a34a;
+    }
+  }
+
+  &__ring--completed {
+    animation: none;
+    border-color: #16a34a;
+  }
+
+  &__core--completed {
+    background-color: #16a34a;
+    color: #ffffff;
+    transform: scale(1.06);
+    transition:
+      background-color 0.18s ease,
+      transform 0.18s ease;
+  }
+
+  &__card--completed::before {
+    background: #16a34a;
   }
 
   &__progress-pct {

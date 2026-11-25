@@ -1,7 +1,6 @@
 import { TestBed } from '@angular/core/testing';
-import { DRAFT_IMPORT_WORKER_FACTORY } from './draft-import-worker.factory';
+import { DRAFT_IMPORT_WORKER_FACTORY, DraftImportWorkerMessage } from '../workers';
 import { DraftImportWorkerService } from './draft-import-worker.service';
-import { DraftImportWorkerMessage } from './draft-import.processor';
 
 describe('DraftImportWorkerService', () => {
   afterEach(() => {
@@ -71,14 +70,19 @@ describe('DraftImportWorkerService', () => {
     const service = TestBed.inject(DraftImportWorkerService);
     const file = new File(['{}'], 'meu-rascunho.json', { type: 'application/json' });
 
-    const promise = service.importDraftFile(file, '1.0.0', { minDisplayMs: 0 });
+    const promise = service.importDraftFile(file, '1.0.0', {
+      minDisplayMs: 0,
+      startDelayMs: 0,
+      completionDelayMs: 0,
+    });
     expect(service.isProcessing()).toBe(true);
     expect(service.fileName()).toBe('meu-rascunho.json');
 
     const outcome = await promise;
     expect(service.isProcessing()).toBe(false);
-    expect(service.stage()).toBe('parsing');
-    expect(service.progress()).toBe(55);
+    expect(service.isCompleted()).toBe(false);
+    expect(service.stage()).toBe('complete');
+    expect(service.progress()).toBe(100);
     expect(outcome.processedInWorker).toBe(true);
     expect(outcome.validation.valid).toBe(true);
     expect(outcome.answeredCount).toBe(1);

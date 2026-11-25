@@ -56,6 +56,10 @@ const PT_BR_TRANSLATIONS = {
     exportJson: 'Exportar JSON',
     importJson: 'Importar JSON',
     exportCsv: 'Exportar CSV',
+    exportXlsx: 'Exportar XLSX',
+    itemHeader: 'Prática / Item',
+    valueHeader: 'Resposta',
+    legendTitle: 'Legenda da Escala',
     schemaVersionLabel: 'Versão do Schema',
     generatedAtLabel: 'Gerado em',
     notAnswered: 'Não respondido',
@@ -288,7 +292,7 @@ describe('ExportPageComponent', () => {
     );
   });
 
-  it('should export PDF, JSON draft, and CSV with success snackbars', async () => {
+  it('should export PDF, JSON draft, CSV, and XLSX with success snackbars respecting selected layout', async () => {
     const successSpy = jest.spyOn(feedbackHost, 'success');
     checklistState.setItemAnswer('item_rope', { primaryScale: 'enjoy' });
     await createPage();
@@ -318,7 +322,19 @@ describe('ExportPageComponent', () => {
       expect.stringMatching(/^kink-consent-checklist-modern-\d{4}-\d{2}-\d{2}\.csv$/),
     );
 
-    expect(successSpy).toHaveBeenCalledTimes(3);
+    hostEl.querySelector<HTMLButtonElement>('button[data-layout="classic"]')?.click();
+    await fixture.whenStable();
+
+    hostEl.querySelector<HTMLButtonElement>('button[data-action="xlsx"]')?.click();
+    await fixture.whenStable();
+    expect(fileDownloadMock.downloadBlob).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      }),
+      expect.stringMatching(/^kink-consent-checklist-classic-\d{4}-\d{2}-\d{2}\.xlsx$/),
+    );
+
+    expect(successSpy).toHaveBeenCalledTimes(4);
   });
 
   it('should import a valid JSON draft file, update ChecklistStateService, and show success snackbar', async () => {

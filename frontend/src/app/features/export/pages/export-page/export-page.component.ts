@@ -17,6 +17,7 @@ import { take } from 'rxjs';
 import { ExportFormat, ExportResult, ResolvedPreviewTexts } from '../../../../core/models';
 import { SCHEMA_REPOSITORY_TOKEN } from '../../../../core/repositories';
 import {
+  BackgroundTaskWorkerService,
   ChecklistAutosaveService,
   ChecklistStateService,
   DraftImportWorkerService,
@@ -32,6 +33,7 @@ import {
   JsonDraftService,
   PdfExportService,
   PngExportService,
+  XlsxExportService,
 } from '../../services';
 
 /**
@@ -53,6 +55,7 @@ export class ExportPageComponent implements OnInit {
   private readonly checklistState = inject(ChecklistStateService);
   private readonly autosave = inject(ChecklistAutosaveService);
   private readonly draftImportWorker = inject(DraftImportWorkerService);
+  private readonly backgroundWorker = inject(BackgroundTaskWorkerService);
   private readonly i18n = inject(I18nService);
   private readonly schemaRepository = inject(SCHEMA_REPOSITORY_TOKEN);
   private readonly feedbackHost = inject(UiFeedbackHostService);
@@ -64,6 +67,7 @@ export class ExportPageComponent implements OnInit {
   private readonly pdfExport = inject(PdfExportService);
   private readonly jsonDraft = inject(JsonDraftService);
   private readonly csvExport = inject(CsvExportService);
+  private readonly xlsxExport = inject(XlsxExportService);
 
   private readonly pngCaptureContainer = viewChild<ElementRef<HTMLElement>>('pngCaptureContainer');
   private readonly generatedAtDate = signal<Date>(new Date());
@@ -130,10 +134,15 @@ export class ExportPageComponent implements OnInit {
     this.busyFormat.set('png');
     const startedAt = Date.now();
     try {
-      const result = await this.pngExport.exportElementAsPng(
-        captureElement,
-        this.buildExportFilename(),
-      );
+      const baseFilename = this.buildExportFilename();
+      const result = await this.backgroundWorker.runTrackedTask({
+        kind: 'export_png',
+        fileName: `${baseFilename}.png`,
+        initialStage: 'preparing',
+        options: { progressMode: 'virtual' },
+        shouldShowCompletion: (exportResult) => exportResult.success,
+        run: () => this.pngExport.exportElementAsPng(captureElement, baseFilename),
+      });
       this.notifyExportResult(result, Date.now() - startedAt);
     } finally {
       this.busyFormat.set(null);
@@ -151,11 +160,13 @@ export class ExportPageComponent implements OnInit {
     const startedAt = Date.now();
     try {
       const rows = this.checklistFlatten.flatten(activeSchema, this.answers(), texts);
+      const selectedLayout = this.previewLayout() ?? 'modern';
       const result = await this.pdfExport.exportPdf(
         activeSchema,
         rows,
         texts,
         this.buildExportFilename(),
+        selectedLayout,
       );
       this.notifyExportResult(result, Date.now() - startedAt);
     } finally {
@@ -261,7 +272,7 @@ export class ExportPageComponent implements OnInit {
     }
   }
 
-  protected onExportCsv(): void {
+  protected async onExportCsv(): Promise<void> {
     const activeSchema = this.schema();
     const texts = this.previewTexts();
     if (!activeSchema || !texts || this.busyFormat() !== null) {
@@ -272,7 +283,41 @@ export class ExportPageComponent implements OnInit {
     const startedAt = Date.now();
     try {
       const rows = this.checklistFlatten.flatten(activeSchema, this.answers(), texts);
-      const result = this.csvExport.exportCsv(rows, this.buildExportFilename());
+      const result = await this.csvExport.exportCsvInBackground(rows, this.buildExportFilename());
+      this.notifyExportResult(result, Date.now() - startedAt);
+    } finally {
+      this.busyFormat.set(null);
+    }
+  }
+
+  protected async onExportXlsx(): Promise<void> {
+    const activeSchema = this.schema();
+    const texts = this.previewTexts();
+    if (!activeSchema || !texts || this.busyFormat() !== null) {
+      return;
+    }
+
+    this.busyFormat.set('xlsx');
+    const startedAt = Date.now();
+    try {
+      const rows = this.checklistFlatten.flatten(activeSchema, this.answers(), texts);
+      const selectedLayout = this.previewLayout() ?? 'modern';
+      const result = await this.xlsxExport.exportXlsx(
+        activeSchema,
+        rows,
+        texts,
+        this.buildExportFilename(),
+        selectedLayout,
+        {
+          itemHeader: this.t('itemHeader'),
+          valueHeader: this.t('valueHeader'),
+          legendTitle: this.t('legendTitle'),
+          layoutLabel:
+            selectedLayout === 'classic'
+              ? this.t('exportLayoutClassic')
+              : this.t('exportLayoutModern'),
+        },
+      );
       this.notifyExportResult(result, Date.now() - startedAt);
     } finally {
       this.busyFormat.set(null);

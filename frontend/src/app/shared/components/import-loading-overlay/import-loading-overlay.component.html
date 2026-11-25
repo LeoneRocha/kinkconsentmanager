@@ -1,25 +1,34 @@
-@if (importWorker.isProcessing()) {
+@if (worker.isProcessing()) {
   <div
     class="import-overlay"
     role="status"
     aria-live="polite"
-    aria-busy="true"
+    [attr.aria-busy]="!worker.isCompleted()"
     [attr.aria-label]="titleText()"
   >
-    <div class="import-overlay__card">
+    <div
+      class="import-overlay__card"
+      [class.import-overlay__card--completed]="worker.isCompleted()"
+    >
       <div class="import-overlay__orbit" aria-hidden="true">
-        <span class="import-overlay__ring"></span>
-        <span class="import-overlay__core">
-          <i class="fa-solid fa-file-import"></i>
+        <span
+          class="import-overlay__ring"
+          [class.import-overlay__ring--completed]="worker.isCompleted()"
+        ></span>
+        <span
+          class="import-overlay__core"
+          [class.import-overlay__core--completed]="worker.isCompleted()"
+        >
+          <i [class]="coreIconClass()"></i>
         </span>
       </div>
 
       <h2 class="import-overlay__title">{{ titleText() }}</h2>
       <p class="import-overlay__stage">{{ stageText() }}</p>
 
-      @if (importWorker.fileName(); as fileName) {
+      @if (worker.fileName(); as fileName) {
         <div class="import-overlay__file-pill">
-          <i class="fa-solid fa-file-code" aria-hidden="true"></i>
+          <i [class]="fileIconClass()" aria-hidden="true"></i>
           <span class="import-overlay__file-name">{{ fileName }}</span>
         </div>
       }
@@ -28,16 +37,17 @@
         <div
           class="import-overlay__progress-track"
           role="progressbar"
-          [attr.aria-valuenow]="importWorker.progress()"
+          [attr.aria-valuenow]="worker.progress()"
           aria-valuemin="0"
           aria-valuemax="100"
         >
           <div
             class="import-overlay__progress-fill"
-            [style.width.%]="importWorker.progress()"
+            [class.import-overlay__progress-fill--completed]="worker.isCompleted()"
+            [style.width.%]="worker.progress()"
           ></div>
         </div>
-        <span class="import-overlay__progress-pct">{{ importWorker.progress() }}%</span>
+        <span class="import-overlay__progress-pct">{{ worker.progress() }}%</span>
       </div>
 
       <div class="import-overlay__badge">

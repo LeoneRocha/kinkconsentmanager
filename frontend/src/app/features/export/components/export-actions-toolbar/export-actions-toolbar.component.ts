@@ -32,6 +32,7 @@ export class ExportActionsToolbarComponent {
   readonly jsonLabel = input<string>('Exportar JSON');
   readonly importJsonLabel = input<string>('Importar JSON');
   readonly csvLabel = input<string>('Exportar CSV');
+  readonly xlsxLabel = input<string>('Exportar XLSX');
 
   readonly backToChecklist = output<void>();
   readonly exportPng = output<void>();
@@ -40,6 +41,7 @@ export class ExportActionsToolbarComponent {
   readonly exportJson = output<void>();
   readonly importJsonFile = output<File>();
   readonly exportCsv = output<void>();
+  readonly exportXlsx = output<void>();
 
   private readonly jsonFileInput = viewChild<ElementRef<HTMLInputElement>>('jsonFileInput');
 
@@ -93,6 +95,13 @@ export class ExportActionsToolbarComponent {
       return;
     }
     this.exportCsv.emit();
+  }
+
+  protected onExportXlsxClick(): void {
+    if (this.exportActionsDisabled()) {
+      return;
+    }
+    this.exportXlsx.emit();
   }
 
   protected onFileSelected(event: Event): void {

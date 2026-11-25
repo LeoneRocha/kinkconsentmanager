@@ -110,6 +110,23 @@
       <span>{{ csvLabel() }}</span>
     </button>
 
+    <button
+      mat-flat-button
+      type="button"
+      class="export-toolbar__btn export-toolbar__btn--export"
+      [class.export-toolbar__btn--ready]="!exportActionsDisabled()"
+      data-action="xlsx"
+      [disabled]="exportActionsDisabled()"
+      [attr.aria-busy]="busyFormat() === 'xlsx'"
+      (click)="onExportXlsxClick()"
+    >
+      <i
+        [class]="busyFormat() === 'xlsx' ? 'fa-solid fa-spinner fa-spin' : 'fa-solid fa-file-excel'"
+        aria-hidden="true"
+      ></i>
+      <span>{{ xlsxLabel() }}</span>
+    </button>
+
     <input
       #jsonFileInput
       type="file"
