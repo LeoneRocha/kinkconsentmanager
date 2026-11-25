@@ -32,18 +32,3 @@
   }
 </section>
 }
-[attr.aria-label]="'notificationCloseLabel' | schemaTranslate: 'ui'"
-[attr.title]="'notificationCloseLabel' | schemaTranslate: 'ui'"
-(click)="notifications.dismiss(toast.id)"
->
-<i class="fa-solid fa-xmark" [attr.title]="'notificationCloseLabel' | schemaTranslate: 'ui'" aria-hidden="true"></i>
-</button>
-</div>
-
-@if (toast.duration > 0) {
-<span class="kcm-toast__timer" [style.animation-duration.ms]="toast.duration" aria-hidden="true"></span>
-}
-</div>
-}
-</section>
-}
