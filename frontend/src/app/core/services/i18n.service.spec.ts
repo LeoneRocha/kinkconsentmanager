@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { provideTranslateService, TranslateService } from '@ngx-translate/core';
+import { firstValueFrom } from 'rxjs';
 import { ChecklistSchema } from '../models';
 import { ChecklistStateService } from './checklist-state.service';
 import { I18nService, LANGUAGE_STORAGE_KEY } from './i18n.service';
@@ -142,6 +143,14 @@ describe('I18nService', () => {
   let service: I18nService;
   let translateService: TranslateService;
   let checklistState: ChecklistStateService;
+  const originalLanguageDescriptor = Object.getOwnPropertyDescriptor(
+    Navigator.prototype,
+    'language',
+  );
+  const originalLanguagesDescriptor = Object.getOwnPropertyDescriptor(
+    Navigator.prototype,
+    'languages',
+  );
 
   beforeEach(() => {
     localStorage.clear();
@@ -158,6 +167,12 @@ describe('I18nService', () => {
   });
 
   afterEach(() => {
+    if (originalLanguageDescriptor) {
+      Object.defineProperty(Navigator.prototype, 'language', originalLanguageDescriptor);
+    }
+    if (originalLanguagesDescriptor) {
+      Object.defineProperty(Navigator.prototype, 'languages', originalLanguagesDescriptor);
+    }
     jest.restoreAllMocks();
     localStorage.clear();
   });
@@ -338,5 +353,64 @@ describe('I18nService', () => {
     expect(preview.roles['dominant_submissive']).toEqual({ primary: 'Dom', secondary: 'Sub' });
     expect(freshI18n.availableLocales.map((l) => l.code)).toEqual(['pt-BR', 'en-US']);
     expect(document.documentElement.lang).toBe('en-US');
+  });
+
+  // Cenário: Inicialização sem idioma salvo e sem lang fixo em provideTranslateService (como em appConfig).
+  // Objetivo: Detectar automaticamente o idioma preferido do navegador (en-US ou pt-BR) e permitir limpar override manual.
+  it('should auto-detect browser language when no saved preference or hardcoded lang is configured', async () => {
+    Object.defineProperty(Navigator.prototype, 'languages', {
+      configurable: true,
+      get: () => ['es-ES', 'en-GB'],
+    });
+    Object.defineProperty(Navigator.prototype, 'language', {
+      configurable: true,
+      get: () => 'en-GB',
+    });
+
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      providers: [provideTranslateService({ fallbackLang: 'en-US', langs: ['pt-BR', 'en-US'] })],
+    });
+
+    const autoTranslate = TestBed.inject(TranslateService);
+    autoTranslate.setTranslation('pt-BR', PT_BR_TRANSLATIONS);
+    autoTranslate.setTranslation('en-US', EN_US_TRANSLATIONS);
+
+    const autoI18n = TestBed.inject(I18nService);
+    await firstValueFrom(autoI18n.initialize());
+
+    expect(autoI18n.currentLang()).toBe('en-US');
+    expect(autoI18n.isBrowserDefault()).toBe(true);
+    expect(document.documentElement.lang).toBe('en-US');
+    expect(autoI18n.translateUi('greeting', { name: 'Alex' })).toBe('Hello, Alex');
+
+    autoI18n.setLanguage('pt-BR');
+    expect(autoI18n.isBrowserDefault()).toBe(false);
+    expect(autoI18n.currentLang()).toBe('pt-BR');
+
+    autoI18n.clearSavedLanguage();
+    expect(autoI18n.isBrowserDefault()).toBe(true);
+    expect(autoI18n.currentLang()).toBe('en-US');
+    expect(localStorage.getItem(LANGUAGE_STORAGE_KEY)).toBeNull();
+
+    // Agora simulando navegador em português
+    Object.defineProperty(Navigator.prototype, 'languages', {
+      configurable: true,
+      get: () => ['pt-BR', 'en-US'],
+    });
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      providers: [provideTranslateService({ fallbackLang: 'en-US', langs: ['pt-BR', 'en-US'] })],
+    });
+
+    const ptTranslate = TestBed.inject(TranslateService);
+    ptTranslate.setTranslation('pt-BR', PT_BR_TRANSLATIONS);
+    ptTranslate.setTranslation('en-US', EN_US_TRANSLATIONS);
+
+    const ptI18n = TestBed.inject(I18nService);
+    await firstValueFrom(ptI18n.initialize());
+    expect(ptI18n.currentLang()).toBe('pt-BR');
+    expect(ptI18n.isBrowserDefault()).toBe(true);
+    expect(document.documentElement.lang).toBe('pt-BR');
   });
 });

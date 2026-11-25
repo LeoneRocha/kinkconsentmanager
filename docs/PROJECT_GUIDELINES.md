@@ -3,7 +3,7 @@
 Documento normativo de referência para desenvolvedores e agentes de IA do **KinkConsentManager**.
 Consolida os padrões técnicos, regras de arquitetura, qualidade e governança aplicáveis à base de código atual (V1 Checklist em `frontend/`) e às diretrizes preparatórias genéricas para a futura evolução do Backend (**Coming Soon**).
 
-**Último alinhamento documental:** `2026-11-25` (Angular 22 zoneless, Angular Material 22.3, Font Awesome 7 SVG + CSS, Popper.js, SweetAlert2, Web Worker unificado em `core/workers/` com XLSX OOXML modular, rotas modulares em `core/routes/`, sistema modular de 3 temas em `core/themes/`, acessibilidade audiovisual com `alt`/`title` + leitura por foco, Web Crypto AES-GCM, Jest 30 + `jest-preset-angular` 17 e regra mandatória `R-GOV-GUIDELINES`).
+**Último alinhamento documental:** `2026-11-25` (Angular 22 zoneless, Angular Material 22.3, Font Awesome 7 SVG + CSS, Popper.js, SweetAlert2, Web Worker unificado em `core/workers/` com XLSX OOXML modular, rotas modulares em `core/routes/`, sistema modular de 3 temas em `core/themes/` com autodetecção `prefers-color-scheme`, autodetecção inicial de idioma do navegador no bootstrap, padronização de botões verde/cinza vs. navegação vazada, acessibilidade audiovisual com `alt`/`title` + leitura por foco, Web Crypto AES-GCM, Jest 30 + `jest-preset-angular` 17 e regra mandatória `R-GOV-GUIDELINES`).
 
 ---
 
@@ -283,8 +283,8 @@ npm.cmd audit --omit=dev
 
 ### 5.3 Baseline Verificado (V1 Checklist)
 
-- **Suíte:** `50 passed, 50 total` arquivos `.spec.ts` · `224 passed, 224 total` testes unitários (`0` falhas).
-- **Cobertura Global Jest:** Statements **`90,58%`** · Branches **`73,59%`** · Functions **`90,94%`** · Lines **`90,28%`**.
+- **Suíte:** `73 passed, 73 total` arquivos `.spec.ts` · `300 passed, 300 total` testes unitários (`0` falhas).
+- **Cobertura Global Jest:** Statements **`91,79%`** · Branches **`75,32%`** · Functions **`92,23%`** · Lines **`91,54%`**.
 - **Relatórios Sonar:** [sonar-project.properties](../frontend/sonar-project.properties) aponta para `frontend/coverage/lcov.info` e `frontend/coverage/sonar/sonar-report.xml`.
 - Detalhes completos em [CHANGELOG_MELHORIAS.md](./CHANGELOG_MELHORIAS.md), [Diretrizes-Coverage-Frontend-KinkConsentManager.md](./Frontend/COVERAGE%20AND%20TEST/Diretrizes-Coverage-Frontend-KinkConsentManager.md) e [Diretrizes-CodeSmell-KinkConsentManagerUI.md](./Frontend/COVERAGE%20AND%20TEST/Diretrizes-CodeSmell-KinkConsentManagerUI.md).
 
@@ -323,7 +323,7 @@ Quando o backend for iniciado na V2+, deverá acompanhar testes automatizados eq
 - [ ] Nenhum `[innerHTML]` inseguro ou vazamento de subscrição RxJS foi introduzido.
 - [ ] `npx.cmd tsc -p tsconfig.app.json --noEmit` e `tsconfig.spec.json` passam com `0` erros.
 - [ ] `npx.cmd prettier --check "src/**/*.{ts,html,scss,json}"` conclui sem violações.
-- [ ] `npm.cmd run test:ci` e `npm.cmd run test:coverage` passam 100% (**50/50 suítes · 224/224 testes**).
+- [ ] `npm.cmd run test:ci` e `npm.cmd run test:coverage` passam 100% (**73/73 suítes · 300/300 testes**).
 - [ ] `npm.cmd run build:prod` conclui sem erros gerando artefatos e assets esperados.
 - [ ] `npm.cmd audit --omit=dev` reporta `0` vulnerabilidades em dependências de produção.
 - [ ] Configurações `nginx.conf`, `Dockerfile`, `docker-compose*.yml` e `sonar-project.properties` permanecem consistentes.

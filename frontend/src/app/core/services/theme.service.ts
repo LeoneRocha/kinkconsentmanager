@@ -33,6 +33,7 @@ export class ThemeService {
 
   readonly presets: readonly ThemePresetDefinition[] = THEME_PRESETS;
   readonly customTokenOverrides = this.tokenOverrides.asReadonly();
+  readonly isSystemDefault = computed<boolean>(() => this.savedMode() === null);
 
   readonly theme = computed<ThemeMode>(() => {
     const saved = this.savedMode();
@@ -97,30 +98,43 @@ export class ThemeService {
     this.applyThemeToDom(this.activePreset(), {});
   }
 
+  private getMatchMedia(): ((query: string) => MediaQueryList) | null {
+    if (typeof globalThis.matchMedia === 'function') {
+      return globalThis.matchMedia.bind(globalThis);
+    }
+    const docView = this.document?.defaultView;
+    if (docView && typeof docView.matchMedia === 'function') {
+      return docView.matchMedia.bind(docView);
+    }
+    return null;
+  }
+
   private readSystemDark(): boolean {
-    if (typeof globalThis.matchMedia !== 'function') {
+    const matchMediaFn = this.getMatchMedia();
+    if (!matchMediaFn) {
       return false;
     }
     try {
-      return globalThis.matchMedia('(prefers-color-scheme: dark)')?.matches ?? false;
+      return matchMediaFn('(prefers-color-scheme: dark)')?.matches ?? false;
     } catch {
       return false;
     }
   }
 
   private watchSystemTheme(): void {
-    if (typeof globalThis.matchMedia !== 'function') {
+    const matchMediaFn = this.getMatchMedia();
+    if (!matchMediaFn) {
       return;
     }
 
     let media: MediaQueryList | undefined;
     try {
-      media = globalThis.matchMedia('(prefers-color-scheme: dark)');
+      media = matchMediaFn('(prefers-color-scheme: dark)');
     } catch {
       return;
     }
 
-    if (!media || typeof media.addEventListener !== 'function') {
+    if (!media) {
       return;
     }
 
@@ -129,10 +143,24 @@ export class ThemeService {
       this.systemDark.set(nextMatches);
     };
 
-    media.addEventListener('change', onChange);
-    this.destroyRef.onDestroy(() => {
-      media?.removeEventListener?.('change', onChange);
-    });
+    if (typeof media.addEventListener === 'function') {
+      media.addEventListener('change', onChange);
+      this.destroyRef.onDestroy(() => {
+        media?.removeEventListener?.('change', onChange);
+      });
+      return;
+    }
+
+    const legacyMedia = media as MediaQueryList & {
+      addListener?: (listener: (event: MediaQueryListEvent) => void) => void;
+      removeListener?: (listener: (event: MediaQueryListEvent) => void) => void;
+    };
+    if (typeof legacyMedia.addListener === 'function') {
+      legacyMedia.addListener(onChange);
+      this.destroyRef.onDestroy(() => {
+        legacyMedia.removeListener?.(onChange);
+      });
+    }
   }
 
   private applyThemeToDom(

@@ -16,9 +16,9 @@ As versões vivas constam em [frontend/package.json](../frontend/package.json), 
 | Área | O que o repositório usa hoje |
 | ---- | ---------------------------- |
 | Frontend (V1 ativo) | Angular `^22.1.0` (Standalone, Signals, **zoneless**, `OnPush`), TypeScript `~6.0.2`, RxJS `~7.8.0` |
-| Design System, Ícones & Temas | **Angular Material** `^22.3.0`, `@angular/cdk` `^22.3.0`, **Font Awesome Free** `^7.0.1` (SVG + CSS), `sweetalert2` `^11.26.25`, `@popperjs/core` `^2.11.8`, tipografia `Nunito` e sistema modular de **3 temas** (`core/themes/`: *Sóbrio P&B com azul/degradê*, *Claro Vermelho*, *Escuro Vermelho*) |
+| Design System, Ícones & Temas | **Angular Material** `^22.3.0`, `@angular/cdk` `^22.3.0`, **Font Awesome Free** `^7.0.1` (SVG + CSS), `sweetalert2` `^11.26.25`, `@popperjs/core` `^2.11.8`, tipografia `Nunito`, sistema modular de **3 temas** (`core/themes/`: *Sóbrio P&B com azul/degradê*, *Claro Vermelho*, *Escuro Vermelho*) com autodetecção inicial de `prefers-color-scheme` e padronização de botões (verde/cinza em formulários; transparente vazado em navegação/entrada) |
 | Rotas Modulares & Acessibilidade | `core/routes/app-routes.config.ts` (`/dashboard`, `/checklist`, `/checklist/fill`, `/checklist/export`), `checklistFillGuard`, navegação pelo título `.app-shell__brand-title`, leitor audiovisual por `(focusin)` + Web Speech API + legendas ao vivo + `alt`/`title` em todos os templates |
-| Internacionalização | `@ngx-translate/core` `^18.1.0` e `@ngx-translate/http-loader` `^18.1.0` (`pt-BR`, `en-US`) com verificação automatizada `npm.cmd run check:i18n` (**66/66** chaves) |
+| Internacionalização | `@ngx-translate/core` `^18.1.0` e `@ngx-translate/http-loader` `^18.1.0` (`pt-BR`, `en-US`) com autodetecção inicial do idioma do navegador (`navigator.languages` / `navigator.language`) no `provideAppInitializer` e verificação `npm.cmd run check:i18n` (**66/66** chaves) |
 | Schema, Segurança & Preferências | Schema `checklist-v1.json` (`ISchemaRepository`) + autosave criptografado Web Crypto AES-GCM (`CryptoService`, `ChecklistAutosaveService`, `BrowserStorageRepository`) + `UserPreferencesRepository`, `ThemeService` e `AccessibilityService` |
 | Web Workers & Exportação Client-Side | Worker unificado (`core/workers/`) com delay configurável por variável de ambiente (`WORKER_LOADING_DELAY_MS`, padrão `3000ms`): **PNG** (`html-to-image` `^1.11.13`), **PDF** (`pdfmake` `^0.3.15`), **XLSX** OOXML modular (layouts Moderno pastel e Clássico paisagem), **Imprimir** (`window.print()` + `@media print`), **JSON Draft** e **CSV** UTF-8 BOM |
 | Camada Genérica CRUD | `ICrudOperations`, `BaseDataService`, `BaseCrudService`, `ICrudRepository`, `BaseCrudRepository`, `API_BASE_URL` |
@@ -27,7 +27,7 @@ As versões vivas constam em [frontend/package.json](../frontend/package.json), 
 | Infraestrutura & Containers | Docker multi-stage ([Dockerfile](../frontend/Dockerfile)), Nginx Alpine com CSP e `/health` ([nginx.conf](../frontend/nginx.conf)), Compose e DevContainers |
 | **Backend** | **Coming Soon (Roadmap V2+)** — sem implementação na V1; contrato preparatório genérico documentado |
 
-**Baseline verificado (`v1.2.4` — `2026-11-25`):** **73 arquivos `.spec.ts`** / **296 testes unitários aprovados (100%)**, cobertura global Jest de **91,83% Statements / 91,59% Lines**, `tsc` (`app`, `worker` e `spec`) sem erros, **66/66** chaves i18n sincronizadas e `npm.cmd run build` / `npm.cmd run build:prod` limpos.
+**Baseline verificado (`v1.2.4` — `2026-11-25`):** **73 arquivos `.spec.ts`** / **300 testes unitários aprovados (100%)**, cobertura global Jest de **91,79% Statements / 91,54% Lines**, builds `build` e `build:prod` limpos, **66/66** chaves i18n sincronizadas e formatação Prettier verificada.
 
 ---
 
@@ -116,7 +116,7 @@ As versões vivas constam em [frontend/package.json](../frontend/package.json), 
 | ------- | ------------- | --------- |
 | Painel Inicial (Rota padrão) | `/dashboard` | Seção **Ferramentas** com cartão do Checklist e indicador de progresso salvo |
 | Início do Checklist | `/checklist` | Seleção inicial entre os 4 modos de preenchimento + importação JSON em segundo plano |
-| Preenchimento do Checklist | `/checklist/fill` | Formulário interativo (*Guiado*, *Clássico*, *Visão Completa*, *Preenchimento Rápido*) protegido por `checklistFillGuard` |
+| Preenchimento do Checklist | `/checklist/fill` | Formulário interativo (*Preenchimento Rápido*, *Guiado*, *Clássico*, *Visão Completa*) protegido por `checklistFillGuard` |
 | Prévia e Exportação | `/checklist/export` | Seleção de estilo (*Visualização Moderna* ou *Visualização Clássica*) + **PNG**, **PDF**, **XLSX**, **Imprimir** (`@media print`), **JSON Draft** e **CSV BOM** |
 | Healthcheck Nginx (Docker) | `/health` | Resposta `200 OK` de disponibilidade do container frontend |
 

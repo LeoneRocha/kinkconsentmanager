@@ -40,7 +40,27 @@ describe('ThemeService', () => {
     expect(document.documentElement.getAttribute('data-theme')).toBe('light');
   });
 
-  // Cenário: Sistema operacional configurado em modo escuro e atualização dinâmica via listener.
+  // Cenário: Inicialização sem preferência salva com dispositivo/navegador em modo escuro.
+  // Objetivo: Auto-detectar prefers-color-scheme: dark como padrão inicial e sinalizar isSystemDefault().
+  it('should default to dark theme on startup when device/browser prefers dark color scheme and no choice is saved', () => {
+    globalThis.matchMedia = jest.fn().mockReturnValue({
+      matches: true,
+      media: '(prefers-color-scheme: dark)',
+      addEventListener: jest.fn(),
+      removeEventListener: jest.fn(),
+    }) as unknown as typeof globalThis.matchMedia;
+
+    const service = TestBed.inject(ThemeService);
+
+    expect(service.theme()).toBe('dark');
+    expect(service.isDark()).toBe(true);
+    expect(service.isSystemDefault()).toBe(true);
+    expect(document.documentElement.classList.contains('app-dark')).toBe(true);
+    expect(document.documentElement.getAttribute('data-theme')).toBe('dark');
+    expect(document.documentElement.style.colorScheme).toBe('dark');
+  });
+
+  // Cenário: Sistema operacional configurado em modo escuro e atualização dinâmica via listener (moderno e legado).
   // Objetivo: Seguir a preferência do sistema ao vivo e permitir limpar escolha manual.
   it('should follow OS dark preference and react to live matchMedia changes when no explicit choice is saved', () => {
     let changeHandler: ((event?: { matches: boolean }) => void) | undefined;
@@ -60,6 +80,7 @@ describe('ThemeService', () => {
 
     const service = TestBed.inject(ThemeService);
     expect(service.isDark()).toBe(false);
+    expect(service.isSystemDefault()).toBe(true);
 
     mediaMock.matches = true;
     changeHandler?.({ matches: true });
@@ -67,11 +88,38 @@ describe('ThemeService', () => {
     expect(service.theme()).toBe('dark');
 
     service.setTheme('light');
+    expect(service.isSystemDefault()).toBe(false);
     expect(service.isDark()).toBe(false);
     expect(localStorage.getItem(PREF_THEME_KEY)).toBe(JSON.stringify('light'));
 
     service.clearSavedTheme();
+    expect(service.isSystemDefault()).toBe(true);
     expect(localStorage.getItem(PREF_THEME_KEY)).toBeNull();
+    expect(service.isDark()).toBe(true);
+  });
+
+  // Cenário: Navegador legado utilizando MediaQueryList.addListener/removeListener sem addEventListener.
+  // Objetivo: Garantir que alterações do tema do dispositivo também sejam detectadas em Safari/WebViews antigos.
+  it('should fallback to legacy MediaQueryList.addListener when addEventListener is unavailable', () => {
+    let legacyHandler: ((event?: MediaQueryListEvent) => void) | undefined;
+    const legacyMediaMock = {
+      matches: false,
+      media: '(prefers-color-scheme: dark)',
+      addListener: jest.fn((handler: (event?: MediaQueryListEvent) => void) => {
+        legacyHandler = handler;
+      }),
+      removeListener: jest.fn(),
+    };
+    globalThis.matchMedia = jest
+      .fn()
+      .mockReturnValue(legacyMediaMock) as unknown as typeof globalThis.matchMedia;
+
+    const service = TestBed.inject(ThemeService);
+    expect(legacyMediaMock.addListener).toHaveBeenCalledTimes(1);
+    expect(service.theme()).toBe('light');
+
+    legacyHandler?.({ matches: true } as MediaQueryListEvent);
+    expect(service.theme()).toBe('dark');
     expect(service.isDark()).toBe(true);
   });
 

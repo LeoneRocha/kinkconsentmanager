@@ -1,7 +1,7 @@
-import { DOCUMENT, inject, Injectable, signal } from '@angular/core';
+import { computed, DOCUMENT, inject, Injectable, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslateService } from '@ngx-translate/core';
-import { take } from 'rxjs';
+import { catchError, map, Observable, of, shareReplay, take } from 'rxjs';
 import {
   ChecklistSchema,
   ResolvedPreviewTexts,
@@ -28,11 +28,16 @@ export class I18nService {
   private readonly preferencesRepo = inject(USER_PREFERENCES_REPOSITORY_TOKEN);
   private readonly localeCatalog = inject(LocaleCatalogService);
 
+  private readonly savedLangSignal = signal<SupportedLanguage | null>(
+    this.preferencesRepo.getLanguage(),
+  );
   private readonly currentLangSignal = signal<SupportedLanguage>('pt-BR');
   private readonly translationRevisionSignal = signal(0);
+  private readonly initialLoad$: Observable<void>;
 
   readonly availableLocales: readonly LocaleMetadata[] = this.localeCatalog.getFallbackLocales();
   readonly currentLang = this.currentLangSignal.asReadonly();
+  readonly isBrowserDefault = computed<boolean>(() => this.savedLangSignal() === null);
 
   constructor() {
     this.translateService?.onLangChange?.pipe(takeUntilDestroyed()).subscribe((event) => {
@@ -47,7 +52,7 @@ export class I18nService {
       this.translationRevisionSignal.update((rev) => rev + 1);
     });
 
-    const persistedLang = this.preferencesRepo.getLanguage();
+    const persistedLang = this.savedLangSignal();
     const serviceLang = this.translateService?.getCurrentLang() ?? '';
     const initialLang: SupportedLanguage =
       persistedLang ??
@@ -57,23 +62,53 @@ export class I18nService {
 
     this.currentLangSignal.set(initialLang);
     this.syncDocumentLang(initialLang);
+
     if (this.translateService && serviceLang !== initialLang) {
-      this.translateService
-        .use(initialLang)
-        .pipe(take(1))
-        .subscribe({ error: () => {} });
+      this.initialLoad$ = this.translateService.use(initialLang).pipe(
+        take(1),
+        map(() => void 0),
+        catchError(() => of(void 0)),
+        shareReplay(1),
+      );
+      this.initialLoad$.subscribe();
+    } else {
+      this.initialLoad$ = of(void 0);
     }
+  }
+
+  /**
+   * Awaits initial translation loading for the detected or persisted language during app startup.
+   */
+  initialize(): Observable<void> {
+    return this.initialLoad$;
   }
 
   /**
    * Switches active application language and persists it cleanly without mutating checklist answers.
    */
   setLanguage(lang: SupportedLanguage): void {
+    this.savedLangSignal.set(lang);
     this.currentLangSignal.set(lang);
     this.syncDocumentLang(lang);
     this.preferencesRepo.saveLanguage(lang);
     this.translateService
       ?.use(lang)
+      .pipe(take(1))
+      .subscribe({ error: () => {} });
+    this.translationRevisionSignal.update((rev) => rev + 1);
+  }
+
+  /**
+   * Clears any saved language override and reverts to the browser's detected preferred locale.
+   */
+  clearSavedLanguage(): void {
+    this.preferencesRepo.clearLanguage();
+    this.savedLangSignal.set(null);
+    const detectedLang = this.localeCatalog.resolveBrowserPreferredLocale();
+    this.currentLangSignal.set(detectedLang);
+    this.syncDocumentLang(detectedLang);
+    this.translateService
+      ?.use(detectedLang)
       .pipe(take(1))
       .subscribe({ error: () => {} });
     this.translationRevisionSignal.update((rev) => rev + 1);

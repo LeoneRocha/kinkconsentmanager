@@ -21,19 +21,28 @@ import {
   USER_PREFERENCES_REPOSITORY_TOKEN,
   UserPreferencesRepository,
 } from './core/repositories';
-import { CompositeTranslateLoader, TelemetryErrorHandler, TelemetryService } from './core/services';
+import {
+  CompositeTranslateLoader,
+  I18nService,
+  TelemetryErrorHandler,
+  TelemetryService,
+  ThemeService,
+} from './core/services';
 import { routes } from './app.routes';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideAppInitializer(() => inject(TelemetryService).initialize()),
+    provideAppInitializer(() => {
+      inject(ThemeService);
+      return inject(I18nService).initialize();
+    }),
     { provide: ErrorHandler, useClass: TelemetryErrorHandler },
     provideRouter(routes),
     provideHttpClient(),
     importProvidersFrom(MatDialogModule, MatSnackBarModule),
     provideTranslateService({
-      lang: 'pt-BR',
       fallbackLang: 'en-US',
       langs: ['pt-BR', 'en-US'],
       loader: provideTranslateLoader(CompositeTranslateLoader),

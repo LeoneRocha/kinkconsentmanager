@@ -13,9 +13,11 @@
   - `/checklist/export`: prévia em 2 etapas (*Visualização Moderna* ou *Visualização Clássica*) com exportação e impressão.
 - **Checklist Dinâmico Orientado a Schema (`checklist-v1.json`):**
   - Suporte configurável a **Dual-Role** (*Dar / Receber*, *Dominante / Submisso*, *Em Mim / No(a) Parceiro(a)* ou papel único) e 5 tipos de entrada (`scale_matrix`, `single_choice`, `multiple_choice`, `allowOtherOption` e `restricted_text`).
-  - **4 modos de preenchimento:** *Guiado (Passos)* com trilha circular e Revisão Final, *Modo Clássico*, *Visão Completa* e *Preenchimento Rápido* (`1–5`, `0`, `↑/↓`).
-- **Temas Modulares por Tokens (`core/themes/`):**
+  - **4 modos de preenchimento:** *Preenchimento Rápido* (`1–5`, `0`, `↑/↓`, destacado como **Recomendado**), *Guiado (Passos)* (*Por etapas* com trilha circular e Revisão Final), *Modo Clássico* e *Visão Completa*.
+- **Temas Modulares, Autodetecção & Botões Padronizados (`core/themes/` + `app.config.ts`):**
   - **3 presets fixos** no menu superior: **Sóbrio (Preto & Branco com azul e degradê)**, **Claro (Vermelho)** e **Escuro (Vermelho)**, estruturados sobre `ThemeColorTokens` e `THEME_CSS_VAR_MAP` para futura customização pelo usuário.
+  - **Autodetecção no primeiro acesso:** `provideAppInitializer` inicializa tema conforme `prefers-color-scheme` (`ThemeService`) e idioma conforme `navigator.languages` / `navigator.language` (`I18nService` + `LocaleCatalogService`).
+  - **Botões padronizados:** ações/formulários seguem verde quando habilitados e cinza quando desabilitados nos 3 temas (alterando apenas em Alto Contraste); botões de navegação/entrada (*Voltar ao Checklist*, *Começar neste modo →*, *Importar JSON*, *Acessar Checklist →*) são transparentes e vazados alinhados ao tema ativo.
 - **Acessibilidade Audiovisual & Segurança Local:**
   - Leitura automática por foco (`(focusin)` via `AccessibilityService` + Web Speech API), barra de legendas visuais ao vivo, alto contraste WCAG AAA, escala de fonte, redução de animações, `alt` em imagens e `[attr.title]` em controles/ícones/textos.
   - Autosave criptografado no navegador via Web Crypto API AES-GCM 256-bit (`CryptoService` + `ChecklistAutosaveService`).
@@ -32,7 +34,7 @@
 | Build padrão | `npm.cmd run build` | Executa orquestrador de ambiente + `ng build` |
 | Build de produção | `npm.cmd run build:prod` | Gera `dist/kinkconsentmanager` otimizado com *lazy chunks* |
 | Paridade i18n | `npm.cmd run check:i18n` | Garante 100% de sincronia entre `pt-BR.json` e `en-US.json` |
-| Testes unitários (CI) | `npm.cmd run test:ci` | Jest 30 zoneless (**73 suítes / 296 testes aprovados**) |
+| Testes unitários (CI) | `npm.cmd run test:ci` | Jest 30 zoneless (**73 suítes / 300 testes aprovados**) |
 | Cobertura Jest | `npm.cmd run test:coverage` | Gera `coverage/` (`lcov.info`, `sonar-report.xml`, relatórios HTML) |
 
 ### Variáveis de Ambiente de Loading do Worker (Build-time)

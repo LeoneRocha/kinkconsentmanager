@@ -51,18 +51,49 @@ export class LocaleCatalogService {
     return value === 'pt-BR' || value === 'en-US';
   }
 
-  resolveBrowserPreferredLocale(browserLang?: string | null): SupportedLanguage {
-    const candidate =
-      browserLang ?? (typeof navigator !== 'undefined' ? navigator.language : undefined) ?? '';
-    const normalized = candidate.trim().toLowerCase();
+  resolveBrowserPreferredLocale(
+    browserLang?: string | readonly string[] | null,
+  ): SupportedLanguage {
+    const candidates = this.collectLanguageCandidates(browserLang);
 
-    if (normalized.startsWith('pt')) {
-      return 'pt-BR';
-    }
-    if (normalized.startsWith('en')) {
-      return 'en-US';
+    for (const candidate of candidates) {
+      const normalized = candidate.trim().toLowerCase();
+      if (normalized.startsWith('pt')) {
+        return 'pt-BR';
+      }
+      if (normalized.startsWith('en')) {
+        return 'en-US';
+      }
     }
 
     return 'pt-BR';
+  }
+
+  private collectLanguageCandidates(browserLang?: string | readonly string[] | null): string[] {
+    if (Array.isArray(browserLang)) {
+      return browserLang.filter((entry): entry is string => typeof entry === 'string');
+    }
+
+    if (typeof browserLang === 'string') {
+      return [browserLang];
+    }
+
+    if (typeof navigator === 'undefined') {
+      return [];
+    }
+
+    const candidates: string[] = [];
+    if (Array.isArray(navigator.languages)) {
+      for (const lang of navigator.languages) {
+        if (typeof lang === 'string') {
+          candidates.push(lang);
+        }
+      }
+    }
+    if (typeof navigator.language === 'string' && navigator.language.trim().length > 0) {
+      candidates.push(navigator.language);
+    }
+
+    return candidates;
   }
 }
