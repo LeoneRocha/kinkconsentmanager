@@ -1,16 +1,7 @@
 import { inject, Injectable } from '@angular/core';
-import {
-  ChecklistDraft,
-  DraftValidationResult,
-  ExportResult,
-  ItemResponseValue,
-  SupportedLanguage,
-} from '../../../core/models';
+import { ChecklistDraft, DraftValidationResult, ExportResult } from '../../../core/models';
+import { parseAndValidateDraftContent } from '../../../core/services';
 import { FileDownloadService } from './file-download.service';
-
-function isPlainObject(value: unknown): value is Record<string, unknown> {
-  return value !== null && typeof value === 'object' && !Array.isArray(value);
-}
 
 /**
  * Exports and validates portable JSON checklist drafts for backup and restoration.
@@ -50,89 +41,8 @@ export class JsonDraftService {
   /**
    * Parses raw JSON text and validates structure and major schema version compatibility.
    */
-  parseAndValidateDraft(
-    rawContent: string,
-    expectedSchemaVersion: string,
-  ): DraftValidationResult {
-    let parsed: unknown;
-    try {
-      parsed = JSON.parse(rawContent);
-    } catch {
-      return {
-        valid: false,
-        errors: ['Invalid JSON syntax.'],
-      };
-    }
-
-    if (!isPlainObject(parsed)) {
-      return {
-        valid: false,
-        errors: ['Draft payload must be a JSON object.'],
-      };
-    }
-
-    const errors: string[] = [];
-
-    const rawSchemaVersion = parsed['schemaVersion'];
-    if (typeof rawSchemaVersion !== 'string' || rawSchemaVersion.trim().length === 0) {
-      errors.push('Missing or invalid "schemaVersion" field.');
-    } else {
-      const actualMajor = this.extractMajorVersion(rawSchemaVersion);
-      const expectedMajor = this.extractMajorVersion(expectedSchemaVersion);
-      if (actualMajor === null || expectedMajor === null || actualMajor !== expectedMajor) {
-        errors.push(
-          `Incompatible schemaVersion "${rawSchemaVersion}" for expected version "${expectedSchemaVersion}".`,
-        );
-      }
-    }
-
-    const rawExportedAt = parsed['exportedAt'];
-    if (typeof rawExportedAt !== 'string' || rawExportedAt.trim().length === 0) {
-      errors.push('Missing or invalid "exportedAt" field.');
-    }
-
-    const rawAnswers = parsed['answers'];
-    if (!isPlainObject(rawAnswers)) {
-      errors.push('Missing or invalid "answers" object.');
-    } else {
-      for (const [itemId, value] of Object.entries(rawAnswers)) {
-        if (!isPlainObject(value)) {
-          errors.push(`Invalid answer object for item "${itemId}".`);
-        }
-      }
-    }
-
-    if (errors.length > 0) {
-      return {
-        valid: false,
-        errors,
-      };
-    }
-
-    const rawLanguage = parsed['language'];
-    const language: SupportedLanguage =
-      rawLanguage === 'pt-BR' || rawLanguage === 'en-US' ? rawLanguage : 'pt-BR';
-
-    const validatedAnswers: Record<string, ItemResponseValue> = {};
-    for (const [itemId, entry] of Object.entries(rawAnswers as Record<string, unknown>)) {
-      validatedAnswers[itemId] = entry as ItemResponseValue;
-    }
-
-    return {
-      valid: true,
-      errors: [],
-      draft: {
-        schemaVersion: (rawSchemaVersion as string).trim(),
-        exportedAt: (rawExportedAt as string).trim(),
-        language,
-        answers: validatedAnswers,
-      },
-    };
-  }
-
-  private extractMajorVersion(version: string): string | null {
-    const match = /^\s*v?(\d+)(?:\.|$)/.exec(version);
-    return match ? match[1] : null;
+  parseAndValidateDraft(rawContent: string, expectedSchemaVersion: string): DraftValidationResult {
+    return parseAndValidateDraftContent(rawContent, expectedSchemaVersion);
   }
 
   private resolveFilename(filename?: string): string {

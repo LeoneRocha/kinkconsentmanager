@@ -27,6 +27,7 @@ import {
   AccessibilityService,
   ChecklistAutosaveService,
   ChecklistStateService,
+  DraftImportWorkerService,
   I18nService,
   TelemetryService,
   UiFeedbackHostService,
@@ -41,7 +42,6 @@ import {
   ChecklistModeSelectorComponent,
   ChecklistModeSelectorLabels,
 } from '../../components/checklist-mode-selector';
-import { JsonDraftService } from '../../../export/services';
 import {
   ChecklistStepRailComponent,
   ChecklistStepperComponent,
@@ -87,7 +87,7 @@ export class ChecklistPageComponent implements OnInit {
   private readonly accessibility = inject(AccessibilityService);
   private readonly feedbackHost = inject(UiFeedbackHostService);
   private readonly telemetry = inject(TelemetryService);
-  private readonly jsonDraft = inject(JsonDraftService);
+  private readonly draftImportWorker = inject(DraftImportWorkerService);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
 
@@ -500,11 +500,11 @@ export class ChecklistPageComponent implements OnInit {
     this.isImportingJson.set(true);
     const importTitle = this.translateWithFallback('importJson', 'Importar JSON');
     try {
-      const rawContent = await this.readFileAsText(file);
-      const validation = this.jsonDraft.parseAndValidateDraft(
-        rawContent,
+      const outcome = await this.draftImportWorker.importDraftFile(
+        file,
         activeSchema.schemaVersion,
       );
+      const validation = outcome.validation;
 
       if (validation.valid && validation.draft) {
         this.reviewStepActive.set(false);
@@ -515,6 +515,7 @@ export class ChecklistPageComponent implements OnInit {
         this.telemetry.trackEvent('checklist_json_imported', {
           source: 'mode_selector',
           status: 'success',
+          processed_in_worker: String(outcome.processedInWorker),
         });
         this.feedbackHost.success(
           `${importTitle} — ${this.translateWithFallback(
@@ -535,6 +536,7 @@ export class ChecklistPageComponent implements OnInit {
       this.telemetry.trackEvent('checklist_json_imported', {
         source: 'mode_selector',
         status: 'error',
+        processed_in_worker: String(outcome.processedInWorker),
       });
       this.feedbackHost.error(
         `${importTitle} — ${
@@ -694,22 +696,5 @@ export class ChecklistPageComponent implements OnInit {
         // Ignore unimplemented window.scrollTo in non-browser DOM test environments.
       }
     }
-  }
-
-  private readFileAsText(file: File): Promise<string> {
-    if (typeof file.text === 'function') {
-      return file.text();
-    }
-
-    return new Promise<string>((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        resolve(typeof reader.result === 'string' ? reader.result : '');
-      };
-      reader.onerror = () => {
-        reject(reader.error ?? new Error('Failed to read selected file.'));
-      };
-      reader.readAsText(file, 'utf-8');
-    });
   }
 }

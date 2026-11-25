@@ -9,3 +9,4 @@ export * from './popper-popover';
 export * from './sweet-alert-trigger';
 export * from './app-icon';
 export * from './popup-host';
+export * from './import-loading-overlay';

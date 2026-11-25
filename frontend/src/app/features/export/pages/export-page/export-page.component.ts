@@ -19,6 +19,7 @@ import { SCHEMA_REPOSITORY_TOKEN } from '../../../../core/repositories';
 import {
   ChecklistAutosaveService,
   ChecklistStateService,
+  DraftImportWorkerService,
   I18nService,
   TelemetryService,
   UiFeedbackHostService,
@@ -51,6 +52,7 @@ import {
 export class ExportPageComponent implements OnInit {
   private readonly checklistState = inject(ChecklistStateService);
   private readonly autosave = inject(ChecklistAutosaveService);
+  private readonly draftImportWorker = inject(DraftImportWorkerService);
   private readonly i18n = inject(I18nService);
   private readonly schemaRepository = inject(SCHEMA_REPOSITORY_TOKEN);
   private readonly feedbackHost = inject(UiFeedbackHostService);
@@ -209,11 +211,11 @@ export class ExportPageComponent implements OnInit {
 
     this.busyFormat.set('json');
     try {
-      const rawContent = await this.readFileAsText(file);
-      const validation = this.jsonDraft.parseAndValidateDraft(
-        rawContent,
+      const outcome = await this.draftImportWorker.importDraftFile(
+        file,
         activeSchema.schemaVersion,
       );
+      const validation = outcome.validation;
 
       if (validation.valid && validation.draft) {
         this.checklistState.importDraft(validation.draft);
@@ -221,6 +223,7 @@ export class ExportPageComponent implements OnInit {
         this.telemetry.trackEvent('checklist_json_imported', {
           source: 'export_page',
           status: 'success',
+          processed_in_worker: String(outcome.processedInWorker),
         });
         this.feedbackHost.success(`${this.t('importJson')} — ${this.t('importSuccess')}`, {
           actionLabel: this.t('notificationOkAction'),
@@ -235,11 +238,13 @@ export class ExportPageComponent implements OnInit {
       this.telemetry.trackEvent('checklist_json_imported', {
         source: 'export_page',
         status: 'error',
+        processed_in_worker: String(outcome.processedInWorker),
       });
       this.feedbackHost.error(
-        `${this.t('importJson')} — ${isIncompatibleVersion
-          ? this.t('importErrorIncompatibleVersion')
-          : this.t('importErrorInvalidJson')
+        `${this.t('importJson')} — ${
+          isIncompatibleVersion
+            ? this.t('importErrorIncompatibleVersion')
+            : this.t('importErrorInvalidJson')
         }`,
         {
           actionLabel: this.t('notificationOkAction'),
@@ -339,23 +344,6 @@ export class ExportPageComponent implements OnInit {
       name: 'checklist_completion_percent',
       average: this.checklistState.progressPercentage(),
       properties: { format },
-    });
-  }
-
-  private readFileAsText(file: File): Promise<string> {
-    if (typeof file.text === 'function') {
-      return file.text();
-    }
-
-    return new Promise<string>((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        resolve(typeof reader.result === 'string' ? reader.result : '');
-      };
-      reader.onerror = () => {
-        reject(reader.error ?? new Error('Failed to read selected file.'));
-      };
-      reader.readAsText(file, 'utf-8');
     });
   }
 }

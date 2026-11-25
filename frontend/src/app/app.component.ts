@@ -5,7 +5,7 @@ import {
   AppFooterComponent,
   AppHeaderComponent,
 } from './layouts';
-import { AppToastContainerComponent } from './shared/components';
+import { AppImportLoadingOverlayComponent, AppToastContainerComponent } from './shared/components';
 import { SchemaTranslatePipe } from './shared/pipes';
 
 @Component({
@@ -17,6 +17,7 @@ import { SchemaTranslatePipe } from './shared/pipes';
     AppFooterComponent,
     AppAccessibilityOverlayComponent,
     AppToastContainerComponent,
+    AppImportLoadingOverlayComponent,
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',

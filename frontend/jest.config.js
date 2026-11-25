@@ -14,6 +14,8 @@ module.exports = {
     '!src/app/**/*.enum.ts',
     '!src/app/**/*.spec.ts',
     '!src/app/**/*.test.ts',
+    '!src/app/**/*.worker.ts',
+    '!src/app/**/*worker.factory.ts',
     '!src/app/**/__tests__/**',
     '!src/app/**/*.mock.ts',
     '!src/app/**/*.routes.ts',
@@ -40,6 +42,8 @@ module.exports = {
   moduleNameMapper: {
     '^src/(.*)$': '<rootDir>/src/$1',
     '^@app/(.*)$': '<rootDir>/src/app/$1',
+    '^.*/draft-import-worker\\.factory$':
+      '<rootDir>/src/app/core/services/draft-import-worker.factory.mock.ts',
   },
   reporters: [
     'default',

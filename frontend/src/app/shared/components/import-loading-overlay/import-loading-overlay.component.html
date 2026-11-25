@@ -1,0 +1,49 @@
+@if (importWorker.isProcessing()) {
+  <div
+    class="import-overlay"
+    role="status"
+    aria-live="polite"
+    aria-busy="true"
+    [attr.aria-label]="titleText()"
+  >
+    <div class="import-overlay__card">
+      <div class="import-overlay__orbit" aria-hidden="true">
+        <span class="import-overlay__ring"></span>
+        <span class="import-overlay__core">
+          <i class="fa-solid fa-file-import"></i>
+        </span>
+      </div>
+
+      <h2 class="import-overlay__title">{{ titleText() }}</h2>
+      <p class="import-overlay__stage">{{ stageText() }}</p>
+
+      @if (importWorker.fileName(); as fileName) {
+        <div class="import-overlay__file-pill">
+          <i class="fa-solid fa-file-code" aria-hidden="true"></i>
+          <span class="import-overlay__file-name">{{ fileName }}</span>
+        </div>
+      }
+
+      <div class="import-overlay__progress-wrap">
+        <div
+          class="import-overlay__progress-track"
+          role="progressbar"
+          [attr.aria-valuenow]="importWorker.progress()"
+          aria-valuemin="0"
+          aria-valuemax="100"
+        >
+          <div
+            class="import-overlay__progress-fill"
+            [style.width.%]="importWorker.progress()"
+          ></div>
+        </div>
+        <span class="import-overlay__progress-pct">{{ importWorker.progress() }}%</span>
+      </div>
+
+      <div class="import-overlay__badge">
+        <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
+        <span>{{ backgroundBadgeText() }}</span>
+      </div>
+    </div>
+  </div>
+}
