@@ -105,4 +105,12 @@ describe('UserPreferencesRepository', () => {
     repository.removePreference('kcm_custom_view');
     expect(repository.getPreference('kcm_custom_view')).toBeNull();
   });
+
+  // Cenário: Persistência do tema sóbrio ('sober') além de claro e escuro.
+  // Objetivo: Garantir que o repositório aceite e restaure os 3 presets fixos ('sober', 'light', 'dark').
+  it('should persist and restore sober theme preference', () => {
+    expect(repository.saveTheme('sober')).toBe(true);
+    expect(repository.getTheme()).toBe('sober');
+    expect(repository.getSnapshot().theme).toBe('sober');
+  });
 });

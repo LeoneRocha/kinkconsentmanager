@@ -7,7 +7,7 @@ describe('ThemeService', () => {
 
   const clearDomState = (): void => {
     localStorage.clear();
-    document.documentElement.classList.remove('app-dark');
+    document.documentElement.classList.remove('app-dark', 'app-theme-sober');
     document.documentElement.removeAttribute('data-theme');
     document.documentElement.style.colorScheme = '';
   };
@@ -104,5 +104,35 @@ describe('ThemeService', () => {
     expect(service.isDark()).toBe(false);
     expect(document.documentElement.classList.contains('app-dark')).toBe(false);
     expect(localStorage.getItem(THEME_STORAGE_KEY)).toBe(JSON.stringify('light'));
+  });
+
+  // Cenário: Seleção do tema sóbrio (Preto & Branco com azul e degradê) e sobrescrita futura de tokens de cor.
+  // Objetivo: Expor os 3 presets fixos, aplicar data-theme='sober' com app-theme-sober, e permitir customização/limpeza de tokens via CSS vars.
+  it('should support sober preset and custom color token overrides for future customization', () => {
+    const service = TestBed.inject(ThemeService);
+
+    expect(service.presets.map((p) => p.id)).toEqual(['sober', 'light', 'dark']);
+
+    service.setTheme('sober');
+    expect(service.theme()).toBe('sober');
+    expect(service.isSober()).toBe(true);
+    expect(service.isDark()).toBe(false);
+    expect(document.documentElement.classList.contains('app-theme-sober')).toBe(true);
+    expect(document.documentElement.classList.contains('app-dark')).toBe(false);
+    expect(document.documentElement.getAttribute('data-theme')).toBe('sober');
+    expect(document.documentElement.style.colorScheme).toBe('light');
+
+    service.setCustomColorTokens({
+      accentPrimary: '#0369a1',
+      accentGradient: 'linear-gradient(135deg, #000000 0%, #0369a1 100%)',
+    });
+    expect(document.documentElement.style.getPropertyValue('--kcm-accent-primary')).toBe('#0369a1');
+    expect(document.documentElement.style.getPropertyValue('--kcm-accent-gradient')).toBe(
+      'linear-gradient(135deg, #000000 0%, #0369a1 100%)',
+    );
+
+    service.clearCustomColorTokens();
+    expect(document.documentElement.style.getPropertyValue('--kcm-accent-primary')).toBe('');
+    expect(service.customTokenOverrides()).toEqual({});
   });
 });

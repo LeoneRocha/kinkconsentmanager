@@ -14,6 +14,7 @@ describe('AppHeaderComponent', () => {
   const clearRootClasses = (): void => {
     document.documentElement.classList.remove(
       'app-dark',
+      'app-theme-sober',
       'app-high-contrast',
       'app-font-large',
       'app-font-xlarge',
@@ -46,6 +47,14 @@ describe('AppHeaderComponent', () => {
         themeToggleToLight: 'Ativar tema claro',
         themeDarkActive: 'Tema escuro ativado.',
         themeLightActive: 'Tema claro ativado.',
+        themeMenuLabel: 'Alterar tema',
+        themeSoberLabel: 'Sóbrio (Preto & Branco)',
+        themeSoberDesc: 'Branco e preto com detalhes em azul e degradê',
+        themeSoberActive: 'Tema sóbrio ativado.',
+        themeLightLabel: 'Claro (Vermelho)',
+        themeLightDesc: 'Visual claro com destaques em vermelho',
+        themeDarkLabel: 'Escuro (Vermelho)',
+        themeDarkDesc: 'Visual escuro com destaques em vermelho',
         languageMenuLabel: 'Alterar idioma',
         languageChanged: 'Idioma alterado para Português (Brasil).',
         a11yButtonLabel: 'Acessibilidade e leitura audiovisual',
@@ -150,7 +159,9 @@ describe('AppHeaderComponent', () => {
     }
   });
 
-  it('should toggle dark theme and announce state', async () => {
+  // Cenário: Abertura do menu de temas na barra superior com as 3 opções fixas.
+  // Objetivo: Renderizar Sóbrio, Claro e Escuro com títulos acessíveis, alternar temas e anunciar o estado selecionado.
+  it('should open theme menu with 3 fixed presets, apply sober/dark themes, and announce selection', async () => {
     const fixture = TestBed.createComponent(AppHeaderComponent);
     const themeService = TestBed.inject(ThemeService);
     const a11yService = TestBed.inject(AccessibilityService);
@@ -163,8 +174,39 @@ describe('AppHeaderComponent', () => {
     themeBtn.click();
     await fixture.whenStable();
 
+    const menu = fixture.nativeElement.querySelector('.app-shell__popover--theme-menu');
+    expect(menu).not.toBeNull();
+    const options = Array.from(
+      fixture.nativeElement.querySelectorAll('.app-shell__theme-item'),
+    ) as HTMLButtonElement[];
+    expect(options.map((item) => item.getAttribute('data-theme-option'))).toEqual([
+      'sober',
+      'light',
+      'dark',
+    ]);
+    for (const option of options) {
+      expect(option.getAttribute('title')?.trim().length).toBeGreaterThan(0);
+    }
+
+    options[0].click();
+    await fixture.whenStable();
+    expect(themeService.theme()).toBe('sober');
+    expect(themeService.isSober()).toBe(true);
+    expect(document.documentElement.classList.contains('app-theme-sober')).toBe(true);
+    expect(document.documentElement.getAttribute('data-theme')).toBe('sober');
+    expect(a11yService.liveAnnouncement()).toBe('Tema sóbrio ativado.');
+    expect(fixture.nativeElement.querySelector('.app-shell__popover--theme-menu')).toBeNull();
+
+    themeBtn.click();
+    await fixture.whenStable();
+    const darkOption = fixture.nativeElement.querySelector(
+      'button[data-theme-option="dark"]',
+    ) as HTMLButtonElement;
+    darkOption.click();
+    await fixture.whenStable();
+
     expect(themeService.isDark()).toBe(true);
-    expect(themeBtn.getAttribute('aria-pressed')).toBe('true');
+    expect(document.documentElement.classList.contains('app-dark')).toBe(true);
     expect(a11yService.liveAnnouncement()).toBe('Tema escuro ativado.');
   });
 

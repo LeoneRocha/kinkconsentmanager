@@ -1,8 +1,8 @@
 # Checklist de Implementação, Etapas e Progresso
 **Projeto:** KinkConsentManager — Plataforma de Checklists de Limites e Consentimento (BDSM / D/s)  
 **Documento:** Orquestração Multi-Agente, Matriz de Tarefas Modulares, Testes Unitários e Controle de Escopo V1  
-**Versão:** 2.1 (Atualizado após Execução Multi-Agente V1)  
-**Data:** 22 de Novembro de 2026  
+**Versão:** 2.2 (Atualizado após Evoluções `v1.2.4` — Dashboard, Rotas Modulares, Web Workers/XLSX, Acessibilidade e 3 Temas)  
+**Data:** 25 de Novembro de 2026  
 
 ---
 
@@ -236,6 +236,16 @@ Os itens abaixo estão intencionalmente **excluídos da implementação V1** e n
 | **FUT-01** | Motor de Geração de Contratos D/s | `[FORA DE ESCOPO V1 - DECIDIR DEPOIS]` |
 | **FUT-02** | Custom Builder Visual de Schemas | `[FORA DE ESCOPO V1 - DECIDIR DEPOIS]` |
 | **FUT-03** | Gestão de Play Partners & Comparação (Match/Diff) | `[FORA DE ESCOPO V1 - DECIDIR DEPOIS]` |
-| **FUT-04** | Exportação Nativa em Excel (`.xlsx`) Multi-abas | `[FORA DE ESCOPO V1 - DECIDIR DEPOIS]` |
+| **FUT-04** | Exportação Nativa em Excel (`.xlsx`) | `[IMPLEMENTADO NA v1.2.4 - core/workers/xlsx/ (Layouts Moderno & Clássico)]` |
 | **FUT-05** | Backend API Node.js & Persistência Remota | `[FORA DE ESCOPO V1 - DECIDIR DEPOIS]` |
 | **FUT-06** | Integração ATProto / Bluesky ou Compartilhamento Público | `[FORA DE ESCOPO V1 - DECIDIR DEPOIS]` |
+
+---
+
+## 5. Evoluções Consolidadas Pós-Onda 2 (`v1.2.4` — `2026-11-25`)
+
+- [x] **Painel Inicial (`/dashboard`) & Modularização de Rotas (`core/routes/`):** seção **Ferramentas**, separação `/checklist` -> `/checklist/fill` (com `checklistFillGuard`) -> `/checklist/export`, arquivos `*.routes.ts` por página e retorno direto ao `/dashboard` pelo clique em `.app-shell__brand-title` no cabeçalho (sem botões redundantes de retorno nas páginas do checklist).
+- [x] **Web Worker Unificado & Exportação Excel OOXML (`core/workers/` + `core/workers/xlsx/`):** processamento em background com layout **Moderno** (cores pastel claras e texto preto em negrito) e layout **Clássico** (paisagem 3 colunas espelhando a prévia de tela), barra de progresso com estado verde concluído (`100%`) e atraso configurável via variável de ambiente (`WORKER_LOADING_DELAY_MS`, padrão `3000ms`).
+- [x] **Acessibilidade Audiovisual Abrangente:** leitura automática por `(focusin)` no shell `App`, `AppIconComponent` com `title`/`<svg><title>`, `alt` descritivo em `favicon.svg` e `[attr.title]` padronizado nos 31 templates HTML.
+- [x] **Sistema Modular de Temas (`core/themes/`):** 3 opções fixas selecionáveis no cabeçalho (**Sóbrio Preto & Branco com azul e degradê**, **Claro Vermelho** e **Escuro Vermelho**) sobre arquitetura extensível (`ThemeColorTokens` + `THEME_CSS_VAR_MAP`).
+- [x] **Verificação Atualizada (`2026-11-25`):** **73 suítes / 296 testes aprovados (`100%`)**, cobertura **91,83% Statements / 91,59% Lines**, **66/66** chaves i18n sincronizadas (`check:i18n`), `tsc` sem erros e `npm.cmd run build` / `build:prod` limpos.

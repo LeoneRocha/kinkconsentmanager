@@ -15,6 +15,8 @@
   --kcm-accent-primary-hover: #b91c1c;
   --kcm-accent-soft: rgba(220, 38, 38, 0.11);
   --kcm-accent-text: #dc2626;
+  --kcm-accent-gradient: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  --kcm-surface-gradient: none;
   --kcm-font-family: 'Nunito', ui-rounded, 'Segoe UI', system-ui, -apple-system, sans-serif;
   --kcm-topbar-bg: rgba(255, 255, 255, 0.88);
   --kcm-shadow-sm: 0 2px 10px rgba(15, 23, 42, 0.05);
@@ -26,14 +28,23 @@
 }
 
 html {
-  @include mat.theme((
-    color: (
-      primary: mat.$red-palette,
-      theme-type: light,
-    ),
-    typography: ('Nunito', ui-rounded, 'Segoe UI', system-ui, -apple-system, sans-serif),
-    density: 0,
-  ));
+  @include mat.theme(
+    (
+      color: (
+        primary: mat.$red-palette,
+        theme-type: light,
+      ),
+      typography: (
+        'Nunito',
+        ui-rounded,
+        'Segoe UI',
+        system-ui,
+        -apple-system,
+        sans-serif,
+      ),
+      density: 0,
+    )
+  );
   --mat-sys-plain-font: var(--kcm-font-family);
   --mat-sys-brand-font: var(--kcm-font-family);
   --mat-sys-primary: var(--kcm-accent-primary);
@@ -55,12 +66,14 @@ html {
 }
 
 html.app-dark {
-  @include mat.theme((
-    color: (
-      primary: mat.$red-palette,
-      theme-type: dark,
-    ),
-  ));
+  @include mat.theme(
+    (
+      color: (
+        primary: mat.$red-palette,
+        theme-type: dark,
+      ),
+    )
+  );
   color-scheme: dark;
   --kcm-surface-bg: #0f1117;
   --kcm-surface-card: #181c26;
@@ -75,6 +88,8 @@ html.app-dark {
   --kcm-accent-primary-hover: #b91c1c;
   --kcm-accent-soft: rgba(220, 38, 38, 0.22);
   --kcm-accent-text: #ffffff;
+  --kcm-accent-gradient: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+  --kcm-surface-gradient: none;
   --kcm-topbar-bg: rgba(20, 23, 32, 0.9);
   --kcm-shadow-sm: 0 4px 16px rgba(0, 0, 0, 0.35);
   --kcm-shadow-md: 0 12px 28px rgba(0, 0, 0, 0.48);
@@ -120,6 +135,81 @@ html.app-dark {
   --mat-slide-toggle-selected-hover-track-color: var(--kcm-accent-primary-hover);
   --mat-slide-toggle-selected-focus-track-color: var(--kcm-accent-primary);
   --mat-slide-toggle-selected-handle-color: #ffffff;
+}
+
+html[data-theme='sober'] {
+  @include mat.theme(
+    (
+      color: (
+        primary: mat.$azure-palette,
+        theme-type: light,
+      ),
+    )
+  );
+  color-scheme: light;
+  --kcm-surface-bg: #f8fafc;
+  --kcm-surface-card: #ffffff;
+  --kcm-surface-elevated: #ffffff;
+  --kcm-surface-subtle: #f1f5f9;
+  --kcm-border-color: #cbd5e1;
+  --kcm-border-strong: #94a3b8;
+  --kcm-text-primary: #090d16;
+  --kcm-text-secondary: #1f2937;
+  --kcm-text-muted: #4b5563;
+  --kcm-accent-primary: #1d4ed8;
+  --kcm-accent-primary-hover: #1e40af;
+  --kcm-accent-soft: rgba(29, 78, 216, 0.1);
+  --kcm-accent-text: #1d4ed8;
+  --kcm-accent-gradient: linear-gradient(135deg, #0f172a 0%, #1d4ed8 58%, #0284c7 100%);
+  --kcm-surface-gradient: linear-gradient(180deg, #ffffff 0%, #f1f5f9 100%);
+  --kcm-topbar-bg: rgba(255, 255, 255, 0.92);
+  --kcm-shadow-sm: 0 2px 10px rgba(9, 13, 22, 0.06);
+  --kcm-shadow-md: 0 8px 24px rgba(9, 13, 22, 0.09);
+  --kcm-shadow-lg: 0 18px 42px rgba(9, 13, 22, 0.16);
+  --kcm-kbd-bg: rgba(15, 23, 42, 0.08);
+  --kcm-ambient-top: rgba(29, 78, 216, 0.1);
+  --kcm-ambient-bottom: rgba(15, 23, 42, 0.08);
+  --mat-sys-primary: var(--kcm-accent-primary);
+  --mat-sys-on-primary: #ffffff;
+  --mat-sys-surface: var(--kcm-surface-card);
+  --mat-sys-surface-container-low: var(--kcm-surface-card);
+  --mat-sys-surface-container: var(--kcm-surface-elevated);
+  --mat-sys-on-surface: var(--kcm-text-primary);
+  --mat-sys-on-surface-variant: var(--kcm-text-secondary);
+  --mat-sys-outline: var(--kcm-border-strong);
+  --mat-sys-outline-variant: var(--kcm-border-color);
+  --mat-button-filled-container-color: var(--kcm-accent-primary);
+  --mat-button-filled-label-text-color: #ffffff;
+  --mat-button-toggle-selected-state-background-color: var(--kcm-accent-soft);
+  --mat-button-toggle-selected-state-text-color: var(--kcm-accent-text);
+  --mat-checkbox-selected-icon-color: var(--kcm-accent-primary);
+  --mat-checkbox-selected-hover-icon-color: var(--kcm-accent-primary-hover);
+  --mat-checkbox-selected-focus-icon-color: var(--kcm-accent-primary);
+  --mat-checkbox-selected-pressed-icon-color: var(--kcm-accent-primary-hover);
+  --mat-radio-selected-icon-color: var(--kcm-accent-primary);
+  --mat-radio-selected-hover-icon-color: var(--kcm-accent-primary-hover);
+  --mat-radio-selected-focus-icon-color: var(--kcm-accent-primary);
+  --mat-radio-selected-pressed-icon-color: var(--kcm-accent-primary-hover);
+  --mat-slide-toggle-selected-track-color: var(--kcm-accent-primary);
+  --mat-slide-toggle-selected-hover-track-color: var(--kcm-accent-primary-hover);
+  --mat-slide-toggle-selected-focus-track-color: var(--kcm-accent-primary);
+
+  body {
+    background-image:
+      radial-gradient(circle at 12% 0%, var(--kcm-ambient-top) 0%, transparent 45%),
+      radial-gradient(circle at 88% 100%, var(--kcm-ambient-bottom) 0%, transparent 45%),
+      var(--kcm-surface-gradient);
+  }
+
+  .mat-mdc-unelevated-button:not(:disabled) {
+    background: var(--kcm-accent-gradient);
+    color: #ffffff;
+  }
+
+  .app-shell__lang-pill,
+  .app-shell__status-dot {
+    background: var(--kcm-accent-gradient);
+  }
 }
 
 html.app-high-contrast {
@@ -197,7 +287,9 @@ body {
   font-family: var(--kcm-font-family);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
-  transition: background-color 0.2s ease, color 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
 }
 
 button,
@@ -323,6 +415,7 @@ html.app-reduced-motion {
 
   html,
   html.app-dark,
+  html[data-theme='sober'],
   body,
   .app-shell {
     background: #ffffff !important;

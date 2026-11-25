@@ -1,13 +1,14 @@
 import { inject, Injectable, InjectionToken } from '@angular/core';
 import { SupportedLanguage } from '../models';
 import { StorageOptions } from '../services/storage.service';
+import { isThemeId, ThemeId } from '../themes';
 import { BROWSER_STORAGE_REPOSITORY_TOKEN } from './browser-storage.repository';
 
 export const PREF_THEME_KEY = 'kcm_theme_v1';
 export const PREF_LANGUAGE_KEY = 'kcm_lang_v1';
 export const PREF_ACCESSIBILITY_KEY = 'kcm_a11y_v1';
 
-export type ThemeMode = 'light' | 'dark';
+export type ThemeMode = ThemeId;
 export type FontScale = 'normal' | 'large' | 'xlarge';
 export type SpeechRate = 0.85 | 1 | 1.2;
 
@@ -27,7 +28,7 @@ export interface UserPreferencesSnapshot {
 }
 
 function isThemeMode(value: unknown): value is ThemeMode {
-  return value === 'light' || value === 'dark';
+  return isThemeId(value);
 }
 
 function isSupportedLanguage(value: unknown): value is SupportedLanguage {

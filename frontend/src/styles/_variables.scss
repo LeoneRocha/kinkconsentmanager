@@ -1,20 +1,20 @@
 // Scale tokens (WCAG 2.1 AA high-contrast pairs)
-$scale-hard-limit: #D32F2F;
-$scale-hard-limit-contrast: #FFFFFF;
+$scale-hard-limit: #d32f2f;
+$scale-hard-limit-contrast: #ffffff;
 
-$scale-soft-limit: #F57C00;
+$scale-soft-limit: #f57c00;
 $scale-soft-limit-contrast: #111827;
 
-$scale-curious: #FBC02D;
+$scale-curious: #fbc02d;
 $scale-curious-contrast: #111827;
 
-$scale-enjoy: #388E3C;
-$scale-enjoy-contrast: #FFFFFF;
+$scale-enjoy: #388e3c;
+$scale-enjoy-contrast: #ffffff;
 
-$scale-favorite: #7B1FA2;
-$scale-favorite-contrast: #FFFFFF;
+$scale-favorite: #7b1fa2;
+$scale-favorite-contrast: #ffffff;
 
-$scale-empty: #E0E0E0;
+$scale-empty: #e0e0e0;
 $scale-empty-contrast: #374151;
 
 // Theme-aware CSS custom property references (Light / Dark / High-Contrast)
@@ -31,6 +31,8 @@ $accent-primary: var(--kcm-accent-primary);
 $accent-primary-hover: var(--kcm-accent-primary-hover);
 $accent-soft: var(--kcm-accent-soft);
 $accent-text: var(--kcm-accent-text);
+$accent-gradient: var(--kcm-accent-gradient);
+$surface-gradient: var(--kcm-surface-gradient);
 $topbar-bg: var(--kcm-topbar-bg);
 $shadow-sm: var(--kcm-shadow-sm);
 $shadow-md: var(--kcm-shadow-md);

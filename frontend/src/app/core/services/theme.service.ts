@@ -4,13 +4,22 @@ import {
   ThemeMode,
   USER_PREFERENCES_REPOSITORY_TOKEN,
 } from '../repositories/user-preferences.repository';
+import {
+  getThemePreset,
+  THEME_CSS_VAR_MAP,
+  THEME_PRESETS,
+  ThemeColorTokens,
+  ThemeId,
+  ThemePresetDefinition,
+} from '../themes';
 
 export const THEME_STORAGE_KEY = PREF_THEME_KEY;
-export type { ThemeMode };
+export type { ThemeColorTokens, ThemeId, ThemeMode, ThemePresetDefinition };
 
 /**
- * Signal-backed theme manager persisting choices via `UserPreferencesRepository`
- * and synchronizing live OS `prefers-color-scheme` changes when no explicit choice is saved.
+ * Signal-backed theme manager persisting choices via `UserPreferencesRepository`,
+ * synchronizing live OS `prefers-color-scheme` changes when no explicit choice is saved,
+ * and exposing token-driven presets structured for future user color customization.
  */
 @Injectable({ providedIn: 'root' })
 export class ThemeService {
@@ -20,24 +29,27 @@ export class ThemeService {
 
   private readonly savedMode = signal<ThemeMode | null>(this.preferencesRepo.getTheme());
   private readonly systemDark = signal<boolean>(this.readSystemDark());
+  private readonly tokenOverrides = signal<Partial<ThemeColorTokens>>({});
 
-  readonly isDark = computed<boolean>(() => {
+  readonly presets: readonly ThemePresetDefinition[] = THEME_PRESETS;
+  readonly customTokenOverrides = this.tokenOverrides.asReadonly();
+
+  readonly theme = computed<ThemeMode>(() => {
     const saved = this.savedMode();
-    if (saved === 'dark') {
-      return true;
+    if (saved) {
+      return saved;
     }
-    if (saved === 'light') {
-      return false;
-    }
-    return this.systemDark();
+    return this.systemDark() ? 'dark' : 'light';
   });
 
-  readonly theme = computed<ThemeMode>(() => (this.isDark() ? 'dark' : 'light'));
+  readonly activePreset = computed<ThemePresetDefinition>(() => getThemePreset(this.theme()));
+  readonly isDark = computed<boolean>(() => this.activePreset().colorScheme === 'dark');
+  readonly isSober = computed<boolean>(() => this.theme() === 'sober');
 
   constructor() {
-    this.applyThemeToDom(this.theme());
+    this.applyThemeToDom(this.activePreset(), this.tokenOverrides());
     effect(() => {
-      this.applyThemeToDom(this.theme());
+      this.applyThemeToDom(this.activePreset(), this.tokenOverrides());
     });
     this.watchSystemTheme();
   }
@@ -48,7 +60,7 @@ export class ThemeService {
   setTheme(mode: ThemeMode): void {
     this.preferencesRepo.saveTheme(mode);
     this.savedMode.set(mode);
-    this.applyThemeToDom(mode);
+    this.applyThemeToDom(getThemePreset(mode), this.tokenOverrides());
   }
 
   /**
@@ -66,7 +78,23 @@ export class ThemeService {
   clearSavedTheme(): void {
     this.preferencesRepo.clearTheme();
     this.savedMode.set(null);
-    this.applyThemeToDom(this.theme());
+    this.applyThemeToDom(this.activePreset(), this.tokenOverrides());
+  }
+
+  /**
+   * Applies custom CSS token overrides on top of the active preset (foundation for future user color customization).
+   */
+  setCustomColorTokens(tokens: Partial<ThemeColorTokens>): void {
+    this.tokenOverrides.set({ ...tokens });
+    this.applyThemeToDom(this.activePreset(), this.tokenOverrides());
+  }
+
+  /**
+   * Removes any runtime custom CSS token overrides, restoring pure preset tokens.
+   */
+  clearCustomColorTokens(): void {
+    this.tokenOverrides.set({});
+    this.applyThemeToDom(this.activePreset(), {});
   }
 
   private readSystemDark(): boolean {
@@ -107,14 +135,30 @@ export class ThemeService {
     });
   }
 
-  private applyThemeToDom(mode: ThemeMode): void {
+  private applyThemeToDom(
+    preset: ThemePresetDefinition,
+    overrides: Partial<ThemeColorTokens>,
+  ): void {
     const root = this.document?.documentElement;
     if (!root) {
       return;
     }
 
-    root.classList.toggle('app-dark', mode === 'dark');
-    root.setAttribute('data-theme', mode);
-    root.style.colorScheme = mode;
+    root.classList.toggle('app-dark', preset.colorScheme === 'dark');
+    root.classList.toggle('app-theme-sober', preset.id === 'sober');
+    root.setAttribute('data-theme', preset.id);
+    root.style.colorScheme = preset.colorScheme;
+
+    const tokenEntries = Object.entries(THEME_CSS_VAR_MAP) as Array<
+      [keyof ThemeColorTokens, string]
+    >;
+    for (const [tokenKey, cssVar] of tokenEntries) {
+      const overrideValue = overrides[tokenKey]?.trim();
+      if (overrideValue) {
+        root.style.setProperty(cssVar, overrideValue);
+      } else {
+        root.style.removeProperty(cssVar);
+      }
+    }
   }
 }

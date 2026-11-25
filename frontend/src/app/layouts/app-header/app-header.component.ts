@@ -20,6 +20,8 @@ import {
   LocaleMetadata,
   SpeechRate,
   TelemetryService,
+  ThemeMode,
+  ThemePresetDefinition,
   ThemeService,
 } from '../../core/services';
 import { SchemaTranslatePipe } from '../../shared/pipes';
@@ -51,10 +53,12 @@ export class AppHeaderComponent {
   protected readonly accessibility = inject(AccessibilityService);
   private readonly telemetry = inject(TelemetryService);
 
+  protected readonly themeMenuOpen = signal(false);
   protected readonly langMenuOpen = signal(false);
   protected readonly a11yPanelOpen = signal(false);
   protected readonly dashboardRoute = APP_ROUTE_COMMANDS.dashboard;
 
+  protected readonly themePresets: readonly ThemePresetDefinition[] = this.theme.presets;
   protected readonly supportedLanguages: readonly LocaleMetadata[] = this.i18n.availableLocales;
 
   protected readonly speechRates: readonly SpeechRateOption[] = [
@@ -75,14 +79,14 @@ export class AppHeaderComponent {
 
   @HostListener('document:keydown.escape')
   protected onEscapePressed(): void {
-    if (this.langMenuOpen() || this.a11yPanelOpen()) {
+    if (this.themeMenuOpen() || this.langMenuOpen() || this.a11yPanelOpen()) {
       this.closePopovers();
     }
   }
 
   @HostListener('document:click', ['$event'])
   protected onDocumentClick(event: MouseEvent): void {
-    if (!this.langMenuOpen() && !this.a11yPanelOpen()) {
+    if (!this.themeMenuOpen() && !this.langMenuOpen() && !this.a11yPanelOpen()) {
       return;
     }
 
@@ -93,17 +97,30 @@ export class AppHeaderComponent {
     }
   }
 
-  protected onToggleTheme(): void {
-    const nextMode = this.theme.toggleTheme();
-    this.telemetry.trackEvent('theme_changed', { theme: nextMode });
-    const key = nextMode === 'dark' ? 'themeDarkActive' : 'themeLightActive';
-    this.accessibility.announce(this.i18n.translateUi(key));
+  protected toggleThemeMenu(): void {
+    const next = !this.themeMenuOpen();
+    this.themeMenuOpen.set(next);
+    if (next) {
+      this.langMenuOpen.set(false);
+      this.a11yPanelOpen.set(false);
+    }
+  }
+
+  protected selectTheme(mode: ThemeMode): void {
+    const preset = this.themePresets.find((item) => item.id === mode);
+    this.theme.setTheme(mode);
+    this.themeMenuOpen.set(false);
+    this.telemetry.trackEvent('theme_changed', { theme: mode });
+    if (preset) {
+      this.accessibility.announce(this.i18n.translateUi(preset.activeAnnouncementKey));
+    }
   }
 
   protected toggleLangMenu(): void {
     const next = !this.langMenuOpen();
     this.langMenuOpen.set(next);
     if (next) {
+      this.themeMenuOpen.set(false);
       this.a11yPanelOpen.set(false);
     }
   }
@@ -119,11 +136,13 @@ export class AppHeaderComponent {
     const next = !this.a11yPanelOpen();
     this.a11yPanelOpen.set(next);
     if (next) {
+      this.themeMenuOpen.set(false);
       this.langMenuOpen.set(false);
     }
   }
 
   protected closePopovers(): void {
+    this.themeMenuOpen.set(false);
     this.langMenuOpen.set(false);
     this.a11yPanelOpen.set(false);
   }

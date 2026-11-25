@@ -2,31 +2,32 @@
 
 Índice central para onboarding, arquitetura, diretrizes de código, especificação V1, testes Jest, qualidade estática, containers e atualização de pacotes do **KinkConsentManager**.
 
-- **Escopo atual (V1):** SPA **100% client-side** para Checklist de Limites e Consentimento (`/checklist`) e Prévia/Exportação segura (`/export`), sem envio de dados a servidor.
+- **Escopo atual (V1):** SPA **100% client-side** para Painel Inicial (`/dashboard`), seleção de modo (`/checklist`), preenchimento do Checklist (`/checklist/fill`) e Prévia/Exportação segura (`/checklist/export`), sem envio de dados a servidor.
 - **Backend:** **Coming Soon (Roadmap V2+)** — o servidor/API ainda não existe neste repositório na V1; veja a seção [Backend (Coming Soon)](#backend-coming-soon).
 
 Documentação e comentários de contexto ficam em **português**; código, símbolos e nomes de testes (`describe`/`it`) ficam em **inglês**; textos de UI residem nos dicionários `assets/i18n/` ([PROJECT_GUIDELINES.md](./PROJECT_GUIDELINES.md#13-princípios-gerais)).
 
 ---
 
-## Stack e Recursos (Baseline `2026-11-22`)
+## Stack e Recursos (Baseline `v1.2.4` — `2026-11-25`)
 
 As versões vivas constam em [frontend/package.json](../frontend/package.json), [Arquitetura — catálogo](./ARCHITECTURE.md#10-catálogo-de-tecnologias-e-recursos) e [Conjunto Homologado Frontend](./Frontend/UpdatePackages/2026-11-22-ConjuntoHomologado-Frontend.md).
 
 | Área | O que o repositório usa hoje |
 | ---- | ---------------------------- |
 | Frontend (V1 ativo) | Angular `^22.1.0` (Standalone, Signals, **zoneless**, `OnPush`), TypeScript `~6.0.2`, RxJS `~7.8.0` |
-| Design System & UI | **Angular Material** `^22.3.0`, `@angular/cdk` `^22.3.0`, **Font Awesome Free** `^7.0.1` e tipografia `Nunito` |
-| Internacionalização | `@ngx-translate/core` `^18.1.0` e `@ngx-translate/http-loader` `^18.1.0` (`pt-BR`, `en-US`) |
+| Design System, Ícones & Temas | **Angular Material** `^22.3.0`, `@angular/cdk` `^22.3.0`, **Font Awesome Free** `^7.0.1` (SVG + CSS), `sweetalert2` `^11.26.25`, `@popperjs/core` `^2.11.8`, tipografia `Nunito` e sistema modular de **3 temas** (`core/themes/`: *Sóbrio P&B com azul/degradê*, *Claro Vermelho*, *Escuro Vermelho*) |
+| Rotas Modulares & Acessibilidade | `core/routes/app-routes.config.ts` (`/dashboard`, `/checklist`, `/checklist/fill`, `/checklist/export`), `checklistFillGuard`, navegação pelo título `.app-shell__brand-title`, leitor audiovisual por `(focusin)` + Web Speech API + legendas ao vivo + `alt`/`title` em todos os templates |
+| Internacionalização | `@ngx-translate/core` `^18.1.0` e `@ngx-translate/http-loader` `^18.1.0` (`pt-BR`, `en-US`) com verificação automatizada `npm.cmd run check:i18n` (**66/66** chaves) |
 | Schema, Segurança & Preferências | Schema `checklist-v1.json` (`ISchemaRepository`) + autosave criptografado Web Crypto AES-GCM (`CryptoService`, `ChecklistAutosaveService`, `BrowserStorageRepository`) + `UserPreferencesRepository`, `ThemeService` e `AccessibilityService` |
-| Exportação & Impressão Client-Side | **PNG** (`html-to-image` `^1.11.13`, `1200px` Moderna / `1360px` Clássica), **PDF** (`pdfmake` `^0.3.15` em *chunk lazy*), **Imprimir** (`window.print()` + `@media print`), **JSON Draft** (export/import) e **CSV** UTF-8 BOM (`kink-consent-checklist-<modern|classic>-YYYY-MM-DD.<ext>`) |
+| Web Workers & Exportação Client-Side | Worker unificado (`core/workers/`) com delay configurável por variável de ambiente (`WORKER_LOADING_DELAY_MS`, padrão `3000ms`): **PNG** (`html-to-image` `^1.11.13`), **PDF** (`pdfmake` `^0.3.15`), **XLSX** OOXML modular (layouts Moderno pastel e Clássico paisagem), **Imprimir** (`window.print()` + `@media print`), **JSON Draft** e **CSV** UTF-8 BOM |
 | Camada Genérica CRUD | `ICrudOperations`, `BaseDataService`, `BaseCrudService`, `ICrudRepository`, `BaseCrudRepository`, `API_BASE_URL` |
 | Testes & Cobertura | **Jest** `^30.5.2`, `jest-preset-angular` `^17.0.3`, `jest-environment-jsdom` `^30.5.2`, `jsdom` `^28.0.0` |
 | Qualidade & Reporters | Prettier `^3.8.1`, SonarCloud (`sonar-project.properties`), `jest-junit`, `jest-sonar`, `jest-stare`, `jest-html-reporter`, `jest-html-reporters` |
 | Infraestrutura & Containers | Docker multi-stage ([Dockerfile](../frontend/Dockerfile)), Nginx Alpine com CSP e `/health` ([nginx.conf](../frontend/nginx.conf)), Compose e DevContainers |
 | **Backend** | **Coming Soon (Roadmap V2+)** — sem implementação na V1; contrato preparatório genérico documentado |
 
-**Baseline verificado da V1 (`2026-11-22`):** **41 arquivos `.spec.ts`** / **201 testes unitários aprovados (100%)**, cobertura global Jest de **90,3% Statements** / **90,04% Lines**, `tsc` (`app` e `spec`) sem erros e `npm.cmd run build:prod` limpo.
+**Baseline verificado (`v1.2.4` — `2026-11-25`):** **73 arquivos `.spec.ts`** / **296 testes unitários aprovados (100%)**, cobertura global Jest de **91,83% Statements / 91,59% Lines**, `tsc` (`app`, `worker` e `spec`) sem erros, **66/66** chaves i18n sincronizadas e `npm.cmd run build` / `npm.cmd run build:prod` limpos.
 
 ---
 
@@ -100,7 +101,7 @@ As versões vivas constam em [frontend/package.json](../frontend/package.json), 
 | Configuração Jest 30 + Reporters (JUnit, Cobertura, LCOV, Sonar) | [frontend/jest.config.js](../frontend/jest.config.js) |
 | Setup Zoneless + Polyfills `jsdom` | [frontend/src/setup-jest.ts](../frontend/src/setup-jest.ts) |
 | Configuração SonarCloud | [frontend/sonar-project.properties](../frontend/sonar-project.properties) |
-| Pipelines CI/CD (Azure DevOps, GitHub, GitLab & Scripts — desativados por padrão) | [ci-cd/README.md](../ci-cd/README.md) · [Guia Azure DevOps -> Azure](../ci-cd/GUIA_AZURE_DEVOPS_AZURE.md) · [Guia GitHub -> Azure](../ci-cd/GUIA_GITHUB_ACTIONS_AZURE.md) · [Guia Deploy Manual Azure](../ci-cd/manualdeploy/GUIA_PUBLICACAO_MANUAL_AZURE.md) · [azure-pipelines.yml](../ci-cd/azure-devops/azure-pipelines.yml) · [kinkconsentmanager-ci-cd.yml](../ci-cd/github/kinkconsentmanager-ci-cd.yml) |
+| Pipelines CI/CD (Azure DevOps, GitHub, GitLab & Scripts — desativados por padrão) | [ci-cd/README.md](../ci-cd/README.md) · [Guia Azure DevOps -> Azure](../ci-cd/azure-devops/GUIA_AZURE_DEVOPS_AZURE.md) · [Guia GitHub -> Azure](../ci-cd/github/GUIA_GITHUB_ACTIONS_AZURE.md) · [Guia Deploy Manual Azure](../ci-cd/manualdeploy/GUIA_PUBLICACAO_MANUAL_AZURE.md) · [azure-pipelines.yml](../ci-cd/azure-devops/azure-pipelines.yml) · [kinkconsentmanager-ci-cd.yml](../ci-cd/github/kinkconsentmanager-ci-cd.yml) |
 | Dockerfile Multi-Stage & Nginx CSP | [Dockerfile](../frontend/Dockerfile) · [nginx.conf](../frontend/nginx.conf) |
 | Docker Compose (Dev/Local & Prod) | [docker-compose.yml](../frontend/docker-compose.yml) · [dockercompose.prod.yml](../frontend/dockercompose.prod.yml) |
 | DevContainers (Frontend + Backend Placeholder) | [.devcontainer/docker-compose.yml](../.devcontainer/docker-compose.yml) |
@@ -113,8 +114,10 @@ As versões vivas constam em [frontend/package.json](../frontend/package.json), 
 
 | Recurso | Caminho / URL | Descrição |
 | ------- | ------------- | --------- |
-| Checklist Interativo (Rota padrão) | `/checklist` | Tela inicial de seleção de modo + Importar JSON, modos *Guiado (Passos)*, *Modo Clássico*, *Visão Completa* e *Preenchimento Rápido* inline |
-| Prévia e Exportação | `/export` | Seleção de estilo (*Visualização Moderna* ou *Visualização Clássica*) + **PNG**, **PDF**, **Imprimir** (`@media print`), **JSON Draft** (export/import) e **CSV BOM** |
+| Painel Inicial (Rota padrão) | `/dashboard` | Seção **Ferramentas** com cartão do Checklist e indicador de progresso salvo |
+| Início do Checklist | `/checklist` | Seleção inicial entre os 4 modos de preenchimento + importação JSON em segundo plano |
+| Preenchimento do Checklist | `/checklist/fill` | Formulário interativo (*Guiado*, *Clássico*, *Visão Completa*, *Preenchimento Rápido*) protegido por `checklistFillGuard` |
+| Prévia e Exportação | `/checklist/export` | Seleção de estilo (*Visualização Moderna* ou *Visualização Clássica*) + **PNG**, **PDF**, **XLSX**, **Imprimir** (`@media print`), **JSON Draft** e **CSV BOM** |
 | Healthcheck Nginx (Docker) | `/health` | Resposta `200 OK` de disponibilidade do container frontend |
 
 ### Portas por Contexto

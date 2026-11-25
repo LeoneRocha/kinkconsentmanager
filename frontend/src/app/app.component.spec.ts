@@ -16,6 +16,7 @@ describe('App', () => {
   const clearRootClasses = (): void => {
     document.documentElement.classList.remove(
       'app-dark',
+      'app-theme-sober',
       'app-high-contrast',
       'app-font-large',
       'app-font-xlarge',
@@ -54,6 +55,14 @@ describe('App', () => {
         themeToggleToLight: 'Ativar tema claro',
         themeDarkActive: 'Tema escuro ativado.',
         themeLightActive: 'Tema claro ativado.',
+        themeMenuLabel: 'Alterar tema',
+        themeSoberLabel: 'Sóbrio (Preto & Branco)',
+        themeSoberDesc: 'Branco e preto com detalhes em azul e degradê',
+        themeSoberActive: 'Tema sóbrio ativado.',
+        themeLightLabel: 'Claro (Vermelho)',
+        themeLightDesc: 'Visual claro com destaques em vermelho',
+        themeDarkLabel: 'Escuro (Vermelho)',
+        themeDarkDesc: 'Visual escuro com destaques em vermelho',
         languageMenuLabel: 'Alterar idioma',
         langPtBr: 'Português (Brasil)',
         langEnUs: 'English (US)',
@@ -135,9 +144,9 @@ describe('App', () => {
     expect(routes[3]?.redirectTo).toBe('dashboard');
   });
 
-  // Cenário: Clique no botão de tema claro/escuro na barra superior.
-  // Objetivo: Alternar a classe `app-dark` e anunciar o novo estado para leitores de tela.
-  it('should toggle dark theme via topbar button and announce change', async () => {
+  // Cenário: Seleção do tema sóbrio e escuro via menu de temas da barra superior.
+  // Objetivo: Atualizar classes CSS na raiz do documento e anunciar o tema escolhido para leitores de tela.
+  it('should switch themes via topbar theme menu and announce change', async () => {
     const fixture = TestBed.createComponent(App);
     const themeService = TestBed.inject(ThemeService);
     const a11yService = TestBed.inject(AccessibilityService);
@@ -147,14 +156,32 @@ describe('App', () => {
     const themeBtn = fixture.nativeElement.querySelector(
       '.app-shell__icon-btn--theme',
     ) as HTMLButtonElement;
-    expect(themeBtn.getAttribute('aria-pressed')).toBe('false');
+    expect(themeBtn.getAttribute('aria-expanded')).toBe('false');
 
     themeBtn.click();
+    await fixture.whenStable();
+    expect(themeBtn.getAttribute('aria-expanded')).toBe('true');
+
+    const soberOption = fixture.nativeElement.querySelector(
+      'button[data-theme-option="sober"]',
+    ) as HTMLButtonElement;
+    soberOption.click();
+    await fixture.whenStable();
+
+    expect(themeService.theme()).toBe('sober');
+    expect(document.documentElement.classList.contains('app-theme-sober')).toBe(true);
+    expect(a11yService.liveAnnouncement()).toBe('Tema sóbrio ativado.');
+
+    themeBtn.click();
+    await fixture.whenStable();
+    const darkOption = fixture.nativeElement.querySelector(
+      'button[data-theme-option="dark"]',
+    ) as HTMLButtonElement;
+    darkOption.click();
     await fixture.whenStable();
 
     expect(themeService.isDark()).toBe(true);
     expect(document.documentElement.classList.contains('app-dark')).toBe(true);
-    expect(themeBtn.getAttribute('aria-pressed')).toBe('true');
     expect(a11yService.liveAnnouncement()).toBe('Tema escuro ativado.');
   });
 
@@ -226,7 +253,7 @@ describe('App', () => {
     themeBtn.dispatchEvent(new FocusEvent('focusin', { bubbles: true }));
     await fixture.whenStable();
 
-    expect(a11yService.liveAnnouncement()).toBe('Ativar tema escuro');
+    expect(a11yService.liveAnnouncement()).toBe('Alterar tema');
   });
 
   // Cenário: Clique no título `.app-shell__brand-title` no shell principal após navegação para `/checklist`.

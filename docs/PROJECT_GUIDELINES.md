@@ -3,7 +3,7 @@
 Documento normativo de referência para desenvolvedores e agentes de IA do **KinkConsentManager**.
 Consolida os padrões técnicos, regras de arquitetura, qualidade e governança aplicáveis à base de código atual (V1 Checklist em `frontend/`) e às diretrizes preparatórias genéricas para a futura evolução do Backend (**Coming Soon**).
 
-**Último alinhamento documental:** `2026-11-23` (Angular 22 zoneless, Angular Material 22.3, Font Awesome 7 SVG + CSS, Popper.js, SweetAlert2, Toast desacoplado, Web Crypto AES-GCM, Jest 30 + `jest-preset-angular` 17 e regra mandatória `R-GOV-GUIDELINES`).
+**Último alinhamento documental:** `2026-11-25` (Angular 22 zoneless, Angular Material 22.3, Font Awesome 7 SVG + CSS, Popper.js, SweetAlert2, Web Worker unificado em `core/workers/` com XLSX OOXML modular, rotas modulares em `core/routes/`, sistema modular de 3 temas em `core/themes/`, acessibilidade audiovisual com `alt`/`title` + leitura por foco, Web Crypto AES-GCM, Jest 30 + `jest-preset-angular` 17 e regra mandatória `R-GOV-GUIDELINES`).
 
 ---
 
@@ -60,7 +60,7 @@ Quando houver divergência entre documentos:
 ### 1.6 Adesão Obrigatória às Diretrizes para Todo Novo Desenvolvimento (`R-GOV-GUIDELINES`)
 
 - **Escopo Universal:** qualquer **novo desenvolvimento, funcionalidade, serviço, utilitário ou criação/refatoração de componente** — seja por desenvolvedor ou agente de IA — **deve obrigatoriamente seguir todas as regras deste `PROJECT_GUIDELINES.md`**.
-- **Inconformidade Bloqueante:** componentes ou serviços criados fora do padrão **4+1**, sem `ChangeDetectionStrategy.OnPush`, com strings visíveis ou atributos de acessibilidade (`aria-label`, títulos, botões de confirmação/fechamento) **hardcoded fora de `assets/i18n/{lang}.json`**, sem encapsulamento de terceiros ou sem testes unitários Jest são considerados fora de conformidade e devem ser ajustados antes de concluir a entrega.
+- **Inconformidade Bloqueante:** componentes ou serviços criados fora do padrão **4+1**, sem `ChangeDetectionStrategy.OnPush`, com imagens sem `alt` descritivo, botões/ícones/textos interativos sem `title` (`[attr.title]`) ou atributos ARIA adequados, com strings visíveis ou atributos de acessibilidade **hardcoded fora de `assets/i18n/{lang}.json`**, sem encapsulamento de terceiros ou sem testes unitários Jest são considerados fora de conformidade e devem ser ajustados antes de concluir a entrega.
 
 ---
 
@@ -84,11 +84,11 @@ kinkconsentmanager/
 │   └── Frontend/
 ├── frontend/                            # SPA Angular 22 + Angular Material 22.3 (V1 Checklist & Export)
 │   ├── public/                          # Favicons (silhueta de usuário SVG/ICO/PNG), manifest PWA e og-image.png
-│   ├── scripts/                         # Versionamento dinâmico amigável (X.Y.Z + buildDate), injeção de telemetria em build e check-i18n-keys.mjs
-│   ├── src/app/core/                    # Models, Repositories (Schema, BrowserStorage, UserPreferences, BaseCrud) e Services (State, Autosave, Crypto, I18n, Theme, Accessibility, Storage, Notification, SweetAlert, AlertFactory, ModalFactory, UiFeedbackHost, Telemetry)
+│   ├── scripts/                         # Versionamento dinâmico amigável (X.Y.Z + buildDate), injeção de telemetria e delay de worker (worker-loading-config-updater.js) e check-i18n-keys.mjs
+│   ├── src/app/core/                    # Models, Repositories, Routes (app-routes.config.ts), Themes (theme-presets.config.ts), Workers (core/workers/ + xlsx/) e Services (State, Autosave, Crypto, I18n, Theme, Accessibility, BackgroundTaskWorker, Notification, SweetAlert, UiFeedbackHost, Telemetry)
 │   ├── src/app/layouts/                 # Shell layout desacoplado (AppHeaderComponent, AppFooterComponent, AppAccessibilityOverlayComponent)
-│   ├── src/app/shared/                  # Dumb Components 4+1 (scale, question, legend, progress, full-grid, confirm, toast-container, popper-popover, sweet-alert-trigger, popup-host, app-icon) e SchemaTranslatePipe
-│   ├── src/app/features/                # Features lazy: checklist (mode selector, stepper, classic, full, quick_fill) e export
+│   ├── src/app/shared/                  # Dumb Components 4+1 (scale, question, legend, progress, full-grid, confirm, toast-container, popper-popover, sweet-alert-trigger, popup-host, app-icon, import-loading-overlay) e SchemaTranslatePipe
+│   ├── src/app/features/                # Features lazy com *.routes.ts modulares: dashboard (/dashboard), checklist (/checklist + /checklist/fill com guard) e export (/checklist/export)
 │   ├── src/environments/                # environment.ts e environment.prod.ts (version + buildDate dinâmicos)
 │   ├── src/assets/                      # checklist-v1.json e i18n/{pt-BR,en-US}.json
 │   ├── src/setup-jest.ts                # Setup zoneless e polyfills jsdom para Jest 30
