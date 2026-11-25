@@ -1,5 +1,5 @@
 export type ScaleId =
-  'hard_limit' | 'soft_limit' | 'curious' | 'enjoy' | 'favorite' | 'not_applicable';
+  'not_applicable' | 'hard_limit' | 'soft_limit' | 'curious' | 'enjoy' | 'favorite';
 
 export type QuestionType = 'scale_matrix' | 'single_choice' | 'multiple_choice' | 'restricted_text';
 

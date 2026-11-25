@@ -4,7 +4,7 @@
 > - **Objetivo 1 (Isolamento de `groups`, `items` e `options` + Camada Extensível por Provider):** **Implementado** (`assets/i18n/groups/{pt-BR,en-US}.json` com `groups`, `assets/i18n/questions/{pt-BR,en-US}.json` com `items` e `options`, `IQuestionTranslationsRepository`, `QUESTION_TRANSLATIONS_REPOSITORY_TOKEN`, `StaticJsonQuestionTranslationsRepository`, `QuestionTranslationsService` e `CompositeTranslateLoader`).  
 > - **Base Estrutural na V1 para Questionários Específicos por Perfil e Categoria (`2026-11-25`):** **Implementado no schema/i18n** — adicionada a 6ª opção de escala `not_applicable` (**Não se aplica**), catálogo `participantRoles` em `checklist-v1.json` + traduções `participantRoles` em `pt-BR.json`/`en-US.json`, além dos campos `participantRoles` e `groupId` preenchidos em **todos os grupos e perguntas** (ainda sem filtragem por role na UI da V1).  
 > - **Objetivo 2 (Checklist Personalizável Multilíngue & Questionários Específicos por Role/Categoria):** **Anotação para Levantamento Futuro (Pós-V1 / Roadmap V2+)** — preparação de dados já concluída na V1; interface de seleção de perfil (*Quem é você?*) e filtro de subcategorias/questionários específicos planejada para o ciclo de personalização.  
-> **Documentos relacionados:** [Blueprint](./../Bueprint.md) · [Levantamento Funcional e Técnico](./LEVANTAMENTO_FUNCIONAL_TECNICO.md) · [Arquitetura](./../ARCHITECTURE.md) · [PROJECT_GUIDELINES](./../PROJECT_GUIDELINES.md)
+> **Documentos relacionados:** [Blueprint](./../Blueprint.md) · [Levantamento Funcional e Técnico](./Feito/LEVANTAMENTO_FUNCIONAL_TECNICO.md) · [Arquitetura](./../ARCHITECTURE.md) · [PROJECT_GUIDELINES](./../PROJECT_GUIDELINES.md)
 
 ---
 

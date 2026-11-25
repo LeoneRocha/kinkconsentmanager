@@ -3,7 +3,7 @@
 Documento normativo de referência para desenvolvedores e agentes de IA do **KinkConsentManager**.
 Consolida os padrões técnicos, regras de arquitetura, qualidade e governança aplicáveis à base de código atual (V1 Checklist em `frontend/`) e às diretrizes preparatórias genéricas para a futura evolução do Backend (**Coming Soon**).
 
-**Último alinhamento documental:** `2026-11-25` (Angular 22 zoneless, Angular Material 22.3, Font Awesome 7 SVG + CSS, Popper.js, SweetAlert2, Web Worker unificado em `core/workers/` com XLSX OOXML modular, rotas modulares em `core/routes/`, sistema modular de 3 temas em `core/themes/` com autodetecção `prefers-color-scheme`, autodetecção inicial de idioma do navegador no bootstrap, padronização de botões verde/cinza vs. navegação vazada, acessibilidade audiovisual com `alt`/`title` + leitura por foco, Web Crypto AES-GCM, Jest 30 + `jest-preset-angular` 17 e regra mandatória `R-GOV-GUIDELINES`).
+**Último alinhamento documental:** `2026-11-25` (Angular 22 zoneless, Angular Material 22.3, Font Awesome 7 SVG + CSS, Popper.js, SweetAlert2, Web Worker unificado em `core/workers/` com XLSX OOXML modular, rotas modulares em `core/routes/`, sistema modular de 3 temas em `core/themes/` com autodetecção `prefers-color-scheme`, autodetecção inicial de idioma do navegador no bootstrap, `checklist-v1.json` com 6 escalas incluindo `not_applicable` e metadados `participantRoles` + `groupId`, dicionários `groups/` e `questions/` isolados, padronização de botões verde/cinza vs. navegação vazada, acessibilidade audiovisual com `alt`/`title` + leitura por foco, Web Crypto AES-GCM, Jest 30 + `jest-preset-angular` 17 e regra mandatória `R-GOV-GUIDELINES`).
 
 ---
 
@@ -34,7 +34,7 @@ Quando houver divergência entre documentos:
 2. **Este guia (`PROJECT_GUIDELINES.md`)** — regras transversais de implementação e qualidade.
 3. **Arquitetura e Documentos V1** ([ARCHITECTURE.md](./ARCHITECTURE.md) e guias em [Features/](./Features/)) — contratos e decisões da entrega V1.
 4. **Guias Especializados Frontend** em [Frontend/](./Frontend/) — diretrizes operacionais de testes, coverage, Code Smells e atualização de pacotes.
-5. **Visão Conceitual e Roadmap Futuro** ([Bueprint.md](./Bueprint.md)) — horizonte de funcionalidades V2+ (fora do escopo da V1).
+5. **Visão Conceitual e Roadmap Futuro** ([Blueprint.md](./Blueprint.md)) — horizonte de funcionalidades V2+ (fora do escopo da V1).
 
 ### 1.3 Princípios Gerais
 
@@ -79,7 +79,7 @@ kinkconsentmanager/
 │   ├── PROJECT_GUIDELINES.md
 │   ├── CHANGELOG_MELHORIAS.md
 │   ├── README.md
-│   ├── Bueprint.md
+│   ├── Blueprint.md
 │   ├── Features/
 │   └── Frontend/
 ├── frontend/                            # SPA Angular 22 + Angular Material 22.3 (V1 Checklist & Export)
@@ -90,7 +90,7 @@ kinkconsentmanager/
 │   ├── src/app/shared/                  # Dumb Components 4+1 (scale, question, legend, progress, full-grid, confirm, toast-container, popper-popover, sweet-alert-trigger, popup-host, app-icon, import-loading-overlay) e SchemaTranslatePipe
 │   ├── src/app/features/                # Features lazy com *.routes.ts modulares: dashboard (/dashboard), checklist (/checklist + /checklist/fill com guard) e export (/checklist/export)
 │   ├── src/environments/                # environment.ts e environment.prod.ts (version + buildDate dinâmicos)
-│   ├── src/assets/                      # checklist-v1.json e i18n/{pt-BR,en-US}.json
+│   ├── src/assets/                      # checklist-v1.json (6 escalas + participantRoles + groupId) e i18n/{pt-BR,en-US}.json + groups/ + questions/
 │   ├── src/setup-jest.ts                # Setup zoneless e polyfills jsdom para Jest 30
 │   ├── jest.config.js                   # Configuração Jest + jest-preset-angular + 6 reporters
 │   ├── nginx.conf / Dockerfile          # Serving estático seguro com CSP e /health
@@ -130,11 +130,11 @@ kinkconsentmanager/
 
 | Módulo / Recurso | Status | Onde Vive |
 | ---------------- | ------ | --------- |
-| Seleção Inicial de Modo, Checklist Interativo (Passos, Clássico, Completo, Rápido Inline), Acessibilidade & Tema | **Entregue (V1)** | `frontend/src/app/features/checklist/` |
-| Persistência Local Criptografada (Web Crypto AES-GCM), Autosave e i18n (`pt-BR` / `en-US`) | **Entregue (V1)** | `frontend/src/app/core/services/` |
-| Exportação & Impressão Client-Side (Prévia Moderna/Clássica, PNG, PDF `pdfmake`, Imprimir `@media print`, JSON import/export, CSV BOM) | **Entregue (V1)** | `frontend/src/app/features/export/` |
+| Painel Inicial, Seleção de Modo, Checklist Interativo (6 escalas + `not_applicable`, `participantRoles`/`groupId`, 4 modos), Acessibilidade & 3 Temas | **Entregue (V1)** | `frontend/src/app/features/{dashboard,checklist}/` |
+| Persistência Local Criptografada (Web Crypto AES-GCM), Autosave, Autodetecção Tema/Idioma e i18n (`pt-BR` / `en-US` + `groups/` + `questions/`) | **Entregue (V1)** | `frontend/src/app/core/services/` |
+| Exportação & Impressão Client-Side (Prévia Moderna/Clássica, PNG, PDF `pdfmake`, XLSX OOXML, Imprimir `@media print`, JSON import/export, CSV BOM) | **Entregue (V1)** | `frontend/src/app/features/export/` |
 | Abstração Genérica CRUD (`BaseDataService`, `BaseCrudService`, `BaseCrudRepository`) | **Entregue (V1)** | `frontend/src/app/core/{repositories,services}/` |
-| Backend REST / Persistência Remota / E2E Compartilhamento / Contas | **Coming Soon (V2+)** | Fora do escopo da V1 (ver [Bueprint.md](./Bueprint.md)) |
+| Backend REST / Persistência Remota / Questionários Filtrados / E2E Compartilhamento / Contas | **Coming Soon (V2+)** | Fora do escopo da V1 (ver [Blueprint.md](./Blueprint.md)) |
 
 ---
 
@@ -283,8 +283,8 @@ npm.cmd audit --omit=dev
 
 ### 5.3 Baseline Verificado (V1 Checklist)
 
-- **Suíte:** `73 passed, 73 total` arquivos `.spec.ts` · `300 passed, 300 total` testes unitários (`0` falhas).
-- **Cobertura Global Jest:** Statements **`91,79%`** · Branches **`75,32%`** · Functions **`92,23%`** · Lines **`91,54%`**.
+- **Suíte:** `73 passed, 73 total` arquivos `.spec.ts` · `301 passed, 301 total` testes unitários (`0` falhas).
+- **Cobertura Global Jest:** Statements **`91,79%`** · Branches **`75,43%`** · Functions **`92,23%`** · Lines **`91,54%`**.
 - **Relatórios Sonar:** [sonar-project.properties](../frontend/sonar-project.properties) aponta para `frontend/coverage/lcov.info` e `frontend/coverage/sonar/sonar-report.xml`.
 - Detalhes completos em [CHANGELOG_MELHORIAS.md](./CHANGELOG_MELHORIAS.md), [Diretrizes-Coverage-Frontend-KinkConsentManager.md](./Frontend/COVERAGE%20AND%20TEST/Diretrizes-Coverage-Frontend-KinkConsentManager.md) e [Diretrizes-CodeSmell-KinkConsentManagerUI.md](./Frontend/COVERAGE%20AND%20TEST/Diretrizes-CodeSmell-KinkConsentManagerUI.md).
 
@@ -323,7 +323,7 @@ Quando o backend for iniciado na V2+, deverá acompanhar testes automatizados eq
 - [ ] Nenhum `[innerHTML]` inseguro ou vazamento de subscrição RxJS foi introduzido.
 - [ ] `npx.cmd tsc -p tsconfig.app.json --noEmit` e `tsconfig.spec.json` passam com `0` erros.
 - [ ] `npx.cmd prettier --check "src/**/*.{ts,html,scss,json}"` conclui sem violações.
-- [ ] `npm.cmd run test:ci` e `npm.cmd run test:coverage` passam 100% (**73/73 suítes · 300/300 testes**).
+- [ ] `npm.cmd run test:ci` e `npm.cmd run test:coverage` passam 100% (**73/73 suítes · 301/301 testes**).
 - [ ] `npm.cmd run build:prod` conclui sem erros gerando artefatos e assets esperados.
 - [ ] `npm.cmd audit --omit=dev` reporta `0` vulnerabilidades em dependências de produção.
 - [ ] Configurações `nginx.conf`, `Dockerfile`, `docker-compose*.yml` e `sonar-project.properties` permanecem consistentes.
@@ -338,10 +338,11 @@ Quando o backend for iniciado na V2+, deverá acompanhar testes automatizados eq
 | [README.md](./README.md) | Índice geral, stack atual, URLs e mapa da documentação |
 | [ARCHITECTURE.md](./ARCHITECTURE.md) | Arquitetura em camadas V1, diagramas, decisões técnicas e Backend Coming Soon |
 | [CHANGELOG_MELHORIAS.md](./CHANGELOG_MELHORIAS.md) | Resumo consolidado das melhorias de UX/UI, ícones, impressão e testes |
-| [Bueprint.md](./Bueprint.md) | Visão de produto completa, arquitetura Zero-Knowledge e roadmap pós-V1 |
-| [LEVANTAMENTO_FUNCIONAL_TECNICO.md](./Features/LEVANTAMENTO_FUNCIONAL_TECNICO.md) | Requisitos funcionais/técnicos e fronteira oficial do escopo V1 Checklist |
-| [PLANO_IMPLEMENTACAO_FRONTEND.md](./Features/PLANO_IMPLEMENTACAO_FRONTEND.md) | Plano modular e arquitetura detalhada da entrega V1 Frontend |
-| [CHECKLIST_IMPLEMENTACAO_PROGRESSO.md](./Features/CHECKLIST_IMPLEMENTACAO_PROGRESSO.md) | Rastreabilidade de etapas e critérios de aceite da V1 |
+| [Blueprint.md](./Blueprint.md) | Visão de produto completa, arquitetura Zero-Knowledge e roadmap pós-V1 |
+| [LEVANTAMENTO_FUNCIONAL_TECNICO.md](./Features/Feito/LEVANTAMENTO_FUNCIONAL_TECNICO.md) | Requisitos funcionais/técnicos e fronteira oficial do escopo V1 Checklist |
+| [PLANO_IMPLEMENTACAO_FRONTEND.md](./Features/Feito/PLANO_IMPLEMENTACAO_FRONTEND.md) | Plano modular e arquitetura detalhada da entrega V1 Frontend |
+| [CHECKLIST_IMPLEMENTACAO_PROGRESSO.md](./Features/Feito/CHECKLIST_IMPLEMENTACAO_PROGRESSO.md) | Rastreabilidade de etapas e critérios de aceite da V1 |
+| [ESPECIFICACAO_I18N_CHECKLIST_PERSONALIZAVEL.md](./Features/ESPECIFICACAO_I18N_CHECKLIST_PERSONALIZAVEL.md) | Isolamento i18n por questões, metadados por role/categoria e especificações futuras |
 | [Diretrizes-CodeSmell-Frontend-Generico.md](./Frontend/COVERAGE%20AND%20TEST/Diretrizes-CodeSmell-Frontend-Generico.md) | Guia genérico TypeScript/JS para saneamento de Code Smells e Sonar |
 | [Diretrizes-CodeSmell-KinkConsentManagerUI.md](./Frontend/COVERAGE%20AND%20TEST/Diretrizes-CodeSmell-KinkConsentManagerUI.md) | Diretrizes específicas de Code Smells, `OnPush`, 4+1, Sonar e segurança no projeto |
 | [Diretrizes-Coverage-Frontend-Generico.md](./Frontend/COVERAGE%20AND%20TEST/Diretrizes-Coverage-Frontend-Generico.md) | Padrões genéricos AAA, mocking e cobertura Jest / Vitest |

@@ -27,8 +27,8 @@ O **KinkConsentManager** é uma plataforma *privacy-first* (arquitetura **Zero-K
   - Aplicação SPA **100% client-side** em **Angular 22** (Standalone Components, Signals e execução *zoneless*), com **Angular Material 22.3**, **Font Awesome 7**, `sweetalert2`, `@popperjs/core` e tipografia `Nunito`.
   - Registro global de rotas (`core/routes/app-routes.config.ts`) com rotas modulares por página carregadas sob demanda (*lazy loading*): `/dashboard` (rota padrão com seção **Ferramentas**), `/checklist` (escolha do modo + importação JSON), `/checklist/fill` (preenchimento protegido por `checklistFillGuard`) e `/checklist/export` (prévia e exportação).
   - Tela inicial de entrada em `/checklist` (`ChecklistModeSelectorComponent`) com descrição e guia **Como preencher** dos 4 modos e opção de **Importar JSON** em background.
-  - Arquitetura **Schema-Driven UI** (`checklist-v1.json`), completamente separada dos dicionários de internacionalização (`@ngx-translate/core` 18 em `pt-BR` e `en-US`, **66/66** chaves de UI sincronizadas via `check:i18n`).
-  - Quatro modos complementares de preenchimento inline ordenados por prioridade de uso: *Preenchimento Rápido* (`QuickFillWizardModalComponent` com atalhos `1–5`, marcado como **Recomendado**), *Guiado (Passos)* (`ChecklistStepperComponent` + `ChecklistStepRailComponent` com validação de conclusão e Revisão Final), *Modo Clássico* (`ClassicKinkSheetComponent`) e *Visão Completa* (`FullViewContainerComponent`).
+  - Arquitetura **Schema-Driven UI** (`checklist-v1.json` com **6 escalas**, incluindo **`not_applicable` — *Não se aplica***, além de metadados **`participantRoles`** e **`groupId`** em todos os grupos e itens preparando futuros questionários específicos), completamente separada dos dicionários de internacionalização (`@ngx-translate/core` 18 + `CompositeTranslateLoader` em `pt-BR` e `en-US`, com `groups/` e `questions/` isolados e **66/66** chaves estáticas de UI sincronizadas via `check:i18n`).
+  - Quatro modos complementares de preenchimento inline ordenados por prioridade de uso: *Preenchimento Rápido* (`QuickFillWizardModalComponent` com atalhos `1–6`, marcado como **Recomendado**), *Guiado (Passos)* (`ChecklistStepperComponent` + `ChecklistStepRailComponent` com validação de conclusão e Revisão Final), *Modo Clássico* (`ClassicKinkSheetComponent`) e *Visão Completa* (`FullViewContainerComponent`).
   - Cabeçalho, barra de **Progresso**, **Steps** e **Legenda da Escala** unificados em bloco `sticky` único no topo com rolagem externa nativa do navegador em telas `>= 768px`, e navegação direta ao `/dashboard` pelo clique em `.app-shell__brand-title` no topo.
   - Controles globais de acessibilidade audiovisual (`AccessibilityService`: leitura por foco `(focusin)`, Web Speech API, legendas visuais ao vivo, alto contraste WCAG AAA, tamanho de fonte, redução de animações, `alt` em imagens e `[attr.title]` nos 31 templates), sistema modular de **3 temas fixos** por tokens (`core/themes/`: *Sóbrio Preto & Branco com azul e degradê*, *Claro Vermelho* e *Escuro Vermelho*, via `ThemeService` com autodetecção inicial de `prefers-color-scheme`), autodetecção inicial de idioma (`navigator.languages` / `navigator.language`) no `provideAppInitializer` e padronização visual de botões (verde habilitado / cinza desabilitado em formulários vs. transparente e vazado em botões de navegação e entrada).
   - Persistência local resiliente com criptografia Web Crypto AES-GCM 256-bit (`CryptoService`, `ChecklistAutosaveService`, `BrowserStorageRepository`, `LocalStoragePersistenceService`), salvamento condicional apenas quando há alterações pendentes e zero envio de respostas a servidores.
@@ -36,7 +36,7 @@ O **KinkConsentManager** é uma plataforma *privacy-first* (arquitetura **Zero-K
   - Camada genérica de contratos e acesso a dados já preparada (`ICrudOperations`, `BaseDataService`, `BaseCrudService`, `BaseCrudRepository`, `ISchemaRepository`) para futura evolução modular.
 - **Backend — Coming Soon (Roadmap V2+):**
   - Ainda **não existe implementação de backend** neste repositório na V1.
-  - Módulos de servidor, persistência remota, sincronização criptografada de ponta a ponta (Zero-Knowledge E2E) e demais recursos descritos em [Bueprint.md](./Bueprint.md) ficam documentados em alto nível como **Coming Soon** para definição e execução a partir da V2+.
+  - Módulos de servidor, persistência remota, sincronização criptografada de ponta a ponta (Zero-Knowledge E2E) e demais recursos descritos em [Blueprint.md](./Blueprint.md) ficam documentados em alto nível como **Coming Soon** para definição e execução a partir da V2+.
 
 ---
 
@@ -124,7 +124,7 @@ flowchart TD
 
 ### 5.1 Core Layer (`src/app/core/`)
 
-- **Models (`core/models/`):** contratos tipados para schema (`ChecklistSchema`), respostas (`ChecklistAnswer`, `ChecklistDraft`), exportação (`ExportConfig`, `ExportResult`), paginação/CRUD genérico (`EntityId`, `QueryParams`, `PageRequest`, `PageResult<T>`, `ICrudOperations`) e suíte de integridade estrutural (`__tests__/schema-integrity.spec.ts`).
+- **Models (`core/models/`):** contratos tipados para schema (`ChecklistSchema`, 6 escalas `ScaleId` incluindo `not_applicable`, `ParticipantRoleId` / `ALL_PARTICIPANT_ROLES`, `ItemDefinition.groupId`), respostas (`ChecklistAnswer`, `ChecklistDraft`), exportação (`ExportConfig`, `ExportResult`), paginação/CRUD genérico (`EntityId`, `QueryParams`, `PageRequest`, `PageResult<T>`, `ICrudOperations`) e suíte de integridade estrutural (`__tests__/schema-integrity.spec.ts`).
 - **Repositories (`core/repositories/`):**
   - `ISchemaRepository` + `SCHEMA_REPOSITORY_TOKEN`: abstrai a origem do checklist schema. Na V1 é provido por `StaticJsonSchemaRepository` (com cache e evicção de erro antes do `shareReplay(1)`).
   - `BrowserStorageRepository` & `UserPreferencesRepository`: persistência tipada com escopo para respostas e preferências locais do usuário (tema `'sober' | 'light' | 'dark'`, idioma, acessibilidade e modo de visualização).
@@ -138,7 +138,7 @@ flowchart TD
   - `BaseCrudService<T, ...>`: camada de aplicação/domínio genérica sobre `ICrudOperations` com hooks de ciclo de vida (`beforeCreate`, `afterLoadList`, etc.).
   - `ChecklistStateService`: gerencia schema ativo, respostas, progresso, confirmação de modo (`hasConfirmedStartMode`), seleção de modo de visualização (`stepper`, `classic`, `full`, `quick_fill`), restauração local e importação de rascunhos.
   - `ChecklistAutosaveService` & `CryptoService`: criptografia client-side via Web Crypto API (AES-GCM 256-bit) e salvamento automático condicional (somente com alterações pendentes e respeitando ativação pelo usuário).
-  - `I18nService` & `LocaleCatalogService`: inicializados no bootstrap via `provideAppInitializer`, detectam automaticamente o idioma preferido do navegador (`navigator.languages` / `navigator.language`, com `isBrowserDefault` e `clearSavedLanguage()`) quando não há preferência salva, coordenam `@ngx-translate/core` (`pt-BR` / `en-US`) preservando intactas as respostas ao alternar idioma e resolvem títulos de prévia/exportação (`Checklist`).
+  - `I18nService` & `LocaleCatalogService`: inicializados no bootstrap via `provideAppInitializer`, detectam automaticamente o idioma preferido do navegador (`navigator.languages` / `navigator.language`, com `isBrowserDefault` e `clearSavedLanguage()`) quando não há preferência salva, coordenam `@ngx-translate/core` (`pt-BR` / `en-US`) preservando intactas as respostas ao alternar idioma e resolvem escalas, `participantRoles` (`getParticipantRoleLabel()`), grupos, itens e títulos de prévia/exportação (`Checklist`).
   - `ThemeService` & `AccessibilityService`: inicializam automaticamente o tema conforme `(prefers-color-scheme: dark)` quando não há escolha persistida (`isSystemDefault`, escutando `addEventListener('change', ...)` e fallback `addListener(...)`), gerenciam os 3 temas (`sober`, `light`, `dark`) + overrides futuros de tokens (`setCustomColorTokens`), leitura automática por foco `(focusin)` + Web Speech API, barra de legendas visuais ao vivo, alto contraste WCAG AAA, tamanho do texto e redução de animações.
   - `BackgroundTaskWorkerService` & `DraftImportWorkerService`: orquestram tarefas em Web Worker com fallback assíncrono no cliente e controle de progresso configurável por ambiente (`WORKER_LOADING_DELAY_MS`).
   - `StorageService` & `LocalStoragePersistenceService`: leitura e escrita seguras protegidas por `try/catch` (resiliente a modo anônimo, SSR/jsdom e `QuotaExceededError`).
@@ -176,13 +176,13 @@ Quando o backend for introduzido em ciclos futuros (V2+), deverá seguir diretri
 
 - **Separação em Camadas:** distinção clara entre borda HTTP/API (rotas, autenticação/autorização, DTOs), lógica de aplicação/domínio (validações, regras de negócio, criptografia/auditoria) e persistência/repositórios.
 - **Compatibilidade com o Frontend Existente:** contratos REST/JSON alinhados aos tipos já preparados em `frontend/src/app/core/models/crud.model.ts` (`PageRequest`, `PageResult<T>`, query params) e consumo transparente via `BaseDataService` + `API_BASE_URL` (permitindo substituir ou estender `SCHEMA_REPOSITORY_TOKEN` e novos repositórios sem reescrever componentes visuais).
-- **Zero-Knowledge & Segurança:** caso haja sincronização, compartilhamento ou histórico em nuvem, priorizar criptografia de ponta a ponta (*Zero-Knowledge E2E* conforme [Bueprint.md](./Bueprint.md)), cabeçalhos de segurança, CORS estrito, proteção contra CSRF/injeção, logs sem dados sensíveis e endpoints de prontidão (`/health`, `/ready`).
+- **Zero-Knowledge & Segurança:** caso haja sincronização, compartilhamento ou histórico em nuvem, priorizar criptografia de ponta a ponta (*Zero-Knowledge E2E* conforme [Blueprint.md](./Blueprint.md)), cabeçalhos de segurança, CORS estrito, proteção contra CSRF/injeção, logs sem dados sensíveis e endpoints de prontidão (`/health`, `/ready`).
 - **Contratos & Observabilidade:** especificação OpenAPI/REST documentada, códigos HTTP padronizados e suíte de testes automatizados cobrindo contratos, regras de negócio e persistência.
 
 ### 5.6 Testes e Qualidade (`Jest 30` + `SonarCloud`)
 
 - **Runner:** **Jest 30** com **`jest-preset-angular` 17** (`setupZonelessTestEnv()`) e **`jest-environment-jsdom`**.
-- **Suíte Verificada (`v1.2.4` — `2026-11-25`):** **73 arquivos `.spec.ts` (73 suítes)**, **300 testes unitários aprovados (100%)**, cobertura global de **91,79% Statements / 91,54% Lines / 92,23% Functions / 75,32% Branches** (`npm.cmd run test:ci`).
+- **Suíte Verificada (`v1.2.4` — `2026-11-25`):** **73 arquivos `.spec.ts` (73 suítes)**, **301 testes unitários aprovados (100%)**, cobertura global de **91,79% Statements / 91,54% Lines / 92,23% Functions / 75,43% Branches** (`npm.cmd run test:ci`).
 - **Relatórios e Governança Estática:** `lcov.info`, `sonar-report.xml`, `junit/test-results.xml`, relatórios HTML (`coverage/html`, `coverage/jest-stare`, `coverage/jest-html-reporters`), `npm.cmd run check:i18n` (**66/66** chaves) e Prettier.
 
 ---
@@ -271,10 +271,11 @@ it('should serialize current state into a versioned JSON Blob', async () => {
 - [Índice Geral da Documentação](./README.md)
 - [Resumo de Alterações e Melhorias (CHANGELOG)](./CHANGELOG_MELHORIAS.md)
 - [Diretrizes do Projeto (PROJECT_GUIDELINES)](./PROJECT_GUIDELINES.md)
-- [Blueprint Conceitual e Roadmap Futuro](./Bueprint.md)
-- [Levantamento Funcional e Técnico V1](./Features/LEVANTAMENTO_FUNCIONAL_TECNICO.md)
-- [Plano de Implementação Frontend V1](./Features/PLANO_IMPLEMENTACAO_FRONTEND.md)
-- [Checklist de Implementação e Progresso](./Features/CHECKLIST_IMPLEMENTACAO_PROGRESSO.md)
+- [Blueprint Conceitual e Roadmap Futuro](./Blueprint.md)
+- [Levantamento Funcional e Técnico V1](./Features/Feito/LEVANTAMENTO_FUNCIONAL_TECNICO.md)
+- [Plano de Implementação Frontend V1](./Features/Feito/PLANO_IMPLEMENTACAO_FRONTEND.md)
+- [Checklist de Implementação e Progresso](./Features/Feito/CHECKLIST_IMPLEMENTACAO_PROGRESSO.md)
+- [Especificação Futura — i18n de Questões & Checklist Personalizável](./Features/ESPECIFICACAO_I18N_CHECKLIST_PERSONALIZAVEL.md)
 - [Diretrizes de Cobertura — KinkConsentManager](./Frontend/COVERAGE%20AND%20TEST/Diretrizes-Coverage-Frontend-KinkConsentManager.md)
 - [Diretrizes de Code Smells — KinkConsentManager UI](./Frontend/COVERAGE%20AND%20TEST/Diretrizes-CodeSmell-KinkConsentManagerUI.md)
 - [Guia de Atualização de Pacotes Frontend](./Frontend/UpdatePackages/GuiaAtualizacaoPacotes-KinkConsentManagerUI.md)

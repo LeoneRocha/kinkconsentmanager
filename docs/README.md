@@ -18,8 +18,8 @@ As versões vivas constam em [frontend/package.json](../frontend/package.json), 
 | Frontend (V1 ativo) | Angular `^22.1.0` (Standalone, Signals, **zoneless**, `OnPush`), TypeScript `~6.0.2`, RxJS `~7.8.0` |
 | Design System, Ícones & Temas | **Angular Material** `^22.3.0`, `@angular/cdk` `^22.3.0`, **Font Awesome Free** `^7.0.1` (SVG + CSS), `sweetalert2` `^11.26.25`, `@popperjs/core` `^2.11.8`, tipografia `Nunito`, sistema modular de **3 temas** (`core/themes/`: *Sóbrio P&B com azul/degradê*, *Claro Vermelho*, *Escuro Vermelho*) com autodetecção inicial de `prefers-color-scheme` e padronização de botões (verde/cinza em formulários; transparente vazado em navegação/entrada) |
 | Rotas Modulares & Acessibilidade | `core/routes/app-routes.config.ts` (`/dashboard`, `/checklist`, `/checklist/fill`, `/checklist/export`), `checklistFillGuard`, navegação pelo título `.app-shell__brand-title`, leitor audiovisual por `(focusin)` + Web Speech API + legendas ao vivo + `alt`/`title` em todos os templates |
-| Internacionalização | `@ngx-translate/core` `^18.1.0` e `@ngx-translate/http-loader` `^18.1.0` (`pt-BR`, `en-US`) com autodetecção inicial do idioma do navegador (`navigator.languages` / `navigator.language`) no `provideAppInitializer` e verificação `npm.cmd run check:i18n` (**66/66** chaves) |
-| Schema, Segurança & Preferências | Schema `checklist-v1.json` (`ISchemaRepository`) + autosave criptografado Web Crypto AES-GCM (`CryptoService`, `ChecklistAutosaveService`, `BrowserStorageRepository`) + `UserPreferencesRepository`, `ThemeService` e `AccessibilityService` |
+| Internacionalização | `@ngx-translate/core` `^18.1.0` e `@ngx-translate/http-loader` `^18.1.0` com `CompositeTranslateLoader` (`pt-BR`, `en-US`, `groups/`, `questions/`), autodetecção inicial do idioma do navegador (`navigator.languages` / `navigator.language`) no `provideAppInitializer` e verificação `npm.cmd run check:i18n` (**66/66** chaves) |
+| Schema, Segurança & Preferências | Schema `checklist-v1.json` com **6 escalas** (`not_applicable` — *Não se aplica*) e metadados `participantRoles` + `groupId` por grupo/pergunta (`ISchemaRepository`) + autosave criptografado Web Crypto AES-GCM (`CryptoService`, `ChecklistAutosaveService`, `BrowserStorageRepository`) + `UserPreferencesRepository`, `ThemeService` e `AccessibilityService` |
 | Web Workers & Exportação Client-Side | Worker unificado (`core/workers/`) com delay configurável por variável de ambiente (`WORKER_LOADING_DELAY_MS`, padrão `3000ms`): **PNG** (`html-to-image` `^1.11.13`), **PDF** (`pdfmake` `^0.3.15`), **XLSX** OOXML modular (layouts Moderno pastel e Clássico paisagem), **Imprimir** (`window.print()` + `@media print`), **JSON Draft** e **CSV** UTF-8 BOM |
 | Camada Genérica CRUD | `ICrudOperations`, `BaseDataService`, `BaseCrudService`, `ICrudRepository`, `BaseCrudRepository`, `API_BASE_URL` |
 | Testes & Cobertura | **Jest** `^30.5.2`, `jest-preset-angular` `^17.0.3`, `jest-environment-jsdom` `^30.5.2`, `jsdom` `^28.0.0` |
@@ -27,7 +27,7 @@ As versões vivas constam em [frontend/package.json](../frontend/package.json), 
 | Infraestrutura & Containers | Docker multi-stage ([Dockerfile](../frontend/Dockerfile)), Nginx Alpine com CSP e `/health` ([nginx.conf](../frontend/nginx.conf)), Compose e DevContainers |
 | **Backend** | **Coming Soon (Roadmap V2+)** — sem implementação na V1; contrato preparatório genérico documentado |
 
-**Baseline verificado (`v1.2.4` — `2026-11-25`):** **73 arquivos `.spec.ts`** / **300 testes unitários aprovados (100%)**, cobertura global Jest de **91,79% Statements / 91,54% Lines**, builds `build` e `build:prod` limpos, **66/66** chaves i18n sincronizadas e formatação Prettier verificada.
+**Baseline verificado (`v1.2.4` — `2026-11-25`):** **73 arquivos `.spec.ts`** / **301 testes unitários aprovados (100%)**, cobertura global Jest de **91,79% Statements / 91,54% Lines / 92,23% Functions / 75,43% Branches**, builds `build` e `build:prod` limpos, **66/66** chaves i18n sincronizadas e formatação Prettier verificada.
 
 ---
 
@@ -37,9 +37,9 @@ As versões vivas constam em [frontend/package.json](../frontend/package.json), 
 | --------------- | -------- |
 | [`PROJECT_GUIDELINES.md`](./PROJECT_GUIDELINES.md) | Diretrizes normativas transversais, padrões 4+1, Jest, Git (`R-GOV-GIT`) e Backend genérico |
 | [`ARCHITECTURE.md`](./ARCHITECTURE.md) | Arquitetura em camadas, diagramas Mermaid, fluxos, exemplos e catálogo técnico |
-| [`Bueprint.md`](./Bueprint.md) | Blueprint conceitual do produto e visão de roadmap futuro (pós-V1) |
+| [`Blueprint.md`](./Blueprint.md) | Blueprint conceitual do produto e visão de roadmap futuro (pós-V1) |
 | [`CHANGELOG_MELHORIAS.md`](./CHANGELOG_MELHORIAS.md) | Resumo consolidado das melhorias de UX, layout, fluxo de entrada e conformidade técnica |
-| [`Features/`](./Features/) | Levantamento funcional/técnico, plano modular de implementação e checklist da V1 |
+| [`Features/`](./Features/) | Levantamento funcional/técnico, plano modular de implementação (arquivados em `Features/Feito/`) e especificações futuras |
 | [`Frontend/COVERAGE AND TEST/`](./Frontend/COVERAGE%20AND%20TEST/) | Diretrizes de cobertura Jest/Vitest, metas por camada e saneamento de Code Smells |
 | [`Frontend/UpdatePackages/`](./Frontend/UpdatePackages/) | Guias de governança/atualização de pacotes npm e conjunto homologado atual |
 
@@ -47,10 +47,10 @@ As versões vivas constam em [frontend/package.json](../frontend/package.json), 
 
 ## Percurso Recomendado de Onboarding
 
-1. Entenda a visão geral do produto e o recorte entre V1 e futuro em [Bueprint.md](./Bueprint.md).
+1. Entenda a visão geral do produto e o recorte entre V1 e futuro em [Blueprint.md](./Blueprint.md).
 2. Leia as regras obrigatórias em [PROJECT_GUIDELINES.md](./PROJECT_GUIDELINES.md).
 3. Explore as camadas e fluxos do código em [ARCHITECTURE.md](./ARCHITECTURE.md).
-4. Revise o escopo e a arquitetura detalhada da V1 em [LEVANTAMENTO_FUNCIONAL_TECNICO.md](./Features/LEVANTAMENTO_FUNCIONAL_TECNICO.md) e [PLANO_IMPLEMENTACAO_FRONTEND.md](./Features/PLANO_IMPLEMENTACAO_FRONTEND.md).
+4. Revise o escopo e a arquitetura detalhada da V1 em [LEVANTAMENTO_FUNCIONAL_TECNICO.md](./Features/Feito/LEVANTAMENTO_FUNCIONAL_TECNICO.md) e [PLANO_IMPLEMENTACAO_FRONTEND.md](./Features/Feito/PLANO_IMPLEMENTACAO_FRONTEND.md).
 5. Confira os padrões de execução local em [frontend/README.md](../frontend/README.md), [Diretrizes de Cobertura](./Frontend/COVERAGE%20AND%20TEST/Diretrizes-Coverage-Frontend-KinkConsentManager.md) e [Guia de Atualização de Pacotes](./Frontend/UpdatePackages/GuiaAtualizacaoPacotes-KinkConsentManagerUI.md).
 
 ---
@@ -61,7 +61,7 @@ As versões vivas constam em [frontend/package.json](../frontend/package.json), 
 
 | Tema | Documento |
 | ---- | --------- |
-| Visão Conceitual e Roadmap Futuro | [Bueprint.md](./Bueprint.md) |
+| Visão Conceitual e Roadmap Futuro | [Blueprint.md](./Blueprint.md) |
 | Arquitetura em Camadas e Decisões Técnicas | [ARCHITECTURE.md](./ARCHITECTURE.md) |
 | Diretrizes Normativas do Projeto | [PROJECT_GUIDELINES.md](./PROJECT_GUIDELINES.md) |
 | Resumo de Alterações e Melhorias Recentes | [CHANGELOG_MELHORIAS.md](./CHANGELOG_MELHORIAS.md) |
@@ -70,9 +70,9 @@ As versões vivas constam em [frontend/package.json](../frontend/package.json), 
 
 | Tema | Documento |
 | ---- | --------- |
-| Levantamento Funcional e Técnico (V1 Checklist) | [LEVANTAMENTO_FUNCIONAL_TECNICO.md](./Features/LEVANTAMENTO_FUNCIONAL_TECNICO.md) |
-| Plano de Implementação Frontend | [PLANO_IMPLEMENTACAO_FRONTEND.md](./Features/PLANO_IMPLEMENTACAO_FRONTEND.md) |
-| Checklist de Implementação, Etapas e Progresso | [CHECKLIST_IMPLEMENTACAO_PROGRESSO.md](./Features/CHECKLIST_IMPLEMENTACAO_PROGRESSO.md) |
+| Levantamento Funcional e Técnico (V1 Checklist) | [LEVANTAMENTO_FUNCIONAL_TECNICO.md](./Features/Feito/LEVANTAMENTO_FUNCIONAL_TECNICO.md) |
+| Plano de Implementação Frontend | [PLANO_IMPLEMENTACAO_FRONTEND.md](./Features/Feito/PLANO_IMPLEMENTACAO_FRONTEND.md) |
+| Checklist de Implementação, Etapas e Progresso | [CHECKLIST_IMPLEMENTACAO_PROGRESSO.md](./Features/Feito/CHECKLIST_IMPLEMENTACAO_PROGRESSO.md) |
 | Notas Futuras — i18n de Questões & Checklist Personalizável | [ESPECIFICACAO_I18N_CHECKLIST_PERSONALIZAVEL.md](./Features/ESPECIFICACAO_I18N_CHECKLIST_PERSONALIZAVEL.md) |
 
 ### Frontend — Testes, Cobertura e Code Smells (`docs/Frontend/COVERAGE AND TEST/`)

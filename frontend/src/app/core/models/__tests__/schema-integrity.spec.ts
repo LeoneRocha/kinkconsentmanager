@@ -40,12 +40,12 @@ interface TranslationDictionary {
 }
 
 const VALID_SCALE_IDS: readonly ScaleId[] = [
+  'not_applicable',
   'hard_limit',
   'soft_limit',
   'curious',
   'enjoy',
   'favorite',
-  'not_applicable',
 ];
 
 const VALID_QUESTION_TYPES: readonly QuestionType[] = [

@@ -2,7 +2,7 @@
 
 Documento consolidando todas as alterações funcionais, melhorias de interface (UI/UX), ajustes visuais, exportação/impressão e qualidade implementadas no frontend do **KinkConsentManager**.
 
-> **Documentação relacionada:** [Índice Geral](./README.md) · [Arquitetura](./ARCHITECTURE.md) · [Diretrizes do Projeto](./PROJECT_GUIDELINES.md) · [Blueprint](./Bueprint.md)
+> **Documentação relacionada:** [Índice Geral](./README.md) · [Arquitetura](./ARCHITECTURE.md) · [Diretrizes do Projeto](./PROJECT_GUIDELINES.md) · [Blueprint](./Blueprint.md)
 
 ---
 
@@ -13,10 +13,10 @@ Documento consolidando todas as alterações funcionais, melhorias de interface 
 - **Temas:** arquitetura modular baseada em tokens (`core/themes/`) com **3 presets fixos** selecionáveis no cabeçalho (**Sóbrio Preto & Branco com azul e degradê**, **Claro Vermelho** e **Escuro Vermelho**), autodetecção inicial do tema do dispositivo/navegador (`prefers-color-scheme`) quando não há escolha salva e base preparada para customização futura pelo usuário.
 - **Botões Padronizados:** botões de formulário e ação seguem verde quando habilitados (`--kcm-btn-enabled-*`) e cinza quando desabilitados (`--kcm-btn-disabled-*`) em todos os temas (mudando apenas em Alto Contraste WCAG AAA), enquanto botões de navegação e entrada (*Voltar ao Checklist*, *Começar neste modo →*, *Importar JSON* e *Acessar Checklist →*) adotam estilo transparente e vazado alinhado ao tema ativo.
 - **Rotas Modulares:** `/dashboard` (padrão), `/checklist` (escolha de modo), `/checklist/fill` (preenchimento protegido por `checklistFillGuard`) e `/checklist/export` (prévia e exportação).
-- **Internacionalização:** `@ngx-translate/core` `^18.1.0` com autodetecção inicial do idioma do navegador (`navigator.languages` / `navigator.language`) no bootstrap (`app.config.ts`) e dicionários simétricos em Português (`pt-BR.json`) e Inglês (`en-US.json`) — **66/66** chaves estáticas de UI sincronizadas via `npm.cmd run check:i18n`.
+- **Schema & Internacionalização:** `checklist-v1.json` com **6 escalas** (incluindo **`not_applicable` — *Não se aplica***) + metadados **`participantRoles`** e **`groupId`** em todos os grupos e perguntas preparando futuros questionários específicos; `@ngx-translate/core` `^18.1.0` com autodetecção inicial do idioma do navegador (`navigator.languages` / `navigator.language`) via `provideAppInitializer`, dicionários de interface (`{pt-BR,en-US}.json`), grupos (`groups/`) e questões/opções (`questions/`) isolados — **66/66** chaves estáticas de UI sincronizadas via `npm.cmd run check:i18n`.
 - **Web Workers, Exportação & Impressão:** Web Worker unificado em `core/workers/` (`pdfmake` `^0.3.15` vetorial, **XLSX OOXML nativo** com layouts Moderno e Clássico desacoplados, **CSV** RFC-4180 + BOM e validação de rascunho **JSON Draft**), além de `html-to-image` `^1.11.13` (PNG), modo nativo de impressão (`window.print()` + `@media print`) e delay configurável por variável de ambiente (`WORKER_LOADING_DELAY_MS`, padrão `3000ms`).
 - **Acessibilidade Audiovisual:** `AccessibilityService` (leitura por foco `(focusin)` + Web Speech API + legendas visuais ao vivo + WCAG AAA), `alt` traduzido em imagens e `[attr.title]` padronizado nos templates HTML.
-- **Testes:** Jest `^30.5.2` + `jest-preset-angular` `^17.0.3` + `jsdom` `^28.0.0` — **73 suítes aprovadas (73/73)** e **300 testes aprovados (300/300)**.
+- **Testes:** Jest `^30.5.2` + `jest-preset-angular` `^17.0.3` + `jsdom` `^28.0.0` — **73 suítes aprovadas (73/73)** e **301 testes aprovados (301/301)**.
 
 ---
 
@@ -47,7 +47,7 @@ Documento consolidando todas as alterações funcionais, melhorias de interface 
 ### 3.1 Tela Inicial de Escolha do Modo e Importação JSON (`ChecklistModeSelectorComponent`)
 - Criado o componente [`ChecklistModeSelectorComponent`](../frontend/src/app/features/checklist/components/checklist-mode-selector/checklist-mode-selector.component.ts) exibido ao acessar `/checklist` antes da abertura direta do formulário:
   - Apresenta os 4 modos de preenchimento ordenados com descrição detalhada e bloco **Como preencher**:
-    1. **Preenchimento Rápido** (`quick_fill` — *Recomendado*) — fluxo focado um item por vez com atalhos de teclado (`1–5`, `0`, `↑/↓`).
+    1. **Preenchimento Rápido** (`quick_fill` — *Recomendado*) — fluxo focado um item por vez com atalhos de teclado (`1–6`, `0`, `↑/↓`).
     2. **Guiado (Passos)** (`stepper` — *Por etapas*) — categoria por vez com trilha visual de etapas, validação de conclusão e Revisão Final.
     3. **Modo Clássico** (`classic`) — folha compacta tradicional em múltiplos blocos com círculos coloridos clicáveis.
     4. **Visão Completa** (`full`) — todas as categorias abertas em uma única página com navegação rápida.
@@ -139,18 +139,22 @@ Documento consolidando todas as alterações funcionais, melhorias de interface 
 - **Lista ordenada de idiomas (`navigator.languages`):** [`LocaleCatalogService.resolveBrowserPreferredLocale()`](../frontend/src/app/core/services/locale-catalog.service.ts) agora inspeciona `navigator.languages` em ordem de preferência (com fallback para `navigator.language`) para escolher `'pt-BR'` ou `'en-US'`, enquanto [`I18nService`](../frontend/src/app/core/services/i18n.service.ts) expõe `isBrowserDefault`, `initialize()` e `clearSavedLanguage()`.
 - **Tema inicial pelo dispositivo/navegador:** [`ThemeService`](../frontend/src/app/core/services/theme.service.ts) detecta `(prefers-color-scheme: dark)` no carregamento quando não há tema persistido em `UserPreferencesRepository`, resolve `matchMedia` via `globalThis` / `document.defaultView`, expõe `isSystemDefault` e escuta alterações ao vivo tanto via `addEventListener('change', ...)` quanto via fallback legado `addListener(...)`.
 
-### 6.7 Correção de Template e Verificação Consolidada
+### 6.7 Nova Escala "Não se aplica" (`not_applicable`) e Metadados de Role/Categoria
+- **6ª opção na escala (`not_applicable`):** adicionada em [`checklist-schema.model.ts`](../frontend/src/app/core/models/checklist-schema.model.ts), [`checklist-v1.json`](../frontend/src/assets/schemas/checklist-v1.json) (`order: 1`, primeira opção à esquerda antes de *Limite Rígido*, `#546E7A`, `fa-solid fa-circle-minus`), [`checklist-state.service.ts`](../frontend/src/app/core/services/checklist-state.service.ts) (`VALID_SCALE_IDS`), [`_variables.scss`](../frontend/src/styles/_variables.scss), [`pt-BR.json`](../frontend/src/assets/i18n/pt-BR.json) (*"Não se aplica"*), [`en-US.json`](../frontend/src/assets/i18n/en-US.json) (*"Not Applicable (N/A)"*) e atalhos `1–6` no Preenchimento Rápido, com ajuste responsivo dos círculos em [`classic-kink-sheet.component.scss`](../frontend/src/app/features/checklist/components/classic-kink-sheet/classic-kink-sheet.component.scss).
+- **Preparação de roles e categorias por pergunta (sem filtro ativo na UI):** adicionados `ParticipantRoleId` / `ALL_PARTICIPANT_ROLES` (`top`, `bottom`, `switch`, `dominant`, `submissive`, `sadist`, `masochist`, `fetishist`, `rigger`, `bunny`, `other`), catálogo `participantRoles` + `groupId` em **todos os 8 grupos e 51 itens** de `checklist-v1.json`, traduções `participantRoles` nos dicionários + `I18nService.getParticipantRoleLabel()`, validação em [`schema-integrity.spec.ts`](../frontend/src/app/core/models/__tests__/schema-integrity.spec.ts) e especificação futura em [ESPECIFICACAO_I18N_CHECKLIST_PERSONALIZAVEL.md](./Features/ESPECIFICACAO_I18N_CHECKLIST_PERSONALIZAVEL.md).
+
+### 6.8 Correção de Template e Verificação Consolidada
 - **Saneamento HTML:** removido fragmento duplicado ao final de [`toast-container.component.html`](../frontend/src/app/shared/components/toast-container/toast-container.component.html) que causava falha `NG5002`.
 
 ---
 
 ## 7. Internacionalização e Verificação de Qualidade
 
-- **Simetria i18n:** **66/66** chaves estáticas de UI sincronizadas entre [`pt-BR.json`](../frontend/src/assets/i18n/pt-BR.json) e [`en-US.json`](../frontend/src/assets/i18n/en-US.json) via `npm.cmd run check:i18n` (`0` ausentes).
+- **Simetria i18n:** **66/66** chaves estáticas de UI sincronizadas entre [`pt-BR.json`](../frontend/src/assets/i18n/pt-BR.json) e [`en-US.json`](../frontend/src/assets/i18n/en-US.json) via `npm.cmd run check:i18n` (`0` ausentes), além de paridade recursiva em `groups/` e `questions/`.
 - **Validação final executada após as últimas alterações (`2026-11-25`):**
   - `npx.cmd prettier --check`: formatação limpa em todos os arquivos editados.
   - `npm.cmd run build` e `npm.cmd run build:prod`: **concluídos com sucesso (`0` erros e `0` avisos)**.
-  - `npm.cmd run test:ci`: **73 suítes aprovadas (73/73)**, **300 testes aprovados (300/300)**, cobertura global de **91,79% Statements / 91,54% Lines / 92,23% Functions / 75,32% Branches**.
+  - `npm.cmd run test:ci`: **73 suítes aprovadas (73/73)**, **301 testes aprovados (301/301)**, cobertura global de **91,79% Statements / 91,54% Lines / 92,23% Functions / 75,43% Branches**.
 
 ---
 
@@ -158,6 +162,7 @@ Documento consolidando todas as alterações funcionais, melhorias de interface 
 
 | Área | Arquivo | Papel |
 | ---- | ------- | ----- |
+| Schema & Contratos | [`checklist-schema.model.ts`](../frontend/src/app/core/models/checklist-schema.model.ts) / [`checklist-v1.json`](../frontend/src/assets/schemas/checklist-v1.json) / [`schema-integrity.spec.ts`](../frontend/src/app/core/models/__tests__/schema-integrity.spec.ts) | 6ª escala `not_applicable`, catálogo `ParticipantRoleId`, `participantRoles` e `groupId` por item/grupo |
 | Bootstrap & Autodetecção | [`app.config.ts`](../frontend/src/app/app.config.ts) / [`i18n.service.ts`](../frontend/src/app/core/services/i18n.service.ts) / [`locale-catalog.service.ts`](../frontend/src/app/core/services/locale-catalog.service.ts) | `provideAppInitializer` para tema/idioma iniciais e detecção automática via `navigator.languages` / `navigator.language` |
 | Shell & Acessibilidade | [`app.component.ts`](../frontend/src/app/app.component.ts) / [`.html`](../frontend/src/app/app.component.html) / [`accessibility.service.ts`](../frontend/src/app/core/services/accessibility.service.ts) | Leitor audiovisual por `(focusin)`, `extractAccessibleText()`, legendas ao vivo e skip-link |
 | Cabeçalho & Temas UI | [`app-header.component.ts`](../frontend/src/app/layouts/app-header/app-header.component.ts) / [`.html`](../frontend/src/app/layouts/app-header/app-header.component.html) / [`.scss`](../frontend/src/app/layouts/app-header/app-header.component.scss) | Menu de 3 temas, navegação ao `/dashboard` via `.app-shell__brand-title`, `alt` em `favicon.svg` e painel a11y |
