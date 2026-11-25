@@ -1,10 +1,14 @@
 import { inject, Injectable } from '@angular/core';
 import { ExportResult, FlattenedChecklistRow } from '../../../core/models';
-import { BackgroundTaskWorkerService, buildCsvContentFromRows } from '../../../core/services';
+import {
+  BackgroundTaskWorkerService,
+  buildCsvContentFromRows,
+  CsvExportContext,
+} from '../../../core/services';
 import { FileDownloadService } from './file-download.service';
 
 /**
- * Generates RFC-4180 compliant, UTF-8 BOM encoded CSV exports from flattened checklist rows.
+ * Generates RFC-4180 compliant, UTF-8 BOM encoded CSV exports mirroring the Excel report layout.
  */
 @Injectable({ providedIn: 'root' })
 export class CsvExportService {
@@ -12,20 +16,24 @@ export class CsvExportService {
   private readonly backgroundWorker = inject(BackgroundTaskWorkerService);
 
   /**
-   * Builds UTF-8 BOM prefixed RFC-4180 CSV content for the provided rows.
+   * Builds UTF-8 BOM prefixed RFC-4180 CSV content for the provided rows and optional Excel-like context.
    */
-  buildCsvContent(rows: readonly FlattenedChecklistRow[]): string {
-    return buildCsvContentFromRows(rows);
+  buildCsvContent(rows: readonly FlattenedChecklistRow[], context?: CsvExportContext): string {
+    return buildCsvContentFromRows(rows, context);
   }
 
   /**
    * Builds and triggers download of the checklist CSV file synchronously.
    */
-  exportCsv(rows: readonly FlattenedChecklistRow[], filename?: string): ExportResult {
+  exportCsv(
+    rows: readonly FlattenedChecklistRow[],
+    filename?: string,
+    context?: CsvExportContext,
+  ): ExportResult {
     const resolvedFilename = this.resolveFilename(filename);
 
     try {
-      const csvContent = this.buildCsvContent(rows);
+      const csvContent = this.buildCsvContent(rows, context);
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8' });
       this.fileDownload.downloadBlob(blob, resolvedFilename);
 
@@ -52,11 +60,17 @@ export class CsvExportService {
   async exportCsvInBackground(
     rows: readonly FlattenedChecklistRow[],
     filename?: string,
+    context?: CsvExportContext,
   ): Promise<ExportResult> {
     const resolvedFilename = this.resolveFilename(filename);
 
     try {
-      const outcome = await this.backgroundWorker.generateCsvContent(rows, resolvedFilename);
+      const outcome = await this.backgroundWorker.generateCsvContent(
+        rows,
+        resolvedFilename,
+        undefined,
+        context,
+      );
       const blob = new Blob([outcome.textContent], { type: 'text/csv;charset=utf-8' });
       this.fileDownload.downloadBlob(blob, resolvedFilename);
 

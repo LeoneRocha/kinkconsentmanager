@@ -79,9 +79,9 @@
       mat-flat-button
       type="button"
       class="export-toolbar__btn export-toolbar__btn--export"
-      [class.export-toolbar__btn--ready]="!exportActionsDisabled()"
+      [class.export-toolbar__btn--ready]="!actionsDisabled()"
       data-action="json"
-      [disabled]="exportActionsDisabled()"
+      [disabled]="actionsDisabled()"
       [attr.aria-busy]="busyFormat() === 'json'"
       [attr.title]="jsonLabel()"
       [attr.aria-label]="jsonLabel()"

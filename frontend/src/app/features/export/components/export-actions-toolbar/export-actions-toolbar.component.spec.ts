@@ -118,17 +118,21 @@ describe('ExportActionsToolbarComponent', () => {
     expect(fileInput.value).toBe('');
   });
 
-  it('should disable export buttons without ready class when exportReady is false, then enable green ready state when true', async () => {
+  it('should disable visual exports until exportReady is true while keeping json draft export/import and back enabled', async () => {
     fixture.componentRef.setInput('exportReady', false);
     await fixture.whenStable();
 
     const hostEl = fixture.nativeElement as HTMLElement;
-    const exportActions = ['png', 'pdf', 'print', 'json', 'csv', 'xlsx'];
-    for (const action of exportActions) {
+    const visualExportActions = ['png', 'pdf', 'print', 'csv', 'xlsx'];
+    for (const action of visualExportActions) {
       const btn = hostEl.querySelector<HTMLButtonElement>(`button[data-action="${action}"]`)!;
       expect(btn.disabled).toBe(true);
       expect(btn.classList.contains('export-toolbar__btn--ready')).toBe(false);
     }
+
+    const jsonBtn = hostEl.querySelector<HTMLButtonElement>('button[data-action="json"]')!;
+    expect(jsonBtn.disabled).toBe(false);
+    expect(jsonBtn.classList.contains('export-toolbar__btn--ready')).toBe(true);
 
     expect(hostEl.querySelector<HTMLButtonElement>('button[data-action="back"]')!.disabled).toBe(
       false,
@@ -140,7 +144,7 @@ describe('ExportActionsToolbarComponent', () => {
     fixture.componentRef.setInput('exportReady', true);
     await fixture.whenStable();
 
-    for (const action of exportActions) {
+    for (const action of visualExportActions) {
       const btn = hostEl.querySelector<HTMLButtonElement>(`button[data-action="${action}"]`)!;
       expect(btn.disabled).toBe(false);
       expect(btn.classList.contains('export-toolbar__btn--ready')).toBe(true);

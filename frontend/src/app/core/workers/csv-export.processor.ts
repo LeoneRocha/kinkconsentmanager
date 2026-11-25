@@ -1,39 +1,134 @@
-import { FlattenedChecklistRow } from '../models';
+import {
+  ChecklistSchema,
+  ExportSummaryLayout,
+  FlattenedChecklistRow,
+  ResolvedPreviewTexts,
+  resolveOrderedScales,
+  resolveScaleLabel,
+} from '../models';
 import { BackgroundTaskStage, ExportCsvWorkerRequest } from './background-task-worker.types';
+import { formatNonScaleTextValue, groupRowsByCategory } from './xlsx/xlsx-workbook.types';
 
 const UTF8_BOM = '\uFEFF';
-const CSV_HEADERS: readonly string[] = [
-  'Group_ID',
-  'Category',
-  'Item_ID',
-  'Item_Label',
-  'Role_Mode',
-  'Giving_Or_Primary_Response',
-  'Receiving_Or_Secondary_Response',
-  'Selected_Options',
-  'Custom_Note',
-];
+
+export interface CsvExportLabels {
+  readonly itemHeader: string;
+  readonly valueHeader: string;
+  readonly legendTitle: string;
+  readonly layoutLabel?: string;
+}
+
+export interface CsvExportContext {
+  readonly schema?: ChecklistSchema;
+  readonly texts?: ResolvedPreviewTexts;
+  readonly layout?: ExportSummaryLayout;
+  readonly labels?: CsvExportLabels;
+}
+
+const DEFAULT_CSV_LABELS: CsvExportLabels = {
+  itemHeader: 'Prática / Item',
+  valueHeader: 'Resposta',
+  legendTitle: 'Legenda da Escala',
+};
 
 /**
- * Constrói o conteúdo CSV RFC-4180 com BOM UTF-8 a partir das linhas normalizadas do checklist.
+ * Constrói o conteúdo CSV RFC-4180 com BOM UTF-8 espelhando o relatório tabular do Excel (`.xlsx`),
+ * agrupado por categoria com título, metadados, legenda das escalas e cabeçalhos localizados.
  * Compartilhado entre `CsvExportService` e o processador dedicado de CSV.
  */
-export function buildCsvContentFromRows(rows: readonly FlattenedChecklistRow[]): string {
-  const lines: string[] = [CSV_HEADERS.join(',')];
+export function buildCsvContentFromRows(
+  rows: readonly FlattenedChecklistRow[],
+  context?: CsvExportContext,
+): string {
+  const labels = context?.labels ?? DEFAULT_CSV_LABELS;
+  const texts = context?.texts;
+  const schema = context?.schema;
+  const lines: string[] = [];
 
-  for (const row of rows) {
-    const cells = [
-      row.groupId,
-      row.groupTitle,
-      row.itemId,
-      row.itemLabel,
-      row.isDualRole ? 'dual' : 'single',
-      row.primaryValueLabel,
-      row.isDualRole ? (row.secondaryValueLabel ?? '') : '',
-      row.selectedOptionsLabels.join('; '),
-      row.customNote,
-    ];
+  const pushCsvRow = (cells: readonly string[]): void => {
     lines.push(cells.map((cell) => escapeCsvCell(cell)).join(','));
+  };
+
+  if (texts) {
+    pushCsvRow([texts.title]);
+    const layoutSuffix =
+      labels.layoutLabel && labels.layoutLabel.trim().length > 0
+        ? `  •  ${labels.layoutLabel.trim()}`
+        : '';
+    pushCsvRow([`${texts.generatedAtLabel}: ${texts.generatedAtValue}${layoutSuffix}`]);
+  }
+
+  if (schema && texts) {
+    const orderedScales = resolveOrderedScales(schema.scales);
+    const legendEntries = orderedScales.map((scale) => resolveScaleLabel(scale, texts.scales));
+    legendEntries.push(texts.notAnsweredLabel);
+
+    lines.push('');
+    pushCsvRow([labels.legendTitle]);
+    for (let i = 0; i < legendEntries.length; i += 3) {
+      const chunk = legendEntries.slice(i, i + 3);
+      pushCsvRow([chunk[0] ?? '', chunk[1] ?? '', chunk[2] ?? '']);
+    }
+  }
+
+  const groupSchemaMap = schema
+    ? new Map(schema.groups.map((group) => [group.id, group]))
+    : undefined;
+  const groupedRows = groupRowsByCategory(rows);
+  const notAnsweredLabel = texts?.notAnsweredLabel ?? '';
+
+  for (const group of groupedRows) {
+    if (lines.length > 0) {
+      lines.push('');
+    }
+
+    const schemaGroup = groupSchemaMap?.get(group.groupId);
+    const groupTitle = texts?.groups[group.groupId]?.title ?? group.groupTitle;
+    const groupDescription = texts?.groups[group.groupId]?.description;
+
+    pushCsvRow([groupTitle]);
+    if (groupDescription && groupDescription.trim().length > 0) {
+      pushCsvRow([groupDescription]);
+    }
+
+    const hasDualRoleColumns = group.rows.some((row) => row.isDualRole);
+    const groupRoles = schemaGroup && texts ? texts.roles[schemaGroup.rolePairId] : undefined;
+    const firstDualRow = group.rows.find((row) => row.isDualRole);
+    const primaryColumnHeader =
+      groupRoles?.primary ?? firstDualRow?.primaryRoleLabel ?? labels.valueHeader;
+    const secondaryColumnHeader = groupRoles?.secondary ?? firstDualRow?.secondaryRoleLabel ?? '';
+
+    if (hasDualRoleColumns) {
+      pushCsvRow([labels.itemHeader, primaryColumnHeader, secondaryColumnHeader]);
+    } else {
+      pushCsvRow([labels.itemHeader, labels.valueHeader]);
+    }
+
+    for (const row of group.rows) {
+      if (row.isDualRole) {
+        const showRoleHint =
+          row.primaryRoleLabel !== primaryColumnHeader ||
+          (row.secondaryRoleLabel ?? '') !== secondaryColumnHeader;
+        const primaryText =
+          showRoleHint && row.primaryRoleLabel
+            ? `${row.primaryRoleLabel}: ${row.primaryValueLabel}`
+            : row.primaryValueLabel;
+        const secondaryRaw = row.secondaryValueLabel ?? notAnsweredLabel;
+        const secondaryText =
+          showRoleHint && row.secondaryRoleLabel
+            ? `${row.secondaryRoleLabel}: ${secondaryRaw}`
+            : secondaryRaw;
+        pushCsvRow([row.itemLabel, primaryText, secondaryText]);
+        continue;
+      }
+
+      if (row.primaryColor) {
+        pushCsvRow([row.itemLabel, row.primaryValueLabel]);
+        continue;
+      }
+
+      pushCsvRow([row.itemLabel, formatNonScaleTextValue(row, notAnsweredLabel)]);
+    }
   }
 
   return `${UTF8_BOM}${lines.join('\r\n')}`;
@@ -48,7 +143,7 @@ export function processCsvExportPayload(
 ): string {
   onProgress?.('preparing', 30);
   onProgress?.('building', 70);
-  const content = buildCsvContentFromRows(request.rows);
+  const content = buildCsvContentFromRows(request.rows, request.context);
   onProgress?.('complete', 100);
   return content;
 }

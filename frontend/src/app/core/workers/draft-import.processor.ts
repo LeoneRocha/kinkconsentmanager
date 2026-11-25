@@ -33,8 +33,64 @@ export type DraftImportWorkerMessage =
       readonly message: string;
     };
 
+const FORBIDDEN_KEYS = new Set<string>(['__proto__', 'constructor', 'prototype']);
+
 function isPlainObject(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+function sanitizeAnswerEntry(
+  itemId: string,
+  raw: Record<string, unknown>,
+  errors: string[],
+): ItemResponseValue | null {
+  const cleaned: {
+    primaryScale?: ItemResponseValue['primaryScale'];
+    secondaryScale?: ItemResponseValue['secondaryScale'];
+    selectedOption?: string;
+    selectedOptions?: readonly string[];
+    otherText?: string;
+    customText?: string;
+  } = {};
+
+  const stringFields = [
+    'primaryScale',
+    'secondaryScale',
+    'selectedOption',
+    'otherText',
+    'customText',
+  ] as const;
+
+  for (const field of stringFields) {
+    const value = raw[field];
+    if (value === undefined) {
+      continue;
+    }
+    if (typeof value !== 'string') {
+      errors.push(`Invalid "${field}" value for item "${itemId}".`);
+      continue;
+    }
+    if (value.length > 0) {
+      (cleaned as Record<string, unknown>)[field] = value;
+    }
+  }
+
+  const rawSelectedOptions = raw['selectedOptions'];
+  if (rawSelectedOptions !== undefined) {
+    if (
+      !Array.isArray(rawSelectedOptions) ||
+      !rawSelectedOptions.every((entry) => typeof entry === 'string')
+    ) {
+      errors.push(`Invalid "selectedOptions" array for item "${itemId}".`);
+    } else {
+      const validOptions = rawSelectedOptions.filter((entry) => entry.length > 0);
+      if (validOptions.length > 0) {
+        cleaned.selectedOptions = validOptions;
+      }
+    }
+  }
+
+  return Object.keys(cleaned).length > 0 ? cleaned : null;
 }
 
 function extractMajorVersion(version: string): string | null {
@@ -66,9 +122,10 @@ export function parseAndValidateDraftContent(
   rawContent: string,
   expectedSchemaVersion: string,
 ): DraftValidationResult {
+  const normalizedContent = rawContent.replace(/^\uFEFF/, '');
   let parsed: unknown;
   try {
-    parsed = JSON.parse(rawContent);
+    parsed = JSON.parse(normalizedContent);
   } catch {
     return {
       valid: false,
@@ -104,12 +161,21 @@ export function parseAndValidateDraftContent(
   }
 
   const rawAnswers = parsed['answers'];
+  const validatedAnswers: Record<string, ItemResponseValue> = {};
   if (!isPlainObject(rawAnswers)) {
     errors.push('Missing or invalid "answers" object.');
   } else {
     for (const [itemId, value] of Object.entries(rawAnswers)) {
+      if (FORBIDDEN_KEYS.has(itemId) || itemId.trim().length === 0) {
+        continue;
+      }
       if (!isPlainObject(value)) {
         errors.push(`Invalid answer object for item "${itemId}".`);
+        continue;
+      }
+      const sanitized = sanitizeAnswerEntry(itemId, value, errors);
+      if (sanitized !== null) {
+        validatedAnswers[itemId] = sanitized;
       }
     }
   }
@@ -124,11 +190,6 @@ export function parseAndValidateDraftContent(
   const rawLanguage = parsed['language'];
   const language: SupportedLanguage =
     rawLanguage === 'pt-BR' || rawLanguage === 'en-US' ? rawLanguage : 'pt-BR';
-
-  const validatedAnswers: Record<string, ItemResponseValue> = {};
-  for (const [itemId, entry] of Object.entries(rawAnswers as Record<string, unknown>)) {
-    validatedAnswers[itemId] = entry as ItemResponseValue;
-  }
 
   return {
     valid: true,

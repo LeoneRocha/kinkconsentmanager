@@ -140,4 +140,27 @@ describe('JsonDraftService', () => {
     expect(entryResult.valid).toBe(false);
     expect(entryResult.errors.length).toBe(2);
   });
+
+  it('should round-trip a full ChecklistDraft with dual roles, not_applicable, choices, __other__, and text', async () => {
+    const draft: ChecklistDraft = {
+      schemaVersion: '1.0.0',
+      exportedAt: '2026-11-25T13:15:00.000Z',
+      language: 'pt-BR',
+      answers: {
+        item_bondage: { primaryScale: 'not_applicable', secondaryScale: 'favorite' },
+        item_safeword: { selectedOption: '__other__', otherText: 'Two taps' },
+        item_aftercare: { selectedOptions: ['opt_water', '__other__'], otherText: 'Tea' },
+        item_medical: { customText: 'Avoid pressure on knees' },
+      },
+    };
+
+    const exportResult = service.exportDraft(draft);
+    expect(exportResult.success).toBe(true);
+    expect(exportResult.filename).toMatch(/^kink-consent-draft-\d{4}-\d{2}-\d{2}\.json$/);
+
+    const [blob] = fileDownloadMock.downloadBlob.mock.calls[0] as [Blob, string];
+    const reimported = service.parseAndValidateDraft(await blob.text(), '1.0.0');
+    expect(reimported.valid).toBe(true);
+    expect(reimported.draft).toEqual(draft);
+  });
 });

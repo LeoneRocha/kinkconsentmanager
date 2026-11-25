@@ -53,4 +53,50 @@ describe('draft-import.processor', () => {
     expect(incompatible.valid).toBe(false);
     expect(incompatible.errors.some((e) => e.toLowerCase().includes('incompatible'))).toBe(true);
   });
+
+  // Cenário: Importação de JSON com BOM UTF-8, objetos de resposta vazios, campos malformados e respostas completas (not_applicable, __other__, texto).
+  // Objetivo: Garantir tolerância a BOM, remoção de entradas vazias e rejeição de tipos inválidos em respostas sem vazar propriedades de protótipo.
+  it('should accept UTF-8 BOM, strip empty answer entries, and reject invalid answer field types', () => {
+    const bomJson =
+      '\uFEFF' +
+      JSON.stringify({
+        schemaVersion: '1.0.0',
+        exportedAt: '2026-11-25T13:10:00.000Z',
+        language: 'pt-BR',
+        answers: {
+          empty_entry: {},
+          item_bondage: { primaryScale: 'not_applicable', secondaryScale: 'enjoy' },
+          item_safeword: { selectedOption: '__other__', otherText: 'Tap twice' },
+        },
+      });
+
+    const validResult = parseAndValidateDraftContent(bomJson, '1.0.0');
+    expect(validResult.valid).toBe(true);
+    expect(validResult.draft?.answers['empty_entry']).toBeUndefined();
+    expect(validResult.draft?.answers['item_bondage']).toEqual({
+      primaryScale: 'not_applicable',
+      secondaryScale: 'enjoy',
+    });
+    expect(validResult.draft?.answers['item_safeword']).toEqual({
+      selectedOption: '__other__',
+      otherText: 'Tap twice',
+    });
+
+    const invalidFieldTypes = parseAndValidateDraftContent(
+      JSON.stringify({
+        schemaVersion: '1.0.0',
+        exportedAt: '2026-11-25T13:10:00.000Z',
+        answers: {
+          item_a: { primaryScale: 123 },
+          item_b: { selectedOptions: 'not-an-array' },
+        },
+      }),
+      '1.0.0',
+    );
+    expect(invalidFieldTypes.valid).toBe(false);
+    expect(invalidFieldTypes.errors).toEqual([
+      'Invalid "primaryScale" value for item "item_a".',
+      'Invalid "selectedOptions" array for item "item_b".',
+    ]);
+  });
 });

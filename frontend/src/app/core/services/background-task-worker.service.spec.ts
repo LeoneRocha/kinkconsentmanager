@@ -187,10 +187,22 @@ describe('BackgroundTaskWorkerService', () => {
     expect(xlsxOutcome.bytes[0]).toBe(0x50);
     expect(xlsxOutcome.bytes[1]).toBe(0x4b);
 
-    const csvOutcome = await service.generateCsvContent(MOCK_ROWS, 'fallback.csv');
+    const csvOutcome = await service.generateCsvContent(MOCK_ROWS, 'fallback.csv', undefined, {
+      schema: MOCK_SCHEMA,
+      texts: MOCK_TEXTS,
+      layout: 'modern',
+      labels: {
+        itemHeader: 'Practice',
+        valueHeader: 'Answer',
+        legendTitle: 'Legend',
+        layoutLabel: 'Modern',
+      },
+    });
     expect(csvOutcome.processedInWorker).toBe(false);
     expect(csvOutcome.textContent.startsWith('\uFEFF')).toBe(true);
-    expect(csvOutcome.textContent).toContain('item_rope');
+    expect(csvOutcome.textContent).toContain('Checklist Report');
+    expect(csvOutcome.textContent).toContain('Practice,Giving,Receiving');
+    expect(csvOutcome.textContent).toContain('Rope,Enjoy,Enjoy');
   });
 
   // Cenário: Ciclo visual completo com delay inicial, progresso virtual contínuo e confirmação final em 100%.

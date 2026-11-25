@@ -212,7 +212,7 @@ export class ExportPageComponent implements OnInit {
     const startedAt = Date.now();
     try {
       const draft = this.checklistState.exportDraftSnapshot(this.i18n.currentLang());
-      const result = this.jsonDraft.exportDraft(draft, this.buildExportFilename());
+      const result = this.jsonDraft.exportDraft(draft, this.buildDraftFilename());
       this.notifyExportResult(result, Date.now() - startedAt);
     } finally {
       this.busyFormat.set(null);
@@ -235,6 +235,7 @@ export class ExportPageComponent implements OnInit {
 
       if (validation.valid && validation.draft) {
         this.checklistState.importDraft(validation.draft);
+        void this.autosave.saveNow();
         this.generatedAtDate.set(new Date());
         this.telemetry.trackEvent('checklist_json_imported', {
           source: 'export_page',
@@ -288,7 +289,13 @@ export class ExportPageComponent implements OnInit {
     const startedAt = Date.now();
     try {
       const rows = this.checklistFlatten.flatten(activeSchema, this.answers(), texts);
-      const result = await this.csvExport.exportCsvInBackground(rows, this.buildExportFilename());
+      const selectedLayout = this.previewLayout() ?? 'modern';
+      const result = await this.csvExport.exportCsvInBackground(rows, this.buildExportFilename(), {
+        schema: activeSchema,
+        texts,
+        layout: selectedLayout,
+        labels: this.buildTabularExportLabels(selectedLayout),
+      });
       this.notifyExportResult(result, Date.now() - startedAt);
     } finally {
       this.busyFormat.set(null);
@@ -313,15 +320,7 @@ export class ExportPageComponent implements OnInit {
         texts,
         this.buildExportFilename(),
         selectedLayout,
-        {
-          itemHeader: this.t('itemHeader'),
-          valueHeader: this.t('valueHeader'),
-          legendTitle: this.t('legendTitle'),
-          layoutLabel:
-            selectedLayout === 'classic'
-              ? this.t('exportLayoutClassic')
-              : this.t('exportLayoutModern'),
-        },
+        this.buildTabularExportLabels(selectedLayout),
       );
       this.notifyExportResult(result, Date.now() - startedAt);
     } finally {
@@ -329,10 +328,25 @@ export class ExportPageComponent implements OnInit {
     }
   }
 
+  private buildTabularExportLabels(selectedLayout: ExportPreviewLayout) {
+    return {
+      itemHeader: this.t('itemHeader'),
+      valueHeader: this.t('valueHeader'),
+      legendTitle: this.t('legendTitle'),
+      layoutLabel:
+        selectedLayout === 'classic' ? this.t('exportLayoutClassic') : this.t('exportLayoutModern'),
+    };
+  }
+
   private buildExportFilename(): string {
     const mode = this.previewLayout() ?? 'modern';
     const dateStamp = new Date().toISOString().slice(0, 10);
     return `kink-consent-checklist-${mode}-${dateStamp}`;
+  }
+
+  private buildDraftFilename(): string {
+    const dateStamp = new Date().toISOString().slice(0, 10);
+    return `kink-consent-draft-${dateStamp}`;
   }
 
   private loadSchemaIfNeeded(forceReload = false): void {

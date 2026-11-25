@@ -4,7 +4,11 @@ import { provideTranslateService, TranslateService } from '@ngx-translate/core';
 import { Observable, of, throwError } from 'rxjs';
 import { ChecklistSchema } from '../../../../core/models';
 import { SCHEMA_REPOSITORY_TOKEN } from '../../../../core/repositories';
-import { ChecklistStateService, UiFeedbackHostService } from '../../../../core/services';
+import {
+  ChecklistAutosaveService,
+  ChecklistStateService,
+  UiFeedbackHostService,
+} from '../../../../core/services';
 import {
   FileDownloadService,
   PDF_MAKER_LOADER,
@@ -315,7 +319,7 @@ describe('ExportPageComponent', () => {
     await fixture.whenStable();
     expect(fileDownloadMock.downloadBlob).toHaveBeenCalledWith(
       expect.any(Blob),
-      expect.stringMatching(/^kink-consent-checklist-modern-\d{4}-\d{2}-\d{2}\.json$/),
+      expect.stringMatching(/^kink-consent-draft-\d{4}-\d{2}-\d{2}\.json$/),
     );
 
     hostEl.querySelector<HTMLButtonElement>('button[data-action="csv"]')?.click();
@@ -324,6 +328,18 @@ describe('ExportPageComponent', () => {
       expect.any(Blob),
       expect.stringMatching(/^kink-consent-checklist-modern-\d{4}-\d{2}-\d{2}\.csv$/),
     );
+    const [csvBlob] = fileDownloadMock.downloadBlob.mock.calls[1] as [Blob, string];
+    expect(csvBlob.type).toContain('text/csv');
+    if (typeof csvBlob.arrayBuffer === 'function') {
+      const bomBytes = Array.from(new Uint8Array(await csvBlob.arrayBuffer()).slice(0, 3));
+      expect(bomBytes).toEqual([0xef, 0xbb, 0xbf]);
+    }
+    const csvContent = await csvBlob.text();
+    expect(csvContent).not.toContain('Group_ID');
+    expect(csvContent).toContain('Segurança');
+    expect(csvContent).toContain('Bondage');
+    expect(csvContent).toContain('Prática / Item,Ativo,Passivo');
+    expect(csvContent).toContain('Cordas,Gosto,Não respondido');
 
     hostEl.querySelector<HTMLButtonElement>('button[data-layout="classic"]')?.click();
     await fixture.whenStable();
@@ -485,5 +501,50 @@ describe('ExportPageComponent', () => {
     expect(printSpy).toHaveBeenCalledTimes(1);
     expect(titleDuringPrint).toMatch(/^kink-consent-checklist-classic-\d{4}-\d{2}-\d{2}$/);
     expect(document.title).toBe(originalTitle);
+  });
+
+  it('should allow exporting JSON draft before choosing a visual layout, round-trip into import, and trigger autosave', async () => {
+    checklistState.setItemAnswer('item_safeword', { selectedOption: 'opt_traffic' });
+    checklistState.setItemAnswer('item_rope', {
+      primaryScale: 'enjoy',
+      secondaryScale: 'hard_limit',
+    });
+    const autosave = TestBed.inject(ChecklistAutosaveService);
+    const saveNowSpy = jest.spyOn(autosave, 'saveNow').mockResolvedValue(true);
+
+    await createPage();
+
+    const hostEl = fixture.nativeElement as HTMLElement;
+    const jsonBtn = hostEl.querySelector<HTMLButtonElement>('button[data-action="json"]')!;
+    expect(jsonBtn.disabled).toBe(false);
+
+    jsonBtn.click();
+    await fixture.whenStable();
+
+    const [exportedBlob, exportedName] = fileDownloadMock.downloadBlob.mock.calls[0] as [
+      Blob,
+      string,
+    ];
+    expect(exportedName).toMatch(/^kink-consent-draft-\d{4}-\d{2}-\d{2}\.json$/);
+    const exportedJsonText = await exportedBlob.text();
+
+    // Reset checklist state and re-import the exported JSON draft
+    checklistState.resetAllAnswers();
+    expect(checklistState.answers()).toEqual({});
+
+    const draftFile = createFileWithText(exportedJsonText, exportedName);
+    const fileInput = hostEl.querySelector<HTMLInputElement>('input[type="file"]')!;
+    Object.defineProperty(fileInput, 'files', {
+      value: { 0: draftFile, length: 1, item: (i: number) => (i === 0 ? draftFile : null) },
+      configurable: true,
+    });
+    fileInput.dispatchEvent(new Event('change'));
+    await fixture.whenStable();
+
+    expect(checklistState.answers()).toEqual({
+      item_safeword: { selectedOption: 'opt_traffic' },
+      item_rope: { primaryScale: 'enjoy', secondaryScale: 'hard_limit' },
+    });
+    expect(saveNowSpy).toHaveBeenCalledTimes(1);
   });
 });

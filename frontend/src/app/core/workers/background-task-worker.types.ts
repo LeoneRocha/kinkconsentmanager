@@ -5,6 +5,7 @@ import {
   ResolvedPreviewTexts,
 } from '../models';
 import { DraftImportProcessSummary, DraftImportWorkerStage } from './draft-import.processor';
+import { CsvExportContext } from './csv-export.processor';
 import { XlsxExportLabels } from './xlsx/xlsx-workbook.types';
 
 export type BackgroundTaskKind =
@@ -73,6 +74,7 @@ export interface ExportCsvWorkerRequest {
   readonly task: 'export_csv';
   readonly requestId: string;
   readonly rows: readonly FlattenedChecklistRow[];
+  readonly context?: CsvExportContext;
 }
 
 export type BackgroundWorkerRequest =

@@ -21,6 +21,7 @@ import {
   BackgroundWorkerResultMessage,
   buildCsvContentFromRows,
   buildStyledXlsxWorkbook,
+  CsvExportContext,
   DraftImportProcessSummary,
   parseAndValidateDraftContent,
   processDraftImportPayload,
@@ -322,6 +323,7 @@ export class BackgroundTaskWorkerService implements OnDestroy {
     rows: readonly FlattenedChecklistRow[],
     fileName: string,
     options?: BackgroundTaskOptions,
+    context?: CsvExportContext,
   ): Promise<BackgroundTextOutcome> {
     return this.executeWithLifecycle({
       kind: 'export_csv',
@@ -336,6 +338,7 @@ export class BackgroundTaskWorkerService implements OnDestroy {
             task: 'export_csv',
             requestId: `bg-csv-${++nextRequestCounter}`,
             rows,
+            context,
           },
           reportProgress,
         );
@@ -349,7 +352,7 @@ export class BackgroundTaskWorkerService implements OnDestroy {
 
         this._usedBackgroundWorker.set(false);
         reportProgress('building', 70);
-        const textContent = buildCsvContentFromRows(rows);
+        const textContent = buildCsvContentFromRows(rows, context);
         reportProgress('complete', 100);
 
         return { textContent, processedInWorker: false };

@@ -78,7 +78,7 @@ export class ExportActionsToolbarComponent {
   }
 
   protected onExportJsonClick(): void {
-    if (this.exportActionsDisabled()) {
+    if (this.actionsDisabled()) {
       return;
     }
     this.exportJson.emit();
