@@ -6,6 +6,14 @@ export interface AppTelemetryConfig {
   readonly cloudRole: string;
 }
 
+export interface AppWorkerLoadingConfig {
+  readonly totalDelayMs: number;
+  readonly startDelayMs: number;
+  readonly completionDelayMs: number;
+  readonly progressTickMs: number;
+  readonly virtualProgressCap: number;
+}
+
 export interface AppEnvironment {
   readonly production: boolean;
   readonly appName: string;
@@ -17,6 +25,7 @@ export interface AppEnvironment {
     readonly encryptionKeyBase64: string;
   };
   readonly telemetry: AppTelemetryConfig;
+  readonly workerLoading: AppWorkerLoadingConfig;
 }
 
 export const environment: AppEnvironment = {
@@ -33,5 +42,12 @@ export const environment: AppEnvironment = {
     enabled: false,
     connectionString: '',
     cloudRole: 'kinkconsentmanager-ui',
+  },
+  workerLoading: {
+    totalDelayMs: 3000,
+    startDelayMs: 350,
+    completionDelayMs: 650,
+    progressTickMs: 40,
+    virtualProgressCap: 92,
   },
 };

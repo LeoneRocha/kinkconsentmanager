@@ -1,4 +1,5 @@
 import { inject, Injectable, InjectionToken, OnDestroy, signal } from '@angular/core';
+import { environment } from '../../../environments/environment';
 import {
   ChecklistSchema,
   DraftValidationResult,
@@ -40,10 +41,57 @@ interface ResolvedTimings {
   readonly virtualProgressCap: number;
 }
 
+export interface WorkerLoadingTimingInput {
+  readonly totalDelayMs: number;
+  readonly startDelayMs: number;
+  readonly completionDelayMs: number;
+  readonly progressTickMs: number;
+  readonly virtualProgressCap: number;
+}
+
 /**
- * Configuração padrão de cadência visual (delay inicial, tempo mínimo de processamento,
- * confirmação final e taxa de atualização da barra progressiva). Em ambientes sem `Worker`
- * (ex.: testes Jest), os atrasos padrão são zerados para manter a suíte determinística e rápida.
+ * Converte a configuração de ambiente (`workerLoading`) em janelas proporcionais de delay inicial,
+ * processamento mínimo e confirmação final, preservando a soma em `totalDelayMs` (padrão 3000ms).
+ */
+export function resolveEnvironmentTimingConfig(
+  config: WorkerLoadingTimingInput,
+): BackgroundTaskTimingConfig {
+  const totalDelayMs = Math.max(0, Math.round(config.totalDelayMs));
+  const progressTickMs = Math.max(15, Math.round(config.progressTickMs));
+  const virtualProgressCap = Math.max(50, Math.min(98, Math.round(config.virtualProgressCap)));
+
+  if (totalDelayMs === 0) {
+    return {
+      startDelayMs: 0,
+      minProcessingMs: 0,
+      completionDelayMs: 0,
+      progressTickMs,
+      virtualProgressCap,
+    };
+  }
+
+  const startDelayMs = Math.min(
+    Math.max(0, Math.round(config.startDelayMs)),
+    Math.round(totalDelayMs * 0.25),
+  );
+  const completionDelayMs = Math.min(
+    Math.max(0, Math.round(config.completionDelayMs)),
+    Math.round(totalDelayMs * 0.35),
+  );
+  const minProcessingMs = Math.max(0, totalDelayMs - startDelayMs - completionDelayMs);
+
+  return {
+    startDelayMs,
+    minProcessingMs,
+    completionDelayMs,
+    progressTickMs,
+    virtualProgressCap,
+  };
+}
+
+/**
+ * Configuração padrão de cadência visual lida de `environment.workerLoading` (3000ms padrão).
+ * Em ambientes sem `Worker` (ex.: testes Jest), os atrasos padrão são zerados para manter a suíte rápida.
  */
 export const BACKGROUND_TASK_TIMING_CONFIG = new InjectionToken<BackgroundTaskTimingConfig>(
   'BACKGROUND_TASK_TIMING_CONFIG',
@@ -51,19 +99,13 @@ export const BACKGROUND_TASK_TIMING_CONFIG = new InjectionToken<BackgroundTaskTi
     providedIn: 'root',
     factory: () =>
       typeof Worker !== 'undefined'
-        ? {
-            startDelayMs: 240,
-            minProcessingMs: 420,
-            completionDelayMs: 480,
-            progressTickMs: 40,
-            virtualProgressCap: 92,
-          }
+        ? resolveEnvironmentTimingConfig(environment.workerLoading)
         : {
             startDelayMs: 0,
             minProcessingMs: 0,
             completionDelayMs: 0,
-            progressTickMs: 40,
-            virtualProgressCap: 92,
+            progressTickMs: environment.workerLoading.progressTickMs,
+            virtualProgressCap: environment.workerLoading.virtualProgressCap,
           },
   },
 );
@@ -360,12 +402,22 @@ export class BackgroundTaskWorkerService implements OnDestroy {
       resolved.progressTickMs,
       resolved.virtualProgressCap,
       params.kind,
+      resolved.startDelayMs + resolved.minProcessingMs,
     );
 
     const reportSynchronizedProgress = (stage: BackgroundTaskStage, rawPct: number): void => {
-      const clampedPct = Math.max(0, Math.min(100, Math.round(rawPct)));
+      const hasPendingHold = resolved.minProcessingMs > 0;
+      const effectiveStage: BackgroundTaskStage =
+        hasPendingHold && stage === 'complete'
+          ? params.kind === 'import_json'
+            ? 'validating'
+            : 'packaging'
+          : stage;
+      const maxActivePct = hasPendingHold ? resolved.virtualProgressCap : 100;
+      const clampedPct = Math.max(0, Math.min(maxActivePct, Math.round(rawPct)));
+
       this.syncedFloor = Math.max(this.syncedFloor, clampedPct);
-      this._stage.set(stage);
+      this._stage.set(effectiveStage);
 
       if (resolved.progressMode === 'synchronized') {
         this.virtualCursor = clampedPct;
@@ -447,14 +499,18 @@ export class BackgroundTaskWorkerService implements OnDestroy {
     tickMs: number,
     cap: number,
     kind: BackgroundTaskKind,
+    expectedActiveMs: number,
   ): void {
     if (mode === 'synchronized') {
       return;
     }
 
+    const expectedTicks = Math.max(8, Math.max(400, expectedActiveMs) / tickMs);
+    const easingFactor = Math.min(0.14, Math.max(0.025, 2.8 / expectedTicks));
+
     this.progressTimer = setInterval(() => {
       if (mode === 'virtual') {
-        const delta = Math.max(0.8, (cap - this.virtualCursor) * 0.085);
+        const delta = Math.max(0.45, (cap - this.virtualCursor) * easingFactor);
         this.virtualCursor = Math.min(cap, this.virtualCursor + delta);
         const pct = Math.min(cap, Math.round(this.virtualCursor));
         this._progress.set(pct);
@@ -462,10 +518,10 @@ export class BackgroundTaskWorkerService implements OnDestroy {
         return;
       }
 
-      // Modo híbrido: ancora no avanço real do worker e desliza suavemente entre marcos.
+      // Modo híbrido: ancora no avanço real do worker e desliza suavemente ao longo do tempo configurado.
       const hybridTarget = Math.min(cap, Math.max(this.syncedFloor + 18, 28));
       if (this.virtualCursor < hybridTarget) {
-        const delta = Math.max(0.45, (hybridTarget - this.virtualCursor) * 0.1);
+        const delta = Math.max(0.4, (hybridTarget - this.virtualCursor) * easingFactor);
         this.virtualCursor = Math.min(hybridTarget, this.virtualCursor + delta);
         const pct = Math.min(cap, Math.round(this.virtualCursor));
         if (pct > this._progress()) {

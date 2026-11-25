@@ -8,6 +8,7 @@ const path = require('path');
 const { updateVersion } = require('./version-updater');
 const { updateCryptoKey } = require('./crypto-key-updater');
 const { updateTelemetryConfig } = require('./telemetry-config-updater');
+const { updateWorkerLoadingConfig } = require('./worker-loading-config-updater');
 
 let env = null;
 for (const arg of process.argv) {
@@ -35,3 +36,6 @@ updateCryptoKey(envPath, envFile);
 
 // Passo 3: injetar Application Insights Connection String se configurada no ambiente de CI/CD
 updateTelemetryConfig(envPath, envFile);
+
+// Passo 4: ajustar delays do loading de workers caso definidos via variável de ambiente
+updateWorkerLoadingConfig(envPath, envFile);

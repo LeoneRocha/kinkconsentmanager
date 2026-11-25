@@ -3,11 +3,9 @@ import { ChecklistSchema, FlattenedChecklistRow, ResolvedPreviewTexts } from '..
 import {
   BACKGROUND_TASK_TIMING_CONFIG,
   BackgroundTaskWorkerService,
+  resolveEnvironmentTimingConfig,
 } from './background-task-worker.service';
-import {
-  BACKGROUND_TASK_WORKER_FACTORY,
-  BackgroundWorkerMessage,
-} from '../workers';
+import { BACKGROUND_TASK_WORKER_FACTORY, BackgroundWorkerMessage } from '../workers';
 
 const MOCK_SCHEMA: ChecklistSchema = {
   schemaVersion: '1.0.0',
@@ -330,5 +328,98 @@ describe('BackgroundTaskWorkerService', () => {
     expect(failResult).toBe(false);
     expect(service.isProcessing()).toBe(false);
     expect(service.isCompleted()).toBe(false);
+  });
+
+  // Cenário: Cálculo proporcional dos delays a partir da configuração de ambiente (`workerLoading`).
+  // Objetivo: Garantir que o padrão de 3000ms distribua start/processing/completion mantendo a soma exata e aceite 0ms ou janelas menores.
+  it('should resolve proportional timing windows from environment.workerLoading (3000ms default, custom, and zero)', () => {
+    expect(
+      resolveEnvironmentTimingConfig({
+        totalDelayMs: 3000,
+        startDelayMs: 350,
+        completionDelayMs: 650,
+        progressTickMs: 40,
+        virtualProgressCap: 92,
+      }),
+    ).toEqual({
+      startDelayMs: 350,
+      minProcessingMs: 2000,
+      completionDelayMs: 650,
+      progressTickMs: 40,
+      virtualProgressCap: 92,
+    });
+
+    const compact = resolveEnvironmentTimingConfig({
+      totalDelayMs: 500,
+      startDelayMs: 350,
+      completionDelayMs: 650,
+      progressTickMs: 40,
+      virtualProgressCap: 92,
+    });
+    expect(compact.startDelayMs).toBe(125);
+    expect(compact.completionDelayMs).toBe(175);
+    expect(compact.minProcessingMs).toBe(200);
+    expect(compact.startDelayMs + compact.minProcessingMs + compact.completionDelayMs).toBe(500);
+
+    expect(
+      resolveEnvironmentTimingConfig({
+        totalDelayMs: 0,
+        startDelayMs: 350,
+        completionDelayMs: 650,
+        progressTickMs: 40,
+        virtualProgressCap: 92,
+      }),
+    ).toEqual({
+      startDelayMs: 0,
+      minProcessingMs: 0,
+      completionDelayMs: 0,
+      progressTickMs: 40,
+      virtualProgressCap: 92,
+    });
+  });
+
+  // Cenário: Tarefa rápida encerrando antes do término do `minProcessingMs` configurado.
+  // Objetivo: Segurar o progresso ativo no teto (`virtualProgressCap`) antes de liberar 100% e `isCompleted`.
+  it('should cap synchronized completion at virtualProgressCap while waiting out minProcessingMs', async () => {
+    jest.useFakeTimers();
+
+    TestBed.configureTestingModule({
+      providers: [
+        BackgroundTaskWorkerService,
+        { provide: BACKGROUND_TASK_WORKER_FACTORY, useValue: () => null },
+      ],
+    });
+
+    const service = TestBed.inject(BackgroundTaskWorkerService);
+    const runPromise = service.runTrackedTask({
+      kind: 'export_xlsx',
+      fileName: 'fast.xlsx',
+      options: {
+        progressMode: 'synchronized',
+        startDelayMs: 0,
+        minDisplayMs: 300,
+        completionDelayMs: 100,
+      },
+      run: async (reportProgress) => {
+        reportProgress('complete', 100);
+        return 'ok';
+      },
+    });
+
+    // Logo após execução instantânea, aguarda `minProcessingMs` limitado ao cap (92%) sem marcar concluído
+    await jest.advanceTimersByTimeAsync(150);
+    expect(service.isProcessing()).toBe(true);
+    expect(service.isCompleted()).toBe(false);
+    expect(service.stage()).toBe('packaging');
+    expect(service.progress()).toBe(92);
+
+    // Após cruzar os 300ms de processamento mínimo, entra na confirmação final de 100%
+    await jest.advanceTimersByTimeAsync(170);
+    expect(service.isCompleted()).toBe(true);
+    expect(service.stage()).toBe('complete');
+    expect(service.progress()).toBe(100);
+
+    await jest.advanceTimersByTimeAsync(120);
+    await expect(runPromise).resolves.toBe('ok');
   });
 });

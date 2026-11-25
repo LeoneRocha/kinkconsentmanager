@@ -1,5 +1,13 @@
 import { BUILD_INFO } from './build-info';
 
+export interface AppWorkerLoadingConfig {
+  readonly totalDelayMs: number;
+  readonly startDelayMs: number;
+  readonly completionDelayMs: number;
+  readonly progressTickMs: number;
+  readonly virtualProgressCap: number;
+}
+
 export const environment = {
   production: true,
   appName: 'Kink Consent Manager',
@@ -14,5 +22,12 @@ export const environment = {
     enabled: false,
     connectionString: '',
     cloudRole: 'kinkconsentmanager-ui',
+  },
+  workerLoading: {
+    totalDelayMs: 3000,
+    startDelayMs: 350,
+    completionDelayMs: 650,
+    progressTickMs: 40,
+    virtualProgressCap: 92,
   },
 };
