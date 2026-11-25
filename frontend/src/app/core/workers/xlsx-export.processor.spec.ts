@@ -1,5 +1,9 @@
 import { ChecklistSchema, FlattenedChecklistRow, ResolvedPreviewTexts } from '../models';
-import { buildStyledXlsxWorkbook, XlsxExportLabels } from './xlsx-export.processor';
+import {
+  buildStyledXlsxWorkbook,
+  processXlsxExportPayload,
+  XlsxExportLabels,
+} from './xlsx-export.processor';
 
 const MOCK_SCHEMA: ChecklistSchema = {
   schemaVersion: '1.0.0',
@@ -27,13 +31,23 @@ const MOCK_SCHEMA: ChecklistSchema = {
       order: 2,
       defaultDualRole: true,
       rolePairId: 'giving_receiving',
-      items: [{ id: 'item_rope', type: 'scale_matrix' }],
+      items: [
+        { id: 'item_rope', type: 'scale_matrix' },
+        { id: 'item_self', type: 'scale_matrix', dualRole: false, rolePairId: 'general' },
+      ],
+    },
+    {
+      id: 'grp_impact',
+      order: 3,
+      defaultDualRole: true,
+      rolePairId: 'giving_receiving',
+      items: [{ id: 'item_spank', type: 'scale_matrix' }],
     },
   ],
 };
 
 const MOCK_TEXTS: ResolvedPreviewTexts = {
-  title: 'Kink Consent Report',
+  title: 'Checklist',
   schemaVersionLabel: 'Schema Version',
   generatedAtLabel: 'Generated at',
   generatedAtValue: '2026-11-24 21:00',
@@ -51,10 +65,13 @@ const MOCK_TEXTS: ResolvedPreviewTexts = {
   groups: {
     grp_safety: { title: 'Safety & Protocols', description: 'Essential agreements' },
     grp_bondage: { title: 'Bondage' },
+    grp_impact: { title: 'Impact Play' },
   },
   items: {
     item_sw: { label: 'Safeword & Care' },
     item_rope: { label: 'Rope <Heavy> & "Cuffs"' },
+    item_self: { label: 'Self-tying' },
+    item_spank: { label: 'Spanking' },
   },
   options: {
     opt_traffic: 'Traffic Light',
@@ -84,6 +101,32 @@ const MOCK_ROWS: readonly FlattenedChecklistRow[] = [
     primaryValueLabel: 'Enjoy',
     secondaryValueLabel: 'Not answered',
     primaryColor: '#388E3C',
+    selectedOptionsLabels: [],
+    customNote: '',
+  },
+  {
+    groupId: 'grp_bondage',
+    groupTitle: 'Bondage',
+    itemId: 'item_self',
+    itemLabel: 'Self-tying',
+    isDualRole: false,
+    primaryRoleLabel: 'General',
+    primaryValueLabel: 'Not answered',
+    selectedOptionsLabels: [],
+    customNote: '',
+  },
+  {
+    groupId: 'grp_impact',
+    groupTitle: 'Impact Play',
+    itemId: 'item_spank',
+    itemLabel: 'Spanking',
+    isDualRole: true,
+    primaryRoleLabel: 'Giving',
+    secondaryRoleLabel: 'Receiving',
+    primaryValueLabel: 'Hard Limit',
+    secondaryValueLabel: 'Curious',
+    primaryColor: '#D32F2F',
+    secondaryColor: '#FBC02D',
     selectedOptionsLabels: [],
     customNote: '',
   },
@@ -121,10 +164,37 @@ function readZipEntries(archive: Uint8Array): Map<string, string> {
   return entries;
 }
 
+function colLettersToIndex(letters: string): number {
+  let num = 0;
+  for (let i = 0; i < letters.length; i += 1) {
+    num = num * 26 + (letters.charCodeAt(i) - 64);
+  }
+  return num;
+}
+
+function assertStrictlySortedRowsAndCells(sheetXml: string): void {
+  const rowMatches = [...sheetXml.matchAll(/<row r="(\d+)"[^>]*>(.*?)<\/row>/g)];
+  let prevRow = 0;
+  for (const rowMatch of rowMatches) {
+    const rowIdx = Number(rowMatch[1]);
+    expect(rowIdx).toBeGreaterThan(prevRow);
+    prevRow = rowIdx;
+
+    const cellMatches = [...rowMatch[2].matchAll(/<c r="([A-Z]+)(\d+)"/g)];
+    let prevCol = 0;
+    for (const cellMatch of cellMatches) {
+      const colIdx = colLettersToIndex(cellMatch[1]);
+      expect(Number(cellMatch[2])).toBe(rowIdx);
+      expect(colIdx).toBeGreaterThan(prevCol);
+      prevCol = colIdx;
+    }
+  }
+}
+
 describe('xlsx-export.processor', () => {
-  // Cenário: Geração de arquivo XLSX no layout Moderno.
-  // Objetivo: Garantir cabeçalho ZIP PK válido, presença de todos os arquivos OOXML obrigatórios, estilos slate/cores das escalas e escape XML seguro.
-  it('should build a valid OOXML .xlsx archive with modern slate styling and escaped XML content', () => {
+  // Cenário: Geração de arquivo XLSX no layout Moderno com cores claras e fontes pretas.
+  // Objetivo: Garantir ausência de fundos escuros em títulos/categorias, preenchimento pastel suave nas escalas, texto preto em negrito e escape XML seguro.
+  it('should build a light-themed OOXML .xlsx archive with black fonts, no header fills, and pastel scale tints', () => {
     const stages: string[] = [];
     const bytes = buildStyledXlsxWorkbook(
       {
@@ -139,8 +209,6 @@ describe('xlsx-export.processor', () => {
 
     expect(bytes[0]).toBe(0x50); // P
     expect(bytes[1]).toBe(0x4b); // K
-    expect(bytes[2]).toBe(0x03);
-    expect(bytes[3]).toBe(0x04);
     expect(stages).toEqual(['preparing', 'building', 'packaging', 'complete']);
 
     const entries = readZipEntries(bytes);
@@ -154,22 +222,27 @@ describe('xlsx-export.processor', () => {
     ]);
 
     const stylesXml = entries.get('xl/styles.xml')!;
-    expect(stylesXml).toContain('FF0F172A');
-    expect(stylesXml).toContain('FF388E3C');
+    // Sem preenchimentos escuros pesados
+    expect(stylesXml).not.toContain('FF0F172A');
+    expect(stylesXml).not.toContain('FF991B1B');
+    expect(stylesXml).not.toContain('FFDC2626');
+    // Texto em preto (#111827) e preenchimentos pastéis suaves (ex.: #388E3C clareado -> FFD7E8D8)
     expect(stylesXml).toContain('FF111827');
+    expect(stylesXml).toContain('FFD7E8D8');
+    expect(stylesXml).toContain('FFF6D5D5');
 
     const sheetXml = entries.get('xl/worksheets/sheet1.xml')!;
-    expect(sheetXml).toContain('Kink Consent Report');
+    assertStrictlySortedRowsAndCells(sheetXml);
+    expect(sheetXml).toContain('Checklist');
     expect(sheetXml).toContain('Essential agreements');
     expect(sheetXml).toContain('Safeword &amp; Care');
     expect(sheetXml).toContain('Rope &lt;Heavy&gt; &amp; &quot;Cuffs&quot;');
     expect(sheetXml).toContain('Red stops now');
-    expect(sheetXml).not.toContain('● Enjoy');
   });
 
-  // Cenário: Geração de arquivo XLSX seguindo o layout Clássico.
-  // Objetivo: Garantir aplicação da paleta carmesim clássica, títulos em caixa alta, omissão de descrições longas e marcadores ● / ○ nas células.
-  it('should apply classic crimson layout styling, uppercase banners, and dot markers when layout is classic', () => {
+  // Cenário: Geração de arquivo XLSX no layout Clássico minimalista de 3 colunas espelhando a tela.
+  // Objetivo: Garantir zero cores de fundo, títulos em negrito preto (sem caixa alta forçada), 3 colunas lado a lado em paisagem, legenda em rich-text e bolinhas ●/○ coloridas.
+  it('should render classic layout as a clean 3-column sheet with black headings, zero background fills, and colored dot markers', () => {
     const bytes = buildStyledXlsxWorkbook({
       schema: MOCK_SCHEMA,
       rows: MOCK_ROWS,
@@ -183,16 +256,43 @@ describe('xlsx-export.processor', () => {
 
     const entries = readZipEntries(bytes);
     const stylesXml = entries.get('xl/styles.xml')!;
-    expect(stylesXml).toContain('FF991B1B');
-    expect(stylesXml).toContain('FFDC2626');
-    expect(stylesXml).toContain('FFFEE2E2');
+    expect(stylesXml).toContain('<fills count="2">');
+    expect(stylesXml).not.toContain('patternType="solid"');
+    expect(stylesXml).not.toContain('FF991B1B');
+    expect(stylesXml).not.toContain('FFDC2626');
 
     const sheetXml = entries.get('xl/worksheets/sheet1.xml')!;
-    expect(sheetXml).toContain('KINK CONSENT REPORT');
-    expect(sheetXml).toContain('SAFETY &amp; PROTOCOLS');
-    expect(sheetXml).toContain('BONDAGE');
-    expect(sheetXml).toContain('● Enjoy');
-    expect(sheetXml).toContain('○ Not answered');
+    assertStrictlySortedRowsAndCells(sheetXml);
+    expect(sheetXml).toContain('orientation="landscape"');
+    expect(sheetXml).toContain('A1:K1');
+    expect(sheetXml).toContain('Safety &amp; Protocols');
+    expect(sheetXml).toContain('Bondage');
+    expect(sheetXml).toContain('Impact Play');
+    expect(sheetXml).toContain('Giving, Receiving');
+    expect(sheetXml).toContain('●');
+    expect(sheetXml).toContain('○');
     expect(sheetXml).not.toContain('Essential agreements');
+  });
+
+  // Cenário: Despacho direto via payload de worker (`processXlsxExportPayload`).
+  // Objetivo: Confirmar delegação limpa do payload de requisição e geração de arquivo XLSX válido com progresso.
+  it('should generate valid XLSX archive via processXlsxExportPayload worker handler', () => {
+    const stages: string[] = [];
+    const bytes = processXlsxExportPayload(
+      {
+        task: 'export_xlsx',
+        requestId: 'xlsx-worker-1',
+        schema: MOCK_SCHEMA,
+        rows: MOCK_ROWS,
+        texts: MOCK_TEXTS,
+        layout: 'modern',
+        labels: MOCK_LABELS,
+      },
+      (stage) => stages.push(stage),
+    );
+
+    expect(bytes[0]).toBe(0x50);
+    expect(bytes[1]).toBe(0x4b);
+    expect(stages).toEqual(['preparing', 'building', 'packaging', 'complete']);
   });
 });

@@ -3,4 +3,6 @@ export * from './background-task-worker.factory';
 export * from './draft-import.processor';
 export * from './csv-export.processor';
 export * from './pdf-document.builder';
+export * from './pdf-export.processor';
+export * from './xlsx';
 export * from './xlsx-export.processor';

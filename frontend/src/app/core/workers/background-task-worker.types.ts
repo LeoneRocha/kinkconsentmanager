@@ -5,7 +5,7 @@ import {
   ResolvedPreviewTexts,
 } from '../models';
 import { DraftImportProcessSummary, DraftImportWorkerStage } from './draft-import.processor';
-import { XlsxExportLabels } from './xlsx-export.processor';
+import { XlsxExportLabels } from './xlsx/xlsx-workbook.types';
 
 export type BackgroundTaskKind =
   'import_json' | 'export_png' | 'export_pdf' | 'export_xlsx' | 'export_csv';

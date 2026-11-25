@@ -1,4 +1,5 @@
 import { FlattenedChecklistRow } from '../models';
+import { BackgroundTaskStage, ExportCsvWorkerRequest } from './background-task-worker.types';
 
 const UTF8_BOM = '\uFEFF';
 const CSV_HEADERS: readonly string[] = [
@@ -15,7 +16,7 @@ const CSV_HEADERS: readonly string[] = [
 
 /**
  * Constrói o conteúdo CSV RFC-4180 com BOM UTF-8 a partir das linhas normalizadas do checklist.
- * Compartilhado entre `CsvExportService` e o Web Worker de background.
+ * Compartilhado entre `CsvExportService` e o processador dedicado de CSV.
  */
 export function buildCsvContentFromRows(rows: readonly FlattenedChecklistRow[]): string {
   const lines: string[] = [CSV_HEADERS.join(',')];
@@ -36,6 +37,20 @@ export function buildCsvContentFromRows(rows: readonly FlattenedChecklistRow[]):
   }
 
   return `${UTF8_BOM}${lines.join('\r\n')}`;
+}
+
+/**
+ * Processador específico para requisições de exportação CSV em background.
+ */
+export function processCsvExportPayload(
+  request: ExportCsvWorkerRequest,
+  onProgress?: (stage: BackgroundTaskStage, progress: number) => void,
+): string {
+  onProgress?.('preparing', 30);
+  onProgress?.('building', 70);
+  const content = buildCsvContentFromRows(request.rows);
+  onProgress?.('complete', 100);
+  return content;
 }
 
 function escapeCsvCell(value: string): string {
