@@ -220,6 +220,16 @@
           </div>
         </header>
 
+        @if (areAllGroupsCompleted()) {
+          <app-completion-banner
+            [title]="completionTitle()"
+            [message]="completionMessage()"
+            [showSecondaryAction]="false"
+            [primaryActionLabel]="exportLabel()"
+            (primaryAction)="finishChecklist.emit()"
+          />
+        }
+
         <mat-accordion class="stepper__review-accordion" [multi]="true">
           @for (group of groups(); track group.id; let i = $index) {
             <mat-expansion-panel

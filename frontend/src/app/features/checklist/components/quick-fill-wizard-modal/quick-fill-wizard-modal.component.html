@@ -2,9 +2,17 @@
   <header class="quick-fill-dialog__header">
     <h2 class="quick-fill-dialog__title" [attr.title]="labels().title">{{ labels().title }}</h2>
     <div class="quick-fill-dialog__header-actions">
-      @if (currentStep()) {
-        <span class="quick-fill__counter" [attr.title]="safeIndex() + 1 + ' / ' + steps().length">
-          {{ safeIndex() + 1 }} / {{ steps().length }}
+      @if (steps().length > 0) {
+        <span
+          class="quick-fill__counter"
+          [attr.title]="
+            (isShowingCompletionScreen() ? steps().length : safeIndex() + 1) +
+            ' / ' +
+            steps().length
+          "
+        >
+          {{ isShowingCompletionScreen() ? steps().length : safeIndex() + 1 }} /
+          {{ steps().length }}
         </span>
       }
       @if (!inline()) {
@@ -21,7 +29,44 @@
     </div>
   </header>
 
-  @if (currentStep(); as activeStep) {
+  @if (isShowingCompletionScreen()) {
+    <div class="quick-fill quick-fill--completed">
+      <app-completion-banner
+        [title]="completionTitle()"
+        [message]="completionMessage()"
+        [secondaryActionLabel]="reviewLabel()"
+        [primaryActionLabel]="exportLabel()"
+        (secondaryAction)="reviewChecklist.emit()"
+        (primaryAction)="finishChecklist.emit()"
+      />
+
+      <div class="quick-fill__nav">
+        <button
+          mat-stroked-button
+          type="button"
+          class="quick-fill__prev-btn"
+          [disabled]="!canGoPrev()"
+          [attr.title]="labels().prev"
+          (click)="prevStep()"
+        >
+          <i class="fa-solid fa-arrow-left" [attr.title]="labels().prev" aria-hidden="true"></i>
+          <span>{{ labels().prev }}</span>
+        </button>
+
+        @if (!inline()) {
+          <button
+            mat-button
+            type="button"
+            class="quick-fill__close-btn"
+            [attr.title]="labels().close"
+            (click)="closeModal()"
+          >
+            {{ labels().close }}
+          </button>
+        }
+      </div>
+    </div>
+  } @else if (currentStep(); as activeStep) {
     <div class="quick-fill">
       <div class="quick-fill__current" aria-live="polite">
         <div class="quick-fill__current-top">

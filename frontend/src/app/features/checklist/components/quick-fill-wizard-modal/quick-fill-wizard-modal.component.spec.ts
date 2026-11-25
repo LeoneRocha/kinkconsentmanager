@@ -366,4 +366,102 @@ describe('QuickFillWizardModalComponent', () => {
       'Não há itens disponíveis',
     );
   });
+
+  // Cenário: Retomada de preenchimento salvo com questões pendentes (incluindo segunda role em dualRole).
+  // Objetivo: Posicionar o usuário diretamente na primeira questão não respondida ao carregar rascunho parcial.
+  it('should resume on the first unanswered step when loaded with partial saved answers', async () => {
+    await setBaseInputs({ visible: false, answers: {} });
+
+    await setBaseInputs({
+      visible: true,
+      answers: {
+        item_safeword: { selectedOption: 'opt_a' },
+        item_aftercare: { selectedOptions: ['opt_c'] },
+        item_allergies: { customText: 'None' },
+        item_checkin: { primaryScale: 'enjoy' },
+        item_rope: { primaryScale: 'curious' },
+      },
+    });
+
+    const hostEl = fixture.nativeElement as HTMLElement;
+    expect(hostEl.querySelector('.quick-fill__counter')?.textContent?.trim()).toBe('6 / 6');
+    expect(hostEl.querySelector('.quick-fill__current-item')?.textContent?.trim()).toBe(
+      'Rope Bondage',
+    );
+    expect(hostEl.querySelector('.quick-fill__current-role')?.textContent?.trim()).toBe(
+      'Receiving',
+    );
+  });
+
+  // Cenário: Carregamento com 100% respondido, conclusão ao responder a última questão e retorno com botão Anterior.
+  // Objetivo: Mostrar a tela de conclusão integrada com app-completion-banner, permitir voltar às perguntas pelo botão Anterior/seta e reiniciar se as respostas forem limpas.
+  it('should show completion screen when all steps are answered, allow stepping back with Anterior/ArrowLeft, and advance to completion from last step', async () => {
+    const completionEvents: boolean[] = [];
+    component.completionScreenChange.subscribe((active) => completionEvents.push(active));
+
+    const completeAnswers: Readonly<Record<string, ItemResponseValue>> = {
+      item_safeword: { selectedOption: 'opt_a' },
+      item_aftercare: { selectedOptions: ['opt_c'] },
+      item_allergies: { customText: 'None' },
+      item_checkin: { primaryScale: 'enjoy' },
+      item_rope: { primaryScale: 'curious', secondaryScale: 'favorite' },
+    };
+
+    await setBaseInputs({ visible: false, answers: completeAnswers });
+    await setBaseInputs({ visible: true, answers: completeAnswers });
+
+    const hostEl = fixture.nativeElement as HTMLElement;
+    expect(hostEl.querySelector('.quick-fill--completed')).not.toBeNull();
+    expect(hostEl.querySelector('app-completion-banner')).not.toBeNull();
+    expect(hostEl.querySelector('.quick-fill__counter')?.textContent?.trim()).toBe('6 / 6');
+    expect(completionEvents[completionEvents.length - 1]).toBe(true);
+
+    const reviewSpy = jest.fn<void, []>();
+    const finishSpy = jest.fn<void, []>();
+    component.reviewChecklist.subscribe(reviewSpy);
+    component.finishChecklist.subscribe(finishSpy);
+
+    hostEl
+      .querySelector<HTMLButtonElement>(
+        'app-completion-banner button[data-action="review-checklist"]',
+      )
+      ?.click();
+    hostEl
+      .querySelector<HTMLButtonElement>(
+        'app-completion-banner button[data-action="export-checklist"]',
+      )
+      ?.click();
+    expect(reviewSpy).toHaveBeenCalledTimes(1);
+    expect(finishSpy).toHaveBeenCalledTimes(1);
+
+    // Clicar em Anterior volta da tela de conclusão para a última questão (6 / 6)
+    hostEl.querySelector<HTMLButtonElement>('.quick-fill__prev-btn')?.click();
+    await fixture.whenStable();
+    expect(hostEl.querySelector('.quick-fill--completed')).toBeNull();
+    expect(hostEl.querySelector('.quick-fill__counter')?.textContent?.trim()).toBe('6 / 6');
+    expect(hostEl.querySelector('.quick-fill__current-role')?.textContent?.trim()).toBe(
+      'Receiving',
+    );
+    expect(completionEvents[completionEvents.length - 1]).toBe(false);
+
+    // Selecionar resposta na última questão avança automaticamente para a tela de conclusão
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: '4' }));
+    await fixture.whenStable();
+    expect(hostEl.querySelector('.quick-fill--completed')).not.toBeNull();
+
+    // Pressionar ArrowLeft também sai da tela de conclusão de volta à última questão
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft' }));
+    await fixture.whenStable();
+    expect(hostEl.querySelector('.quick-fill--completed')).toBeNull();
+    expect(hostEl.querySelector('.quick-fill__counter')?.textContent?.trim()).toBe('6 / 6');
+
+    // Avançar novamente e limpar todas as respostas sai da tela de conclusão para 1 / 6
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: '4' }));
+    await fixture.whenStable();
+    expect(hostEl.querySelector('.quick-fill--completed')).not.toBeNull();
+
+    await setBaseInputs({ visible: true, answers: {} });
+    expect(hostEl.querySelector('.quick-fill--completed')).toBeNull();
+    expect(hostEl.querySelector('.quick-fill__counter')?.textContent?.trim()).toBe('1 / 6');
+  });
 });

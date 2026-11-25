@@ -32,7 +32,7 @@ import {
   TelemetryService,
   UiFeedbackHostService,
 } from '../../../../core/services';
-import { CompletionBannerComponent, LegendBarComponent } from '../../../../shared/components';
+import { LegendBarComponent } from '../../../../shared/components';
 import { ChecklistHeaderComponent, ChecklistHeaderLabels } from '../../components/checklist-header';
 import {
   ChecklistProgressBarComponent,
@@ -60,7 +60,6 @@ import {
   selector: 'app-checklist-page',
   imports: [
     MatButtonModule,
-    CompletionBannerComponent,
     LegendBarComponent,
     ChecklistHeaderComponent,
     ChecklistProgressBarComponent,
@@ -112,15 +111,6 @@ export class ChecklistPageComponent implements OnInit {
   protected readonly isChecklistComplete = computed<boolean>(
     () => this.totalCount() > 0 && this.answeredCount() >= this.totalCount(),
   );
-
-  protected readonly isInReviewStep = computed<boolean>(() => {
-    const groups = this.filteredGroups();
-    return (
-      this.viewMode() === 'stepper' &&
-      groups.length > 0 &&
-      this.activeStepperStep() >= groups.length
-    );
-  });
 
   protected readonly areFullViewGroupsExpanded = computed<boolean>(() => {
     const groups = this.filteredGroups();
@@ -399,7 +389,6 @@ export class ChecklistPageComponent implements OnInit {
         const labels = untracked(() => this.completionLabels());
         untracked(() => {
           this.accessibility.announce(`${labels.title} ${labels.message}`, false);
-          this.scrollToContentTop();
         });
       } else if (!complete) {
         this.wasChecklistComplete = false;

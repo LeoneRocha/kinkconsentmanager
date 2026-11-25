@@ -96,6 +96,17 @@
       }
     </div>
 
+    @if (isReadyToFinish()) {
+      <app-completion-banner
+        [title]="completionTitle()"
+        [message]="completionMessage()"
+        [secondaryActionLabel]="reviewLabel()"
+        [primaryActionLabel]="exportLabel()"
+        (secondaryAction)="reviewChecklist.emit()"
+        (primaryAction)="finishChecklist.emit()"
+      />
+    }
+
     <div class="full-view__footer">
       <button
         mat-flat-button

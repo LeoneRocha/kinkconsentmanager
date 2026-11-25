@@ -554,36 +554,56 @@ describe('ChecklistPageComponent', () => {
     expect(navigateSpy).toHaveBeenCalledWith(['/checklist']);
   });
 
-  it('should display completion banner when all items are answered and support review and export actions', async () => {
+  it('should display completion banner inside question view bodies when completed and support review, back, and export actions', async () => {
     await createTestModule(() => of(MOCK_SCHEMA));
     const hostEl = await startInMode('quick_fill');
     const navigateSpy = jest.spyOn(router, 'navigate').mockResolvedValue(true);
 
     expect(hostEl.querySelector('app-completion-banner')).toBeNull();
 
-    // Answer both questions in MOCK_SCHEMA to reach 100% completion
+    // Answering only primaryScale on dual-role item keeps QuickFill on the unanswered secondary step without an outer banner
     checklistState.setItemAnswer('item_safeword', { selectedOption: 'opt_traffic' });
     checklistState.setItemAnswer('item_rope', { primaryScale: 'enjoy' });
     await fixture.whenStable();
+    expect(hostEl.querySelector('.quick-fill--completed')).toBeNull();
+    expect(hostEl.querySelector('app-completion-banner')).toBeNull();
 
-    const banner = hostEl.querySelector('app-completion-banner .completion-banner');
+    // Completing both roles finishes all QuickFill steps and displays the banner inside the QuickFill body
+    checklistState.setItemAnswer('item_rope', { primaryScale: 'enjoy', secondaryScale: 'favorite' });
+    await fixture.whenStable();
+
+    const banner = hostEl.querySelector('.checklist-page__content app-completion-banner .completion-banner');
     expect(banner).not.toBeNull();
+    expect(hostEl.querySelector('.quick-fill--completed app-completion-banner')).not.toBeNull();
+    expect(hostEl.querySelectorAll('app-completion-banner').length).toBe(1);
     expect(banner?.textContent).toContain('Checklist concluído!');
 
-    const reviewBtn = banner?.querySelector<HTMLButtonElement>(
-      'button[data-action="review-checklist"]',
+    // Clicking Anterior inside QuickFill completion screen steps back to the last question
+    const quickFillPrevBtn = hostEl.querySelector<HTMLButtonElement>('.quick-fill__prev-btn');
+    expect(quickFillPrevBtn).not.toBeNull();
+    quickFillPrevBtn!.click();
+    await fixture.whenStable();
+    expect(hostEl.querySelector('.quick-fill--completed')).toBeNull();
+    expect(hostEl.querySelector('app-completion-banner')).toBeNull();
+    expect(hostEl.querySelector('.quick-fill__current-item')?.textContent).toContain(
+      'Bondage com Cordas',
     );
-    const exportBtn = banner?.querySelector<HTMLButtonElement>(
-      'button[data-action="export-checklist"]',
+
+    // Selecting scale on last step re-enters the QuickFill completion screen
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: '4' }));
+    await fixture.whenStable();
+    expect(hostEl.querySelector('.quick-fill--completed app-completion-banner')).not.toBeNull();
+
+    const reviewBtn = hostEl.querySelector<HTMLButtonElement>(
+      '.quick-fill--completed app-completion-banner button[data-action="review-checklist"]',
     );
     expect(reviewBtn).not.toBeNull();
-    expect(exportBtn).not.toBeNull();
 
-    // Clicking review switches to Stepper Final Review and hides duplicate review button in banner
+    // Clicking review switches to Stepper Final Review with completion banner inside the stepper panel body
     reviewBtn!.click();
     await fixture.whenStable();
     expect(checklistState.viewMode()).toBe('stepper');
-    expect(hostEl.querySelector('.stepper__panel--review')).not.toBeNull();
+    expect(hostEl.querySelector('.stepper__panel--review app-completion-banner')).not.toBeNull();
     expect(
       hostEl.querySelector('app-completion-banner button[data-action="review-checklist"]'),
     ).toBeNull();
@@ -591,7 +611,7 @@ describe('ChecklistPageComponent', () => {
     // Clicking export from banner navigates to /checklist/export
     hostEl
       .querySelector<HTMLButtonElement>(
-        'app-completion-banner button[data-action="export-checklist"]',
+        '.stepper__panel--review app-completion-banner button[data-action="export-checklist"]',
       )!
       .click();
     await fixture.whenStable();

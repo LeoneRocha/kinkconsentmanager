@@ -23,7 +23,10 @@ import {
   ScaleOption,
 } from '../../../../core/models';
 import { UiFeedbackHostService } from '../../../../core/services';
-import { DynamicQuestionItemComponent } from '../../../../shared/components';
+import {
+  CompletionBannerComponent,
+  DynamicQuestionItemComponent,
+} from '../../../../shared/components';
 import {
   countGroupAnsweredItems,
   getGroupDescription,
@@ -40,7 +43,12 @@ import {
  */
 @Component({
   selector: 'app-classic-kink-sheet',
-  imports: [MatButtonModule, MatTooltipModule, DynamicQuestionItemComponent],
+  imports: [
+    MatButtonModule,
+    MatTooltipModule,
+    CompletionBannerComponent,
+    DynamicQuestionItemComponent,
+  ],
   templateUrl: './classic-kink-sheet.component.html',
   styleUrl: './classic-kink-sheet.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -61,12 +69,19 @@ export class ClassicKinkSheetComponent {
   readonly expandCategoryLabel = input<string>('Expandir categoria');
   readonly collapseCategoryLabel = input<string>('Recolher categoria');
   readonly isComplete = input<boolean | undefined>(undefined);
+  readonly completionTitle = input<string>('Checklist concluído!');
+  readonly completionMessage = input<string>(
+    'Todas as questões visíveis foram respondidas. Você já pode revisar suas escolhas ou exportar seu resultado.',
+  );
+  readonly reviewLabel = input<string>('Revisar respostas');
+  readonly exportLabel = input<string>('Exportar');
   readonly classicHint = input<string>(
     'Visualização clássica em blocos por categoria: clique nos círculos para marcar ou desmarcar cada escala.',
   );
 
   readonly answerChange = output<{ itemId: string; patch: Partial<ItemResponseValue> }>();
   readonly readItemAloud = output<ItemDefinition>();
+  readonly reviewChecklist = output<void>();
   readonly finishChecklist = output<void>();
 
   protected readonly collapsedGroupIds = signal<ReadonlySet<string>>(new Set());

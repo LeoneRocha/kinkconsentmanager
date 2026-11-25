@@ -124,18 +124,6 @@
         </app-checklist-progress-bar>
       </div>
 
-      @if (isChecklistComplete()) {
-        <app-completion-banner
-          [title]="completionLabels().title"
-          [message]="completionLabels().message"
-          [secondaryActionLabel]="completionLabels().reviewButton"
-          [showSecondaryAction]="!isInReviewStep()"
-          [primaryActionLabel]="completionLabels().exportButton"
-          (secondaryAction)="onReviewChecklist()"
-          (primaryAction)="onFinishChecklist()"
-        />
-      }
-
       <section
         #contentContainer
         class="checklist-page__content"
@@ -155,6 +143,9 @@
               [totalCount]="totalCount()"
               [progressPercentage]="progressPercentage()"
               [progressLabel]="progressBarLabels().progressLabel"
+              [completionTitle]="completionLabels().title"
+              [completionMessage]="completionLabels().message"
+              [exportLabel]="completionLabels().exportButton"
               (activeStepChange)="onActiveStepChange($event)"
               (answerChange)="onAnswerChange($event)"
               (readItemAloud)="onReadItemAloud($event)"
@@ -176,10 +167,15 @@
               [collapseAllLabel]="collapseAllLabel()"
               [expandCategoryLabel]="expandCategoryLabel()"
               [collapseCategoryLabel]="collapseCategoryLabel()"
+              [completionTitle]="completionLabels().title"
+              [completionMessage]="completionLabels().message"
+              [reviewLabel]="completionLabels().reviewButton"
+              [exportLabel]="completionLabels().exportButton"
               [isComplete]="isChecklistComplete()"
               [classicHint]="classicHint()"
               (answerChange)="onAnswerChange($event)"
               (readItemAloud)="onReadItemAloud($event)"
+              (reviewChecklist)="onReviewChecklist()"
               (finishChecklist)="onFinishChecklist()"
             />
           }
@@ -199,10 +195,15 @@
               [collapseAllLabel]="collapseAllLabel()"
               [expandCategoryLabel]="expandCategoryLabel()"
               [collapseCategoryLabel]="collapseCategoryLabel()"
+              [completionTitle]="completionLabels().title"
+              [completionMessage]="completionLabels().message"
+              [reviewLabel]="completionLabels().reviewButton"
+              [exportLabel]="completionLabels().exportButton"
               [showQuickNav]="false"
               [isComplete]="isChecklistComplete()"
               (answerChange)="onAnswerChange($event)"
               (readItemAloud)="onReadItemAloud($event)"
+              (reviewChecklist)="onReviewChecklist()"
               (finishChecklist)="onFinishChecklist()"
             />
           }
@@ -220,6 +221,9 @@
               [readAloudLabel]="readAloudLabel()"
               [finishLabel]="finishLabel()"
               [reviewLabel]="completionLabels().reviewButton"
+              [completionTitle]="completionLabels().title"
+              [completionMessage]="completionLabels().message"
+              [exportLabel]="completionLabels().exportButton"
               [isComplete]="isChecklistComplete()"
               (answerChange)="onAnswerChange($event)"
               (readAloud)="onReadTextAloud($event)"

@@ -9,9 +9,11 @@ import {
   input,
   output,
   signal,
+  untracked,
 } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { CompletionBannerComponent } from '../../../../shared/components';
 import {
   getScaleAnswerValue,
   GroupDefinition,
@@ -109,7 +111,13 @@ function isInteractiveInputTarget(target: EventTarget | null): boolean {
  */
 @Component({
   selector: 'app-quick-fill-wizard-modal',
-  imports: [A11yModule, NgTemplateOutlet, MatButtonModule, MatTooltipModule],
+  imports: [
+    A11yModule,
+    NgTemplateOutlet,
+    MatButtonModule,
+    MatTooltipModule,
+    CompletionBannerComponent,
+  ],
   templateUrl: './quick-fill-wizard-modal.component.html',
   styleUrl: './quick-fill-wizard-modal.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -126,6 +134,11 @@ export class QuickFillWizardModalComponent {
   readonly readAloudLabel = input<string>('Ouvir leitura deste item');
   readonly finishLabel = input<string>('Finalizar e Exportar');
   readonly reviewLabel = input<string>('Revisar respostas');
+  readonly completionTitle = input<string>('Checklist concluído!');
+  readonly completionMessage = input<string>(
+    'Todas as questões visíveis foram respondidas. Você já pode revisar suas escolhas ou exportar seu resultado.',
+  );
+  readonly exportLabel = input<string>('Exportar');
   readonly isComplete = input<boolean | undefined>(undefined);
 
   readonly visibleChange = output<boolean>();
@@ -133,10 +146,13 @@ export class QuickFillWizardModalComponent {
   readonly readAloud = output<string>();
   readonly reviewChecklist = output<void>();
   readonly finishChecklist = output<void>();
+  readonly completionScreenChange = output<boolean>();
 
   protected readonly otherOptionValue = OTHER_OPTION_VALUE;
   private readonly currentIndex = signal(0);
   private wasVisible = false;
+  private hasUserInteracted = false;
+  private wasAllStepsAnswered = false;
 
   protected readonly orderedScales = computed<readonly ScaleOption[]>(() =>
     resolveItemScales(this.scales(), this.currentStep()?.item),
@@ -207,6 +223,19 @@ export class QuickFillWizardModalComponent {
     return result;
   });
 
+  protected readonly allStepsAnswered = computed<boolean>(() => {
+    const steps = this.steps();
+    if (steps.length === 0) {
+      return false;
+    }
+    const answers = this.answers();
+    return steps.every((step) => this.isStepAnswered(step, answers));
+  });
+
+  protected readonly isShowingCompletionScreen = computed<boolean>(
+    () => this.steps().length > 0 && this.currentIndex() >= this.steps().length,
+  );
+
   protected readonly safeIndex = computed<number>(() => {
     const total = this.steps().length;
     if (total === 0) {
@@ -217,7 +246,7 @@ export class QuickFillWizardModalComponent {
 
   protected readonly currentStep = computed<QuickFillStep | null>(() => {
     const steps = this.steps();
-    if (steps.length === 0) {
+    if (steps.length === 0 || this.isShowingCompletionScreen()) {
       return null;
     }
     return steps[this.safeIndex()] ?? null;
@@ -306,9 +335,11 @@ export class QuickFillWizardModalComponent {
     return isQuestionAnswered(step.item, this.currentAnswer());
   });
 
-  protected readonly canGoPrev = computed<boolean>(() => this.safeIndex() > 0);
+  protected readonly canGoPrev = computed<boolean>(() =>
+    this.isShowingCompletionScreen() ? this.steps().length > 0 : this.safeIndex() > 0,
+  );
   protected readonly canGoNext = computed<boolean>(
-    () => this.safeIndex() < this.steps().length - 1,
+    () => !this.isShowingCompletionScreen() && this.safeIndex() < this.steps().length - 1,
   );
   protected readonly isReadyToFinish = computed<boolean>(() => {
     const explicit = this.isComplete();
@@ -330,10 +361,31 @@ export class QuickFillWizardModalComponent {
   constructor() {
     effect(() => {
       const isOpen = this.visible();
+      const steps = this.steps();
+      const answers = this.answers();
+
       if (isOpen && !this.wasVisible) {
-        this.currentIndex.set(0);
+        this.hasUserInteracted = false;
+        this.currentIndex.set(this.resolveResumeIndex(steps, answers));
+      } else if (isOpen && this.wasVisible && !untracked(() => this.hasUserInteracted)) {
+        this.currentIndex.set(this.resolveResumeIndex(steps, answers));
       }
       this.wasVisible = isOpen;
+    });
+
+    effect(() => {
+      const allAnswered = this.allStepsAnswered();
+      const showingCompletion = untracked(() => this.isShowingCompletionScreen());
+      if (this.wasAllStepsAnswered && !allAnswered && showingCompletion) {
+        const steps = untracked(() => this.steps());
+        const answers = untracked(() => this.answers());
+        this.currentIndex.set(this.resolveResumeIndex(steps, answers));
+      }
+      this.wasAllStepsAnswered = allAnswered;
+    });
+
+    effect(() => {
+      this.completionScreenChange.emit(this.visible() && this.isShowingCompletionScreen());
     });
   }
 
@@ -350,6 +402,14 @@ export class QuickFillWizardModalComponent {
       if (!this.inline()) {
         event.preventDefault();
         this.closeModal();
+      }
+      return;
+    }
+
+    if (this.isShowingCompletionScreen()) {
+      if (event.key === 'ArrowUp' || event.key === 'ArrowLeft') {
+        event.preventDefault();
+        this.prevStep();
       }
       return;
     }
@@ -421,12 +481,18 @@ export class QuickFillWizardModalComponent {
   }
 
   protected prevStep(): void {
+    this.hasUserInteracted = true;
+    if (this.isShowingCompletionScreen()) {
+      this.currentIndex.set(Math.max(0, this.steps().length - 1));
+      return;
+    }
     if (this.canGoPrev()) {
       this.currentIndex.set(this.safeIndex() - 1);
     }
   }
 
   protected nextStep(): void {
+    this.hasUserInteracted = true;
     if (this.canGoNext()) {
       this.currentIndex.set(this.safeIndex() + 1);
     }
@@ -438,8 +504,9 @@ export class QuickFillWizardModalComponent {
       return;
     }
 
+    this.hasUserInteracted = true;
     this.emitStepScale(step, scaleId);
-    this.nextStep();
+    this.advanceAfterAnswer(step);
   }
 
   protected selectSingleOption(optionId: string): void {
@@ -448,6 +515,7 @@ export class QuickFillWizardModalComponent {
       return;
     }
 
+    this.hasUserInteracted = true;
     if (step.item.allowOtherOption) {
       this.answerChange.emit({
         itemId: step.itemId,
@@ -465,7 +533,7 @@ export class QuickFillWizardModalComponent {
     }
 
     if (optionId !== OTHER_OPTION_VALUE) {
-      this.nextStep();
+      this.advanceAfterAnswer(step);
     }
   }
 
@@ -475,6 +543,7 @@ export class QuickFillWizardModalComponent {
       return;
     }
 
+    this.hasUserInteracted = true;
     const current = this.currentAnswer()?.selectedOptions ?? [];
     const checked = !current.includes(optionId);
     const nextSelectedOptions = checked
@@ -515,6 +584,7 @@ export class QuickFillWizardModalComponent {
       return;
     }
 
+    this.hasUserInteracted = true;
     const maxLen = this.currentOtherMaxLength();
     const bounded = value.length > maxLen ? value.slice(0, maxLen) : value;
 
@@ -556,6 +626,7 @@ export class QuickFillWizardModalComponent {
       return;
     }
 
+    this.hasUserInteracted = true;
     const maxLen = this.currentMaxTextLength();
     const bounded = value.length > maxLen ? value.slice(0, maxLen) : value;
     this.answerChange.emit({
@@ -569,6 +640,8 @@ export class QuickFillWizardModalComponent {
     if (!step) {
       return;
     }
+
+    this.hasUserInteracted = true;
 
     switch (step.itemType) {
       case 'scale_matrix':
@@ -643,5 +716,47 @@ export class QuickFillWizardModalComponent {
       step.roleField === 'primaryScale' ? { primaryScale: scaleId } : { secondaryScale: scaleId };
 
     this.answerChange.emit({ itemId: step.itemId, patch });
+  }
+
+  private advanceAfterAnswer(answeredStep: QuickFillStep): void {
+    if (this.canGoNext()) {
+      this.nextStep();
+      return;
+    }
+    const steps = this.steps();
+    const answers = this.answers();
+    const allRemainingAnswered = steps.every(
+      (candidate) => candidate.key === answeredStep.key || this.isStepAnswered(candidate, answers),
+    );
+    if (allRemainingAnswered) {
+      this.currentIndex.set(steps.length);
+    }
+  }
+
+  private isStepAnswered(
+    step: QuickFillStep,
+    answers: Readonly<Record<string, ItemResponseValue>>,
+  ): boolean {
+    const answer = getItemAnswer(answers, step.itemId);
+    if (step.itemType === 'scale_matrix') {
+      if (!answer) {
+        return false;
+      }
+      return Boolean(
+        step.roleField === 'primaryScale' ? answer.primaryScale : answer.secondaryScale,
+      );
+    }
+    return isQuestionAnswered(step.item, answer);
+  }
+
+  private resolveResumeIndex(
+    steps: readonly QuickFillStep[],
+    answers: Readonly<Record<string, ItemResponseValue>>,
+  ): number {
+    if (steps.length === 0) {
+      return 0;
+    }
+    const firstUnanswered = steps.findIndex((step) => !this.isStepAnswered(step, answers));
+    return firstUnanswered === -1 ? steps.length : firstUnanswered;
   }
 }

@@ -18,7 +18,10 @@ import {
   ResolvedRolePairLabels,
   ScaleOption,
 } from '../../../../core/models';
-import { DynamicQuestionItemComponent } from '../../../../shared/components';
+import {
+  CompletionBannerComponent,
+  DynamicQuestionItemComponent,
+} from '../../../../shared/components';
 import {
   countGroupAnsweredItems,
   getGroupDescription,
@@ -39,6 +42,7 @@ import { FullViewCategoryNavComponent } from './full-view-category-nav.component
   imports: [
     MatButtonModule,
     MatTooltipModule,
+    CompletionBannerComponent,
     DynamicQuestionItemComponent,
     FullViewCategoryNavComponent,
   ],
@@ -64,9 +68,16 @@ export class FullViewContainerComponent {
   readonly collapseCategoryLabel = input<string>('Recolher categoria');
   readonly showQuickNav = input<boolean>(true);
   readonly isComplete = input<boolean | undefined>(undefined);
+  readonly completionTitle = input<string>('Checklist concluído!');
+  readonly completionMessage = input<string>(
+    'Todas as questões visíveis foram respondidas. Você já pode revisar suas escolhas ou exportar seu resultado.',
+  );
+  readonly reviewLabel = input<string>('Revisar respostas');
+  readonly exportLabel = input<string>('Exportar');
 
   readonly answerChange = output<{ itemId: string; patch: Partial<ItemResponseValue> }>();
   readonly readItemAloud = output<ItemDefinition>();
+  readonly reviewChecklist = output<void>();
   readonly finishChecklist = output<void>();
 
   protected readonly collapsedGroupIds = signal<ReadonlySet<string>>(new Set());

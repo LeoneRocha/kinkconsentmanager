@@ -19,7 +19,10 @@ import {
   ResolvedRolePairLabels,
   ScaleOption,
 } from '../../../../core/models';
-import { DynamicQuestionItemComponent } from '../../../../shared/components';
+import {
+  CompletionBannerComponent,
+  DynamicQuestionItemComponent,
+} from '../../../../shared/components';
 import {
   countGroupAnsweredItems,
   getGroupDescription,
@@ -80,6 +83,7 @@ export const DEFAULT_CHECKLIST_STEPPER_LABELS: ChecklistStepperLabels = {
     MatExpansionModule,
     MatButtonModule,
     MatTooltipModule,
+    CompletionBannerComponent,
     DynamicQuestionItemComponent,
     ChecklistStepRailComponent,
   ],
@@ -99,6 +103,11 @@ export class ChecklistStepperComponent {
   readonly progressPercentage = input<number>(0);
   readonly progressLabel = input<string>('Progresso');
   readonly externalChromeHost = input<boolean>(false);
+  readonly completionTitle = input<string>('Checklist concluído!');
+  readonly completionMessage = input<string>(
+    'Todas as questões visíveis foram respondidas. Você já pode revisar suas escolhas ou exportar seu resultado.',
+  );
+  readonly exportLabel = input<string>('Exportar');
 
   readonly activeStepChange = output<number>();
   readonly answerChange = output<{ itemId: string; patch: Partial<ItemResponseValue> }>();
