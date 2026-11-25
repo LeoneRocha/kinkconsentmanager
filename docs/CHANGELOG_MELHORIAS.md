@@ -86,7 +86,7 @@ Documento consolidando todas as alterações funcionais, melhorias de interface 
 ## 5. Experiência de Prévia, Exportação e Impressão (`/export`)
 
 ### 5.1 Fluxo Guiado em 3 Seções
-- **Seção 1 — Escolha do estilo:** o usuário escolhe entre **Visualização Moderna** (tabelas detalhadas com pílulas coloridas) ou **Visualização Clássica** (folha compacta com círculos coloridos) em [`export-page.component.html`](../frontend/src/app/features/export/pages/export-page/export-page.component.html).
+- **Seção 1 — Escolha do estilo:** título alinhado ao padrão das demais seções (badge + título) e cards de opção **Visualização Moderna** / **Visualização Clássica** com ícone, descrição e estado selecionado, em [`export-page.component.html`](../frontend/src/app/features/export/pages/export-page/export-page.component.html).
 - **Seção 2 — Exporte seu checklist:** os botões de exportação visual/tabular (**PNG**, **PDF**, **Imprimir**, **CSV**, **XLSX**) ficam cinza/desabilitados até a escolha do estilo e ficam verdes assim que o resumo é exibido, na [`ExportActionsToolbarComponent`](../frontend/src/app/features/export/components/export-actions-toolbar/export-actions-toolbar.component.html).
 - **Seção 3 — Backup e Restore:** botões **Exportar JSON** e **Importar JSON** movidos para a seção dedicada [`ExportBackupRestoreComponent`](../frontend/src/app/features/export/components/export-backup-restore/export-backup-restore.component.ts), deixando a seção 2 mais limpa e organizada.
 

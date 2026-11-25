@@ -8,7 +8,7 @@
     </div>
   </header>
 
-  <section class="export-page__step-card" [attr.aria-label]="t('exportStep1Title')">
+  <section class="export-page__step-section" [attr.aria-label]="t('exportStep1Title')">
     <div class="export-page__step-header">
       <span
         class="export-page__step-badge"
@@ -22,17 +22,12 @@
           1
         }
       </span>
-      <div class="export-page__step-copy">
-        <h2 class="export-page__step-title" [attr.title]="t('exportStep1Title')">
-          {{ t('exportStep1Title') }}
-        </h2>
-        <p class="export-page__step-hint" [attr.title]="t('exportStep1Hint')">
-          {{ t('exportStep1Hint') }}
-        </p>
-      </div>
+      <h2 class="export-page__step-title" [attr.title]="t('exportStep1Title')">
+        {{ t('exportStep1Title') }}
+      </h2>
     </div>
 
-    <div class="export-page__layout-grid">
+    <div class="export-page__layout-grid" role="group" [attr.aria-label]="t('exportStep1Hint')">
       <button
         type="button"
         class="export-page__layout-card"
