@@ -106,18 +106,45 @@
       [pngLabel]="t('downloadPng')"
       [pdfLabel]="t('downloadPdf')"
       [printLabel]="t('printSummary')"
-      [jsonLabel]="t('exportJson')"
-      [importJsonLabel]="t('importJson')"
       [csvLabel]="t('exportCsv')"
       [xlsxLabel]="t('exportXlsx')"
       (backToChecklist)="onBackToChecklist()"
       (exportPng)="onExportPng()"
       (exportPdf)="onExportPdf()"
       (printChecklist)="onPrint()"
-      (exportJson)="onExportJson()"
-      (importJsonFile)="onImportJsonFile($event)"
       (exportCsv)="onExportCsv()"
       (exportXlsx)="onExportXlsx()"
+    />
+  </section>
+
+  <section class="export-page__step-section" [attr.aria-label]="t('exportStep3Title')">
+    <div class="export-page__step-header">
+      <span
+        class="export-page__step-badge"
+        [class.export-page__step-badge--done]="hasSchema()"
+        [attr.title]="t('exportStep3Title')"
+        aria-hidden="true"
+      >
+        3
+      </span>
+      <div class="export-page__step-copy">
+        <h2 class="export-page__step-title" [attr.title]="t('exportStep3Title')">
+          {{ t('exportStep3Title') }}
+        </h2>
+        <p class="export-page__step-hint" [attr.title]="t('exportStep3Hint')">
+          {{ t('exportStep3Hint') }}
+        </p>
+      </div>
+    </div>
+
+    <app-export-backup-restore
+      [busyFormat]="busyFormat()"
+      [hasSchema]="hasSchema()"
+      [sectionLabel]="t('exportStep3Title')"
+      [jsonLabel]="t('exportJson')"
+      [importJsonLabel]="t('importJson')"
+      (exportJson)="onExportJson()"
+      (importJsonFile)="onImportJsonFile($event)"
     />
   </section>
 

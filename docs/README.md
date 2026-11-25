@@ -117,7 +117,7 @@ As versões vivas constam em [frontend/package.json](../frontend/package.json), 
 | Painel Inicial (Rota padrão) | `/dashboard` | Seção **Ferramentas** com cartão do Checklist e indicador de progresso salvo |
 | Início do Checklist | `/checklist` | Seleção inicial entre os 4 modos de preenchimento + importação JSON em segundo plano |
 | Preenchimento do Checklist | `/checklist/fill` | Formulário interativo (*Preenchimento Rápido*, *Guiado*, *Clássico*, *Visão Completa*) protegido por `checklistFillGuard` |
-| Prévia e Exportação | `/checklist/export` | Seleção de estilo (*Visualização Moderna* ou *Visualização Clássica*) + **PNG**, **PDF**, **XLSX**, **Imprimir** (`@media print`), **JSON Draft** e **CSV BOM** |
+| Prévia e Exportação | `/checklist/export` | 3 seções: escolha de estilo (*Visualização Moderna* ou *Visualização Clássica*) → exportação (**PNG**, **PDF**, **XLSX**, **Imprimir**, **CSV**) → **Backup e Restore** (**JSON Draft**) |
 | Healthcheck Nginx (Docker) | `/health` | Resposta `200 OK` de disponibilidade do container frontend |
 
 ### Portas por Contexto

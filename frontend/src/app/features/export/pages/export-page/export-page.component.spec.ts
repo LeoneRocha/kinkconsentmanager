@@ -76,6 +76,9 @@ const PT_BR_TRANSLATIONS = {
     exportStep1Hint:
       'Selecione Visualização Moderna ou Visualização Clássica para ver o resumo e liberar os botões de exportação.',
     exportStep2Title: '2. Exporte seu checklist',
+    exportStep3Title: '3. Backup e Restore',
+    exportStep3Hint:
+      'Salve suas respostas em JSON para backup local ou importe um arquivo salvo anteriormente para restaurar e continuar editando.',
     exportLayoutModernDesc:
       'Tabelas detalhadas por categoria com pílulas coloridas e leitura facilitada.',
     exportLayoutClassicDesc:
@@ -515,7 +518,18 @@ describe('ExportPageComponent', () => {
     await createPage();
 
     const hostEl = fixture.nativeElement as HTMLElement;
-    const jsonBtn = hostEl.querySelector<HTMLButtonElement>('button[data-action="json"]')!;
+    expect(hostEl.textContent).toContain('3. Backup e Restore');
+    expect(
+      hostEl.querySelector('app-export-actions-toolbar button[data-action="json"]'),
+    ).toBeNull();
+    expect(
+      hostEl.querySelector('app-export-actions-toolbar button[data-action="import-json"]'),
+    ).toBeNull();
+
+    const jsonBtn = hostEl.querySelector<HTMLButtonElement>(
+      'app-export-backup-restore button[data-action="json"]',
+    )!;
+    expect(jsonBtn).not.toBeNull();
     expect(jsonBtn.disabled).toBe(false);
 
     jsonBtn.click();

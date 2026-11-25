@@ -28,6 +28,7 @@ import {
 } from '../../../../core/services';
 import { ExportPreviewLayout, FullGridPreviewComponent } from '../../../../shared/components';
 import { ExportActionsToolbarComponent } from '../../components/export-actions-toolbar';
+import { ExportBackupRestoreComponent } from '../../components/export-backup-restore';
 import {
   ChecklistFlattenService,
   CsvExportService,
@@ -46,6 +47,7 @@ import {
     MatButtonModule,
     MatProgressSpinnerModule,
     ExportActionsToolbarComponent,
+    ExportBackupRestoreComponent,
     FullGridPreviewComponent,
   ],
   templateUrl: './export-page.component.html',

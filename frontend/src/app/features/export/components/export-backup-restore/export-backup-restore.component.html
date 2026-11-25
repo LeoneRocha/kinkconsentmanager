@@ -1,0 +1,49 @@
+<div class="export-backup" role="group" [attr.aria-label]="sectionLabel()">
+  <div class="export-backup__actions">
+    <button
+      mat-flat-button
+      type="button"
+      class="export-backup__btn export-backup__btn--export"
+      [class.export-backup__btn--ready]="!actionsDisabled()"
+      data-action="json"
+      [disabled]="actionsDisabled()"
+      [attr.aria-busy]="busyFormat() === 'json'"
+      [attr.title]="jsonLabel()"
+      [attr.aria-label]="jsonLabel()"
+      (click)="onExportJsonClick()"
+    >
+      <i
+        [class]="busyFormat() === 'json' ? 'fa-solid fa-spinner fa-spin' : 'fa-solid fa-download'"
+        [attr.title]="jsonLabel()"
+        aria-hidden="true"
+      ></i>
+      <span>{{ jsonLabel() }}</span>
+    </button>
+
+    <button
+      mat-flat-button
+      type="button"
+      class="export-backup__btn export-backup__btn--export"
+      [class.export-backup__btn--ready]="!actionsDisabled()"
+      data-action="import-json"
+      [disabled]="actionsDisabled()"
+      [attr.title]="importJsonLabel()"
+      [attr.aria-label]="importJsonLabel()"
+      (click)="onImportJsonTriggerClick()"
+    >
+      <i class="fa-solid fa-upload" [attr.title]="importJsonLabel()" aria-hidden="true"></i>
+      <span>{{ importJsonLabel() }}</span>
+    </button>
+
+    <input
+      #jsonFileInput
+      type="file"
+      accept=".json,application/json"
+      class="export-backup__file-input"
+      tabindex="-1"
+      [attr.aria-label]="importJsonLabel()"
+      [attr.title]="importJsonLabel()"
+      (change)="onFileSelected($event)"
+    />
+  </div>
+</div>

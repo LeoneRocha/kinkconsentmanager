@@ -1,18 +1,10 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  ElementRef,
-  input,
-  output,
-  viewChild,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { ExportFormat } from '../../../../core/models';
 import { SchemaTranslatePipe } from '../../../../shared/pipes';
 
 /**
- * Presentational action toolbar providing visual/data export triggers and JSON draft import.
+ * Presentational action toolbar providing navigation back to checklist and visual/spreadsheet exports.
  */
 @Component({
   selector: 'app-export-actions-toolbar',
@@ -30,8 +22,6 @@ export class ExportActionsToolbarComponent {
   readonly pngLabel = input<string>('Baixar PNG');
   readonly pdfLabel = input<string>('Baixar PDF');
   readonly printLabel = input<string>('Imprimir');
-  readonly jsonLabel = input<string>('Exportar JSON');
-  readonly importJsonLabel = input<string>('Importar JSON');
   readonly csvLabel = input<string>('Exportar CSV');
   readonly xlsxLabel = input<string>('Exportar XLSX');
 
@@ -39,15 +29,10 @@ export class ExportActionsToolbarComponent {
   readonly exportPng = output<void>();
   readonly exportPdf = output<void>();
   readonly printChecklist = output<void>();
-  readonly exportJson = output<void>();
-  readonly importJsonFile = output<File>();
   readonly exportCsv = output<void>();
   readonly exportXlsx = output<void>();
 
-  private readonly jsonFileInput = viewChild<ElementRef<HTMLInputElement>>('jsonFileInput');
-
   protected readonly isBusy = computed<boolean>(() => this.busyFormat() !== null);
-  protected readonly actionsDisabled = computed<boolean>(() => !this.hasSchema() || this.isBusy());
   protected readonly exportActionsDisabled = computed<boolean>(
     () => !this.hasSchema() || !this.exportReady() || this.isBusy(),
   );
@@ -77,20 +62,6 @@ export class ExportActionsToolbarComponent {
     this.printChecklist.emit();
   }
 
-  protected onExportJsonClick(): void {
-    if (this.actionsDisabled()) {
-      return;
-    }
-    this.exportJson.emit();
-  }
-
-  protected onImportJsonTriggerClick(): void {
-    if (this.actionsDisabled()) {
-      return;
-    }
-    this.jsonFileInput()?.nativeElement.click();
-  }
-
   protected onExportCsvClick(): void {
     if (this.exportActionsDisabled()) {
       return;
@@ -103,16 +74,5 @@ export class ExportActionsToolbarComponent {
       return;
     }
     this.exportXlsx.emit();
-  }
-
-  protected onFileSelected(event: Event): void {
-    const inputElement = event.target as HTMLInputElement | null;
-    const selectedFile = inputElement?.files?.[0];
-    if (selectedFile) {
-      this.importJsonFile.emit(selectedFile);
-    }
-    if (inputElement) {
-      inputElement.value = '';
-    }
   }
 }

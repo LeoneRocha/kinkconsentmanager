@@ -17,15 +17,15 @@ describe('ExportActionsToolbarComponent', () => {
     await fixture.whenStable();
   });
 
-  it('should render all 8 toolbar actions including XLSX export', () => {
+  it('should render all 6 toolbar actions for navigation and checklist exports', () => {
     const hostEl = fixture.nativeElement as HTMLElement;
     const buttons = hostEl.querySelectorAll<HTMLButtonElement>('button[data-action]');
     const actions = Array.from(buttons).map((btn) => btn.dataset['action']);
 
-    expect(actions).toEqual(['back', 'png', 'pdf', 'print', 'json', 'import-json', 'csv', 'xlsx']);
+    expect(actions).toEqual(['back', 'png', 'pdf', 'print', 'csv', 'xlsx']);
   });
 
-  it('should disable export and import actions when hasSchema is false while keeping back enabled', async () => {
+  it('should disable export actions when hasSchema is false while keeping back enabled', async () => {
     fixture.componentRef.setInput('hasSchema', false);
     await fixture.whenStable();
 
@@ -34,8 +34,6 @@ describe('ExportActionsToolbarComponent', () => {
     const pngBtn = hostEl.querySelector<HTMLButtonElement>('button[data-action="png"]')!;
     const pdfBtn = hostEl.querySelector<HTMLButtonElement>('button[data-action="pdf"]')!;
     const printBtn = hostEl.querySelector<HTMLButtonElement>('button[data-action="print"]')!;
-    const jsonBtn = hostEl.querySelector<HTMLButtonElement>('button[data-action="json"]')!;
-    const importBtn = hostEl.querySelector<HTMLButtonElement>('button[data-action="import-json"]')!;
     const csvBtn = hostEl.querySelector<HTMLButtonElement>('button[data-action="csv"]')!;
     const xlsxBtn = hostEl.querySelector<HTMLButtonElement>('button[data-action="xlsx"]')!;
 
@@ -43,8 +41,6 @@ describe('ExportActionsToolbarComponent', () => {
     expect(pngBtn.disabled).toBe(true);
     expect(pdfBtn.disabled).toBe(true);
     expect(printBtn.disabled).toBe(true);
-    expect(jsonBtn.disabled).toBe(true);
-    expect(importBtn.disabled).toBe(true);
     expect(csvBtn.disabled).toBe(true);
     expect(xlsxBtn.disabled).toBe(true);
   });
@@ -69,7 +65,6 @@ describe('ExportActionsToolbarComponent', () => {
     component.exportPng.subscribe(() => emitted.push('png'));
     component.exportPdf.subscribe(() => emitted.push('pdf'));
     component.printChecklist.subscribe(() => emitted.push('print'));
-    component.exportJson.subscribe(() => emitted.push('json'));
     component.exportCsv.subscribe(() => emitted.push('csv'));
     component.exportXlsx.subscribe(() => emitted.push('xlsx'));
 
@@ -78,47 +73,13 @@ describe('ExportActionsToolbarComponent', () => {
     hostEl.querySelector<HTMLButtonElement>('button[data-action="png"]')?.click();
     hostEl.querySelector<HTMLButtonElement>('button[data-action="pdf"]')?.click();
     hostEl.querySelector<HTMLButtonElement>('button[data-action="print"]')?.click();
-    hostEl.querySelector<HTMLButtonElement>('button[data-action="json"]')?.click();
     hostEl.querySelector<HTMLButtonElement>('button[data-action="csv"]')?.click();
     hostEl.querySelector<HTMLButtonElement>('button[data-action="xlsx"]')?.click();
 
-    expect(emitted).toEqual(['back', 'png', 'pdf', 'print', 'json', 'csv', 'xlsx']);
+    expect(emitted).toEqual(['back', 'png', 'pdf', 'print', 'csv', 'xlsx']);
   });
 
-  it('should trigger hidden file input on import click, emit selected File, and reset input value', () => {
-    const hostEl = fixture.nativeElement as HTMLElement;
-    const fileInput = hostEl.querySelector<HTMLInputElement>('input[type="file"]')!;
-    const clickSpy = jest.spyOn(fileInput, 'click').mockImplementation(() => {});
-
-    expect(fileInput.accept).toBe('.json,application/json');
-
-    hostEl.querySelector<HTMLButtonElement>('button[data-action="import-json"]')?.click();
-    expect(clickSpy).toHaveBeenCalledTimes(1);
-
-    const importedFiles: File[] = [];
-    component.importJsonFile.subscribe((file) => importedFiles.push(file));
-
-    const mockFile = new File(['{"schemaVersion":"1.0.0"}'], 'draft.json', {
-      type: 'application/json',
-    });
-    const mockFileList: FileList = {
-      0: mockFile,
-      length: 1,
-      item: (index: number) => (index === 0 ? mockFile : null),
-      [Symbol.iterator]: () => [mockFile].values(),
-    };
-    Object.defineProperty(fileInput, 'files', {
-      value: mockFileList,
-      configurable: true,
-    });
-
-    fileInput.dispatchEvent(new Event('change'));
-
-    expect(importedFiles).toEqual([mockFile]);
-    expect(fileInput.value).toBe('');
-  });
-
-  it('should disable visual exports until exportReady is true while keeping json draft export/import and back enabled', async () => {
+  it('should disable visual exports until exportReady is true while keeping back enabled', async () => {
     fixture.componentRef.setInput('exportReady', false);
     await fixture.whenStable();
 
@@ -130,16 +91,9 @@ describe('ExportActionsToolbarComponent', () => {
       expect(btn.classList.contains('export-toolbar__btn--ready')).toBe(false);
     }
 
-    const jsonBtn = hostEl.querySelector<HTMLButtonElement>('button[data-action="json"]')!;
-    expect(jsonBtn.disabled).toBe(false);
-    expect(jsonBtn.classList.contains('export-toolbar__btn--ready')).toBe(true);
-
     expect(hostEl.querySelector<HTMLButtonElement>('button[data-action="back"]')!.disabled).toBe(
       false,
     );
-    expect(
-      hostEl.querySelector<HTMLButtonElement>('button[data-action="import-json"]')!.disabled,
-    ).toBe(false);
 
     fixture.componentRef.setInput('exportReady', true);
     await fixture.whenStable();

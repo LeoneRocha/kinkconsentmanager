@@ -82,6 +82,8 @@
     "exportStep1Title": "1. Choose the summary layout",
     "exportStep1Hint": "Select Modern View or Classic View to preview the summary and unlock the export buttons.",
     "exportStep2Title": "2. Export your checklist",
+    "exportStep3Title": "3. Backup & Restore",
+    "exportStep3Hint": "Save your responses as a portable JSON backup or import a previously saved file to restore and continue editing.",
     "exportLayoutModernDesc": "Detailed category tables with color-coded pills for easy reading.",
     "exportLayoutClassicDesc": "Compact multi-column sheet with traditional color-coded circles.",
     "exportSelectLayoutPrompt": "Choose Modern View or Classic View above to display the complete summary and unlock the export buttons.",

@@ -111,9 +111,10 @@ O JSON contém **apenas estrutura lógica e IDs**, sem textos fixos, garantindo 
   * Cabeçalho (`ChecklistHeaderComponent`), barra de **Progresso**, trilha circular de **Steps** (`ChecklistStepRailComponent`, no modo Guiado) e **Legenda da Escala** permanecem fixos em bloco `sticky` abaixo da topbar enquanto a página rola externamente pelo navegador.
   * **Guiado (Passos)** exige preenchimento completo do passo atual antes de avançar e culmina na **Revisão Final** em accordion.
 
-* `/checklist/export` — **Pré-visualização, Impressão e Exportação (2 Etapas):**
-  * **Etapa 1:** O usuário seleciona entre **Visualização Moderna** (tabelas detalhadas com pílulas coloridas) ou **Visualização Clássica** (folha compacta em colunas com círculos).
-  * **Etapa 2:** Liberação em verde dos botões **Baixar PNG**, **Baixar PDF**, **Imprimir**, **Exportar JSON**, **Exportar CSV** e **Exportar XLSX** (além de **Importar JSON** e botão **Voltar ao Checklist** vazado).
+* `/checklist/export` — **Pré-visualização, Impressão e Exportação (3 Seções):**
+  * **Seção 1:** O usuário seleciona entre **Visualização Moderna** (tabelas detalhadas com pílulas coloridas) ou **Visualização Clássica** (folha compacta em colunas com círculos).
+  * **Seção 2 — Exporte seu checklist:** liberação em verde dos botões **Baixar PNG**, **Baixar PDF**, **Imprimir**, **Exportar CSV** e **Exportar XLSX**, além do botão **Voltar ao Checklist** vazado.
+  * **Seção 3 — Backup e Restore:** botões **Exportar JSON** e **Importar JSON** em área dedicada para backup portátil e restauração do rascunho.
 
 ---
 
@@ -149,7 +150,7 @@ frontend/
     │   ├── features/
     │   │   ├── dashboard/                # dashboard-page (/dashboard)
     │   │   ├── checklist/                # checklist-start-page, checklist-fill.guard, checklist-mode-selector, checklist-header, checklist-progress-bar, checklist-step-rail, checklist-stepper, classic-kink-sheet, full-view-container, quick-fill-wizard-modal, category-accordion
-    │   │   └── export/                   # export-page (/checklist/export), export-actions-toolbar e serviços (flatten, png, pdf, xlsx, json-draft, csv, file-download)
+    │   │   └── export/                   # export-page (/checklist/export), export-actions-toolbar, export-backup-restore e serviços (flatten, png, pdf, xlsx, json-draft, csv, file-download)
     │   ├── app.routes.ts
     │   └── app.config.ts
     └── assets/

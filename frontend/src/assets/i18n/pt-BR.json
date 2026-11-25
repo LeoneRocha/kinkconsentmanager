@@ -82,6 +82,8 @@
     "exportStep1Title": "1. Escolha o estilo do resumo",
     "exportStep1Hint": "Selecione Visualização Moderna ou Visualização Clássica para ver o resumo e liberar os botões de exportação.",
     "exportStep2Title": "2. Exporte seu checklist",
+    "exportStep3Title": "3. Backup e Restore",
+    "exportStep3Hint": "Salve suas respostas em JSON para backup local ou importe um arquivo salvo anteriormente para restaurar e continuar editando.",
     "exportLayoutModernDesc": "Tabelas detalhadas por categoria com pílulas coloridas e leitura facilitada.",
     "exportLayoutClassicDesc": "Folha compacta em múltiplas colunas com círculos coloridos no estilo tradicional.",
     "exportSelectLayoutPrompt": "Escolha acima entre Visualização Moderna ou Visualização Clássica para visualizar o resumo completo e habilitar os botões de exportação.",

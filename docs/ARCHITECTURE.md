@@ -32,7 +32,7 @@ O **KinkConsentManager** é uma plataforma *privacy-first* (arquitetura **Zero-K
   - Cabeçalho, barra de **Progresso**, **Steps** e **Legenda da Escala** unificados em bloco `sticky` único no topo com rolagem externa nativa do navegador em telas `>= 768px`, e navegação direta ao `/dashboard` pelo clique em `.app-shell__brand-title` no topo.
   - Controles globais de acessibilidade audiovisual (`AccessibilityService`: leitura por foco `(focusin)`, Web Speech API, legendas visuais ao vivo, alto contraste WCAG AAA, tamanho de fonte, redução de animações, `alt` em imagens e `[attr.title]` nos 31 templates), sistema modular de **3 temas fixos** por tokens (`core/themes/`: *Sóbrio Preto & Branco com azul e degradê*, *Claro Vermelho* e *Escuro Vermelho*, via `ThemeService` com autodetecção inicial de `prefers-color-scheme`), autodetecção inicial de idioma (`navigator.languages` / `navigator.language`) no `provideAppInitializer` e padronização visual de botões (verde habilitado / cinza desabilitado em formulários vs. transparente e vazado em botões de navegação e entrada).
   - Persistência local resiliente com criptografia Web Crypto AES-GCM 256-bit (`CryptoService`, `ChecklistAutosaveService`, `BrowserStorageRepository`, `LocalStoragePersistenceService`), salvamento condicional apenas quando há alterações pendentes e zero envio de respostas a servidores.
-  - Prévia em 2 etapas (**Visualização Moderna** ou **Visualização Clássica**) e processamento em Web Worker unificado (`core/workers/`, com delay configurável por env `WORKER_LOADING_DELAY_MS` padrão `3000ms`): **PNG (`1200px` / `1360px`)**, **PDF programático** (`pdfmake`), **XLSX** OOXML modular (layouts Moderno pastel e Clássico paisagem), **Imprimir** (`window.print()` + `@media print`), **JSON Draft** e **CSV UTF-8 com BOM**.
+  - Prévia em 3 seções (**1. Escolha do estilo**, **2. Exporte seu checklist**, **3. Backup e Restore**) e processamento em Web Worker unificado (`core/workers/`, com delay configurável por env `WORKER_LOADING_DELAY_MS` padrão `3000ms`): **PNG (`1200px` / `1360px`)**, **PDF programático** (`pdfmake`), **XLSX** OOXML modular (layouts Moderno pastel e Clássico paisagem), **Imprimir** (`window.print()` + `@media print`), **JSON Draft** e **CSV UTF-8 com BOM**.
   - Camada genérica de contratos e acesso a dados já preparada (`ICrudOperations`, `BaseDataService`, `BaseCrudService`, `BaseCrudRepository`, `ISchemaRepository`) para futura evolução modular.
 - **Backend — Coming Soon (Roadmap V2+):**
   - Ainda **não existe implementação de backend** neste repositório na V1.
@@ -85,7 +85,7 @@ frontend/src/app/
 └── features/
     ├── dashboard/                         # dashboard.routes.ts e DashboardPageComponent (seção Ferramentas + card Checklist)
     ├── checklist/                         # checklist.routes.ts, guards (checklistFillGuard), ChecklistStartPageComponent (/checklist), ChecklistPageComponent (/checklist/fill), ChecklistModeSelector, ChecklistHeader, ChecklistStepRail, ChecklistStepper, ClassicKinkSheet, FullViewContainer, QuickFillWizardModal, CategoryAccordion
-    └── export/                            # export.routes.ts (/checklist/export), ExportPageComponent, ExportActionsToolbar (PNG, PDF, XLSX, Imprimir, JSON, CSV) e serviços
+    └── export/                            # export.routes.ts (/checklist/export), ExportPageComponent, ExportActionsToolbar (PNG, PDF, XLSX, Imprimir, CSV), ExportBackupRestore (JSON) e serviços
 ```
 
 ---
@@ -159,7 +159,7 @@ flowchart TD
 
 - **Feature `dashboard/`:** rota `/dashboard` com `DashboardPageComponent` exibindo a seção **Ferramentas** e o cartão de entrada do Checklist (com status e progresso salvo).
 - **Feature `checklist/`:** rota `/checklist` (`ChecklistStartPageComponent` + `ChecklistModeSelectorComponent` para seleção de modo e importação JSON), guarda `checklistFillGuard`, rota `/checklist/fill` (`ChecklistPageComponent`, `ChecklistHeaderComponent`, `ChecklistProgressBarComponent`, `ChecklistStepRailComponent`, `ChecklistStepperComponent`, `ClassicKinkSheetComponent`, `FullViewContainerComponent`, `QuickFillWizardModalComponent`, `CategoryAccordionComponent` e `checklist-view.helpers.ts`).
-- **Feature `export/`:** rota aninhada `/checklist/export` (`ExportPageComponent` em 2 etapas), barra `ExportActionsToolbarComponent` (PNG, PDF, XLSX, Imprimir, Exportar/Importar JSON e CSV) e serviços especializados (`ChecklistFlattenService`, `PngExportService`, `PdfExportService`, `XlsxExportService`, `JsonDraftService`, `CsvExportService` e `FileDownloadService`).
+- **Feature `export/`:** rota aninhada `/checklist/export` (`ExportPageComponent` em 3 seções), barra `ExportActionsToolbarComponent` (PNG, PDF, XLSX, Imprimir e CSV), seção dedicada `ExportBackupRestoreComponent` (**Backup e Restore**: Exportar/Importar JSON) e serviços especializados (`ChecklistFlattenService`, `PngExportService`, `PdfExportService`, `XlsxExportService`, `JsonDraftService`, `CsvExportService` e `FileDownloadService`).
 
 ### 5.4 Infraestrutura, Containers e Hosting (`frontend/` e `.devcontainer/`)
 
