@@ -60,7 +60,7 @@ const PT_BR_TRANSLATIONS = {
     exportJson: 'Exportar JSON',
     importJson: 'Importar JSON',
     exportCsv: 'Exportar CSV',
-    exportXlsx: 'Exportar XLSX',
+    exportXlsx: 'Exportar Excel',
     itemHeader: 'Prática / Item',
     valueHeader: 'Resposta',
     legendTitle: 'Legenda da Escala',

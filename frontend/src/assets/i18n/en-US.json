@@ -67,7 +67,7 @@
     "exportJson": "Export JSON",
     "importJson": "Import JSON",
     "exportCsv": "Export CSV",
-    "exportXlsx": "Export XLSX",
+    "exportXlsx": "Export Excel",
     "schemaVersionLabel": "Schema Version",
     "generatedAtLabel": "Generated at",
     "exportSuccess": "File exported successfully.",

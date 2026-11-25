@@ -23,7 +23,7 @@ export class ExportActionsToolbarComponent {
   readonly pdfLabel = input<string>('Baixar PDF');
   readonly printLabel = input<string>('Imprimir');
   readonly csvLabel = input<string>('Exportar CSV');
-  readonly xlsxLabel = input<string>('Exportar XLSX');
+  readonly xlsxLabel = input<string>('Exportar Excel');
 
   readonly backToChecklist = output<void>();
   readonly exportPng = output<void>();

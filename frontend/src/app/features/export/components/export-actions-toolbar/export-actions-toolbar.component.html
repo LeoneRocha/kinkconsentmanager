@@ -60,19 +60,19 @@
       type="button"
       class="export-toolbar__btn export-toolbar__btn--export"
       [class.export-toolbar__btn--ready]="!exportActionsDisabled()"
-      data-action="print"
+      data-action="xlsx"
       [disabled]="exportActionsDisabled()"
-      [attr.aria-busy]="busyFormat() === 'print'"
-      [attr.title]="printLabel()"
-      [attr.aria-label]="printLabel()"
-      (click)="onPrintClick()"
+      [attr.aria-busy]="busyFormat() === 'xlsx'"
+      [attr.title]="xlsxLabel()"
+      [attr.aria-label]="xlsxLabel()"
+      (click)="onExportXlsxClick()"
     >
       <i
-        [class]="busyFormat() === 'print' ? 'fa-solid fa-spinner fa-spin' : 'fa-solid fa-print'"
-        [attr.title]="printLabel()"
+        [class]="busyFormat() === 'xlsx' ? 'fa-solid fa-spinner fa-spin' : 'fa-solid fa-file-excel'"
+        [attr.title]="xlsxLabel()"
         aria-hidden="true"
       ></i>
-      <span>{{ printLabel() }}</span>
+      <span>{{ xlsxLabel() }}</span>
     </button>
 
     <button
@@ -100,19 +100,19 @@
       type="button"
       class="export-toolbar__btn export-toolbar__btn--export"
       [class.export-toolbar__btn--ready]="!exportActionsDisabled()"
-      data-action="xlsx"
+      data-action="print"
       [disabled]="exportActionsDisabled()"
-      [attr.aria-busy]="busyFormat() === 'xlsx'"
-      [attr.title]="xlsxLabel()"
-      [attr.aria-label]="xlsxLabel()"
-      (click)="onExportXlsxClick()"
+      [attr.aria-busy]="busyFormat() === 'print'"
+      [attr.title]="printLabel()"
+      [attr.aria-label]="printLabel()"
+      (click)="onPrintClick()"
     >
       <i
-        [class]="busyFormat() === 'xlsx' ? 'fa-solid fa-spinner fa-spin' : 'fa-solid fa-file-excel'"
-        [attr.title]="xlsxLabel()"
+        [class]="busyFormat() === 'print' ? 'fa-solid fa-spinner fa-spin' : 'fa-solid fa-print'"
+        [attr.title]="printLabel()"
         aria-hidden="true"
       ></i>
-      <span>{{ xlsxLabel() }}</span>
+      <span>{{ printLabel() }}</span>
     </button>
   </div>
 </nav>
