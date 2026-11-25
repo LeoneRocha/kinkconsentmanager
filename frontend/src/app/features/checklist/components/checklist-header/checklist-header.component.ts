@@ -98,10 +98,10 @@ export class ChecklistHeaderComponent {
   );
 
   protected readonly viewModeOptions = computed<SelectOption<ChecklistViewMode>[]>(() => [
+    { label: this.labels().quickFillButton, value: 'quick_fill' },
     { label: this.labels().stepperMode ?? 'Guiado (Passos)', value: 'stepper' },
     { label: this.labels().classicMode ?? 'Modo Clássico', value: 'classic' },
     { label: this.labels().fullMode, value: 'full' },
-    { label: this.labels().quickFillButton, value: 'quick_fill' },
   ]);
 
   protected toggleHeaderExpanded(): void {

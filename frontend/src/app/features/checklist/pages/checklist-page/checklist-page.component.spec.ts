@@ -345,14 +345,14 @@ describe('ChecklistPageComponent', () => {
     );
     expect(modeButtons.length).toBe(4);
 
-    modeButtons[1].click();
+    modeButtons[2].click();
     await fixture.whenStable();
     expect(checklistState.viewMode()).toBe('classic');
     expect(hostEl.querySelector('app-classic-kink-sheet')).not.toBeNull();
     expect(hostEl.querySelector('app-checklist-stepper')).toBeNull();
     expect(hostEl.querySelector('app-checklist-progress-bar')).not.toBeNull();
 
-    modeButtons[2].click();
+    modeButtons[3].click();
     await fixture.whenStable();
     expect(checklistState.viewMode()).toBe('full');
     expect(hostEl.querySelector('app-full-view-container')).not.toBeNull();
@@ -380,7 +380,7 @@ describe('ChecklistPageComponent', () => {
       hostEl.querySelectorAll('app-full-view-container .full-view__items').length,
     ).toBeGreaterThan(0);
 
-    modeButtons[3].click();
+    modeButtons[0].click();
     await fixture.whenStable();
     expect(checklistState.viewMode()).toBe('quick_fill');
     expect(hostEl.querySelector('.quick-fill-inline')).not.toBeNull();

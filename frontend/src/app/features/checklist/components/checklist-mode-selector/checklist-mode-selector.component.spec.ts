@@ -13,7 +13,7 @@ const MOCK_LABELS: ChecklistModeSelectorLabels = {
   continueButton: 'Continuar neste modo',
   existingProgressLabel: 'Progresso local encontrado',
   stepperTitle: 'Guiado (Passos)',
-  stepperBadge: 'Recomendado',
+  stepperBadge: 'Por etapas',
   stepperDesc: 'Avance uma categoria por vez.',
   stepperHowToFill: 'Responda todos os itens do passo atual antes de avançar.',
   classicTitle: 'Modo Clássico',
@@ -25,7 +25,7 @@ const MOCK_LABELS: ChecklistModeSelectorLabels = {
   fullDesc: 'Todas as categorias abertas.',
   fullHowToFill: 'Role livremente e responda na mesma tela.',
   quickFillTitle: 'Preenchimento Rápido',
-  quickFillBadge: 'Atalhos 1–5',
+  quickFillBadge: 'Recomendado',
   quickFillDesc: 'Um item por vez em fluxo ágil.',
   quickFillHowToFill: 'Pressione teclas 1 a 5 para escolher a escala.',
   importTitle: 'Já tem um preenchimento salvo em JSON?',
@@ -64,7 +64,7 @@ describe('ChecklistModeSelectorComponent', () => {
     expect(hostEl.querySelector('.mode-selector__saved-banner')).toBeNull();
 
     cards.forEach((card) => card.click());
-    expect(emitted).toEqual(['stepper', 'classic', 'full', 'quick_fill']);
+    expect(emitted).toEqual(['quick_fill', 'stepper', 'classic', 'full']);
   });
 
   it('should show saved local progress banner and continue label when answeredCount > 0', async () => {
@@ -84,7 +84,7 @@ describe('ChecklistModeSelectorComponent', () => {
   it('should trigger hidden file input on import button click, emit selected File, and reset input value', () => {
     const hostEl = fixture.nativeElement as HTMLElement;
     const fileInput = hostEl.querySelector<HTMLInputElement>('input[type="file"]')!;
-    const clickSpy = jest.spyOn(fileInput, 'click').mockImplementation(() => {});
+    const clickSpy = jest.spyOn(fileInput, 'click').mockImplementation(() => { });
 
     expect(fileInput.accept).toBe('.json,application/json');
 

@@ -75,6 +75,14 @@ export class ChecklistModeSelectorComponent {
     const l = this.labels();
     return [
       {
+        mode: 'quick_fill',
+        icon: 'fa-solid fa-bolt',
+        title: l.quickFillTitle,
+        badge: l.quickFillBadge,
+        description: l.quickFillDesc,
+        howToFill: l.quickFillHowToFill,
+      },
+      {
         mode: 'stepper',
         icon: 'fa-solid fa-route',
         title: l.stepperTitle,
@@ -97,14 +105,6 @@ export class ChecklistModeSelectorComponent {
         badge: l.fullBadge,
         description: l.fullDesc,
         howToFill: l.fullHowToFill,
-      },
-      {
-        mode: 'quick_fill',
-        icon: 'fa-solid fa-bolt',
-        title: l.quickFillTitle,
-        badge: l.quickFillBadge,
-        description: l.quickFillDesc,
-        howToFill: l.quickFillHowToFill,
       },
     ];
   });

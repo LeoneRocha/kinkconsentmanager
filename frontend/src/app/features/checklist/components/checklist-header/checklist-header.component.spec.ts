@@ -125,53 +125,54 @@ describe('ChecklistHeaderComponent', () => {
     expect(hostEl.querySelector('#checklist-header-body')).toBeNull();
   });
 
-  it('should emit viewModeChange when switching across stepper, classic, full, and quick_fill modes', async () => {
-    const emitted: ChecklistViewMode[] = [];
-    component.viewModeChange.subscribe((mode) => emitted.push(mode));
+    it('should emit viewModeChange when switching across quick_fill, stepper, classic, and full modes', async () => {
+      const emitted: ChecklistViewMode[] = [];
+      component.viewModeChange.subscribe((mode) => emitted.push(mode));
 
-    const hostEl = fixture.nativeElement as HTMLElement;
-    const modeButtons = hostEl.querySelectorAll<HTMLElement>(
-      '.checklist-header__mode-select mat-button-toggle button',
-    );
-    expect(modeButtons.length).toBe(4);
+      const hostEl = fixture.nativeElement as HTMLElement;
+      const modeButtons = hostEl.querySelectorAll<HTMLElement>(
+        '.checklist-header__mode-select mat-button-toggle button',
+      );
+      expect(modeButtons.length).toBe(4);
 
-    modeButtons[1].click();
-    modeButtons[2].click();
-    modeButtons[3].click();
-    await fixture.whenStable();
+      modeButtons[0].click();
+      modeButtons[1].click();
+      modeButtons[2].click();
+      modeButtons[3].click();
+      await fixture.whenStable();
 
-    expect(emitted).toEqual(['classic', 'full', 'quick_fill']);
+      expect(emitted).toEqual(['quick_fill', 'stepper', 'classic', 'full']);
+    });
+
+    it('should emit onlyUnansweredChange when toggling the filter switch', async () => {
+      const emitted: boolean[] = [];
+      component.onlyUnansweredChange.subscribe((enabled) => emitted.push(enabled));
+
+      const hostEl = fixture.nativeElement as HTMLElement;
+      const toggleBtn = hostEl.querySelector<HTMLButtonElement>(
+        '#only-unanswered-toggle button[role="switch"]',
+      );
+      expect(toggleBtn).not.toBeNull();
+
+      toggleBtn!.click();
+      await fixture.whenStable();
+
+      expect(emitted).toEqual([true]);
+    });
+
+    it('should emit clearAll when clear button is clicked and disable it when hasAnswers is false', async () => {
+      const clearAllSpy = jest.fn<void, []>();
+      component.clearAll.subscribe(clearAllSpy);
+
+      const hostEl = fixture.nativeElement as HTMLElement;
+      const clearBtn = hostEl.querySelector<HTMLButtonElement>('.checklist-header__clear-btn')!;
+      expect(clearBtn.disabled).toBe(false);
+
+      clearBtn.click();
+      await fixture.whenStable();
+      expect(clearAllSpy).toHaveBeenCalledTimes(1);
+
+      await setBaseInputs({ hasAnswers: false });
+      expect(clearBtn.disabled).toBe(true);
+    });
   });
-
-  it('should emit onlyUnansweredChange when toggling the filter switch', async () => {
-    const emitted: boolean[] = [];
-    component.onlyUnansweredChange.subscribe((enabled) => emitted.push(enabled));
-
-    const hostEl = fixture.nativeElement as HTMLElement;
-    const toggleBtn = hostEl.querySelector<HTMLButtonElement>(
-      '#only-unanswered-toggle button[role="switch"]',
-    );
-    expect(toggleBtn).not.toBeNull();
-
-    toggleBtn!.click();
-    await fixture.whenStable();
-
-    expect(emitted).toEqual([true]);
-  });
-
-  it('should emit clearAll when clear button is clicked and disable it when hasAnswers is false', async () => {
-    const clearAllSpy = jest.fn<void, []>();
-    component.clearAll.subscribe(clearAllSpy);
-
-    const hostEl = fixture.nativeElement as HTMLElement;
-    const clearBtn = hostEl.querySelector<HTMLButtonElement>('.checklist-header__clear-btn')!;
-    expect(clearBtn.disabled).toBe(false);
-
-    clearBtn.click();
-    await fixture.whenStable();
-    expect(clearAllSpy).toHaveBeenCalledTimes(1);
-
-    await setBaseInputs({ hasAnswers: false });
-    expect(clearBtn.disabled).toBe(true);
-  });
-});
