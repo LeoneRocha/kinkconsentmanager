@@ -212,15 +212,21 @@ describe('PdfExportService', () => {
     });
   });
 
-  // Cenário: Construção de PDF seguindo o layout Clássico.
-  // Objetivo: Garantir paleta carmesim clássica, títulos em caixa alta e omissão da descrição das categorias.
-  it('should apply classic crimson header styles when layout is classic', () => {
+  // Cenário: Construção de PDF seguindo o layout Clássico alinhado ao PNG Classic.
+  // Objetivo: Garantir paisagem, marcadores ●/○, legenda com não respondido e ausência de banners carmesim.
+  it('should build classic PDF as a PNG-aligned multi-column circle sheet', () => {
     const docDef = service.buildDocumentDefinition(MOCK_SCHEMA, MOCK_ROWS, MOCK_TEXTS, 'classic');
     const serialized = JSON.stringify(docDef.content);
 
-    expect(serialized).toContain('KINK CONSENT MANAGER REPORT');
-    expect(serialized).toContain('#DC2626');
-    expect(serialized).toContain('#FEE2E2');
+    expect(docDef.pageOrientation).toBe('landscape');
+    expect(serialized).toContain('Kink Consent Manager Report');
+    expect(serialized).not.toContain('KINK CONSENT MANAGER REPORT');
+    expect(serialized).toContain('●');
+    expect(serialized).toContain('○ ');
+    expect(serialized).toContain('Not answered');
+    expect(serialized).toContain('Giving, Receiving');
+    expect(serialized).not.toContain('#DC2626');
+    expect(serialized).not.toContain('#FEE2E2');
     expect(serialized).not.toContain('Essential protocols');
   });
 

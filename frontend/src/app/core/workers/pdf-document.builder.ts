@@ -5,6 +5,7 @@ import {
   FlattenedChecklistRow,
   ResolvedPreviewTexts,
 } from '../models';
+import { buildClassicPdfDocumentDefinition } from './pdf-classic-layout.builder';
 
 interface GroupedRows {
   readonly groupId: string;
@@ -13,8 +14,12 @@ interface GroupedRows {
 }
 
 /**
- * Constrói a definição declarativa do documento `pdfmake` de acordo com o layout selecionado
- * (`modern` ou `classic`), incluindo cabeçalho, legenda de escalas, tabelas por categoria e rodapé paginado.
+ * Constrói a definição declarativa do documento `pdfmake` de acordo com o layout selecionado.
+ * - `modern`: tabelas detalhadas com pílulas/células coloridas (retrato).
+ * - `classic`: folha multicamadas com bolinhas (paisagem), espelhando o PNG Classic.
+ *
+ * O layout Classic é contrato fixo alinhado ao PNG; alterações exigem aprovação explícita
+ * (ver `CLASSIC_PDF_LAYOUT_CONTRACT` e testes em `pdf-classic-layout.builder.spec.ts`).
  */
 export function buildPdfDocumentDefinition(
   schema: ChecklistSchema,
@@ -22,7 +27,17 @@ export function buildPdfDocumentDefinition(
   texts: ResolvedPreviewTexts,
   layout: ExportSummaryLayout = 'modern',
 ): TDocumentDefinitions {
-  const isClassic = layout === 'classic';
+  if (layout === 'classic') {
+    return buildClassicPdfDocumentDefinition(schema, rows, texts);
+  }
+  return buildModernPdfDocumentDefinition(schema, rows, texts);
+}
+
+function buildModernPdfDocumentDefinition(
+  schema: ChecklistSchema,
+  rows: readonly FlattenedChecklistRow[],
+  texts: ResolvedPreviewTexts,
+): TDocumentDefinitions {
   const orderedScales = [...schema.scales].sort((a, b) => a.order - b.order);
   const scaleContrastByColor = new Map<string, string>(
     orderedScales.map((scale) => [scale.color.toUpperCase(), scale.contrastColor]),
@@ -30,19 +45,14 @@ export function buildPdfDocumentDefinition(
   const groupSchemaMap = new Map(schema.groups.map((group) => [group.id, group]));
   const groupedRows = groupFlattenedRows(rows);
 
-  const dividerColor = isClassic ? '#DC2626' : '#0F172A';
-  const metaLabelColor = isClassic ? '#991B1B' : '#475569';
-  const groupBannerFill = isClassic ? '#DC2626' : '#F1F5F9';
-  const colHeaderFill = isClassic ? '#FEE2E2' : '#F8FAFC';
-
   const content: Content[] = [
     {
-      text: isClassic ? texts.title.toUpperCase() : texts.title,
+      text: texts.title,
       style: 'docTitle',
     },
     {
       text: [
-        { text: `${texts.generatedAtLabel}: `, bold: true, color: metaLabelColor },
+        { text: `${texts.generatedAtLabel}: `, bold: true, color: '#475569' },
         { text: texts.generatedAtValue, color: '#0F172A' },
       ],
       style: 'metaText',
@@ -57,7 +67,7 @@ export function buildPdfDocumentDefinition(
           x2: 531,
           y2: 0,
           lineWidth: 1.5,
-          lineColor: dividerColor,
+          lineColor: '#0F172A',
         },
       ],
       margin: [0, 0, 0, 10],
@@ -81,23 +91,20 @@ export function buildPdfDocumentDefinition(
           })),
         ],
       },
-      layout: createTableLayout(isClassic),
+      layout: createTableLayout(),
       margin: [0, 0, 0, 14],
     });
   }
 
   for (const group of groupedRows) {
     const schemaGroup = groupSchemaMap.get(group.groupId);
-    const rawGroupTitle = texts.groups[group.groupId]?.title ?? group.groupTitle;
-    const groupTitle = isClassic ? rawGroupTitle.toUpperCase() : rawGroupTitle;
-    const groupDescription = isClassic ? undefined : texts.groups[group.groupId]?.description;
+    const groupTitle = texts.groups[group.groupId]?.title ?? group.groupTitle;
+    const groupDescription = texts.groups[group.groupId]?.description;
     const hasDualRoleColumns = group.rows.some((row) => row.isDualRole);
     const groupRoles = schemaGroup ? texts.roles[schemaGroup.rolePairId] : undefined;
     const firstDualRow = group.rows.find((row) => row.isDualRole);
-    const rawPrimaryHeader = groupRoles?.primary ?? firstDualRow?.primaryRoleLabel ?? '';
-    const rawSecondaryHeader = groupRoles?.secondary ?? firstDualRow?.secondaryRoleLabel ?? '';
-    const primaryColumnHeader = isClassic ? rawPrimaryHeader.toUpperCase() : rawPrimaryHeader;
-    const secondaryColumnHeader = isClassic ? rawSecondaryHeader.toUpperCase() : rawSecondaryHeader;
+    const primaryColumnHeader = groupRoles?.primary ?? firstDualRow?.primaryRoleLabel ?? '';
+    const secondaryColumnHeader = groupRoles?.secondary ?? firstDualRow?.secondaryRoleLabel ?? '';
 
     const buildGroupBannerCell = (colSpan: number): TableCell =>
       groupDescription
@@ -107,14 +114,14 @@ export function buildPdfDocumentDefinition(
               { text: groupDescription, style: 'groupDescription', margin: [0, 2, 0, 0] },
             ],
             colSpan,
-            fillColor: groupBannerFill,
+            fillColor: '#F1F5F9',
             margin: [6, 6, 6, 6],
           }
         : {
             text: groupTitle,
             style: 'groupTitle',
             colSpan,
-            fillColor: groupBannerFill,
+            fillColor: '#F1F5F9',
             margin: [6, 6, 6, 6],
           };
 
@@ -122,17 +129,17 @@ export function buildPdfDocumentDefinition(
       const body: TableCell[][] = [
         [buildGroupBannerCell(3), {}, {}],
         [
-          { text: '', style: 'colHeader', fillColor: colHeaderFill },
-          { text: primaryColumnHeader, style: 'colHeader', fillColor: colHeaderFill },
-          { text: secondaryColumnHeader, style: 'colHeader', fillColor: colHeaderFill },
+          { text: '', style: 'colHeader', fillColor: '#F8FAFC' },
+          { text: primaryColumnHeader, style: 'colHeader', fillColor: '#F8FAFC' },
+          { text: secondaryColumnHeader, style: 'colHeader', fillColor: '#F8FAFC' },
         ],
       ];
 
       for (const row of group.rows) {
         if (row.isDualRole) {
           const showRoleHint =
-            row.primaryRoleLabel !== rawPrimaryHeader ||
-            (row.secondaryRoleLabel ?? '') !== rawSecondaryHeader;
+            row.primaryRoleLabel !== primaryColumnHeader ||
+            (row.secondaryRoleLabel ?? '') !== secondaryColumnHeader;
           body.push([
             { text: row.itemLabel, style: 'itemLabel' },
             buildValueCell(
@@ -167,7 +174,7 @@ export function buildPdfDocumentDefinition(
           dontBreakRows: true,
           body,
         },
-        layout: createTableLayout(isClassic),
+        layout: createTableLayout(),
         margin: [0, 0, 0, 12],
       });
     } else {
@@ -188,7 +195,7 @@ export function buildPdfDocumentDefinition(
           dontBreakRows: true,
           body,
         },
-        layout: createTableLayout(isClassic),
+        layout: createTableLayout(),
         margin: [0, 0, 0, 12],
       });
     }
@@ -226,7 +233,7 @@ export function buildPdfDocumentDefinition(
       docTitle: {
         fontSize: 16,
         bold: true,
-        color: isClassic ? '#991B1B' : '#0F172A',
+        color: '#0F172A',
       },
       metaText: {
         fontSize: 8.5,
@@ -234,7 +241,7 @@ export function buildPdfDocumentDefinition(
       groupTitle: {
         fontSize: 10.5,
         bold: true,
-        color: isClassic ? '#FFFFFF' : '#0F172A',
+        color: '#0F172A',
       },
       groupDescription: {
         fontSize: 8.5,
@@ -243,7 +250,7 @@ export function buildPdfDocumentDefinition(
       colHeader: {
         fontSize: 8.5,
         bold: true,
-        color: isClassic ? '#991B1B' : '#475569',
+        color: '#475569',
       },
       itemLabel: {
         fontSize: 9.5,
@@ -378,13 +385,12 @@ function resolvePdfContrastColor(
   return '#FFFFFF';
 }
 
-function createTableLayout(isClassic: boolean) {
-  const borderColor = isClassic ? '#E2E8F0' : '#CBD5E1';
+function createTableLayout() {
   return {
     hLineWidth: () => 0.5,
     vLineWidth: () => 0.5,
-    hLineColor: () => borderColor,
-    vLineColor: () => borderColor,
+    hLineColor: () => '#CBD5E1',
+    vLineColor: () => '#CBD5E1',
     paddingLeft: () => 6,
     paddingRight: () => 6,
     paddingTop: () => 5,

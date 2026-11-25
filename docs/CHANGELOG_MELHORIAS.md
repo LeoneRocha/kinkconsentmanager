@@ -94,6 +94,7 @@ Documento consolidando todas as alterações funcionais, melhorias de interface 
 - **Novo modo Imprimir (`Imprimir` / `Print`):** adicionado à [`ExportActionsToolbarComponent`](../frontend/src/app/features/export/components/export-actions-toolbar/export-actions-toolbar.component.html) e tratado em [`ExportPageComponent.onPrint()`](../frontend/src/app/features/export/pages/export-page/export-page.component.ts) com regras `@media print` em [`styles.scss`](../frontend/src/styles.scss) e [`export-page.component.scss`](../frontend/src/app/features/export/pages/export-page/export-page.component.scss) (fundo branco, preservação exata de cores e ocultação de barras/botões).
 - **Exportação PNG & PDF:** removida a exibição redundante de "Versão do Schema" nas prévias/PDF e ajustada a nomenclatura padrão de arquivos para incluir o layout escolhido:
   `kink-consent-checklist-<modern|classic>-YYYY-MM-DD.<ext>`.
+- **PDF Classic alinhado ao PNG Classic (`R-GOV-CLASSIC-LAYOUT`):** [`pdf-classic-layout.builder.ts`](../frontend/src/app/core/workers/pdf-classic-layout.builder.ts) gera a Visualização Clássica em paisagem com 4 colunas, legenda ○/● e bolinhas por papel (mesmo padrão do PNG). Layout travado por testes em [`pdf-classic-layout.builder.spec.ts`](../frontend/src/app/core/workers/pdf-classic-layout.builder.spec.ts) e **não deve ser alterado sem aprovação explícita**.
 
 ---
 

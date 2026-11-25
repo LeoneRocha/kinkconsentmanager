@@ -218,6 +218,7 @@ O frontend já expõe contratos genéricos em [crud.model.ts](../frontend/src/ap
 - **Importação JSON (`JsonDraftService`):** validar sempre com `try/catch`, checagem estrutural de objeto e compatibilidade de `schemaVersion` antes de aplicar estado.
 - **Exportação CSV (`CsvExportService`):** prefixar obrigatoriamente `\uFEFF` (UTF-8 BOM) e escapar campos conforme RFC-4180 (aspas dobradas, vírgulas e quebras de linha).
 - **Exportadores Pesados Isolados:** `pdfmake` e `vfs_fonts` permanecem em *chunk lazy* via token `PDF_MAKER_LOADER`; `html-to-image` é abstraído por `PNG_RENDERER` (largura padrão `1200px`).
+- **Contrato de Layout Classic (PNG ↔ PDF) — `R-GOV-CLASSIC-LAYOUT`:** o PDF da **Visualização Clássica** deve espelhar o padrão visual do PNG Classic (paisagem, 4 colunas, legenda com ○/●, grupos com título + papéis em itálico, linhas de escala com bolinhas coloridas e textos no formato `Label:`/`valor`). **É proibido alterar esse layout** (estrutura, densidade de colunas, marcadores ou hierarquia tipográfica) **sem aprovação explícita** de produto/design. O contrato é codificado em `CLASSIC_PDF_LAYOUT_CONTRACT` (`pdf-classic-layout.builder.ts`) e validado por `pdf-classic-layout.builder.spec.ts`.
 
 ### 4.6 Estrutura de Features e Versões de Stack
 
@@ -307,6 +308,7 @@ Quando o backend for iniciado na V2+, deverá acompanhar testes automatizados eq
 | Factories UI (Host -> Factory -> Adapter) | Telas e componentes chamam exclusivamente o Host central (`UiFeedbackHostService` / `<app-popup-host>`) informando `kind` e `provider`; os adaptadores especializados (`Toast`, `SnackBar`, `SweetAlert2`, `Material Dialog`, `Popper.js`) ficam registrados nas Factories (`AlertFactoryService`, `ModalFactoryService`), nunca acoplados diretamente às features. |
 | Assinaturas RxJS | `take(1)` em chamadas finitas; `takeUntilDestroyed()` em streams contínuos (`typescript:S3800`). |
 | Segurança & Privacidade | Zero `[innerHTML]` bruto; CSP em `nginx.conf`; validação de `schemaVersion` no JSON; UTF-8 BOM + escape RFC-4180 no CSV; telemetria Zero-Knowledge (`TelemetryService` nunca envia respostas/notas/rascunhos). |
+| Layout Classic PDF/PNG | **`R-GOV-CLASSIC-LAYOUT`:** PDF Classic deve espelhar o PNG Classic; alterações de layout exigem aprovação explícita e testes em `pdf-classic-layout.builder.spec.ts`. |
 | Testes Frontend | **Jest 30 + `jest-preset-angular` 17** (zoneless), AAA, `jest.restoreAllMocks()`, `HttpTestingController` para HTTP. |
 | Backend | **Coming Soon (Roadmap V2+)** — manter contratos REST/JSON compatíveis com `BaseDataService` / `PageResult<T>` e privacidade E2E. |
 | Controle de Versão (Git) | **Proibido `git commit`, `git push`, criação/troca de `branch` ou abertura de `PR` autônomos (R-GOV-GIT)**. |

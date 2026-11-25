@@ -80,7 +80,10 @@ describe('pdf-export.processor', () => {
 
     expect(loaderMock).toHaveBeenCalledTimes(1);
     expect(capturedDefs).toHaveLength(1);
-    expect(JSON.stringify(capturedDefs[0].content)).toContain('#DC2626');
+    expect(capturedDefs[0].pageOrientation).toBe('landscape');
+    expect(JSON.stringify(capturedDefs[0].content)).toContain('●');
+    expect(JSON.stringify(capturedDefs[0].content)).toContain('○ ');
+    expect(JSON.stringify(capturedDefs[0].content)).toContain('Not answered');
     expect(milestones).toEqual([
       ['preparing', 20],
       ['building', 45],

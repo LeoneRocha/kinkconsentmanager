@@ -121,7 +121,7 @@ O JSON contém **apenas estrutura lógica e IDs**, sem textos fixos, garantindo 
 ## 5. Especificação dos Serviços de Exportação e Impressão (100% Client-Side)
 
 1. **`PngExportService` (`html-to-image`):** Captura superfície dedicada (`1200px` Moderna / `1360px` Clássica) com fallback automático de fontes para maior confiabilidade entre navegadores.
-2. **`PdfExportService` (`pdfmake` em Web Worker):** Gera PDF vetorial em *chunk lazy* com cabeçalho (`Checklist`), legenda de escalas e tabelas não quebráveis entre páginas.
+2. **`PdfExportService` (`pdfmake` em Web Worker):** Gera PDF vetorial em *chunk lazy*. **Visualização Moderna** usa tabelas com células coloridas (retrato); **Visualização Clássica** espelha o PNG Classic (paisagem, 4 colunas, bolinhas ●/○) via `pdf-classic-layout.builder.ts` — layout travado por `R-GOV-CLASSIC-LAYOUT` (sem alteração sem aprovação explícita).
 3. **`XlsxExportService` (`core/workers/xlsx/` OOXML nativo em Web Worker):** Gera planilha `.xlsx` com processadores independentes para **Visualização Moderna** (tons pastel claros e texto preto em negrito) e **Visualização Clássica** (folha em paisagem 3 colunas com marcadores coloridos `●`/`○`).
 4. **Impressão Nativa (`ExportPageComponent.onPrint()` + `@media print`):** Ajusta `document.title` para o padrão `kink-consent-checklist-<modern|classic>-YYYY-MM-DD`, oculta barras e controles e imprime a prévia em fundo branco com preservação de cores.
 5. **`JsonDraftService`:** Exporta e valida rascunhos `{ "schemaVersion", "exportedAt", "language", "answers" }` em português ou inglês (suportando processamento em background via `DraftImportWorkerService`).
