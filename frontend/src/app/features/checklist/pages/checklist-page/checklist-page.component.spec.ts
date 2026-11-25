@@ -559,14 +559,14 @@ describe('ChecklistPageComponent', () => {
     const hostEl = await startInMode('quick_fill');
     const navigateSpy = jest.spyOn(router, 'navigate').mockResolvedValue(true);
 
-    expect(hostEl.querySelector('.checklist-page__completion-banner')).toBeNull();
+    expect(hostEl.querySelector('app-completion-banner')).toBeNull();
 
     // Answer both questions in MOCK_SCHEMA to reach 100% completion
     checklistState.setItemAnswer('item_safeword', { selectedOption: 'opt_traffic' });
     checklistState.setItemAnswer('item_rope', { primaryScale: 'enjoy' });
     await fixture.whenStable();
 
-    const banner = hostEl.querySelector('.checklist-page__completion-banner');
+    const banner = hostEl.querySelector('app-completion-banner .completion-banner');
     expect(banner).not.toBeNull();
     expect(banner?.textContent).toContain('Checklist concluído!');
 
@@ -585,15 +585,13 @@ describe('ChecklistPageComponent', () => {
     expect(checklistState.viewMode()).toBe('stepper');
     expect(hostEl.querySelector('.stepper__panel--review')).not.toBeNull();
     expect(
-      hostEl.querySelector(
-        '.checklist-page__completion-banner button[data-action="review-checklist"]',
-      ),
+      hostEl.querySelector('app-completion-banner button[data-action="review-checklist"]'),
     ).toBeNull();
 
     // Clicking export from banner navigates to /checklist/export
     hostEl
       .querySelector<HTMLButtonElement>(
-        '.checklist-page__completion-banner button[data-action="export-checklist"]',
+        'app-completion-banner button[data-action="export-checklist"]',
       )!
       .click();
     await fixture.whenStable();

@@ -1,0 +1,45 @@
+<section class="completion-banner" role="status" aria-live="polite" [attr.aria-label]="title()">
+  <div class="completion-banner__copy">
+    <span class="completion-banner__icon" [attr.title]="title()" aria-hidden="true">
+      <i [class]="icon()" [attr.title]="title()"></i>
+    </span>
+    <div class="completion-banner__text">
+      <h2 class="completion-banner__title" [attr.title]="title()">{{ title() }}</h2>
+      <p class="completion-banner__desc" [attr.title]="message()">{{ message() }}</p>
+    </div>
+  </div>
+
+  <div class="completion-banner__actions">
+    @if (showSecondaryAction() && secondaryActionLabel(); as secLabel) {
+      <button
+        mat-stroked-button
+        type="button"
+        class="completion-banner__secondary-btn"
+        [attr.data-action]="secondaryActionId()"
+        [attr.title]="secLabel"
+        [attr.aria-label]="secLabel"
+        (click)="secondaryAction.emit()"
+      >
+        <i [class]="secondaryActionIcon()" [attr.title]="secLabel" aria-hidden="true"></i>
+        <span>{{ secLabel }}</span>
+      </button>
+    }
+
+    @if (primaryActionLabel(); as primLabel) {
+      <button
+        mat-flat-button
+        type="button"
+        class="completion-banner__primary-btn"
+        [attr.data-action]="primaryActionId()"
+        [attr.title]="primLabel"
+        [attr.aria-label]="primLabel"
+        (click)="primaryAction.emit()"
+      >
+        <i [class]="primaryActionIcon()" [attr.title]="primLabel" aria-hidden="true"></i>
+        <span>{{ primLabel }}</span>
+      </button>
+    }
+
+    <ng-content />
+  </div>
+</section>

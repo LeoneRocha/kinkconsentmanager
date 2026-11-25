@@ -32,7 +32,7 @@ import {
   TelemetryService,
   UiFeedbackHostService,
 } from '../../../../core/services';
-import { LegendBarComponent } from '../../../../shared/components';
+import { CompletionBannerComponent, LegendBarComponent } from '../../../../shared/components';
 import { ChecklistHeaderComponent, ChecklistHeaderLabels } from '../../components/checklist-header';
 import {
   ChecklistProgressBarComponent,
@@ -60,6 +60,7 @@ import {
   selector: 'app-checklist-page',
   imports: [
     MatButtonModule,
+    CompletionBannerComponent,
     LegendBarComponent,
     ChecklistHeaderComponent,
     ChecklistProgressBarComponent,

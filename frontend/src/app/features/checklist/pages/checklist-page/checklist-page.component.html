@@ -125,68 +125,15 @@
       </div>
 
       @if (isChecklistComplete()) {
-        <section
-          class="checklist-page__completion-banner"
-          role="status"
-          aria-live="polite"
-          [attr.aria-label]="completionLabels().title"
-        >
-          <div class="checklist-page__completion-copy">
-            <span
-              class="checklist-page__completion-icon"
-              [attr.title]="completionLabels().title"
-              aria-hidden="true"
-            >
-              <i class="fa-solid fa-circle-check" [attr.title]="completionLabels().title"></i>
-            </span>
-            <div class="checklist-page__completion-text">
-              <h2 class="checklist-page__completion-title" [attr.title]="completionLabels().title">
-                {{ completionLabels().title }}
-              </h2>
-              <p class="checklist-page__completion-desc" [attr.title]="completionLabels().message">
-                {{ completionLabels().message }}
-              </p>
-            </div>
-          </div>
-
-          <div class="checklist-page__completion-actions">
-            @if (!isInReviewStep()) {
-              <button
-                mat-stroked-button
-                type="button"
-                class="checklist-page__completion-review-btn"
-                data-action="review-checklist"
-                [attr.title]="completionLabels().reviewButton"
-                [attr.aria-label]="completionLabels().reviewButton"
-                (click)="onReviewChecklist()"
-              >
-                <i
-                  class="fa-solid fa-list-check"
-                  [attr.title]="completionLabels().reviewButton"
-                  aria-hidden="true"
-                ></i>
-                <span>{{ completionLabels().reviewButton }}</span>
-              </button>
-            }
-
-            <button
-              mat-flat-button
-              type="button"
-              class="checklist-page__completion-export-btn"
-              data-action="export-checklist"
-              [attr.title]="completionLabels().exportButton"
-              [attr.aria-label]="completionLabels().exportButton"
-              (click)="onFinishChecklist()"
-            >
-              <i
-                class="fa-solid fa-file-export"
-                [attr.title]="completionLabels().exportButton"
-                aria-hidden="true"
-              ></i>
-              <span>{{ completionLabels().exportButton }}</span>
-            </button>
-          </div>
-        </section>
+        <app-completion-banner
+          [title]="completionLabels().title"
+          [message]="completionLabels().message"
+          [secondaryActionLabel]="completionLabels().reviewButton"
+          [showSecondaryAction]="!isInReviewStep()"
+          [primaryActionLabel]="completionLabels().exportButton"
+          (secondaryAction)="onReviewChecklist()"
+          (primaryAction)="onFinishChecklist()"
+        />
       }
 
       <section
