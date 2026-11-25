@@ -304,6 +304,13 @@
     padding-top: 0.25rem;
   }
 
+  &__nav-end {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
   &__empty {
     @extend %qf-col;
     align-items: center;
@@ -326,6 +333,7 @@
 :host ::ng-deep {
   .quick-fill__prev-btn,
   .quick-fill__next-btn,
+  .quick-fill__review-btn,
   .quick-fill__finish-btn,
   .quick-fill__close-btn {
     min-height: v.$min-touch-target;

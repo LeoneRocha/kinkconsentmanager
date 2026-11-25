@@ -553,4 +553,50 @@ describe('ChecklistPageComponent', () => {
       ?.click();
     expect(navigateSpy).toHaveBeenCalledWith(['/checklist']);
   });
+
+  it('should display completion banner when all items are answered and support review and export actions', async () => {
+    await createTestModule(() => of(MOCK_SCHEMA));
+    const hostEl = await startInMode('quick_fill');
+    const navigateSpy = jest.spyOn(router, 'navigate').mockResolvedValue(true);
+
+    expect(hostEl.querySelector('.checklist-page__completion-banner')).toBeNull();
+
+    // Answer both questions in MOCK_SCHEMA to reach 100% completion
+    checklistState.setItemAnswer('item_safeword', { selectedOption: 'opt_traffic' });
+    checklistState.setItemAnswer('item_rope', { primaryScale: 'enjoy' });
+    await fixture.whenStable();
+
+    const banner = hostEl.querySelector('.checklist-page__completion-banner');
+    expect(banner).not.toBeNull();
+    expect(banner?.textContent).toContain('Checklist concluído!');
+
+    const reviewBtn = banner?.querySelector<HTMLButtonElement>(
+      'button[data-action="review-checklist"]',
+    );
+    const exportBtn = banner?.querySelector<HTMLButtonElement>(
+      'button[data-action="export-checklist"]',
+    );
+    expect(reviewBtn).not.toBeNull();
+    expect(exportBtn).not.toBeNull();
+
+    // Clicking review switches to Stepper Final Review and hides duplicate review button in banner
+    reviewBtn!.click();
+    await fixture.whenStable();
+    expect(checklistState.viewMode()).toBe('stepper');
+    expect(hostEl.querySelector('.stepper__panel--review')).not.toBeNull();
+    expect(
+      hostEl.querySelector(
+        '.checklist-page__completion-banner button[data-action="review-checklist"]',
+      ),
+    ).toBeNull();
+
+    // Clicking export from banner navigates to /checklist/export
+    hostEl
+      .querySelector<HTMLButtonElement>(
+        '.checklist-page__completion-banner button[data-action="export-checklist"]',
+      )!
+      .click();
+    await fixture.whenStable();
+    expect(navigateSpy).toHaveBeenCalledWith(['/checklist', 'export']);
+  });
 });

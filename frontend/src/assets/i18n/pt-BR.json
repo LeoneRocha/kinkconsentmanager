@@ -206,7 +206,11 @@
     "modePickerQuickFillHow": "Use as teclas 1 a 6 (ou clique nas opções) para escolher a escala e avançar automaticamente; pressione 0 para limpar ou ↑/↓ para navegar.",
     "modePickerImportTitle": "Já tem um preenchimento salvo em JSON?",
     "modePickerImportDesc": "Importe um arquivo .json exportado anteriormente para restaurar suas respostas e continuar editando ou exportar novamente.",
-    "modePickerImportButton": "Importar JSON"
+    "modePickerImportButton": "Importar JSON",
+    "checklistCompletedTitle": "Checklist concluído!",
+    "checklistCompletedMessage": "Todas as questões visíveis foram respondidas. Você já pode revisar suas escolhas ou exportar seu resultado.",
+    "checklistCompletedReview": "Revisar respostas",
+    "checklistCompletedExport": "Exportar"
   },
   "roles": {
     "giving_receiving": {

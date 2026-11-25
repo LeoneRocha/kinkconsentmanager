@@ -90,9 +90,10 @@ export class ChecklistPageComponent implements OnInit {
   protected readonly fullViewRef = viewChild(FullViewContainerComponent);
   private loadSubscription: Subscription | null = null;
 
-  protected readonly isLoading = signal<boolean>(true);
+  private readonly isLoading = signal<boolean>(true);
   protected readonly loadError = signal<boolean>(false);
   private readonly reviewStepActive = signal<boolean>(false);
+  private wasChecklistComplete = false;
   protected readonly emptyInvalidStepIds: ReadonlySet<string> = new Set();
 
   protected readonly schema = this.checklistState.schema;
@@ -110,6 +111,15 @@ export class ChecklistPageComponent implements OnInit {
   protected readonly isChecklistComplete = computed<boolean>(
     () => this.totalCount() > 0 && this.answeredCount() >= this.totalCount(),
   );
+
+  protected readonly isInReviewStep = computed<boolean>(() => {
+    const groups = this.filteredGroups();
+    return (
+      this.viewMode() === 'stepper' &&
+      groups.length > 0 &&
+      this.activeStepperStep() >= groups.length
+    );
+  });
 
   protected readonly areFullViewGroupsExpanded = computed<boolean>(() => {
     const groups = this.filteredGroups();
@@ -274,6 +284,24 @@ export class ChecklistPageComponent implements OnInit {
     return this.i18n.translateUi('finishAndExport');
   });
 
+  protected readonly completionLabels = computed<{
+    title: string;
+    message: string;
+    reviewButton: string;
+    exportButton: string;
+  }>(() => {
+    this.i18n.currentLang();
+    return {
+      title: this.translateWithFallback('checklistCompletedTitle', 'Checklist concluído!'),
+      message: this.translateWithFallback(
+        'checklistCompletedMessage',
+        'Todas as questões visíveis foram respondidas. Você já pode revisar suas escolhas ou exportar seu resultado.',
+      ),
+      reviewButton: this.translateWithFallback('checklistCompletedReview', 'Revisar respostas'),
+      exportButton: this.translateWithFallback('checklistCompletedExport', 'Exportar'),
+    };
+  });
+
   protected readonly noResultsText = computed<string>(() => {
     this.i18n.currentLang();
     return this.i18n.translateUi('noResults');
@@ -362,6 +390,20 @@ export class ChecklistPageComponent implements OnInit {
         this.checklistState.setSearchableLabels(labels);
       });
     });
+
+    effect(() => {
+      const complete = this.isChecklistComplete();
+      if (complete && !this.wasChecklistComplete) {
+        this.wasChecklistComplete = true;
+        const labels = untracked(() => this.completionLabels());
+        untracked(() => {
+          this.accessibility.announce(`${labels.title} ${labels.message}`, false);
+          this.scrollToContentTop();
+        });
+      } else if (!complete) {
+        this.wasChecklistComplete = false;
+      }
+    });
   }
 
   ngOnInit(): void {
@@ -408,8 +450,26 @@ export class ChecklistPageComponent implements OnInit {
   }
 
   protected onViewModeChange(mode: ChecklistViewMode): void {
+    this.reviewStepActive.set(false);
     this.checklistState.setViewMode(mode);
     this.telemetry.trackEvent('checklist_mode_selected', { mode, source: 'toolbar' });
+  }
+
+  protected onReviewChecklist(): void {
+    if (this.onlyUnanswered()) {
+      this.checklistState.setOnlyUnanswered(false);
+    }
+    if (this.searchQuery().trim().length > 0) {
+      this.checklistState.setSearchQuery('');
+    }
+    this.checklistState.setViewMode('stepper');
+    this.reviewStepActive.set(true);
+    this.telemetry.trackEvent('checklist_review_opened', {
+      answeredCount: this.answeredCount(),
+      totalCount: this.totalCount(),
+    });
+    this.accessibility.announce(this.stepperLabels().reviewTitle, false);
+    this.scrollToContentTop();
   }
 
   protected onBackToModeSelector(): void {

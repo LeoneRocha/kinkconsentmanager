@@ -125,11 +125,13 @@ export class QuickFillWizardModalComponent {
   readonly otherPlaceholder = input<string>('Descreva brevemente sua preferência...');
   readonly readAloudLabel = input<string>('Ouvir leitura deste item');
   readonly finishLabel = input<string>('Finalizar e Exportar');
+  readonly reviewLabel = input<string>('Revisar respostas');
   readonly isComplete = input<boolean | undefined>(undefined);
 
   readonly visibleChange = output<boolean>();
   readonly answerChange = output<{ itemId: string; patch: Partial<ItemResponseValue> }>();
   readonly readAloud = output<string>();
+  readonly reviewChecklist = output<void>();
   readonly finishChecklist = output<void>();
 
   protected readonly otherOptionValue = OTHER_OPTION_VALUE;

@@ -206,7 +206,11 @@
     "modePickerQuickFillHow": "Press keys 1–6 (or click an option) to select a scale and auto-advance; press 0 to clear or ↑/↓ to navigate.",
     "modePickerImportTitle": "Already have a saved JSON draft?",
     "modePickerImportDesc": "Import a previously exported .json file to restore all your responses and keep editing or export again.",
-    "modePickerImportButton": "Import JSON"
+    "modePickerImportButton": "Import JSON",
+    "checklistCompletedTitle": "Checklist complete!",
+    "checklistCompletedMessage": "All visible questions have been answered. You can review your choices or export your result now.",
+    "checklistCompletedReview": "Review responses",
+    "checklistCompletedExport": "Export"
   },
   "roles": {
     "giving_receiving": {
