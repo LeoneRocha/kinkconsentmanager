@@ -118,10 +118,13 @@ export class QuickFillWizardModalComponent {
   readonly labels = input<QuickFillLabels>(DEFAULT_QUICK_FILL_LABELS);
   readonly otherPlaceholder = input<string>('Descreva brevemente sua preferência...');
   readonly readAloudLabel = input<string>('Ouvir leitura deste item');
+  readonly finishLabel = input<string>('Finalizar e Exportar');
+  readonly isComplete = input<boolean | undefined>(undefined);
 
   readonly visibleChange = output<boolean>();
   readonly answerChange = output<{ itemId: string; patch: Partial<ItemResponseValue> }>();
   readonly readAloud = output<string>();
+  readonly finishChecklist = output<void>();
 
   protected readonly otherOptionValue = OTHER_OPTION_VALUE;
   private readonly currentIndex = signal(0);
@@ -295,6 +298,22 @@ export class QuickFillWizardModalComponent {
   protected readonly canGoNext = computed<boolean>(
     () => this.safeIndex() < this.steps().length - 1,
   );
+  protected readonly isReadyToFinish = computed<boolean>(() => {
+    const explicit = this.isComplete();
+    if (explicit !== undefined) {
+      return explicit;
+    }
+    const groups = this.groups();
+    const answers = this.answers();
+    return (
+      groups.length > 0 &&
+      groups.every(
+        (group) =>
+          group.items.length > 0 &&
+          group.items.every((item) => isQuestionAnswered(item, getItemAnswer(answers, item.id))),
+      )
+    );
+  });
 
   constructor() {
     effect(() => {

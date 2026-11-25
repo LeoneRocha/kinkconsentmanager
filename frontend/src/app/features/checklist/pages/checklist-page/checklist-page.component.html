@@ -186,8 +186,11 @@
                 [labels]="quickFillLabels()"
                 [otherPlaceholder]="otherPlaceholder()"
                 [readAloudLabel]="readAloudLabel()"
+                [finishLabel]="finishLabel()"
+                [isComplete]="isChecklistComplete()"
                 (answerChange)="onAnswerChange($event)"
                 (readAloud)="onReadTextAloud($event)"
+                (finishChecklist)="onFinishChecklist()"
               />
             }
           }

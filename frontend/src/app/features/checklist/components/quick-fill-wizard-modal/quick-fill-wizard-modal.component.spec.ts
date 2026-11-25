@@ -295,6 +295,20 @@ describe('QuickFillWizardModalComponent', () => {
 
     expect(emitted).toEqual([{ itemId: 'item_rope', patch: { secondaryScale: undefined } }]);
     expect(hostEl.querySelector('.quick-fill__counter')?.textContent?.trim()).toBe('6 / 6');
+    expect(hostEl.querySelector('.quick-fill__next-btn')).toBeNull();
+
+    const finishBtn = hostEl.querySelector<HTMLButtonElement>('.quick-fill__finish-btn')!;
+    expect(finishBtn).not.toBeNull();
+    expect(finishBtn.classList.contains('quick-fill__finish-btn--ready')).toBe(false);
+
+    fixture.componentRef.setInput('isComplete', true);
+    await fixture.whenStable();
+    expect(finishBtn.classList.contains('quick-fill__finish-btn--ready')).toBe(true);
+
+    const finishSpy = jest.fn<void, []>();
+    component.finishChecklist.subscribe(finishSpy);
+    finishBtn.click();
+    expect(finishSpy).toHaveBeenCalledTimes(1);
   });
 
   // Cenário: Navegação por teclado (ArrowUp/ArrowDown) respeitando limites.

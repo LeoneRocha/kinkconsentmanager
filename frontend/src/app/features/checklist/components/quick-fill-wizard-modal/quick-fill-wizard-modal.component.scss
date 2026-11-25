@@ -326,11 +326,13 @@
 :host ::ng-deep {
   .quick-fill__prev-btn,
   .quick-fill__next-btn,
+  .quick-fill__finish-btn,
   .quick-fill__close-btn {
     min-height: v.$min-touch-target;
   }
 
-  .quick-fill__next-btn--ready:not(:disabled) {
+  .quick-fill__next-btn--ready:not(:disabled),
+  .quick-fill__finish-btn--ready:not(:disabled) {
     --mat-button-filled-container-color: #16a34a;
     --mat-button-filled-label-text-color: #ffffff;
     --mat-sys-primary: #16a34a;

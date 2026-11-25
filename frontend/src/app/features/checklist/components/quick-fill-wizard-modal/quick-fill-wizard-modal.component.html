@@ -217,17 +217,29 @@
           </button>
         }
 
-        <button
-          mat-flat-button
-          type="button"
-          class="quick-fill__next-btn"
-          [class.quick-fill__next-btn--ready]="isCurrentStepAnswered() && canGoNext()"
-          [disabled]="!canGoNext()"
-          (click)="nextStep()"
-        >
-          <span>{{ labels().next }}</span>
-          <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
-        </button>
+        @if (canGoNext()) {
+          <button
+            mat-flat-button
+            type="button"
+            class="quick-fill__next-btn"
+            [class.quick-fill__next-btn--ready]="isCurrentStepAnswered()"
+            (click)="nextStep()"
+          >
+            <span>{{ labels().next }}</span>
+            <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+          </button>
+        } @else {
+          <button
+            mat-flat-button
+            type="button"
+            class="quick-fill__finish-btn"
+            [class.quick-fill__finish-btn--ready]="isReadyToFinish()"
+            (click)="finishChecklist.emit()"
+          >
+            <span>{{ finishLabel() }}</span>
+            <i class="fa-solid fa-check" aria-hidden="true"></i>
+          </button>
+        }
       </div>
     </div>
   } @else {
