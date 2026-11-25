@@ -21,6 +21,22 @@
   cursor: pointer;
 }
 
+%qf-input {
+  width: 100%;
+  padding: 0.625rem 0.875rem;
+  border: 1px solid v.$border-strong;
+  border-radius: v.$radius-md;
+  background-color: v.$surface-card;
+  color: v.$text-primary;
+  font-family: inherit;
+  font-size: 0.9375rem;
+
+  &:focus {
+    outline: none;
+    border-color: v.$accent-primary;
+  }
+}
+
 .quick-fill-backdrop {
   position: fixed;
   inset: 0;
@@ -62,6 +78,13 @@
     color: v.$text-primary;
   }
 
+  &__header-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
+  }
+
   &__close {
     @include m.touch-target(2.25rem);
     display: inline-flex;
@@ -85,11 +108,6 @@
   @extend %qf-col;
   gap: 0.875rem;
 
-  &__status {
-    display: flex;
-    justify-content: flex-end;
-  }
-
   &__counter {
     padding: 0.1875rem 0.625rem;
     border-radius: 9999px;
@@ -99,49 +117,6 @@
     font-size: 0.8125rem;
     font-weight: 600;
     font-variant-numeric: tabular-nums;
-  }
-
-  &__context {
-    @extend %qf-col;
-    gap: 0.25rem;
-    list-style: none;
-    margin: 0;
-    padding: 0;
-  }
-
-  &__context-btn {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    width: 100%;
-    min-height: 2.25rem;
-    padding: 0.375rem 0.625rem;
-    border: 1px solid transparent;
-    border-radius: v.$radius-sm;
-    background-color: v.$surface-subtle;
-    color: v.$text-secondary;
-    font-size: 0.8125rem;
-    text-align: left;
-    cursor: pointer;
-
-    &:hover {
-      border-color: v.$border-color;
-      color: v.$text-primary;
-    }
-  }
-
-  &__context-dot {
-    width: 0.625rem;
-    height: 0.625rem;
-    border-radius: 9999px;
-    background-color: v.$scale-empty;
-    flex-shrink: 0;
-  }
-
-  &__context-text {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
   }
 
   &__current {
@@ -193,6 +168,13 @@
     color: v.$text-primary;
   }
 
+  &__current-desc {
+    margin: 0;
+    font-size: 0.875rem;
+    color: v.$text-secondary;
+    line-height: 1.4;
+  }
+
   &__current-meta {
     display: flex;
     flex-wrap: wrap;
@@ -216,7 +198,8 @@
     color: v.$text-secondary;
   }
 
-  &__scales {
+  &__scales,
+  &__options {
     display: grid;
     grid-template-columns: 1fr;
     gap: 0.5rem;
@@ -226,13 +209,30 @@
     }
   }
 
-  &__scale-btn {
+  &__scale-btn,
+  &__option-btn {
     @extend %qf-choice-btn;
     text-align: left;
 
     &:hover {
       transform: translateY(-1px);
     }
+  }
+
+  &__option-btn--selected {
+    border-color: v.$accent-primary;
+    background-color: v.$accent-soft;
+    color: v.$accent-text;
+  }
+
+  &__option-icon {
+    font-size: 0.95rem;
+    flex-shrink: 0;
+  }
+
+  &__option-label,
+  &__scale-label {
+    flex: 1 1 auto;
   }
 
   &__clear-btn {
@@ -255,12 +255,38 @@
     flex-shrink: 0;
   }
 
-  &__scale-btn--selected &__scale-key {
+  &__scale-btn--selected &__scale-key,
+  &__option-btn--selected &__scale-key {
     background-color: rgba(255, 255, 255, 0.25);
   }
 
-  &__scale-label {
-    flex: 1 1 auto;
+  &__other-input {
+    @extend %qf-input;
+  }
+
+  &__text-wrap {
+    @extend %qf-col;
+    gap: 0.5rem;
+  }
+
+  &__textarea {
+    @extend %qf-input;
+    min-height: 5.5rem;
+    resize: vertical;
+  }
+
+  &__text-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+
+  &__char-count {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: v.$text-muted;
+    font-variant-numeric: tabular-nums;
   }
 
   &__hint {
@@ -302,5 +328,15 @@
   .quick-fill__next-btn,
   .quick-fill__close-btn {
     min-height: v.$min-touch-target;
+  }
+
+  .quick-fill__next-btn--ready:not(:disabled) {
+    --mat-button-filled-container-color: #16a34a;
+    --mat-button-filled-label-text-color: #ffffff;
+    --mat-sys-primary: #16a34a;
+
+    &:hover {
+      --mat-button-filled-container-color: #15803d;
+    }
   }
 }

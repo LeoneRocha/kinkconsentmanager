@@ -154,11 +154,19 @@ describe('CategoryAccordionComponent', () => {
 
     expect(nextBtn).not.toBeNull();
     expect(finishBtnInFirst).toBeNull();
+    expect(nextBtn!.classList.contains('category-accordion__next-btn--ready')).toBe(false);
 
     nextBtn!.click();
     await fixture.whenStable();
 
     expect(nextSpy).toHaveBeenCalledTimes(1);
+
+    await setBaseInputs({
+      answers: {
+        item_safeword: { selectedOption: 'opt_traffic' },
+      },
+    });
+    expect(nextBtn!.classList.contains('category-accordion__next-btn--ready')).toBe(true);
   });
 
   it('should render finish button on last panel and emit finishChecklist on click', async () => {

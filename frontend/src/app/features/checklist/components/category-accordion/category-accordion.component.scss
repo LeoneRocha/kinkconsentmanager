@@ -113,6 +113,7 @@
     }
   }
 
+  .category-accordion__next-btn--ready:not(:disabled),
   .category-accordion__finish-btn--ready:not(:disabled) {
     --mat-button-filled-container-color: #16a34a;
     --mat-button-filled-label-text-color: #ffffff;

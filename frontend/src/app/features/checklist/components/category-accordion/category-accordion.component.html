@@ -66,6 +66,7 @@
                 mat-flat-button
                 type="button"
                 class="category-accordion__next-btn"
+                [class.category-accordion__next-btn--ready]="isGroupCompleted(group)"
                 (click)="nextCategory.emit()"
               >
                 <span>{{ nextCategoryLabel() }}</span>

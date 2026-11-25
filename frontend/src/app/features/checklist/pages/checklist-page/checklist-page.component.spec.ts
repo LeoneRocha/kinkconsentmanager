@@ -539,9 +539,16 @@ describe('ChecklistPageComponent', () => {
     expect(checklistState.viewMode()).toBe('quick_fill');
     expect(hostEl.querySelector('.quick-fill-inline')).not.toBeNull();
     expect(hostEl.querySelector('.quick-fill-backdrop')).toBeNull();
+    expect(hostEl.querySelector('.quick-fill__context--prev')).toBeNull();
+    expect(hostEl.querySelector('.quick-fill__context--next')).toBeNull();
+
+    // Step 1 is single_choice (item_safeword) -> key '1' selects opt_traffic and advances to Step 2 (item_rope)
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: '1' }));
+    await fixture.whenStable();
     window.dispatchEvent(new KeyboardEvent('keydown', { key: '5' }));
     await fixture.whenStable();
 
+    expect(checklistState.answers()['item_safeword']).toEqual({ selectedOption: 'opt_traffic' });
     expect(checklistState.answers()['item_rope']).toEqual({ primaryScale: 'favorite' });
   });
 

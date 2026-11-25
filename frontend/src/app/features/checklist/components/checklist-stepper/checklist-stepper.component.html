@@ -122,7 +122,13 @@
                 <span>{{ labels().goToReview }}</span>
               </button>
             }
-            <button mat-flat-button type="button" class="stepper__next-btn" (click)="goNextStep()">
+            <button
+              mat-flat-button
+              type="button"
+              class="stepper__next-btn"
+              [class.stepper__ready-btn]="isCurrentStepCompleted()"
+              (click)="goNextStep()"
+            >
               <span>{{
                 safeStep() === groups().length - 1 ? labels().reviewTitle : labels().nextStep
               }}</span>

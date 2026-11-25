@@ -86,6 +86,10 @@ export class CategoryAccordionComponent {
     return countGroupAnsweredItems(group, this.answers());
   }
 
+  protected isGroupCompleted(group: GroupDefinition): boolean {
+    return group.items.length > 0 && this.groupAnsweredCount(group) >= group.items.length;
+  }
+
   protected isDualRole(group: GroupDefinition, item: ItemDefinition): boolean {
     return isDualRoleScaleItem(group, item);
   }

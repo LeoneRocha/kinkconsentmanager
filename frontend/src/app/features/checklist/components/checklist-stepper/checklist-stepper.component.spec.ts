@@ -142,8 +142,10 @@ describe('ChecklistStepperComponent', () => {
 
     // Attempt advance while Step 1 is incomplete -> blocked & marks Step 1 red/invalid; review jump disabled
     const reviewJumpBtn = hostEl.querySelector<HTMLButtonElement>('.stepper__review-jump-btn');
+    const nextBtn = hostEl.querySelector<HTMLButtonElement>('.stepper__next-btn')!;
     expect(reviewJumpBtn?.disabled).toBe(true);
-    hostEl.querySelector<HTMLButtonElement>('.stepper__next-btn')?.click();
+    expect(nextBtn.classList.contains('stepper__ready-btn')).toBe(false);
+    nextBtn.click();
     await fixture.whenStable();
     expect(emittedSteps).toEqual([]);
     expect(stepTabs[0].classList.contains('stepper__step-btn--invalid')).toBe(true);
@@ -155,6 +157,7 @@ describe('ChecklistStepperComponent', () => {
     });
     await fixture.whenStable();
     expect(stepTabs[0].classList.contains('stepper__step-btn--done')).toBe(true);
+    expect(nextBtn.classList.contains('stepper__ready-btn')).toBe(true);
     expect(hostEl.querySelector('.stepper__validation-alert')).toBeNull();
 
     hostEl.querySelector<HTMLButtonElement>('.stepper__next-btn')?.click();
