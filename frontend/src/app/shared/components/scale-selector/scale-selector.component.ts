@@ -7,7 +7,13 @@ import {
   output,
   viewChildren,
 } from '@angular/core';
-import { ScaleId, ScaleOption } from '../../../core/models';
+import {
+  getScaleAnswerValue,
+  resolveOrderedScales,
+  resolveScaleLabel,
+  ScaleId,
+  ScaleOption,
+} from '../../../core/models';
 
 @Component({
   selector: 'app-scale-selector',
@@ -28,7 +34,7 @@ export class ScaleSelectorComponent {
   private readonly scaleButtons = viewChildren<ElementRef<HTMLButtonElement>>('scaleBtn');
 
   protected readonly orderedScales = computed<readonly ScaleOption[]>(() =>
-    [...this.scales()].sort((a, b) => a.order - b.order),
+    resolveOrderedScales(this.scales()),
   );
 
   protected readonly focusableScaleId = computed<ScaleId | undefined>(() => {
@@ -37,25 +43,30 @@ export class ScaleSelectorComponent {
       return undefined;
     }
     const selected = this.selectedScale();
-    if (selected !== undefined && ordered.some((scale) => scale.id === selected)) {
+    if (selected !== undefined && ordered.some((scale) => this.getScaleValue(scale) === selected)) {
       return selected;
     }
-    return ordered[0].id;
+    return this.getScaleValue(ordered[0]);
   });
 
+  protected getScaleValue(scale: ScaleOption): ScaleId {
+    return getScaleAnswerValue(scale);
+  }
+
   protected getScaleLabel(scale: ScaleOption): string {
-    return this.scaleLabels()[scale.id] ?? scale.id;
+    return resolveScaleLabel(scale, this.scaleLabels());
   }
 
-  protected isSelected(scaleId: ScaleId): boolean {
-    return this.selectedScale() === scaleId;
+  protected isSelected(scale: ScaleOption): boolean {
+    return this.selectedScale() === this.getScaleValue(scale);
   }
 
-  protected onSelect(scaleId: ScaleId): void {
+  protected onSelect(scale: ScaleOption): void {
     if (this.disabled()) {
       return;
     }
-    const nextValue = this.selectedScale() === scaleId ? undefined : scaleId;
+    const value = this.getScaleValue(scale);
+    const nextValue = this.selectedScale() === value ? undefined : value;
     this.scaleChange.emit(nextValue);
   }
 

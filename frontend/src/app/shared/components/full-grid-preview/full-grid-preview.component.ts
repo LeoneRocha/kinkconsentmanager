@@ -1,10 +1,17 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import {
   ChecklistSchema,
+  ChoiceOptionDefinition,
+  getScaleAnswerValue,
+  ItemDefinition,
   ItemResponseValue,
   OTHER_OPTION_VALUE,
   QuestionType,
+  resolveChoiceOptionLabel,
   ResolvedPreviewTexts,
+  resolveOrderedChoiceOptions,
+  resolveOrderedScales,
+  resolveScaleLabel,
   ScaleId,
   ScaleOption,
 } from '../../../core/models';
@@ -60,16 +67,30 @@ export class FullGridPreviewComponent {
   readonly printMode = input<boolean>(false);
 
   protected readonly orderedScales = computed<readonly ScaleOption[]>(() =>
-    [...this.schema().scales].sort((a, b) => a.order - b.order),
+    resolveOrderedScales(this.schema().scales),
   );
 
   protected readonly previewGroups = computed<readonly PreviewGroupViewModel[]>(() => {
     const schema = this.schema();
     const answers = this.answers();
     const texts = this.texts();
-    const scaleMap = new Map<ScaleId, ScaleOption>(
-      this.orderedScales().map((scale) => [scale.id, scale]),
-    );
+    const scaleMap = new Map<ScaleId, ScaleOption>();
+    const registerScales = (list: readonly ScaleOption[] | undefined): void => {
+      if (!list) {
+        return;
+      }
+      for (const scale of list) {
+        scaleMap.set(scale.id, scale);
+        scaleMap.set(getScaleAnswerValue(scale), scale);
+      }
+    };
+
+    registerScales(this.orderedScales());
+    if (schema.scaleSets) {
+      for (const key of Object.keys(schema.scaleSets)) {
+        registerScales(schema.scaleSets[key]);
+      }
+    }
 
     const orderedGroups = [...schema.groups].sort((a, b) => a.order - b.order);
 
@@ -78,6 +99,7 @@ export class FullGridPreviewComponent {
       const groupRoles = texts.roles[group.rolePairId] ?? { primary: '' };
 
       const rows: PreviewRowViewModel[] = group.items.map((item) => {
+        registerScales(item.scales);
         const answer = answers[item.id];
         const itemLabel = texts.items[item.id]?.label ?? item.id;
         const isDualRole = item.type === 'scale_matrix' && (item.dualRole ?? group.defaultDualRole);
@@ -106,7 +128,7 @@ export class FullGridPreviewComponent {
           };
         }
 
-        const { formatted, answered } = this.formatNonScaleAnswer(item.type, answer, texts);
+        const { formatted, answered } = this.formatNonScaleAnswer(item, answer, texts);
         return {
           itemId: item.id,
           itemLabel,
@@ -149,14 +171,14 @@ export class FullGridPreviewComponent {
     }
 
     const scale = scaleMap.get(scaleId);
-    const label = texts.scales[scaleId] ?? scaleId;
     if (!scale) {
       return {
         answered: true,
-        label,
+        label: texts.scales[scaleId] ?? scaleId,
       };
     }
 
+    const label = resolveScaleLabel(scale, texts.scales);
     return {
       answered: true,
       label,
@@ -167,18 +189,24 @@ export class FullGridPreviewComponent {
   }
 
   private formatNonScaleAnswer(
-    type: Exclude<QuestionType, 'scale_matrix'>,
+    item: ItemDefinition,
     answer: ItemResponseValue | undefined,
     texts: ResolvedPreviewTexts,
   ): { readonly formatted: string; readonly answered: boolean } {
-    switch (type) {
+    const optionMap = new Map<string, ChoiceOptionDefinition>();
+    for (const opt of resolveOrderedChoiceOptions(item.options)) {
+      optionMap.set(opt.id, opt);
+      optionMap.set(opt.value, opt);
+    }
+
+    switch (item.type) {
       case 'single_choice': {
         const selected = answer?.selectedOption;
         if (!selected) {
           return { formatted: texts.notAnsweredLabel, answered: false };
         }
         return {
-          formatted: this.formatOptionValue(selected, answer?.otherText, texts),
+          formatted: this.formatOptionValue(selected, answer?.otherText, texts, optionMap),
           answered: true,
         };
       }
@@ -189,7 +217,7 @@ export class FullGridPreviewComponent {
           return { formatted: texts.notAnsweredLabel, answered: false };
         }
         const labels = selected.map((optionId) =>
-          this.formatOptionValue(optionId, answer?.otherText, texts),
+          this.formatOptionValue(optionId, answer?.otherText, texts, optionMap),
         );
         return {
           formatted: labels.join(', '),
@@ -197,7 +225,8 @@ export class FullGridPreviewComponent {
         };
       }
 
-      case 'restricted_text': {
+      case 'restricted_text':
+      case 'scale_matrix': {
         const rawText = answer?.customText ?? '';
         if (rawText.trim().length === 0) {
           return { formatted: texts.notAnsweredLabel, answered: false };
@@ -214,10 +243,15 @@ export class FullGridPreviewComponent {
     optionId: string,
     otherText: string | undefined,
     texts: ResolvedPreviewTexts,
+    optionMap: ReadonlyMap<string, ChoiceOptionDefinition>,
   ): string {
     if (optionId === OTHER_OPTION_VALUE) {
       const trimmed = (otherText ?? '').trim();
       return trimmed.length > 0 ? `${texts.otherLabel}: ${trimmed}` : texts.otherLabel;
+    }
+    const matched = optionMap.get(optionId);
+    if (matched) {
+      return resolveChoiceOptionLabel(matched, texts.options);
     }
     return texts.options[optionId] ?? optionId;
   }

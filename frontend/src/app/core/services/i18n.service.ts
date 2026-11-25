@@ -4,10 +4,13 @@ import { TranslateService } from '@ngx-translate/core';
 import { catchError, map, Observable, of, shareReplay, take } from 'rxjs';
 import {
   ChecklistSchema,
+  getScaleAnswerValue,
   ParticipantRoleId,
   ResolvedPreviewTexts,
   ResolvedRolePairLabels,
+  resolveOrderedChoiceOptions,
   RolePairId,
+  ScaleOption,
   SupportedLanguage,
 } from '../models';
 import {
@@ -199,8 +202,23 @@ export class I18nService {
     generatedAtValue: string,
   ): ResolvedPreviewTexts {
     const scales: Record<string, string> = {};
-    for (const scale of schema.scales) {
-      scales[scale.id] = this.getScaleLabel(scale.id);
+    const registerScaleLabels = (list: readonly ScaleOption[] | undefined): void => {
+      if (!list) {
+        return;
+      }
+      for (const scale of list) {
+        const translated = this.resolveRaw(`scales.${scale.id}`);
+        const resolved = translated ?? scale.label ?? scale.id;
+        scales[scale.id] = resolved;
+        scales[getScaleAnswerValue(scale)] = resolved;
+      }
+    };
+
+    registerScaleLabels(schema.scales);
+    if (schema.scaleSets) {
+      for (const key of Object.keys(schema.scaleSets)) {
+        registerScaleLabels(schema.scaleSets[key]);
+      }
     }
 
     const rolePairIds = new Set<RolePairId>([
@@ -241,9 +259,14 @@ export class I18nService {
             ? { label: this.getItemLabel(item.id), tooltip }
             : { label: this.getItemLabel(item.id) };
 
+        registerScaleLabels(item.scales);
+
         if (item.options) {
-          for (const optionId of item.options) {
-            options[optionId] = this.getOptionLabel(optionId);
+          for (const opt of resolveOrderedChoiceOptions(item.options)) {
+            const translated = this.resolveRaw(`options.${opt.id}`);
+            const resolved = translated ?? opt.label ?? opt.value;
+            options[opt.id] = resolved;
+            options[opt.value] = resolved;
           }
         }
       }

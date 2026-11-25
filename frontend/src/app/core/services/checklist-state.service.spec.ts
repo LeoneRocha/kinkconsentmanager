@@ -423,7 +423,20 @@ describe('ChecklistStateService', () => {
   // Cenário: Resposta com a 6ª escala 'not_applicable' (Não se aplica) em item dual-role e persistência/importação.
   // Objetivo: Garantir que 'not_applicable' seja aceito, contabilizado como respondido e preservado na importação e snapshot criptografado.
   it('should accept, count, import, and restore not_applicable scale answers', () => {
-    service.initializeSchema(TEST_SCHEMA);
+    service.initializeSchema({
+      ...TEST_SCHEMA,
+      scales: [
+        {
+          id: 'not_applicable',
+          value: 'not_applicable',
+          order: 0,
+          color: '#546E7A',
+          contrastColor: '#FFFFFF',
+          icon: 'fa-solid fa-circle-minus',
+        },
+        ...TEST_SCHEMA.scales,
+      ],
+    });
 
     service.setItemAnswer('rope_bondage', {
       primaryScale: 'not_applicable',
@@ -456,6 +469,84 @@ describe('ChecklistStateService', () => {
     expect(service.answers()['rope_bondage']).toEqual({
       primaryScale: 'not_applicable',
       secondaryScale: 'enjoy',
+    });
+  });
+
+  // Cenário: Schema personalizado com escalas dinâmicas por grupo/item e valores customizados.
+  // Objetivo: Garantir que ChecklistStateService aceite dinamicamente valores declarados no schema ativo e rejeite valores inexistentes.
+  it('should dynamically validate scale answers against active schema scales, scaleSets, and item scales', () => {
+    const customSchema: ChecklistSchema = {
+      schemaVersion: '1.0.0',
+      scales: [
+        {
+          id: 'custom_yes',
+          value: 'yes_score_10',
+          order: 1,
+          label: 'Yes',
+          color: '#16A34A',
+          contrastColor: '#FFFFFF',
+          icon: 'fa-solid fa-check',
+        },
+      ],
+      scaleSets: {
+        extra: [
+          {
+            id: 'set_maybe',
+            value: 'set_maybe_val',
+            order: 1,
+            color: '#FBC02D',
+            contrastColor: '#111827',
+            icon: 'fa-solid fa-question',
+          },
+        ],
+      },
+      groups: [
+        {
+          id: 'grp_custom',
+          order: 1,
+          defaultDualRole: false,
+          rolePairId: 'general',
+          items: [
+            {
+              id: 'q_custom',
+              type: 'scale_matrix',
+              scales: [
+                {
+                  id: 'item_special',
+                  value: 'special_val',
+                  order: 1,
+                  color: '#7B1FA2',
+                  contrastColor: '#FFFFFF',
+                  icon: 'fa-solid fa-heart',
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+
+    service.initializeSchema(customSchema);
+    service.importDraft({
+      schemaVersion: '1.0.0',
+      exportedAt: '2026-11-25T12:45:00.000Z',
+      language: 'pt-BR',
+      answers: {
+        q_custom: { primaryScale: 'special_val', secondaryScale: 'unknown_scale' },
+      },
+    });
+
+    expect(service.answers()['q_custom']).toEqual({ primaryScale: 'special_val' });
+
+    service.restoreFromEncryptedAutosave({
+      schemaVersion: '1.0.0',
+      answers: {
+        q_custom: { primaryScale: 'yes_score_10', secondaryScale: 'set_maybe_val' },
+      },
+    });
+    expect(service.answers()['q_custom']).toEqual({
+      primaryScale: 'yes_score_10',
+      secondaryScale: 'set_maybe_val',
     });
   });
 });

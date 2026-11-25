@@ -10,11 +10,15 @@ import {
 import { MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import {
+  getScaleAnswerValue,
   GroupDefinition,
   ItemDefinition,
   ItemResponseValue,
   ResolvedPreviewTexts,
   ResolvedRolePairLabels,
+  resolveItemScales,
+  resolveOrderedScales,
+  resolveScaleLabel,
   ScaleId,
   ScaleOption,
 } from '../../../../core/models';
@@ -148,7 +152,15 @@ export class ClassicKinkSheetComponent {
   }
 
   protected orderedScales(): readonly ScaleOption[] {
-    return [...this.scales()].sort((a, b) => a.order - b.order);
+    return resolveOrderedScales(this.scales());
+  }
+
+  protected itemScales(item: ItemDefinition): readonly ScaleOption[] {
+    return resolveItemScales(this.scales(), item);
+  }
+
+  protected scaleValue(scale: ScaleOption): ScaleId {
+    return getScaleAnswerValue(scale);
   }
 
   protected hasScaleItems(group: GroupDefinition): boolean {
@@ -200,11 +212,11 @@ export class ClassicKinkSheetComponent {
 
   protected onClassicDotKeydown(
     event: KeyboardEvent,
-    itemId: string,
+    item: ItemDefinition,
     roleField: 'primaryScale' | 'secondaryScale',
     currentIndex: number,
   ): void {
-    const ordered = this.orderedScales();
+    const ordered = this.itemScales(item);
     if (ordered.length === 0) {
       return;
     }
@@ -227,7 +239,7 @@ export class ClassicKinkSheetComponent {
     event.preventDefault();
     const targetScale = ordered[nextIndex];
     if (targetScale) {
-      this.selectRoleScale(itemId, roleField, targetScale.id);
+      this.selectRoleScale(item.id, roleField, this.scaleValue(targetScale));
     }
   }
 
@@ -235,8 +247,11 @@ export class ClassicKinkSheetComponent {
     this.answerChange.emit({ itemId, patch });
   }
 
-  protected scaleLabel(scaleId: ScaleId): string {
-    return this.texts().scales[scaleId] ?? scaleId;
+  protected scaleLabel(scale: ScaleOption | ScaleId): string {
+    if (typeof scale !== 'string') {
+      return resolveScaleLabel(scale, this.texts().scales);
+    }
+    return this.texts().scales[scale] ?? scale;
   }
 
   protected groupTitle(group: GroupDefinition): string {

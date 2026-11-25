@@ -4,10 +4,14 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatRadioModule } from '@angular/material/radio';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import {
+  ChoiceOptionDefinition,
   ItemDefinition,
   ItemResponseValue,
   OTHER_OPTION_VALUE,
+  resolveChoiceOptionLabel,
   ResolvedRolePairLabels,
+  resolveItemScales,
+  resolveOrderedChoiceOptions,
   ScaleId,
   ScaleOption,
 } from '../../../core/models';
@@ -70,16 +74,23 @@ export class DynamicQuestionItemComponent {
     (this.answer()?.selectedOptions ?? []).includes(OTHER_OPTION_VALUE),
   );
 
+  protected readonly effectiveScales = computed<readonly ScaleOption[]>(() =>
+    resolveItemScales(this.scales(), this.item()),
+  );
+  protected readonly orderedOptions = computed<readonly ChoiceOptionDefinition[]>(() =>
+    resolveOrderedChoiceOptions(this.item().options),
+  );
+
   protected optionInputId(optionId: string): string {
     return `q-opt-${this.uid}-${this.item().id}-${optionId}`;
   }
 
-  protected getOptionLabel(optionId: string): string {
-    return this.optionLabels()[optionId] ?? optionId;
+  protected getOptionLabel(option: ChoiceOptionDefinition): string {
+    return resolveChoiceOptionLabel(option, this.optionLabels());
   }
 
-  protected isMultipleOptionSelected(optionId: string): boolean {
-    return (this.answer()?.selectedOptions ?? []).includes(optionId);
+  protected isMultipleOptionSelected(optionValue: string): boolean {
+    return (this.answer()?.selectedOptions ?? []).includes(optionValue);
   }
 
   protected onPrimaryScaleChange(primaryScale: ScaleId | undefined): void {

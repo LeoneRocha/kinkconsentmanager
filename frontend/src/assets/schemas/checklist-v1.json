@@ -16,6 +16,7 @@
   "scales": [
     {
       "id": "not_applicable",
+      "value": "not_applicable",
       "order": 1,
       "color": "#546E7A",
       "contrastColor": "#FFFFFF",
@@ -23,6 +24,7 @@
     },
     {
       "id": "hard_limit",
+      "value": "hard_limit",
       "order": 2,
       "color": "#D32F2F",
       "contrastColor": "#FFFFFF",
@@ -30,6 +32,7 @@
     },
     {
       "id": "soft_limit",
+      "value": "soft_limit",
       "order": 3,
       "color": "#F57C00",
       "contrastColor": "#111827",
@@ -37,6 +40,7 @@
     },
     {
       "id": "curious",
+      "value": "curious",
       "order": 4,
       "color": "#FBC02D",
       "contrastColor": "#111827",
@@ -44,6 +48,7 @@
     },
     {
       "id": "enjoy",
+      "value": "enjoy",
       "order": 5,
       "color": "#388E3C",
       "contrastColor": "#FFFFFF",
@@ -51,6 +56,7 @@
     },
     {
       "id": "favorite",
+      "value": "favorite",
       "order": 6,
       "color": "#7B1FA2",
       "contrastColor": "#FFFFFF",
@@ -95,10 +101,10 @@
           ],
           "type": "single_choice",
           "options": [
-            "opt_sw_traffic_light",
-            "opt_sw_custom_word",
-            "opt_sw_nonverbal",
-            "opt_sw_checkins"
+            { "id": "opt_sw_traffic_light", "value": "opt_sw_traffic_light", "order": 1 },
+            { "id": "opt_sw_custom_word", "value": "opt_sw_custom_word", "order": 2 },
+            { "id": "opt_sw_nonverbal", "value": "opt_sw_nonverbal", "order": 3 },
+            { "id": "opt_sw_checkins", "value": "opt_sw_checkins", "order": 4 }
           ],
           "allowOtherOption": true,
           "maxLength": 120
@@ -121,12 +127,12 @@
           ],
           "type": "multiple_choice",
           "options": [
-            "opt_ac_cuddling",
-            "opt_ac_hydration_snacks",
-            "opt_ac_blanket_warmth",
-            "opt_ac_quiet_space",
-            "opt_ac_verbal_reassurance",
-            "opt_ac_wound_skin_care"
+            { "id": "opt_ac_cuddling", "value": "opt_ac_cuddling", "order": 1 },
+            { "id": "opt_ac_hydration_snacks", "value": "opt_ac_hydration_snacks", "order": 2 },
+            { "id": "opt_ac_blanket_warmth", "value": "opt_ac_blanket_warmth", "order": 3 },
+            { "id": "opt_ac_quiet_space", "value": "opt_ac_quiet_space", "order": 4 },
+            { "id": "opt_ac_verbal_reassurance", "value": "opt_ac_verbal_reassurance", "order": 5 },
+            { "id": "opt_ac_wound_skin_care", "value": "opt_ac_wound_skin_care", "order": 6 }
           ],
           "allowOtherOption": true,
           "maxLength": 120
@@ -479,13 +485,13 @@
           "dualRole": false,
           "rolePairId": "general",
           "options": [
-            "opt_mat_cotton_rope",
-            "opt_mat_jute_hemp",
-            "opt_mat_leather",
-            "opt_mat_neoprene_padded",
-            "opt_mat_silicone",
-            "opt_mat_metal",
-            "opt_mat_bondage_tape"
+            { "id": "opt_mat_cotton_rope", "value": "opt_mat_cotton_rope", "order": 1 },
+            { "id": "opt_mat_jute_hemp", "value": "opt_mat_jute_hemp", "order": 2 },
+            { "id": "opt_mat_leather", "value": "opt_mat_leather", "order": 3 },
+            { "id": "opt_mat_neoprene_padded", "value": "opt_mat_neoprene_padded", "order": 4 },
+            { "id": "opt_mat_silicone", "value": "opt_mat_silicone", "order": 5 },
+            { "id": "opt_mat_metal", "value": "opt_mat_metal", "order": 6 },
+            { "id": "opt_mat_bondage_tape", "value": "opt_mat_bondage_tape", "order": 7 }
           ],
           "allowOtherOption": true,
           "maxLength": 120
@@ -615,12 +621,12 @@
           "dualRole": false,
           "rolePairId": "general",
           "options": [
-            "opt_tool_open_hand",
-            "opt_tool_leather_paddle",
-            "opt_tool_suede_flogger",
-            "opt_tool_riding_crop",
-            "opt_tool_rattan_cane",
-            "opt_tool_belt_strap"
+            { "id": "opt_tool_open_hand", "value": "opt_tool_open_hand", "order": 1 },
+            { "id": "opt_tool_leather_paddle", "value": "opt_tool_leather_paddle", "order": 2 },
+            { "id": "opt_tool_suede_flogger", "value": "opt_tool_suede_flogger", "order": 3 },
+            { "id": "opt_tool_riding_crop", "value": "opt_tool_riding_crop", "order": 4 },
+            { "id": "opt_tool_rattan_cane", "value": "opt_tool_rattan_cane", "order": 5 },
+            { "id": "opt_tool_belt_strap", "value": "opt_tool_belt_strap", "order": 6 }
           ],
           "allowOtherOption": true,
           "maxLength": 120

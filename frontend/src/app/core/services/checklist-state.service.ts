@@ -4,6 +4,7 @@ import {
   ChecklistSchema,
   ChecklistState,
   ChecklistViewMode,
+  collectValidScaleValues,
   GroupDefinition,
   ItemDefinition,
   ItemResponseValue,
@@ -15,14 +16,6 @@ import { BaseStateService } from './base-state.service';
 import { LocalStoragePersistenceService } from './local-storage-persistence.service';
 
 const DEFAULT_SCHEMA_VERSION = '1.0.0';
-const VALID_SCALE_IDS: ReadonlySet<string> = new Set<ScaleId>([
-  'hard_limit',
-  'soft_limit',
-  'curious',
-  'enjoy',
-  'favorite',
-  'not_applicable',
-]);
 
 interface PersistedChecklistState {
   readonly schemaVersion: string;
@@ -500,13 +493,15 @@ export class ChecklistStateService extends BaseStateService<ChecklistState> {
       customText?: string;
     } = {};
 
+    const validScales = collectValidScaleValues(this.schemaSignal());
+
     const primaryScale = raw['primaryScale'];
-    if (typeof primaryScale === 'string' && VALID_SCALE_IDS.has(primaryScale)) {
+    if (typeof primaryScale === 'string' && validScales.has(primaryScale)) {
       cleaned.primaryScale = primaryScale as ScaleId;
     }
 
     const secondaryScale = raw['secondaryScale'];
-    if (typeof secondaryScale === 'string' && VALID_SCALE_IDS.has(secondaryScale)) {
+    if (typeof secondaryScale === 'string' && validScales.has(secondaryScale)) {
       cleaned.secondaryScale = secondaryScale as ScaleId;
     }
 

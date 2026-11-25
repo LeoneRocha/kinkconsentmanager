@@ -1,5 +1,16 @@
-export type ScaleId =
+export type BuiltInScaleId =
   'not_applicable' | 'hard_limit' | 'soft_limit' | 'curious' | 'enjoy' | 'favorite';
+
+export type ScaleId = BuiltInScaleId | (string & {});
+
+export const BUILT_IN_SCALE_IDS: readonly BuiltInScaleId[] = [
+  'not_applicable',
+  'hard_limit',
+  'soft_limit',
+  'curious',
+  'enjoy',
+  'favorite',
+];
 
 export type QuestionType = 'scale_matrix' | 'single_choice' | 'multiple_choice' | 'restricted_text';
 
@@ -34,11 +45,22 @@ export const ALL_PARTICIPANT_ROLES: readonly ParticipantRoleId[] = [
 
 export interface ScaleOption {
   readonly id: ScaleId;
+  readonly value?: string | number;
   readonly order: number;
+  readonly label?: string;
   readonly color: string;
   readonly contrastColor: string;
   readonly icon: string;
 }
+
+export interface ChoiceOptionDefinition {
+  readonly id: string;
+  readonly value: string;
+  readonly order: number;
+  readonly label?: string;
+}
+
+export type ChoiceOptionInput = string | ChoiceOptionDefinition;
 
 export interface ItemDefinition {
   readonly id: string;
@@ -48,7 +70,8 @@ export interface ItemDefinition {
   readonly dualRole?: boolean;
   readonly rolePairId?: RolePairId;
   readonly scaleRef?: string;
-  readonly options?: readonly string[];
+  readonly scales?: readonly ScaleOption[];
+  readonly options?: readonly ChoiceOptionInput[];
   readonly allowOtherOption?: boolean;
   readonly maxLength?: number;
 }
@@ -66,5 +89,6 @@ export interface ChecklistSchema {
   readonly schemaVersion: string;
   readonly participantRoles?: readonly ParticipantRoleId[];
   readonly scales: readonly ScaleOption[];
+  readonly scaleSets?: Readonly<Record<string, readonly ScaleOption[]>>;
   readonly groups: readonly GroupDefinition[];
 }

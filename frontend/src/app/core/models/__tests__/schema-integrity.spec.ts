@@ -8,11 +8,13 @@ import rawEnUsQuestions from '../../../../assets/i18n/questions/en-US.json';
 import {
   ALL_PARTICIPANT_ROLES,
   ChecklistSchema,
+  ChoiceOptionDefinition,
   ParticipantRoleId,
   QuestionType,
   RolePairId,
   ScaleId,
 } from '../checklist-schema.model';
+import { resolveOrderedChoiceOptions } from '../checklist-options.helpers';
 
 interface RoleTranslation {
   readonly primary: string;
@@ -195,7 +197,15 @@ describe('Checklist Schema & i18n Integrity', () => {
       expect(scale.color).toMatch(HEX_COLOR_REGEX);
       expect(scale.contrastColor).toMatch(HEX_COLOR_REGEX);
       expect(scale.icon).toMatch(ICON_CLASS_REGEX);
-      expect(Object.keys(scale).sort()).toEqual(['color', 'contrastColor', 'icon', 'id', 'order']);
+      expect(String(scale.value ?? '').trim().length).toBeGreaterThan(0);
+      expect(Object.keys(scale).sort()).toEqual([
+        'color',
+        'contrastColor',
+        'icon',
+        'id',
+        'order',
+        'value',
+      ]);
     }
 
     expect(Array.isArray(schema.groups)).toBe(true);
@@ -241,6 +251,7 @@ describe('Checklist Schema & i18n Integrity', () => {
       'dualRole',
       'rolePairId',
       'scaleRef',
+      'scales',
       'options',
       'allowOtherOption',
       'maxLength',
@@ -286,14 +297,27 @@ describe('Checklist Schema & i18n Integrity', () => {
           expect(Array.isArray(item.options)).toBe(true);
           expect(item.options?.length ?? 0).toBeGreaterThan(0);
 
-          const itemOptionSet = new Set(item.options);
-          expect(itemOptionSet.size).toBe(item.options?.length);
+          const itemOptionIds = new Set<string>();
+          const itemOptionValues = new Set<string>();
+          const optionOrders: number[] = [];
 
-          for (const optionId of item.options ?? []) {
-            expect(optionId).toMatch(/^opt_[a-z0-9_]+$/);
-            expect(seenOptionIds.has(optionId)).toBe(false);
-            seenOptionIds.add(optionId);
+          for (const rawOption of item.options ?? []) {
+            expect(typeof rawOption).toBe('object');
+            const option = rawOption as ChoiceOptionDefinition;
+            expect(option.id).toMatch(/^opt_[a-z0-9_]+$/);
+            expect(option.value.trim().length).toBeGreaterThan(0);
+            expect(typeof option.order).toBe('number');
+            expect(itemOptionIds.has(option.id)).toBe(false);
+            expect(itemOptionValues.has(option.value)).toBe(false);
+            expect(seenOptionIds.has(option.id)).toBe(false);
+
+            itemOptionIds.add(option.id);
+            itemOptionValues.add(option.value);
+            seenOptionIds.add(option.id);
+            optionOrders.push(option.order);
           }
+
+          expect(optionOrders).toEqual(optionOrders.map((_, index) => index + 1));
         }
 
         if (item.type === 'restricted_text') {
@@ -426,8 +450,8 @@ describe('Checklist Schema & i18n Integrity', () => {
             expect(itemEntry?.tooltip).toContain('RACK');
           }
 
-          for (const optionId of item.options ?? []) {
-            expect(dict.options[optionId]?.trim().length ?? 0).toBeGreaterThan(0);
+          for (const option of resolveOrderedChoiceOptions(item.options)) {
+            expect(dict.options[option.id]?.trim().length ?? 0).toBeGreaterThan(0);
           }
         }
       }

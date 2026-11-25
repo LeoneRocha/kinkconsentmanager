@@ -13,12 +13,17 @@ import {
 import { MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import {
+  getScaleAnswerValue,
   GroupDefinition,
   ItemDefinition,
   ItemResponseValue,
   OTHER_OPTION_VALUE,
   QuestionType,
+  resolveChoiceOptionLabel,
   ResolvedPreviewTexts,
+  resolveItemScales,
+  resolveOrderedChoiceOptions,
+  resolveScaleLabel,
   ScaleId,
   ScaleOption,
 } from '../../../../core/models';
@@ -55,6 +60,7 @@ export const DEFAULT_QUICK_FILL_LABELS: QuickFillLabels = {
 
 export interface QuickFillChoiceOption {
   readonly id: string;
+  readonly value: string;
   readonly label: string;
   readonly isOther: boolean;
 }
@@ -131,7 +137,7 @@ export class QuickFillWizardModalComponent {
   private wasVisible = false;
 
   protected readonly orderedScales = computed<readonly ScaleOption[]>(() =>
-    [...this.scales()].sort((a, b) => a.order - b.order),
+    resolveItemScales(this.scales(), this.currentStep()?.item),
   );
 
   protected readonly steps = computed<readonly QuickFillStep[]>(() => {
@@ -237,14 +243,18 @@ export class QuickFillWizardModalComponent {
       return [];
     }
     const texts = this.texts();
-    const list: QuickFillChoiceOption[] = (step.item.options ?? []).map((optionId) => ({
-      id: optionId,
-      label: texts.options[optionId] ?? optionId,
-      isOther: false,
-    }));
+    const list: QuickFillChoiceOption[] = resolveOrderedChoiceOptions(step.item.options).map(
+      (opt) => ({
+        id: opt.id,
+        value: opt.value,
+        label: resolveChoiceOptionLabel(opt, texts.options),
+        isOther: false,
+      }),
+    );
     if (step.item.allowOtherOption) {
       list.push({
         id: OTHER_OPTION_VALUE,
+        value: OTHER_OPTION_VALUE,
         label: texts.otherLabel,
         isOther: true,
       });
@@ -353,7 +363,7 @@ export class QuickFillWizardModalComponent {
         const targetScale = this.orderedScales()[shortcutIndex];
         if (targetScale) {
           event.preventDefault();
-          this.selectScale(targetScale.id);
+          this.selectScale(this.getScaleValue(targetScale));
         }
         return;
       }
@@ -363,9 +373,9 @@ export class QuickFillWizardModalComponent {
         if (targetOption) {
           event.preventDefault();
           if (step.itemType === 'single_choice') {
-            this.selectSingleOption(targetOption.id);
+            this.selectSingleOption(targetOption.value);
           } else {
-            this.toggleMultipleOption(targetOption.id);
+            this.toggleMultipleOption(targetOption.value);
           }
         }
         return;
@@ -600,7 +610,21 @@ export class QuickFillWizardModalComponent {
     this.readAloud.emit(parts.join('. '));
   }
 
+  protected getScaleValue(scale: ScaleOption): ScaleId {
+    return getScaleAnswerValue(scale);
+  }
+
+  protected resolveScaleDisplayLabel(scale: ScaleOption): string {
+    return resolveScaleLabel(scale, this.texts().scales);
+  }
+
   protected getScaleLabel(scaleId: ScaleId): string {
+    const matched = this.orderedScales().find(
+      (scale) => scale.id === scaleId || getScaleAnswerValue(scale) === scaleId,
+    );
+    if (matched) {
+      return resolveScaleLabel(matched, this.texts().scales);
+    }
     return this.texts().scales[scaleId] ?? scaleId;
   }
 

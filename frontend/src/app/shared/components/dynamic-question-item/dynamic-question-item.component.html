@@ -41,14 +41,14 @@
         @if (isDualRole()) {
           <div class="question-item__dual-scales">
             <app-scale-selector
-              [scales]="scales()"
+              [scales]="effectiveScales()"
               [scaleLabels]="scaleLabels()"
               [roleTitle]="roleLabels().primary"
               [selectedScale]="answer()?.primaryScale"
               (scaleChange)="onPrimaryScaleChange($event)"
             />
             <app-scale-selector
-              [scales]="scales()"
+              [scales]="effectiveScales()"
               [scaleLabels]="scaleLabels()"
               [roleTitle]="roleLabels().secondary ?? ''"
               [selectedScale]="answer()?.secondaryScale"
@@ -57,7 +57,7 @@
           </div>
         } @else {
           <app-scale-selector
-            [scales]="scales()"
+            [scales]="effectiveScales()"
             [scaleLabels]="scaleLabels()"
             [roleTitle]="roleLabels().primary"
             [selectedScale]="answer()?.primaryScale"
@@ -73,15 +73,16 @@
           [value]="selectedSingleOption()"
           (change)="onSingleOptionSelect($event.value)"
         >
-          @for (optId of item().options ?? []; track optId) {
+          @for (opt of orderedOptions(); track opt.id) {
+            @let optLabel = getOptionLabel(opt);
             <div class="question-item__option">
               <mat-radio-button
-                [id]="optionInputId(optId)"
-                [value]="optId"
-                [attr.title]="getOptionLabel(optId)"
+                [id]="optionInputId(opt.id)"
+                [value]="opt.value"
+                [attr.title]="optLabel"
               >
-                <span class="question-item__option-label" [attr.title]="getOptionLabel(optId)">
-                  {{ getOptionLabel(optId) }}
+                <span class="question-item__option-label" [attr.title]="optLabel">
+                  {{ optLabel }}
                 </span>
               </mat-radio-button>
             </div>
@@ -119,16 +120,17 @@
 
       @case ('multiple_choice') {
         <div class="question-item__options">
-          @for (optId of item().options ?? []; track optId) {
+          @for (opt of orderedOptions(); track opt.id) {
+            @let optLabel = getOptionLabel(opt);
             <div class="question-item__option">
               <mat-checkbox
-                [id]="optionInputId(optId)"
-                [checked]="isMultipleOptionSelected(optId)"
-                [attr.title]="getOptionLabel(optId)"
-                (change)="onMultipleOptionToggle(optId, $event.checked)"
+                [id]="optionInputId(opt.id)"
+                [checked]="isMultipleOptionSelected(opt.value)"
+                [attr.title]="optLabel"
+                (change)="onMultipleOptionToggle(opt.value, $event.checked)"
               >
-                <span class="question-item__option-label" [attr.title]="getOptionLabel(optId)">
-                  {{ getOptionLabel(optId) }}
+                <span class="question-item__option-label" [attr.title]="optLabel">
+                  {{ optLabel }}
                 </span>
               </mat-checkbox>
             </div>

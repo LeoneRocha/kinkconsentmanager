@@ -1,11 +1,16 @@
 import { Injectable } from '@angular/core';
 import {
   ChecklistSchema,
+  ChoiceOptionDefinition,
   FlattenedChecklistRow,
+  getScaleAnswerValue,
   ItemDefinition,
   ItemResponseValue,
   OTHER_OPTION_VALUE,
+  resolveChoiceOptionLabel,
   ResolvedPreviewTexts,
+  resolveOrderedChoiceOptions,
+  resolveScaleLabel,
   ScaleId,
   ScaleOption,
 } from '../../../core/models';
@@ -28,7 +33,24 @@ export class ChecklistFlattenService {
     answers: Readonly<Record<string, ItemResponseValue>>,
     texts: ResolvedPreviewTexts,
   ): readonly FlattenedChecklistRow[] {
-    const scaleMap = new Map<ScaleId, ScaleOption>(schema.scales.map((scale) => [scale.id, scale]));
+    const scaleMap = new Map<ScaleId, ScaleOption>();
+    const registerScales = (list: readonly ScaleOption[] | undefined): void => {
+      if (!list) {
+        return;
+      }
+      for (const scale of list) {
+        scaleMap.set(scale.id, scale);
+        scaleMap.set(getScaleAnswerValue(scale), scale);
+      }
+    };
+
+    registerScales(schema.scales);
+    if (schema.scaleSets) {
+      for (const key of Object.keys(schema.scaleSets)) {
+        registerScales(schema.scaleSets[key]);
+      }
+    }
+
     const orderedGroups = [...schema.groups].sort((a, b) => a.order - b.order);
     const rows: FlattenedChecklistRow[] = [];
 
@@ -37,6 +59,7 @@ export class ChecklistFlattenService {
       const groupRoles = texts.roles[group.rolePairId] ?? { primary: group.rolePairId };
 
       for (const item of group.items) {
+        registerScales(item.scales);
         const answer = hasOwn(answers, item.id) ? answers[item.id] : undefined;
         const itemLabel = texts.items[item.id]?.label ?? item.id;
         const itemRolePairId = item.rolePairId ?? group.rolePairId;
@@ -93,7 +116,9 @@ export class ChecklistFlattenService {
     const primaryScaleId = answer?.primaryScale;
     const primaryScale = primaryScaleId ? scaleMap.get(primaryScaleId) : undefined;
     const primaryValueLabel = primaryScaleId
-      ? (texts.scales[primaryScaleId] ?? primaryScaleId)
+      ? primaryScale
+        ? resolveScaleLabel(primaryScale, texts.scales)
+        : (texts.scales[primaryScaleId] ?? primaryScaleId)
       : texts.notAnsweredLabel;
 
     if (!isDualRole) {
@@ -114,7 +139,9 @@ export class ChecklistFlattenService {
     const secondaryScaleId = answer?.secondaryScale;
     const secondaryScale = secondaryScaleId ? scaleMap.get(secondaryScaleId) : undefined;
     const secondaryValueLabel = secondaryScaleId
-      ? (texts.scales[secondaryScaleId] ?? secondaryScaleId)
+      ? secondaryScale
+        ? resolveScaleLabel(secondaryScale, texts.scales)
+        : (texts.scales[secondaryScaleId] ?? secondaryScaleId)
       : texts.notAnsweredLabel;
 
     return {
@@ -143,6 +170,19 @@ export class ChecklistFlattenService {
     answer: ItemResponseValue | undefined,
     texts: ResolvedPreviewTexts,
   ): FlattenedChecklistRow {
+    const optionMap = new Map<string, ChoiceOptionDefinition>();
+    for (const opt of resolveOrderedChoiceOptions(item.options)) {
+      optionMap.set(opt.id, opt);
+      optionMap.set(opt.value, opt);
+    }
+    const resolveChoiceLabel = (optionKey: string): string => {
+      const matched = optionMap.get(optionKey);
+      if (matched) {
+        return resolveChoiceOptionLabel(matched, texts.options);
+      }
+      return texts.options[optionKey] ?? optionKey;
+    };
+
     switch (item.type) {
       case 'single_choice': {
         const selected = answer?.selectedOption;
@@ -161,7 +201,7 @@ export class ChecklistFlattenService {
         }
 
         const isOther = selected === OTHER_OPTION_VALUE;
-        const optionLabel = isOther ? texts.otherLabel : (texts.options[selected] ?? selected);
+        const optionLabel = isOther ? texts.otherLabel : resolveChoiceLabel(selected);
         const trimmedOther = isOther ? (answer?.otherText ?? '').trim() : '';
         const primaryValueLabel =
           isOther && trimmedOther.length > 0 ? `${texts.otherLabel}: ${trimmedOther}` : optionLabel;
@@ -198,9 +238,7 @@ export class ChecklistFlattenService {
         const hasOther = selected.includes(OTHER_OPTION_VALUE);
         const trimmedOther = hasOther ? (answer?.otherText ?? '').trim() : '';
         const selectedOptionsLabels = selected.map((optionId) =>
-          optionId === OTHER_OPTION_VALUE
-            ? texts.otherLabel
-            : (texts.options[optionId] ?? optionId),
+          optionId === OTHER_OPTION_VALUE ? texts.otherLabel : resolveChoiceLabel(optionId),
         );
         const formattedLabels = selected.map((optionId) => {
           if (optionId === OTHER_OPTION_VALUE) {
@@ -208,7 +246,7 @@ export class ChecklistFlattenService {
               ? `${texts.otherLabel}: ${trimmedOther}`
               : texts.otherLabel;
           }
-          return texts.options[optionId] ?? optionId;
+          return resolveChoiceLabel(optionId);
         });
 
         return {

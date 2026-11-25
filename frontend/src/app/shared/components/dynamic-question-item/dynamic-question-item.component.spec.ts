@@ -361,4 +361,34 @@ describe('DynamicQuestionItemComponent', () => {
       }),
     );
   });
+
+  // Cenário: Pergunta dinâmica com opções estruturadas ({ id, value, order, label }) em ordem arbitrária.
+  // Objetivo: Ordenar opções por 'order', exibir 'label' inline como fallback e emitir 'value' ao selecionar.
+  it('should render structured options ordered by order with inline label fallback and emit option.value', async () => {
+    await setBaseInputs({
+      id: 'dynamic_choice',
+      type: 'single_choice',
+      options: [
+        { id: 'dyn_2', value: 'score_20', order: 2, label: 'Second Inline' },
+        { id: 'dyn_1', value: 'score_10', order: 1, label: 'First Inline' },
+      ],
+    });
+
+    const hostEl = fixture.nativeElement as HTMLElement;
+    const labels = Array.from(hostEl.querySelectorAll('.question-item__option-label')).map((el) =>
+      el.textContent?.trim(),
+    );
+    expect(labels).toEqual(['First Inline', 'Second Inline']);
+
+    const emitted: Partial<ItemResponseValue>[] = [];
+    component.answerChange.subscribe((val) => emitted.push(val));
+
+    const radios = hostEl.querySelectorAll<HTMLInputElement>(
+      'mat-radio-button input[type="radio"]',
+    );
+    radios[0].click();
+    await fixture.whenStable();
+
+    expect(emitted).toEqual([{ selectedOption: 'score_10' }]);
+  });
 });

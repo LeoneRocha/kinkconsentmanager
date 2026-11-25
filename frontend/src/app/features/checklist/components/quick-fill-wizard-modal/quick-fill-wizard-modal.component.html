@@ -3,352 +3,216 @@
     <h2 class="quick-fill-dialog__title" [attr.title]="labels().title">{{ labels().title }}</h2>
     <div class="quick-fill-dialog__header-actions">
       @if (currentStep()) {
-        <span class="quick-fill__counter" [attr.title]="safeIndex() + 1 + ' / ' + steps().length">
-          {{ safeIndex() + 1 }} / {{ steps().length }}
-        </span>
+      <span class="quick-fill__counter" [attr.title]="safeIndex() + 1 + ' / ' + steps().length">
+        {{ safeIndex() + 1 }} / {{ steps().length }}
+      </span>
       }
       @if (!inline()) {
-        <button
-          type="button"
-          class="quick-fill-dialog__close"
-          [attr.aria-label]="labels().close"
-          [attr.title]="labels().close"
-          (click)="closeModal()"
-        >
-          <i class="fa-solid fa-xmark" [attr.title]="labels().close" aria-hidden="true"></i>
-        </button>
+      <button type="button" class="quick-fill-dialog__close" [attr.aria-label]="labels().close"
+        [attr.title]="labels().close" (click)="closeModal()">
+        <i class="fa-solid fa-xmark" [attr.title]="labels().close" aria-hidden="true"></i>
+      </button>
       }
     </div>
   </header>
 
   @if (currentStep(); as activeStep) {
-    <div class="quick-fill">
-      <div class="quick-fill__current" aria-live="polite">
-        <div class="quick-fill__current-top">
-          <div class="quick-fill__current-group" [attr.title]="activeStep.groupTitle">
-            {{ activeStep.groupTitle }}
-          </div>
-          <button
-            type="button"
-            class="quick-fill__speak-btn"
-            [matTooltip]="readAloudLabel()"
-            matTooltipPosition="above"
-            [attr.aria-label]="readAloudLabel() + ': ' + activeStep.itemLabel"
-            [attr.title]="readAloudLabel() + ': ' + activeStep.itemLabel"
-            (click)="emitCurrentStepReadAloud()"
-          >
-            <i
-              class="fa-solid fa-volume-high"
-              [attr.title]="readAloudLabel() + ': ' + activeStep.itemLabel"
-              aria-hidden="true"
-            ></i>
-          </button>
+  <div class="quick-fill">
+    <div class="quick-fill__current" aria-live="polite">
+      <div class="quick-fill__current-top">
+        <div class="quick-fill__current-group" [attr.title]="activeStep.groupTitle">
+          {{ activeStep.groupTitle }}
         </div>
-        <div class="quick-fill__current-item" [attr.title]="activeStep.itemLabel">
-          {{ activeStep.itemLabel }}
-        </div>
-        @if (activeStep.itemTooltip) {
-          <p class="quick-fill__current-desc" [attr.title]="activeStep.itemTooltip">
-            {{ activeStep.itemTooltip }}
-          </p>
-        }
-        @if (activeStep.itemType === 'scale_matrix' && activeStep.roleLabel) {
-          <div class="quick-fill__current-meta">
-            <span class="quick-fill__current-role" [attr.title]="activeStep.roleLabel">
-              {{ activeStep.roleLabel }}
-            </span>
-            @if (currentScaleId(); as selectedId) {
-              <span class="quick-fill__current-selected" [attr.title]="getScaleLabel(selectedId)">
-                {{ getScaleLabel(selectedId) }}
-              </span>
-            }
-          </div>
-        }
+        <button type="button" class="quick-fill__speak-btn" [matTooltip]="readAloudLabel()" matTooltipPosition="above"
+          [attr.aria-label]="readAloudLabel() + ': ' + activeStep.itemLabel"
+          [attr.title]="readAloudLabel() + ': ' + activeStep.itemLabel" (click)="emitCurrentStepReadAloud()">
+          <i class="fa-solid fa-volume-high" [attr.title]="readAloudLabel() + ': ' + activeStep.itemLabel"
+            aria-hidden="true"></i>
+        </button>
       </div>
-
-      @switch (activeStep.itemType) {
-        @case ('scale_matrix') {
-          <div class="quick-fill__scales" role="group" [attr.aria-label]="activeStep.itemLabel">
-            @for (scale of orderedScales(); track scale.id; let idx = $index) {
-              <button
-                type="button"
-                class="quick-fill__scale-btn"
-                [class.quick-fill__scale-btn--selected]="currentScaleId() === scale.id"
-                [attr.aria-pressed]="currentScaleId() === scale.id"
-                [attr.title]="getScaleLabel(scale.id)"
-                [style.border-color]="scale.color"
-                [style.background-color]="currentScaleId() === scale.id ? scale.color : null"
-                [style.color]="currentScaleId() === scale.id ? scale.contrastColor : null"
-                (click)="selectScale(scale.id)"
-              >
-                <span class="quick-fill__scale-key">{{ idx + 1 }}</span>
-                <i
-                  [class]="scale.icon"
-                  class="quick-fill__scale-icon"
-                  [attr.title]="getScaleLabel(scale.id)"
-                  aria-hidden="true"
-                ></i>
-                <span class="quick-fill__scale-label">{{ getScaleLabel(scale.id) }}</span>
-              </button>
-            }
-
-            <button
-              type="button"
-              class="quick-fill__clear-btn"
-              [attr.title]="labels().clearKey"
-              (click)="clearCurrentStep()"
-            >
-              <i class="fa-solid fa-eraser" [attr.title]="labels().clearKey" aria-hidden="true"></i>
-              <span>{{ labels().clearKey }}</span>
-            </button>
-          </div>
-        }
-
-        @case ('single_choice') {
-          <div
-            class="quick-fill__options"
-            role="radiogroup"
-            [attr.aria-label]="activeStep.itemLabel"
-          >
-            @for (opt of currentChoiceOptions(); track opt.id; let idx = $index) {
-              @let selected = currentAnswer()?.selectedOption === opt.id;
-              <button
-                type="button"
-                role="radio"
-                class="quick-fill__option-btn"
-                [class.quick-fill__option-btn--selected]="selected"
-                [attr.aria-checked]="selected"
-                [attr.title]="opt.label"
-                (click)="selectSingleOption(opt.id)"
-              >
-                @if (idx < 9) {
-                  <span class="quick-fill__scale-key">{{ idx + 1 }}</span>
-                }
-                <i
-                  class="quick-fill__option-icon"
-                  [class.fa-solid]="selected"
-                  [class.fa-regular]="!selected"
-                  [class.fa-circle-dot]="selected"
-                  [class.fa-circle]="!selected"
-                  [attr.title]="opt.label"
-                  aria-hidden="true"
-                ></i>
-                <span class="quick-fill__option-label">{{ opt.label }}</span>
-              </button>
-            }
-
-            <button
-              type="button"
-              class="quick-fill__clear-btn"
-              [attr.title]="labels().clearKey"
-              (click)="clearCurrentStep()"
-            >
-              <i class="fa-solid fa-eraser" [attr.title]="labels().clearKey" aria-hidden="true"></i>
-              <span>{{ labels().clearKey }}</span>
-            </button>
-          </div>
-
-          @if (isOtherOptionSelected()) {
-            <input
-              type="text"
-              class="quick-fill__other-input"
-              [value]="currentOtherText()"
-              [attr.maxlength]="currentOtherMaxLength()"
-              [attr.placeholder]="otherPlaceholder()"
-              [attr.aria-label]="otherPlaceholder()"
-              [attr.title]="otherPlaceholder()"
-              (input)="onOtherTextEvent($event)"
-            />
-          }
-        }
-
-        @case ('multiple_choice') {
-          <div class="quick-fill__options" role="group" [attr.aria-label]="activeStep.itemLabel">
-            @for (opt of currentChoiceOptions(); track opt.id; let idx = $index) {
-              @let selected = isMultipleOptionSelected(opt.id);
-              <button
-                type="button"
-                role="checkbox"
-                class="quick-fill__option-btn"
-                [class.quick-fill__option-btn--selected]="selected"
-                [attr.aria-checked]="selected"
-                [attr.title]="opt.label"
-                (click)="toggleMultipleOption(opt.id)"
-              >
-                @if (idx < 9) {
-                  <span class="quick-fill__scale-key">{{ idx + 1 }}</span>
-                }
-                <i
-                  class="quick-fill__option-icon"
-                  [class.fa-solid]="selected"
-                  [class.fa-regular]="!selected"
-                  [class.fa-square-check]="selected"
-                  [class.fa-square]="!selected"
-                  [attr.title]="opt.label"
-                  aria-hidden="true"
-                ></i>
-                <span class="quick-fill__option-label">{{ opt.label }}</span>
-              </button>
-            }
-
-            <button
-              type="button"
-              class="quick-fill__clear-btn"
-              [attr.title]="labels().clearKey"
-              (click)="clearCurrentStep()"
-            >
-              <i class="fa-solid fa-eraser" [attr.title]="labels().clearKey" aria-hidden="true"></i>
-              <span>{{ labels().clearKey }}</span>
-            </button>
-          </div>
-
-          @if (isOtherOptionSelected()) {
-            <input
-              type="text"
-              class="quick-fill__other-input"
-              [value]="currentOtherText()"
-              [attr.maxlength]="currentOtherMaxLength()"
-              [attr.placeholder]="otherPlaceholder()"
-              [attr.aria-label]="otherPlaceholder()"
-              [attr.title]="otherPlaceholder()"
-              (input)="onOtherTextEvent($event)"
-            />
-          }
-        }
-
-        @case ('restricted_text') {
-          <div class="quick-fill__text-wrap">
-            <textarea
-              class="quick-fill__textarea"
-              rows="3"
-              [value]="currentCustomText()"
-              [attr.maxlength]="currentMaxTextLength()"
-              [attr.placeholder]="otherPlaceholder()"
-              [attr.aria-label]="activeStep.itemLabel"
-              [attr.title]="activeStep.itemLabel"
-              (input)="onCustomTextEvent($event)"
-            ></textarea>
-            <div class="quick-fill__text-footer">
-              <button
-                type="button"
-                class="quick-fill__clear-btn"
-                [attr.title]="labels().clearKey"
-                (click)="clearCurrentStep()"
-              >
-                <i
-                  class="fa-solid fa-eraser"
-                  [attr.title]="labels().clearKey"
-                  aria-hidden="true"
-                ></i>
-                <span>{{ labels().clearKey }}</span>
-              </button>
-              <span
-                class="quick-fill__char-count"
-                [attr.title]="currentCustomText().length + ' / ' + currentMaxTextLength()"
-              >
-                {{ currentCustomText().length }} / {{ currentMaxTextLength() }}
-              </span>
-            </div>
-          </div>
-        }
-      }
-
-      <p class="quick-fill__hint" [attr.title]="labels().shortcutHint">
-        {{ labels().shortcutHint }}
+      <div class="quick-fill__current-item" [attr.title]="activeStep.itemLabel">
+        {{ activeStep.itemLabel }}
+      </div>
+      @if (activeStep.itemTooltip) {
+      <p class="quick-fill__current-desc" [attr.title]="activeStep.itemTooltip">
+        {{ activeStep.itemTooltip }}
       </p>
-
-      <div class="quick-fill__nav">
-        <button
-          mat-stroked-button
-          type="button"
-          class="quick-fill__prev-btn"
-          [disabled]="!canGoPrev()"
-          [attr.title]="labels().prev"
-          (click)="prevStep()"
-        >
-          <i class="fa-solid fa-arrow-left" [attr.title]="labels().prev" aria-hidden="true"></i>
-          <span>{{ labels().prev }}</span>
-        </button>
-
-        @if (!inline()) {
-          <button
-            mat-button
-            type="button"
-            class="quick-fill__close-btn"
-            [attr.title]="labels().close"
-            (click)="closeModal()"
-          >
-            {{ labels().close }}
-          </button>
-        }
-
-        @if (canGoNext()) {
-          <button
-            mat-flat-button
-            type="button"
-            class="quick-fill__next-btn"
-            [class.quick-fill__next-btn--ready]="isCurrentStepAnswered()"
-            [attr.title]="labels().next"
-            (click)="nextStep()"
-          >
-            <span>{{ labels().next }}</span>
-            <i class="fa-solid fa-arrow-right" [attr.title]="labels().next" aria-hidden="true"></i>
-          </button>
-        } @else {
-          <button
-            mat-flat-button
-            type="button"
-            class="quick-fill__finish-btn"
-            [class.quick-fill__finish-btn--ready]="isReadyToFinish()"
-            [attr.title]="finishLabel()"
-            (click)="finishChecklist.emit()"
-          >
-            <span>{{ finishLabel() }}</span>
-            <i class="fa-solid fa-check" [attr.title]="finishLabel()" aria-hidden="true"></i>
-          </button>
+      }
+      @if (activeStep.itemType === 'scale_matrix' && activeStep.roleLabel) {
+      <div class="quick-fill__current-meta">
+        <span class="quick-fill__current-role" [attr.title]="activeStep.roleLabel">
+          {{ activeStep.roleLabel }}
+        </span>
+        @if (currentScaleId(); as selectedId) {
+        <span class="quick-fill__current-selected" [attr.title]="getScaleLabel(selectedId)">
+          {{ getScaleLabel(selectedId) }}
+        </span>
         }
       </div>
-    </div>
-  } @else {
-    <div class="quick-fill__empty" role="status" [attr.title]="labels().empty">
-      <i
-        class="fa-solid fa-circle-info quick-fill__empty-icon"
-        [attr.title]="labels().empty"
-        aria-hidden="true"
-      ></i>
-      <p class="quick-fill__empty-text" [attr.title]="labels().empty">{{ labels().empty }}</p>
-      @if (!inline()) {
-        <button
-          mat-stroked-button
-          type="button"
-          class="quick-fill__close-btn"
-          [attr.title]="labels().close"
-          (click)="closeModal()"
-        >
-          {{ labels().close }}
-        </button>
       }
     </div>
+
+    @switch (activeStep.itemType) {
+    @case ('scale_matrix') {
+    <div class="quick-fill__scales" role="group" [attr.aria-label]="activeStep.itemLabel">
+      @for (scale of orderedScales(); track scale.id; let idx = $index) {
+      @let scaleVal = getScaleValue(scale);
+      @let scaleLbl = resolveScaleDisplayLabel(scale);
+      <button type="button" class="quick-fill__scale-btn"
+        [class.quick-fill__scale-btn--selected]="currentScaleId() === scaleVal"
+        [attr.aria-pressed]="currentScaleId() === scaleVal" [attr.title]="scaleLbl" [style.border-color]="scale.color"
+        [style.background-color]="currentScaleId() === scaleVal ? scale.color : null"
+        [style.color]="currentScaleId() === scaleVal ? scale.contrastColor : null" (click)="selectScale(scaleVal)">
+        <span class="quick-fill__scale-key">{{ idx + 1 }}</span>
+        <i [class]="scale.icon" class="quick-fill__scale-icon" [attr.title]="scaleLbl" aria-hidden="true"></i>
+        <span class="quick-fill__scale-label">{{ scaleLbl }}</span>
+      </button>
+      }
+
+      <button type="button" class="quick-fill__clear-btn" [attr.title]="labels().clearKey" (click)="clearCurrentStep()">
+        <i class="fa-solid fa-eraser" [attr.title]="labels().clearKey" aria-hidden="true"></i>
+        <span>{{ labels().clearKey }}</span>
+      </button>
+    </div>
+    }
+
+    @case ('single_choice') {
+    <div class="quick-fill__options" role="radiogroup" [attr.aria-label]="activeStep.itemLabel">
+      @for (opt of currentChoiceOptions(); track opt.id; let idx = $index) {
+      @let selected = currentAnswer()?.selectedOption === opt.value;
+      <button type="button" role="radio" class="quick-fill__option-btn"
+        [class.quick-fill__option-btn--selected]="selected" [attr.aria-checked]="selected" [attr.title]="opt.label"
+        (click)="selectSingleOption(opt.value)">
+        @if (idx < 9) { <span class="quick-fill__scale-key">{{ idx + 1 }}</span>
+          }
+          <i class="quick-fill__option-icon" [class.fa-solid]="selected" [class.fa-regular]="!selected"
+            [class.fa-circle-dot]="selected" [class.fa-circle]="!selected" [attr.title]="opt.label"
+            aria-hidden="true"></i>
+          <span class="quick-fill__option-label">{{ opt.label }}</span>
+      </button>
+      }
+
+      <button type="button" class="quick-fill__clear-btn" [attr.title]="labels().clearKey" (click)="clearCurrentStep()">
+        <i class="fa-solid fa-eraser" [attr.title]="labels().clearKey" aria-hidden="true"></i>
+        <span>{{ labels().clearKey }}</span>
+      </button>
+    </div>
+
+    @if (isOtherOptionSelected()) {
+    <input type="text" class="quick-fill__other-input" [value]="currentOtherText()"
+      [attr.maxlength]="currentOtherMaxLength()" [attr.placeholder]="otherPlaceholder()"
+      [attr.aria-label]="otherPlaceholder()" [attr.title]="otherPlaceholder()" (input)="onOtherTextEvent($event)" />
+    }
+    }
+
+    @case ('multiple_choice') {
+    <div class="quick-fill__options" role="group" [attr.aria-label]="activeStep.itemLabel">
+      @for (opt of currentChoiceOptions(); track opt.id; let idx = $index) {
+      @let selected = isMultipleOptionSelected(opt.value);
+      <button type="button" role="checkbox" class="quick-fill__option-btn"
+        [class.quick-fill__option-btn--selected]="selected" [attr.aria-checked]="selected" [attr.title]="opt.label"
+        (click)="toggleMultipleOption(opt.value)">
+        @if (idx < 9) { <span class="quick-fill__scale-key">{{ idx + 1 }}</span>
+          }
+          <i class="quick-fill__option-icon" [class.fa-solid]="selected" [class.fa-regular]="!selected"
+            [class.fa-square-check]="selected" [class.fa-square]="!selected" [attr.title]="opt.label"
+            aria-hidden="true"></i>
+          <span class="quick-fill__option-label">{{ opt.label }}</span>
+      </button>
+      }
+
+      <button type="button" class="quick-fill__clear-btn" [attr.title]="labels().clearKey" (click)="clearCurrentStep()">
+        <i class="fa-solid fa-eraser" [attr.title]="labels().clearKey" aria-hidden="true"></i>
+        <span>{{ labels().clearKey }}</span>
+      </button>
+    </div>
+
+    @if (isOtherOptionSelected()) {
+    <input type="text" class="quick-fill__other-input" [value]="currentOtherText()"
+      [attr.maxlength]="currentOtherMaxLength()" [attr.placeholder]="otherPlaceholder()"
+      [attr.aria-label]="otherPlaceholder()" [attr.title]="otherPlaceholder()" (input)="onOtherTextEvent($event)" />
+    }
+    }
+
+    @case ('restricted_text') {
+    <div class="quick-fill__text-wrap">
+      <textarea class="quick-fill__textarea" rows="3" [value]="currentCustomText()"
+        [attr.maxlength]="currentMaxTextLength()" [attr.placeholder]="otherPlaceholder()"
+        [attr.aria-label]="activeStep.itemLabel" [attr.title]="activeStep.itemLabel"
+        (input)="onCustomTextEvent($event)"></textarea>
+      <div class="quick-fill__text-footer">
+        <button type="button" class="quick-fill__clear-btn" [attr.title]="labels().clearKey"
+          (click)="clearCurrentStep()">
+          <i class="fa-solid fa-eraser" [attr.title]="labels().clearKey" aria-hidden="true"></i>
+          <span>{{ labels().clearKey }}</span>
+        </button>
+        <span class="quick-fill__char-count" [attr.title]="currentCustomText().length + ' / ' + currentMaxTextLength()">
+          {{ currentCustomText().length }} / {{ currentMaxTextLength() }}
+        </span>
+      </div>
+    </div>
+    }
+    }
+
+    <p class="quick-fill__hint" [attr.title]="labels().shortcutHint">
+      {{ labels().shortcutHint }}
+    </p>
+
+    <div class="quick-fill__nav">
+      <button mat-stroked-button type="button" class="quick-fill__prev-btn" [disabled]="!canGoPrev()"
+        [attr.title]="labels().prev" (click)="prevStep()">
+        <i class="fa-solid fa-arrow-left" [attr.title]="labels().prev" aria-hidden="true"></i>
+        <span>{{ labels().prev }}</span>
+      </button>
+
+      @if (!inline()) {
+      <button mat-button type="button" class="quick-fill__close-btn" [attr.title]="labels().close"
+        (click)="closeModal()">
+        {{ labels().close }}
+      </button>
+      }
+
+      @if (canGoNext()) {
+      <button mat-flat-button type="button" class="quick-fill__next-btn"
+        [class.quick-fill__next-btn--ready]="isCurrentStepAnswered()" [attr.title]="labels().next" (click)="nextStep()">
+        <span>{{ labels().next }}</span>
+        <i class="fa-solid fa-arrow-right" [attr.title]="labels().next" aria-hidden="true"></i>
+      </button>
+      } @else {
+      <button mat-flat-button type="button" class="quick-fill__finish-btn"
+        [class.quick-fill__finish-btn--ready]="isReadyToFinish()" [attr.title]="finishLabel()"
+        (click)="finishChecklist.emit()">
+        <span>{{ finishLabel() }}</span>
+        <i class="fa-solid fa-check" [attr.title]="finishLabel()" aria-hidden="true"></i>
+      </button>
+      }
+    </div>
+  </div>
+  } @else {
+  <div class="quick-fill__empty" role="status" [attr.title]="labels().empty">
+    <i class="fa-solid fa-circle-info quick-fill__empty-icon" [attr.title]="labels().empty" aria-hidden="true"></i>
+    <p class="quick-fill__empty-text" [attr.title]="labels().empty">{{ labels().empty }}</p>
+    @if (!inline()) {
+    <button mat-stroked-button type="button" class="quick-fill__close-btn" [attr.title]="labels().close"
+      (click)="closeModal()">
+      {{ labels().close }}
+    </button>
+    }
+  </div>
   }
 </ng-template>
 
 @if (inline()) {
-  @if (visible()) {
-    <section class="quick-fill-inline" [attr.aria-label]="labels().title">
-      <ng-container [ngTemplateOutlet]="quickFillBody" />
-    </section>
-  }
+@if (visible()) {
+<section class="quick-fill-inline" [attr.aria-label]="labels().title">
+  <ng-container [ngTemplateOutlet]="quickFillBody" />
+</section>
+}
 } @else if (visible()) {
-  <div class="quick-fill-backdrop" (click)="onBackdropClick($event)">
-    <div
-      class="quick-fill-dialog"
-      role="dialog"
-      aria-modal="true"
-      [attr.aria-label]="labels().title"
-      cdkTrapFocus
-      cdkTrapFocusAutoCapture
-    >
-      <ng-container [ngTemplateOutlet]="quickFillBody" />
-    </div>
+<div class="quick-fill-backdrop" (click)="onBackdropClick($event)">
+  <div class="quick-fill-dialog" role="dialog" aria-modal="true" [attr.aria-label]="labels().title" cdkTrapFocus
+    cdkTrapFocusAutoCapture>
+    <ng-container [ngTemplateOutlet]="quickFillBody" />
   </div>
+</div>
 }
