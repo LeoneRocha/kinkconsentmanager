@@ -2,7 +2,8 @@
 
 > **Status:**  
 > - **Objetivo 1 (Isolamento de `groups`, `items` e `options` + Camada Extensível por Provider):** **Implementado** (`assets/i18n/groups/{pt-BR,en-US}.json` com `groups`, `assets/i18n/questions/{pt-BR,en-US}.json` com `items` e `options`, `IQuestionTranslationsRepository`, `QUESTION_TRANSLATIONS_REPOSITORY_TOKEN`, `StaticJsonQuestionTranslationsRepository`, `QuestionTranslationsService` e `CompositeTranslateLoader`).  
-> - **Objetivo 2 (Checklist Personalizável Multilíngue):** **Anotação para Levantamento Futuro (Pós-V1 / Roadmap V2+)** — ainda não implementado no código.  
+> - **Base Estrutural na V1 para Questionários Específicos por Perfil e Categoria (`2026-11-25`):** **Implementado no schema/i18n** — adicionada a 6ª opção de escala `not_applicable` (**Não se aplica**), catálogo `participantRoles` em `checklist-v1.json` + traduções `participantRoles` em `pt-BR.json`/`en-US.json`, além dos campos `participantRoles` e `groupId` preenchidos em **todos os grupos e perguntas** (ainda sem filtragem por role na UI da V1).  
+> - **Objetivo 2 (Checklist Personalizável Multilíngue & Questionários Específicos por Role/Categoria):** **Anotação para Levantamento Futuro (Pós-V1 / Roadmap V2+)** — preparação de dados já concluída na V1; interface de seleção de perfil (*Quem é você?*) e filtro de subcategorias/questionários específicos planejada para o ciclo de personalização.  
 > **Documentos relacionados:** [Blueprint](./../Bueprint.md) · [Levantamento Funcional e Técnico](./LEVANTAMENTO_FUNCIONAL_TECNICO.md) · [Arquitetura](./../ARCHITECTURE.md) · [PROJECT_GUIDELINES](./../PROJECT_GUIDELINES.md)
 
 ---
@@ -80,6 +81,14 @@ Permitir futuramente que o usuário **personalize o checklist** (criar, editar, 
   - `defaultLanguage`: idioma padrão definido pelo autor do checklist personalizado.
   - `supportedLanguages`: lista de idiomas efetivamente preenchidos/suportados por aquele checklist (ex.: `["pt-BR"]` ou `["pt-BR", "en-US"]`).
   - `translations`: mapa `{ [lang]: { groups, items: { [id]: { label, tooltip } }, options, ... } }` embutido no pacote/rascunho personalizado.
+
+### Base Preparatória Já Disponível no Schema V1 (Questionários por Role e Categoria)
+
+Para habilitar futuramente questionários específicos sem reescrever o schema atual (`checklist-v1.json`), a estrutura da V1 já conta com:
+
+1. **6ª opção na escala (`not_applicable` — "Não se aplica"):** permite que participantes indiquem práticas que não são um limite rígido nem parte do seu papel na dinâmica (por exemplo, um(a) submisso(a)/bottom respondendo sobre *dar* bondage), preservando precisão estatística e visual no resumo.
+2. **Papéis do participante em cada categoria e pergunta (`participantRoles`):** catálogo `schema.participantRoles` (`top`, `bottom`, `switch`, `dominant`, `submissive`, `sadist`, `masochist`, `fetishist`, `rigger`, `bunny`, `other`) com rótulos traduzidos em `participantRoles` (`pt-BR.json` / `en-US.json`), replicado em cada grupo e item (`item.participantRoles`) para futura filtragem por perfil (ex.: passo *"Quem é você? / Posição que se identifica"*).
+3. **Referência explícita da categoria em cada pergunta (`item.groupId`):** todo item carrega explicitamente seu `groupId` além de estar aninhado em `groups[].items`, permitindo montar subconjuntos e telas de seleção de subcategorias (ex.: *Bondage*, *Shibari/Rope Play*, *Sadismo e Masoquismo*, *Dominação e Submissão*, *Fetiches*, etc.) ou reutilizar perguntas em múltiplos questionários customizados mantendo integridade referencial.
 
 ---
 

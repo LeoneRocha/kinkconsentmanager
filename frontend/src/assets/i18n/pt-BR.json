@@ -55,7 +55,7 @@
     "quickFillPrev": "Anterior",
     "quickFillNext": "Próximo",
     "quickFillClearKey": "Limpar (0)",
-    "quickFillShortcutHint": "Atalhos: teclas 1–5 escolhem a escala e avançam, 0 limpa a marcação e ↑/↓ navegam entre itens.",
+    "quickFillShortcutHint": "Atalhos: teclas 1–6 escolhem a escala e avançam, 0 limpa a marcação e ↑/↓ navegam entre itens.",
     "quickFillEmpty": "Não há itens de escala disponíveis para preenchimento rápido.",
     "quickFillClose": "Fechar",
     "exportTitle": "Prévia e Exportação do Checklist",
@@ -203,7 +203,7 @@
     "modePickerFullHow": "Role livremente pela lista completa ou pule direto para qualquer categoria usando os atalhos no topo.",
     "modePickerQuickFillBadge": "Recomendado",
     "modePickerQuickFillDesc": "Fluxo focado em um item por vez para preencher o checklist em poucos minutos.",
-    "modePickerQuickFillHow": "Use as teclas 1 a 5 (ou clique nas opções) para escolher a escala e avançar automaticamente; pressione 0 para limpar ou ↑/↓ para navegar.",
+    "modePickerQuickFillHow": "Use as teclas 1 a 6 (ou clique nas opções) para escolher a escala e avançar automaticamente; pressione 0 para limpar ou ↑/↓ para navegar.",
     "modePickerImportTitle": "Já tem um preenchimento salvo em JSON?",
     "modePickerImportDesc": "Importe um arquivo .json exportado anteriormente para restaurar suas respostas e continuar editando ou exportar novamente.",
     "modePickerImportButton": "Importar JSON"
@@ -225,11 +225,25 @@
       "primary": "Geral"
     }
   },
+  "participantRoles": {
+    "top": "Top",
+    "bottom": "Bottom",
+    "switch": "Switch",
+    "dominant": "Dominante",
+    "submissive": "Submisso(a)",
+    "sadist": "Sádico(a)",
+    "masochist": "Masoquista",
+    "fetishist": "Fetichista",
+    "rigger": "Rigger",
+    "bunny": "Bunny (Rope Bunny)",
+    "other": "Outros"
+  },
   "scales": {
     "hard_limit": "Limite Rígido (Não)",
     "soft_limit": "Limite Flexível (Ressalvas)",
     "curious": "Curiosidade / Talvez",
     "enjoy": "Gosto / Apreciado",
-    "favorite": "Favorito"
+    "favorite": "Favorito",
+    "not_applicable": "Não se aplica"
   }
 }

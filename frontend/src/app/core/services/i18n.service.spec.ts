@@ -19,6 +19,12 @@ const PT_BR_TRANSLATIONS = {
   scales: {
     hard_limit: 'Limite Rígido',
     enjoy: 'Gosto',
+    not_applicable: 'Não se aplica',
+  },
+  participantRoles: {
+    top: 'Top',
+    bottom: 'Bottom',
+    submissive: 'Submisso(a)',
   },
   roles: {
     giving_receiving: { primary: 'Praticar (Dar)', secondary: 'Receber' },
@@ -63,7 +69,13 @@ const EN_US_TRANSLATIONS = {
   scales: {
     hard_limit: 'Hard Limit',
     enjoy: 'Enjoy',
+    not_applicable: 'Not Applicable (N/A)',
     en_only_scale: 'English Fallback Scale',
+  },
+  participantRoles: {
+    top: 'Top',
+    bottom: 'Bottom',
+    submissive: 'Submissive',
   },
   roles: {
     giving_receiving: { primary: 'Giving', secondary: 'Receiving' },
@@ -196,6 +208,11 @@ describe('I18nService', () => {
     expect(service.getItemLabel('en_only_item')).toBe('Fallback Item Label');
 
     // Absent in both languages -> fallback to ID
+    expect(service.getScaleLabel('not_applicable')).toBe('Não se aplica');
+    expect(service.getParticipantRoleLabel('submissive')).toBe('Submisso(a)');
+    expect(service.getParticipantRoleLabel('unknown_participant_role')).toBe(
+      'unknown_participant_role',
+    );
     expect(service.getScaleLabel('unknown_scale')).toBe('unknown_scale');
     expect(service.getGroupTitle('unknown_group')).toBe('unknown_group');
     expect(service.getItemLabel('unknown_item')).toBe('unknown_item');

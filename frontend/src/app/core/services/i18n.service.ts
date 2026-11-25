@@ -4,6 +4,7 @@ import { TranslateService } from '@ngx-translate/core';
 import { catchError, map, Observable, of, shareReplay, take } from 'rxjs';
 import {
   ChecklistSchema,
+  ParticipantRoleId,
   ResolvedPreviewTexts,
   ResolvedRolePairLabels,
   RolePairId,
@@ -133,6 +134,13 @@ export class I18nService {
    */
   getScaleLabel(scaleId: string): string {
     return this.resolveRaw(`scales.${scaleId}`) ?? scaleId;
+  }
+
+  /**
+   * Resolves a localized participant role label or falls back to the raw role ID.
+   */
+  getParticipantRoleLabel(roleId: ParticipantRoleId | string): string {
+    return this.resolveRaw(`participantRoles.${roleId}`) ?? roleId;
   }
 
   /**

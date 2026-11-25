@@ -1,8 +1,36 @@
-export type ScaleId = 'hard_limit' | 'soft_limit' | 'curious' | 'enjoy' | 'favorite';
+export type ScaleId =
+  'hard_limit' | 'soft_limit' | 'curious' | 'enjoy' | 'favorite' | 'not_applicable';
 
 export type QuestionType = 'scale_matrix' | 'single_choice' | 'multiple_choice' | 'restricted_text';
 
 export type RolePairId = 'giving_receiving' | 'dominant_submissive' | 'self_partner' | 'general';
+
+export type ParticipantRoleId =
+  | 'top'
+  | 'bottom'
+  | 'switch'
+  | 'dominant'
+  | 'submissive'
+  | 'sadist'
+  | 'masochist'
+  | 'fetishist'
+  | 'rigger'
+  | 'bunny'
+  | 'other';
+
+export const ALL_PARTICIPANT_ROLES: readonly ParticipantRoleId[] = [
+  'top',
+  'bottom',
+  'switch',
+  'dominant',
+  'submissive',
+  'sadist',
+  'masochist',
+  'fetishist',
+  'rigger',
+  'bunny',
+  'other',
+];
 
 export interface ScaleOption {
   readonly id: ScaleId;
@@ -14,6 +42,8 @@ export interface ScaleOption {
 
 export interface ItemDefinition {
   readonly id: string;
+  readonly groupId?: string;
+  readonly participantRoles?: readonly ParticipantRoleId[];
   readonly type: QuestionType;
   readonly dualRole?: boolean;
   readonly rolePairId?: RolePairId;
@@ -28,11 +58,13 @@ export interface GroupDefinition {
   readonly order: number;
   readonly defaultDualRole: boolean;
   readonly rolePairId: RolePairId;
+  readonly participantRoles?: readonly ParticipantRoleId[];
   readonly items: readonly ItemDefinition[];
 }
 
 export interface ChecklistSchema {
   readonly schemaVersion: string;
+  readonly participantRoles?: readonly ParticipantRoleId[];
   readonly scales: readonly ScaleOption[];
   readonly groups: readonly GroupDefinition[];
 }

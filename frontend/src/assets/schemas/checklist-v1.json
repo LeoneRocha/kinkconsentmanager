@@ -1,5 +1,18 @@
 {
   "schemaVersion": "1.0.0",
+  "participantRoles": [
+    "top",
+    "bottom",
+    "switch",
+    "dominant",
+    "submissive",
+    "sadist",
+    "masochist",
+    "fetishist",
+    "rigger",
+    "bunny",
+    "other"
+  ],
   "scales": [
     {
       "id": "hard_limit",
@@ -35,6 +48,13 @@
       "color": "#7B1FA2",
       "contrastColor": "#FFFFFF",
       "icon": "fa-solid fa-heart"
+    },
+    {
+      "id": "not_applicable",
+      "order": 6,
+      "color": "#546E7A",
+      "contrastColor": "#FFFFFF",
+      "icon": "fa-solid fa-circle-minus"
     }
   ],
   "groups": [
@@ -43,9 +63,36 @@
       "order": 1,
       "defaultDualRole": false,
       "rolePairId": "general",
+      "participantRoles": [
+        "top",
+        "bottom",
+        "switch",
+        "dominant",
+        "submissive",
+        "sadist",
+        "masochist",
+        "fetishist",
+        "rigger",
+        "bunny",
+        "other"
+      ],
       "items": [
         {
           "id": "item_safeword_system",
+          "groupId": "grp_safety_health",
+          "participantRoles": [
+            "top",
+            "bottom",
+            "switch",
+            "dominant",
+            "submissive",
+            "sadist",
+            "masochist",
+            "fetishist",
+            "rigger",
+            "bunny",
+            "other"
+          ],
           "type": "single_choice",
           "options": [
             "opt_sw_traffic_light",
@@ -58,6 +105,20 @@
         },
         {
           "id": "item_aftercare_preferences",
+          "groupId": "grp_safety_health",
+          "participantRoles": [
+            "top",
+            "bottom",
+            "switch",
+            "dominant",
+            "submissive",
+            "sadist",
+            "masochist",
+            "fetishist",
+            "rigger",
+            "bunny",
+            "other"
+          ],
           "type": "multiple_choice",
           "options": [
             "opt_ac_cuddling",
@@ -72,11 +133,39 @@
         },
         {
           "id": "item_medical_allergies",
+          "groupId": "grp_safety_health",
+          "participantRoles": [
+            "top",
+            "bottom",
+            "switch",
+            "dominant",
+            "submissive",
+            "sadist",
+            "masochist",
+            "fetishist",
+            "rigger",
+            "bunny",
+            "other"
+          ],
           "type": "restricted_text",
           "maxLength": 300
         },
         {
           "id": "item_psychological_triggers",
+          "groupId": "grp_safety_health",
+          "participantRoles": [
+            "top",
+            "bottom",
+            "switch",
+            "dominant",
+            "submissive",
+            "sadist",
+            "masochist",
+            "fetishist",
+            "rigger",
+            "bunny",
+            "other"
+          ],
           "type": "restricted_text",
           "maxLength": 300
         }
@@ -87,33 +176,144 @@
       "order": 2,
       "defaultDualRole": true,
       "rolePairId": "giving_receiving",
+      "participantRoles": [
+        "top",
+        "bottom",
+        "switch",
+        "dominant",
+        "submissive",
+        "sadist",
+        "masochist",
+        "fetishist",
+        "rigger",
+        "bunny",
+        "other"
+      ],
       "items": [
         {
           "id": "item_cuddling_affection",
+          "groupId": "grp_affection_general",
+          "participantRoles": [
+            "top",
+            "bottom",
+            "switch",
+            "dominant",
+            "submissive",
+            "sadist",
+            "masochist",
+            "fetishist",
+            "rigger",
+            "bunny",
+            "other"
+          ],
           "type": "scale_matrix"
         },
         {
           "id": "item_oral_stimulation",
+          "groupId": "grp_affection_general",
+          "participantRoles": [
+            "top",
+            "bottom",
+            "switch",
+            "dominant",
+            "submissive",
+            "sadist",
+            "masochist",
+            "fetishist",
+            "rigger",
+            "bunny",
+            "other"
+          ],
           "type": "scale_matrix"
         },
         {
           "id": "item_sensory_massage",
+          "groupId": "grp_affection_general",
+          "participantRoles": [
+            "top",
+            "bottom",
+            "switch",
+            "dominant",
+            "submissive",
+            "sadist",
+            "masochist",
+            "fetishist",
+            "rigger",
+            "bunny",
+            "other"
+          ],
           "type": "scale_matrix"
         },
         {
           "id": "item_teasing_anticipation",
+          "groupId": "grp_affection_general",
+          "participantRoles": [
+            "top",
+            "bottom",
+            "switch",
+            "dominant",
+            "submissive",
+            "sadist",
+            "masochist",
+            "fetishist",
+            "rigger",
+            "bunny",
+            "other"
+          ],
           "type": "scale_matrix"
         },
         {
           "id": "item_edging",
+          "groupId": "grp_affection_general",
+          "participantRoles": [
+            "top",
+            "bottom",
+            "switch",
+            "dominant",
+            "submissive",
+            "sadist",
+            "masochist",
+            "fetishist",
+            "rigger",
+            "bunny",
+            "other"
+          ],
           "type": "scale_matrix"
         },
         {
           "id": "item_pace_control",
+          "groupId": "grp_affection_general",
+          "participantRoles": [
+            "top",
+            "bottom",
+            "switch",
+            "dominant",
+            "submissive",
+            "sadist",
+            "masochist",
+            "fetishist",
+            "rigger",
+            "bunny",
+            "other"
+          ],
           "type": "scale_matrix"
         },
         {
           "id": "item_dirty_talk",
+          "groupId": "grp_affection_general",
+          "participantRoles": [
+            "top",
+            "bottom",
+            "switch",
+            "dominant",
+            "submissive",
+            "sadist",
+            "masochist",
+            "fetishist",
+            "rigger",
+            "bunny",
+            "other"
+          ],
           "type": "scale_matrix"
         }
       ]
@@ -123,41 +323,158 @@
       "order": 3,
       "defaultDualRole": true,
       "rolePairId": "giving_receiving",
+      "participantRoles": [
+        "top",
+        "bottom",
+        "switch",
+        "dominant",
+        "submissive",
+        "rigger",
+        "bunny",
+        "fetishist",
+        "other"
+      ],
       "items": [
         {
           "id": "item_cuffs_light",
+          "groupId": "grp_bondage_restraint",
+          "participantRoles": [
+            "top",
+            "bottom",
+            "switch",
+            "dominant",
+            "submissive",
+            "rigger",
+            "bunny",
+            "fetishist",
+            "other"
+          ],
           "type": "scale_matrix"
         },
         {
           "id": "item_rope_shibari",
+          "groupId": "grp_bondage_restraint",
+          "participantRoles": [
+            "top",
+            "bottom",
+            "switch",
+            "dominant",
+            "submissive",
+            "rigger",
+            "bunny",
+            "other"
+          ],
           "type": "scale_matrix"
         },
         {
           "id": "item_blindfold",
+          "groupId": "grp_bondage_restraint",
+          "participantRoles": [
+            "top",
+            "bottom",
+            "switch",
+            "dominant",
+            "submissive",
+            "rigger",
+            "bunny",
+            "fetishist",
+            "other"
+          ],
           "type": "scale_matrix"
         },
         {
           "id": "item_gag",
+          "groupId": "grp_bondage_restraint",
+          "participantRoles": [
+            "top",
+            "bottom",
+            "switch",
+            "dominant",
+            "submissive",
+            "rigger",
+            "bunny",
+            "fetishist",
+            "other"
+          ],
           "type": "scale_matrix"
         },
         {
           "id": "item_collar_leash",
+          "groupId": "grp_bondage_restraint",
+          "participantRoles": [
+            "top",
+            "bottom",
+            "switch",
+            "dominant",
+            "submissive",
+            "rigger",
+            "bunny",
+            "fetishist",
+            "other"
+          ],
           "type": "scale_matrix"
         },
         {
           "id": "item_suspension_bondage",
+          "groupId": "grp_bondage_restraint",
+          "participantRoles": [
+            "top",
+            "bottom",
+            "switch",
+            "dominant",
+            "submissive",
+            "rigger",
+            "bunny",
+            "other"
+          ],
           "type": "scale_matrix"
         },
         {
           "id": "item_sensory_deprivation",
+          "groupId": "grp_bondage_restraint",
+          "participantRoles": [
+            "top",
+            "bottom",
+            "switch",
+            "dominant",
+            "submissive",
+            "rigger",
+            "bunny",
+            "fetishist",
+            "other"
+          ],
           "type": "scale_matrix"
         },
         {
           "id": "item_cage_confinement",
+          "groupId": "grp_bondage_restraint",
+          "participantRoles": [
+            "top",
+            "bottom",
+            "switch",
+            "dominant",
+            "submissive",
+            "rigger",
+            "bunny",
+            "fetishist",
+            "other"
+          ],
           "type": "scale_matrix"
         },
         {
           "id": "item_bondage_materials",
+          "groupId": "grp_bondage_restraint",
+          "participantRoles": [
+            "top",
+            "bottom",
+            "switch",
+            "dominant",
+            "submissive",
+            "rigger",
+            "bunny",
+            "fetishist",
+            "other"
+          ],
           "type": "multiple_choice",
           "dualRole": false,
           "rolePairId": "general",
@@ -180,33 +497,120 @@
       "order": 4,
       "defaultDualRole": true,
       "rolePairId": "giving_receiving",
+      "participantRoles": [
+        "top",
+        "bottom",
+        "switch",
+        "dominant",
+        "submissive",
+        "sadist",
+        "masochist",
+        "other"
+      ],
       "items": [
         {
           "id": "item_spanking_manual",
+          "groupId": "grp_impact_play",
+          "participantRoles": [
+            "top",
+            "bottom",
+            "switch",
+            "dominant",
+            "submissive",
+            "sadist",
+            "masochist",
+            "other"
+          ],
           "type": "scale_matrix"
         },
         {
           "id": "item_paddle",
+          "groupId": "grp_impact_play",
+          "participantRoles": [
+            "top",
+            "bottom",
+            "switch",
+            "dominant",
+            "submissive",
+            "sadist",
+            "masochist",
+            "other"
+          ],
           "type": "scale_matrix"
         },
         {
           "id": "item_flogger",
+          "groupId": "grp_impact_play",
+          "participantRoles": [
+            "top",
+            "bottom",
+            "switch",
+            "dominant",
+            "submissive",
+            "sadist",
+            "masochist",
+            "other"
+          ],
           "type": "scale_matrix"
         },
         {
           "id": "item_cane",
+          "groupId": "grp_impact_play",
+          "participantRoles": [
+            "top",
+            "bottom",
+            "switch",
+            "dominant",
+            "submissive",
+            "sadist",
+            "masochist",
+            "other"
+          ],
           "type": "scale_matrix"
         },
         {
           "id": "item_crop",
+          "groupId": "grp_impact_play",
+          "participantRoles": [
+            "top",
+            "bottom",
+            "switch",
+            "dominant",
+            "submissive",
+            "sadist",
+            "masochist",
+            "other"
+          ],
           "type": "scale_matrix"
         },
         {
           "id": "item_face_slapping",
+          "groupId": "grp_impact_play",
+          "participantRoles": [
+            "top",
+            "bottom",
+            "switch",
+            "dominant",
+            "submissive",
+            "sadist",
+            "masochist",
+            "other"
+          ],
           "type": "scale_matrix"
         },
         {
           "id": "item_impact_tools",
+          "groupId": "grp_impact_play",
+          "participantRoles": [
+            "top",
+            "bottom",
+            "switch",
+            "dominant",
+            "submissive",
+            "sadist",
+            "masochist",
+            "other"
+          ],
           "type": "multiple_choice",
           "dualRole": false,
           "rolePairId": "general",
@@ -228,33 +632,98 @@
       "order": 5,
       "defaultDualRole": true,
       "rolePairId": "giving_receiving",
+      "participantRoles": [
+        "top",
+        "bottom",
+        "switch",
+        "dominant",
+        "submissive",
+        "sadist",
+        "masochist",
+        "fetishist",
+        "other"
+      ],
       "items": [
         {
           "id": "item_hot_wax",
+          "groupId": "grp_sensation_pain",
+          "participantRoles": [
+            "top",
+            "bottom",
+            "switch",
+            "dominant",
+            "submissive",
+            "sadist",
+            "masochist",
+            "fetishist",
+            "other"
+          ],
           "type": "scale_matrix"
         },
         {
           "id": "item_ice_play",
+          "groupId": "grp_sensation_pain",
+          "participantRoles": [
+            "top",
+            "bottom",
+            "switch",
+            "dominant",
+            "submissive",
+            "sadist",
+            "masochist",
+            "fetishist",
+            "other"
+          ],
           "type": "scale_matrix"
         },
         {
           "id": "item_nipple_clamps",
+          "groupId": "grp_sensation_pain",
+          "participantRoles": ["top", "bottom", "switch", "sadist", "masochist", "other"],
           "type": "scale_matrix"
         },
         {
           "id": "item_scratching",
+          "groupId": "grp_sensation_pain",
+          "participantRoles": [
+            "top",
+            "bottom",
+            "switch",
+            "dominant",
+            "submissive",
+            "sadist",
+            "masochist",
+            "fetishist",
+            "other"
+          ],
           "type": "scale_matrix"
         },
         {
           "id": "item_biting",
+          "groupId": "grp_sensation_pain",
+          "participantRoles": [
+            "top",
+            "bottom",
+            "switch",
+            "dominant",
+            "submissive",
+            "sadist",
+            "masochist",
+            "fetishist",
+            "other"
+          ],
           "type": "scale_matrix"
         },
         {
           "id": "item_electro_stimulation",
+          "groupId": "grp_sensation_pain",
+          "participantRoles": ["top", "bottom", "switch", "sadist", "masochist", "other"],
           "type": "scale_matrix"
         },
         {
           "id": "item_play_piercing",
+          "groupId": "grp_sensation_pain",
+          "participantRoles": ["top", "bottom", "switch", "sadist", "masochist", "other"],
           "type": "scale_matrix"
         }
       ]
@@ -264,33 +733,72 @@
       "order": 6,
       "defaultDualRole": true,
       "rolePairId": "dominant_submissive",
+      "participantRoles": [
+        "dominant",
+        "submissive",
+        "switch",
+        "top",
+        "bottom",
+        "fetishist",
+        "other"
+      ],
       "items": [
         {
           "id": "item_ds_dynamic",
+          "groupId": "grp_domination_power",
+          "participantRoles": ["dominant", "submissive", "switch", "top", "bottom", "other"],
           "type": "scale_matrix"
         },
         {
           "id": "item_domestic_servitude",
+          "groupId": "grp_domination_power",
+          "participantRoles": ["dominant", "submissive", "switch", "top", "bottom", "other"],
           "type": "scale_matrix"
         },
         {
           "id": "item_pet_play",
+          "groupId": "grp_domination_power",
+          "participantRoles": [
+            "dominant",
+            "submissive",
+            "switch",
+            "top",
+            "bottom",
+            "fetishist",
+            "other"
+          ],
           "type": "scale_matrix"
         },
         {
           "id": "item_consensual_discipline",
+          "groupId": "grp_domination_power",
+          "participantRoles": ["dominant", "submissive", "switch", "top", "bottom", "other"],
           "type": "scale_matrix"
         },
         {
           "id": "item_orgasm_control",
+          "groupId": "grp_domination_power",
+          "participantRoles": ["dominant", "submissive", "switch", "top", "bottom", "other"],
           "type": "scale_matrix"
         },
         {
           "id": "item_verbal_humiliation",
+          "groupId": "grp_domination_power",
+          "participantRoles": ["dominant", "submissive", "switch", "top", "bottom", "other"],
           "type": "scale_matrix"
         },
         {
           "id": "item_body_worship",
+          "groupId": "grp_domination_power",
+          "participantRoles": [
+            "dominant",
+            "submissive",
+            "switch",
+            "top",
+            "bottom",
+            "fetishist",
+            "other"
+          ],
           "type": "scale_matrix"
         }
       ]
@@ -300,29 +808,98 @@
       "order": 7,
       "defaultDualRole": true,
       "rolePairId": "self_partner",
+      "participantRoles": [
+        "fetishist",
+        "top",
+        "bottom",
+        "switch",
+        "dominant",
+        "submissive",
+        "other"
+      ],
       "items": [
         {
           "id": "item_gear_leather",
+          "groupId": "grp_roleplay_gear",
+          "participantRoles": [
+            "fetishist",
+            "top",
+            "bottom",
+            "switch",
+            "dominant",
+            "submissive",
+            "other"
+          ],
           "type": "scale_matrix"
         },
         {
           "id": "item_gear_latex",
+          "groupId": "grp_roleplay_gear",
+          "participantRoles": [
+            "fetishist",
+            "top",
+            "bottom",
+            "switch",
+            "dominant",
+            "submissive",
+            "other"
+          ],
           "type": "scale_matrix"
         },
         {
           "id": "item_gear_lingerie_stockings",
+          "groupId": "grp_roleplay_gear",
+          "participantRoles": [
+            "fetishist",
+            "top",
+            "bottom",
+            "switch",
+            "dominant",
+            "submissive",
+            "other"
+          ],
           "type": "scale_matrix"
         },
         {
           "id": "item_gear_uniforms_costumes",
+          "groupId": "grp_roleplay_gear",
+          "participantRoles": [
+            "fetishist",
+            "top",
+            "bottom",
+            "switch",
+            "dominant",
+            "submissive",
+            "other"
+          ],
           "type": "scale_matrix"
         },
         {
           "id": "item_gear_cross_dressing",
+          "groupId": "grp_roleplay_gear",
+          "participantRoles": [
+            "fetishist",
+            "top",
+            "bottom",
+            "switch",
+            "dominant",
+            "submissive",
+            "other"
+          ],
           "type": "scale_matrix"
         },
         {
           "id": "item_gear_toys_vibrators",
+          "groupId": "grp_roleplay_gear",
+          "participantRoles": [
+            "fetishist",
+            "top",
+            "bottom",
+            "switch",
+            "dominant",
+            "submissive",
+            "other"
+          ],
           "type": "scale_matrix"
         }
       ]
@@ -332,21 +909,66 @@
       "order": 8,
       "defaultDualRole": true,
       "rolePairId": "giving_receiving",
+      "participantRoles": [
+        "top",
+        "bottom",
+        "switch",
+        "dominant",
+        "submissive",
+        "sadist",
+        "masochist",
+        "other"
+      ],
       "items": [
         {
           "id": "item_breathplay_choking",
+          "groupId": "grp_breath_edge",
+          "participantRoles": [
+            "top",
+            "bottom",
+            "switch",
+            "dominant",
+            "submissive",
+            "sadist",
+            "masochist",
+            "other"
+          ],
           "type": "scale_matrix"
         },
         {
           "id": "item_fear_play",
+          "groupId": "grp_breath_edge",
+          "participantRoles": [
+            "top",
+            "bottom",
+            "switch",
+            "dominant",
+            "submissive",
+            "sadist",
+            "masochist",
+            "other"
+          ],
           "type": "scale_matrix"
         },
         {
           "id": "item_cnc_roleplay",
+          "groupId": "grp_breath_edge",
+          "participantRoles": [
+            "top",
+            "bottom",
+            "switch",
+            "dominant",
+            "submissive",
+            "sadist",
+            "masochist",
+            "other"
+          ],
           "type": "scale_matrix"
         },
         {
           "id": "item_blood_cutting",
+          "groupId": "grp_breath_edge",
+          "participantRoles": ["top", "bottom", "switch", "sadist", "masochist", "other"],
           "type": "scale_matrix"
         }
       ]

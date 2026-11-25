@@ -419,4 +419,43 @@ describe('ChecklistStateService', () => {
     expect(service.answeredItemsCount()).toBe(0);
     expect(persistence.load()).toBeNull();
   });
+
+  // Cenário: Resposta com a 6ª escala 'not_applicable' (Não se aplica) em item dual-role e persistência/importação.
+  // Objetivo: Garantir que 'not_applicable' seja aceito, contabilizado como respondido e preservado na importação e snapshot criptografado.
+  it('should accept, count, import, and restore not_applicable scale answers', () => {
+    service.initializeSchema(TEST_SCHEMA);
+
+    service.setItemAnswer('rope_bondage', {
+      primaryScale: 'not_applicable',
+      secondaryScale: 'favorite',
+    });
+
+    expect(service.answers()['rope_bondage']).toEqual({
+      primaryScale: 'not_applicable',
+      secondaryScale: 'favorite',
+    });
+    expect(service.answeredItemsCount()).toBe(1);
+
+    const draft: ChecklistDraft = {
+      schemaVersion: '1.0.0',
+      exportedAt: '2026-11-25T12:30:00.000Z',
+      language: 'pt-BR',
+      answers: {
+        cuffs: { primaryScale: 'not_applicable' },
+      },
+    };
+    service.importDraft(draft);
+    expect(service.answers()['cuffs']).toEqual({ primaryScale: 'not_applicable' });
+
+    service.restoreFromEncryptedAutosave({
+      schemaVersion: '1.0.0',
+      answers: {
+        rope_bondage: { primaryScale: 'not_applicable', secondaryScale: 'enjoy' },
+      },
+    });
+    expect(service.answers()['rope_bondage']).toEqual({
+      primaryScale: 'not_applicable',
+      secondaryScale: 'enjoy',
+    });
+  });
 });

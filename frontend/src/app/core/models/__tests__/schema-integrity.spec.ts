@@ -5,7 +5,14 @@ import rawPtBrGroups from '../../../../assets/i18n/groups/pt-BR.json';
 import rawEnUsGroups from '../../../../assets/i18n/groups/en-US.json';
 import rawPtBrQuestions from '../../../../assets/i18n/questions/pt-BR.json';
 import rawEnUsQuestions from '../../../../assets/i18n/questions/en-US.json';
-import { ChecklistSchema, QuestionType, RolePairId, ScaleId } from '../checklist-schema.model';
+import {
+  ALL_PARTICIPANT_ROLES,
+  ChecklistSchema,
+  ParticipantRoleId,
+  QuestionType,
+  RolePairId,
+  ScaleId,
+} from '../checklist-schema.model';
 
 interface RoleTranslation {
   readonly primary: string;
@@ -25,6 +32,7 @@ interface ItemTranslation {
 interface TranslationDictionary {
   readonly ui: Readonly<Record<string, string>>;
   readonly roles: Readonly<Record<string, RoleTranslation>>;
+  readonly participantRoles: Readonly<Record<string, string>>;
   readonly scales: Readonly<Record<string, string>>;
   readonly groups: Readonly<Record<string, GroupTranslation>>;
   readonly items: Readonly<Record<string, ItemTranslation>>;
@@ -37,6 +45,7 @@ const VALID_SCALE_IDS: readonly ScaleId[] = [
   'curious',
   'enjoy',
   'favorite',
+  'not_applicable',
 ];
 
 const VALID_QUESTION_TYPES: readonly QuestionType[] = [
@@ -169,15 +178,18 @@ describe('Checklist Schema & i18n Integrity', () => {
     expect(schema.schemaVersion).toMatch(SEMVER_REGEX);
     expect(schema.schemaVersion).toBe('1.0.0');
 
+    expect(Array.isArray(schema.participantRoles)).toBe(true);
+    expect(schema.participantRoles).toEqual(ALL_PARTICIPANT_ROLES);
+
     expect(Array.isArray(schema.scales)).toBe(true);
-    expect(schema.scales).toHaveLength(5);
+    expect(schema.scales).toHaveLength(6);
 
     const scaleIds = schema.scales.map((scale) => scale.id);
     const scaleOrders = schema.scales.map((scale) => scale.order);
 
-    expect(new Set(scaleIds).size).toBe(5);
+    expect(new Set(scaleIds).size).toBe(6);
     expect(scaleIds).toEqual(VALID_SCALE_IDS);
-    expect(scaleOrders).toEqual([1, 2, 3, 4, 5]);
+    expect(scaleOrders).toEqual([1, 2, 3, 4, 5, 6]);
 
     for (const scale of schema.scales) {
       expect(scale.color).toMatch(HEX_COLOR_REGEX);
@@ -199,6 +211,12 @@ describe('Checklist Schema & i18n Integrity', () => {
       expect(group.id).toMatch(/^grp_[a-z0-9_]+$/);
       expect(typeof group.defaultDualRole).toBe('boolean');
       expect(VALID_ROLE_PAIR_IDS).toContain(group.rolePairId);
+      expect(Array.isArray(group.participantRoles)).toBe(true);
+      expect(group.participantRoles?.length ?? 0).toBeGreaterThan(0);
+      expect(new Set(group.participantRoles).size).toBe(group.participantRoles?.length);
+      for (const roleId of group.participantRoles ?? []) {
+        expect(ALL_PARTICIPANT_ROLES).toContain(roleId);
+      }
       expect(Array.isArray(group.items)).toBe(true);
       expect(group.items.length).toBeGreaterThan(0);
 
@@ -208,14 +226,17 @@ describe('Checklist Schema & i18n Integrity', () => {
         'id',
         'items',
         'order',
+        'participantRoles',
         'rolePairId',
       ]);
     }
   });
 
-  it('should ensure every item has valid QuestionType, unique ID, and required properties', () => {
+  it('should ensure every item has valid QuestionType, unique ID, groupId, participantRoles, and required properties', () => {
     const allowedItemKeys = new Set([
       'id',
+      'groupId',
+      'participantRoles',
       'type',
       'dualRole',
       'rolePairId',
@@ -234,6 +255,13 @@ describe('Checklist Schema & i18n Integrity', () => {
         expect(item.id).toMatch(/^item_[a-z0-9_]+$/);
         expect(seenItemIds.has(item.id)).toBe(false);
         seenItemIds.add(item.id);
+        expect(item.groupId).toBe(group.id);
+        expect(Array.isArray(item.participantRoles)).toBe(true);
+        expect(item.participantRoles?.length ?? 0).toBeGreaterThan(0);
+        expect(new Set(item.participantRoles).size).toBe(item.participantRoles?.length);
+        for (const roleId of item.participantRoles ?? []) {
+          expect(ALL_PARTICIPANT_ROLES).toContain(roleId as ParticipantRoleId);
+        }
 
         expect(VALID_QUESTION_TYPES).toContain(item.type);
         observedQuestionTypes.add(item.type);
@@ -366,6 +394,10 @@ describe('Checklist Schema & i18n Integrity', () => {
     for (const { dict } of dictionaries) {
       for (const scale of schema.scales) {
         expect(dict.scales[scale.id]?.trim().length ?? 0).toBeGreaterThan(0);
+      }
+
+      for (const participantRoleId of ALL_PARTICIPANT_ROLES) {
+        expect(dict.participantRoles[participantRoleId]?.trim().length ?? 0).toBeGreaterThan(0);
       }
 
       for (const rolePairId of VALID_ROLE_PAIR_IDS) {

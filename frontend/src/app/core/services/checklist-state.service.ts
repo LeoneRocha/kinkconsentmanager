@@ -21,6 +21,7 @@ const VALID_SCALE_IDS: ReadonlySet<string> = new Set<ScaleId>([
   'curious',
   'enjoy',
   'favorite',
+  'not_applicable',
 ]);
 
 interface PersistedChecklistState {

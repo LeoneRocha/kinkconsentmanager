@@ -55,7 +55,7 @@
     "quickFillPrev": "Previous",
     "quickFillNext": "Next",
     "quickFillClearKey": "Clear (0)",
-    "quickFillShortcutHint": "Shortcuts: keys 1–5 pick a scale level and advance, 0 clears the selection, and ↑/↓ navigate items.",
+    "quickFillShortcutHint": "Shortcuts: keys 1–6 pick a scale level and advance, 0 clears the selection, and ↑/↓ navigate items.",
     "quickFillEmpty": "No scale items are available for quick fill.",
     "quickFillClose": "Close",
     "exportTitle": "Checklist Preview & Export",
@@ -203,7 +203,7 @@
     "modePickerFullHow": "Scroll freely through the complete list or jump straight to any category using the quick-nav bar at the top.",
     "modePickerQuickFillBadge": "Recommended",
     "modePickerQuickFillDesc": "One-item-at-a-time focus mode built to complete the checklist in minutes.",
-    "modePickerQuickFillHow": "Press keys 1–5 (or click an option) to select a scale and auto-advance; press 0 to clear or ↑/↓ to navigate.",
+    "modePickerQuickFillHow": "Press keys 1–6 (or click an option) to select a scale and auto-advance; press 0 to clear or ↑/↓ to navigate.",
     "modePickerImportTitle": "Already have a saved JSON draft?",
     "modePickerImportDesc": "Import a previously exported .json file to restore all your responses and keep editing or export again.",
     "modePickerImportButton": "Import JSON"
@@ -225,11 +225,25 @@
       "primary": "General"
     }
   },
+  "participantRoles": {
+    "top": "Top",
+    "bottom": "Bottom",
+    "switch": "Switch",
+    "dominant": "Dominant",
+    "submissive": "Submissive",
+    "sadist": "Sadist",
+    "masochist": "Masochist",
+    "fetishist": "Fetishist",
+    "rigger": "Rigger",
+    "bunny": "Bunny (Rope Bunny)",
+    "other": "Other"
+  },
   "scales": {
     "hard_limit": "Hard Limit (No)",
     "soft_limit": "Soft Limit (With caveats)",
     "curious": "Curious / Maybe",
     "enjoy": "Enjoy / Like",
-    "favorite": "Favorite"
+    "favorite": "Favorite",
+    "not_applicable": "Not Applicable (N/A)"
   }
 }
