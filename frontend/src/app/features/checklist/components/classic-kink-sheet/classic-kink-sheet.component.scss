@@ -367,12 +367,12 @@
     }
 
     &.classic-sheet__finish-btn--ready:not(:disabled) {
-      --mat-button-filled-container-color: #16a34a;
-      --mat-button-filled-label-text-color: #ffffff;
-      --mat-sys-primary: #16a34a;
+      --mat-button-filled-container-color: var(--kcm-btn-enabled-bg);
+      --mat-button-filled-label-text-color: var(--kcm-btn-enabled-fg);
+      --mat-sys-primary: var(--kcm-btn-enabled-bg);
 
       &:hover {
-        --mat-button-filled-container-color: #15803d;
+        --mat-button-filled-container-color: var(--kcm-btn-enabled-hover);
       }
     }
   }

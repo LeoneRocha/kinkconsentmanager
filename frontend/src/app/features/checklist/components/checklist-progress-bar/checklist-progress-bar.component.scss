@@ -160,25 +160,25 @@
     --mat-button-filled-horizontal-padding: 0.75rem;
     --mat-button-filled-label-text-size: 0.78rem;
     --mat-button-filled-container-shape: 9999px;
-    --mat-button-filled-container-color: var(--kcm-surface-card);
-    --mat-button-filled-label-text-color: var(--kcm-text-muted);
-    --mat-button-filled-disabled-container-color: var(--kcm-surface-card);
-    --mat-button-filled-disabled-label-text-color: var(--kcm-text-muted);
+    --mat-button-filled-container-color: var(--kcm-btn-disabled-bg);
+    --mat-button-filled-label-text-color: var(--kcm-btn-disabled-fg);
+    --mat-button-filled-disabled-container-color: var(--kcm-btn-disabled-bg);
+    --mat-button-filled-disabled-label-text-color: var(--kcm-btn-disabled-fg);
 
     &:disabled {
-      border: 1px solid var(--kcm-border-color);
-      opacity: 0.72;
+      border: 1px solid var(--kcm-btn-disabled-border);
+      opacity: 0.78;
     }
   }
 
   .checklist-progress-bar__save-btn--dirty:not(:disabled),
   .checklist-progress-bar__export-btn--ready:not(:disabled) {
-    --mat-button-filled-container-color: #16a34a;
-    --mat-button-filled-label-text-color: #ffffff;
-    --mat-sys-primary: #16a34a;
+    --mat-button-filled-container-color: var(--kcm-btn-enabled-bg);
+    --mat-button-filled-label-text-color: var(--kcm-btn-enabled-fg);
+    --mat-sys-primary: var(--kcm-btn-enabled-bg);
 
     &:hover {
-      --mat-button-filled-container-color: #15803d;
+      --mat-button-filled-container-color: var(--kcm-btn-enabled-hover);
     }
   }
 

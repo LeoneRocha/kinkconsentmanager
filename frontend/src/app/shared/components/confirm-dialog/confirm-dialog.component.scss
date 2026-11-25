@@ -26,10 +26,4 @@
     gap: 0.5rem;
     padding-top: 0.75rem;
   }
-
-  &__accept-btn--danger {
-    --mat-sys-primary: #{v.$scale-hard-limit};
-    --mat-button-filled-container-color: #{v.$scale-hard-limit};
-    --mat-button-filled-label-text-color: #ffffff;
-  }
 }

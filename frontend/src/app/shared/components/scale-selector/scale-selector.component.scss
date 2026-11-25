@@ -32,7 +32,10 @@
     background-color: v.$surface-subtle;
     color: v.$text-secondary;
     cursor: pointer;
-    transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+    transition:
+      transform 0.15s ease,
+      box-shadow 0.15s ease,
+      background-color 0.15s ease;
 
     &:hover:not(:disabled) {
       transform: translateY(-1px);

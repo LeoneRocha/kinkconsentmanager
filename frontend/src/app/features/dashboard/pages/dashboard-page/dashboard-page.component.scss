@@ -22,7 +22,7 @@
       position: absolute;
       inset: 0 0 auto 0;
       height: 3px;
-      background: linear-gradient(90deg, #ef4444, #dc2626, #991b1b);
+      background: v.$accent-gradient;
     }
   }
 
@@ -178,13 +178,23 @@
   &__cta {
     display: inline-flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: center;
     gap: 0.5rem;
-    width: 100%;
-    padding-top: 0.75rem;
-    border-top: 1px solid v.$border-color;
+    align-self: flex-start;
+    padding: 0.5rem 1rem;
+    border-radius: 9999px;
+    background-color: v.$btn-enabled-bg;
+    color: v.$btn-enabled-fg;
+    border: 1px solid v.$btn-enabled-border;
     font-size: 0.875rem;
     font-weight: 700;
-    color: v.$accent-text;
+    transition:
+      background-color 0.15s ease,
+      border-color 0.15s ease;
+
+    .dashboard__card:hover & {
+      background-color: v.$btn-enabled-hover;
+      border-color: v.$btn-enabled-hover;
+    }
   }
 }

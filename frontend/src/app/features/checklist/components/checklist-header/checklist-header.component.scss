@@ -224,11 +224,6 @@
     }
   }
 
-  .checklist-header__clear-btn:not(:disabled) {
-    --mat-button-outlined-label-text-color: #{v.$accent-text};
-    --mat-button-outlined-outline-color: rgba(220, 38, 38, 0.55);
-  }
-
   .checklist-header__mode-select {
     width: 100%;
     display: flex;

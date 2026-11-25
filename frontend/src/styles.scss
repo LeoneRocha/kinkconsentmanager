@@ -17,6 +17,13 @@
   --kcm-accent-text: #dc2626;
   --kcm-accent-gradient: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
   --kcm-surface-gradient: none;
+  --kcm-btn-enabled-bg: #16a34a;
+  --kcm-btn-enabled-hover: #15803d;
+  --kcm-btn-enabled-fg: #ffffff;
+  --kcm-btn-enabled-border: #15803d;
+  --kcm-btn-disabled-bg: #cbd5e1;
+  --kcm-btn-disabled-fg: #64748b;
+  --kcm-btn-disabled-border: #cbd5e1;
   --kcm-font-family: 'Nunito', ui-rounded, 'Segoe UI', system-ui, -apple-system, sans-serif;
   --kcm-topbar-bg: rgba(255, 255, 255, 0.88);
   --kcm-shadow-sm: 0 2px 10px rgba(15, 23, 42, 0.05);
@@ -97,6 +104,13 @@ html.app-dark {
   --kcm-kbd-bg: rgba(241, 245, 249, 0.14);
   --kcm-ambient-top: rgba(220, 38, 38, 0.16);
   --kcm-ambient-bottom: rgba(153, 27, 27, 0.12);
+  --kcm-btn-enabled-bg: #16a34a;
+  --kcm-btn-enabled-hover: #15803d;
+  --kcm-btn-enabled-fg: #ffffff;
+  --kcm-btn-enabled-border: #15803d;
+  --kcm-btn-disabled-bg: #334155;
+  --kcm-btn-disabled-fg: #94a3b8;
+  --kcm-btn-disabled-border: #475569;
   --mat-sys-primary: var(--kcm-accent-primary);
   --mat-sys-on-primary: #ffffff;
   --mat-sys-surface: var(--kcm-surface-card);
@@ -201,11 +215,6 @@ html[data-theme='sober'] {
       var(--kcm-surface-gradient);
   }
 
-  .mat-mdc-unelevated-button:not(:disabled) {
-    background: var(--kcm-accent-gradient);
-    color: #ffffff;
-  }
-
   .app-shell__lang-pill,
   .app-shell__status-dot {
     background: var(--kcm-accent-gradient);
@@ -232,6 +241,13 @@ html.app-high-contrast {
   --kcm-shadow-lg: 0 0 0 2px #000000;
   --kcm-ambient-top: transparent;
   --kcm-ambient-bottom: transparent;
+  --kcm-btn-enabled-bg: #000000;
+  --kcm-btn-enabled-hover: #1f2937;
+  --kcm-btn-enabled-fg: #ffffff;
+  --kcm-btn-enabled-border: #000000;
+  --kcm-btn-disabled-bg: #e5e7eb;
+  --kcm-btn-disabled-fg: #374151;
+  --kcm-btn-disabled-border: #4b5563;
 }
 
 html.app-dark.app-high-contrast {
@@ -252,6 +268,13 @@ html.app-dark.app-high-contrast {
   --kcm-shadow-sm: none;
   --kcm-shadow-md: 0 0 0 2px #ffffff;
   --kcm-shadow-lg: 0 0 0 2px #ffffff;
+  --kcm-btn-enabled-bg: #ffd60a;
+  --kcm-btn-enabled-hover: #ffc300;
+  --kcm-btn-enabled-fg: #000000;
+  --kcm-btn-enabled-border: #ffffff;
+  --kcm-btn-disabled-bg: #1f2937;
+  --kcm-btn-disabled-fg: #d1d5db;
+  --kcm-btn-disabled-border: #9ca3af;
 }
 
 html {
@@ -306,6 +329,43 @@ select {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
+}
+
+.mat-mdc-unelevated-button:not(:disabled),
+.mat-mdc-raised-button:not(:disabled),
+.mat-mdc-outlined-button:not(:disabled) {
+  --mat-button-filled-container-color: var(--kcm-btn-enabled-bg);
+  --mat-button-filled-label-text-color: var(--kcm-btn-enabled-fg);
+  --mat-button-protected-container-color: var(--kcm-btn-enabled-bg);
+  --mat-button-protected-label-text-color: var(--kcm-btn-enabled-fg);
+  --mat-button-outlined-label-text-color: var(--kcm-btn-enabled-fg);
+  --mat-button-outlined-outline-color: var(--kcm-btn-enabled-border);
+  background-color: var(--kcm-btn-enabled-bg);
+  color: var(--kcm-btn-enabled-fg);
+  border-color: var(--kcm-btn-enabled-border);
+
+  &:hover {
+    --mat-button-filled-container-color: var(--kcm-btn-enabled-hover);
+    --mat-button-protected-container-color: var(--kcm-btn-enabled-hover);
+    background-color: var(--kcm-btn-enabled-hover);
+    border-color: var(--kcm-btn-enabled-hover);
+  }
+}
+
+.mat-mdc-unelevated-button:disabled,
+.mat-mdc-raised-button:disabled,
+.mat-mdc-outlined-button:disabled,
+.mat-mdc-button:disabled {
+  --mat-button-filled-disabled-container-color: var(--kcm-btn-disabled-bg);
+  --mat-button-filled-disabled-label-text-color: var(--kcm-btn-disabled-fg);
+  --mat-button-protected-disabled-container-color: var(--kcm-btn-disabled-bg);
+  --mat-button-protected-disabled-label-text-color: var(--kcm-btn-disabled-fg);
+  --mat-button-outlined-disabled-label-text-color: var(--kcm-btn-disabled-fg);
+  --mat-button-outlined-disabled-outline-color: var(--kcm-btn-disabled-border);
+  --mat-button-text-disabled-label-text-color: var(--kcm-btn-disabled-fg);
+  background-color: var(--kcm-btn-disabled-bg);
+  color: var(--kcm-btn-disabled-fg);
+  border-color: var(--kcm-btn-disabled-border);
 }
 
 .mat-mdc-slide-toggle .mdc-form-field {

@@ -373,16 +373,32 @@
 
 .app-shell__stop-btn {
   @extend %panel-btn;
-  border-color: v.$accent-primary;
-  background-color: v.$accent-soft;
-  color: v.$accent-text;
+  border-color: v.$btn-enabled-border;
+  background-color: v.$btn-enabled-bg;
+  color: v.$btn-enabled-fg;
+
+  &:hover {
+    background-color: v.$btn-enabled-hover;
+    border-color: v.$btn-enabled-hover;
+  }
 }
 
 .app-shell__reset-btn {
   @extend %panel-btn;
+  border-color: v.$btn-enabled-border;
+  background-color: v.$btn-enabled-bg;
+  color: v.$btn-enabled-fg;
+
+  &:hover:not(:disabled) {
+    background-color: v.$btn-enabled-hover;
+    border-color: v.$btn-enabled-hover;
+  }
 
   &:disabled {
-    opacity: 0.45;
+    border-color: v.$btn-disabled-border;
+    background-color: v.$btn-disabled-bg;
+    color: v.$btn-disabled-fg;
+    opacity: 0.78;
     cursor: not-allowed;
   }
 }
