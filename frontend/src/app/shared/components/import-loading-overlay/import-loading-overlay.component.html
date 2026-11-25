@@ -5,6 +5,7 @@
     aria-live="polite"
     [attr.aria-busy]="!worker.isCompleted()"
     [attr.aria-label]="titleText()"
+    [attr.title]="titleText()"
   >
     <div
       class="import-overlay__card"
@@ -19,16 +20,16 @@
           class="import-overlay__core"
           [class.import-overlay__core--completed]="worker.isCompleted()"
         >
-          <i [class]="coreIconClass()"></i>
+          <i [class]="coreIconClass()" [attr.title]="titleText()"></i>
         </span>
       </div>
 
-      <h2 class="import-overlay__title">{{ titleText() }}</h2>
-      <p class="import-overlay__stage">{{ stageText() }}</p>
+      <h2 class="import-overlay__title" [attr.title]="titleText()">{{ titleText() }}</h2>
+      <p class="import-overlay__stage" [attr.title]="stageText()">{{ stageText() }}</p>
 
       @if (worker.fileName(); as fileName) {
-        <div class="import-overlay__file-pill">
-          <i [class]="fileIconClass()" aria-hidden="true"></i>
+        <div class="import-overlay__file-pill" [attr.title]="fileName">
+          <i [class]="fileIconClass()" [attr.title]="fileName" aria-hidden="true"></i>
           <span class="import-overlay__file-name">{{ fileName }}</span>
         </div>
       }
@@ -38,6 +39,8 @@
           class="import-overlay__progress-track"
           role="progressbar"
           [attr.aria-valuenow]="worker.progress()"
+          [attr.aria-label]="titleText()"
+          [attr.title]="titleText() + ' (' + worker.progress() + '%)'"
           aria-valuemin="0"
           aria-valuemax="100"
         >
@@ -47,11 +50,17 @@
             [style.width.%]="worker.progress()"
           ></div>
         </div>
-        <span class="import-overlay__progress-pct">{{ worker.progress() }}%</span>
+        <span class="import-overlay__progress-pct" [attr.title]="worker.progress() + '%'"
+          >{{ worker.progress() }}%</span
+        >
       </div>
 
-      <div class="import-overlay__badge">
-        <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
+      <div class="import-overlay__badge" [attr.title]="backgroundBadgeText()">
+        <i
+          class="fa-solid fa-shield-halved"
+          [attr.title]="backgroundBadgeText()"
+          aria-hidden="true"
+        ></i>
         <span>{{ backgroundBadgeText() }}</span>
       </div>
     </div>

@@ -2,6 +2,8 @@
   type="button"
   class="kcm-swal-trigger"
   [disabled]="disabled()"
+  [attr.title]="buttonTitle()"
+  [attr.aria-label]="buttonTitle()"
   (click)="open()"
 >
   <ng-content />

@@ -25,8 +25,20 @@ const MOCK_SCHEMA: ChecklistSchema = {
       contrastColor: '#111827',
       icon: 'pi pi-question-circle',
     },
-    { id: 'enjoy', order: 4, color: '#388E3C', contrastColor: '#FFFFFF', icon: 'pi pi-check-circle' },
-    { id: 'favorite', order: 5, color: '#7B1FA2', contrastColor: '#FFFFFF', icon: 'pi pi-heart-fill' },
+    {
+      id: 'enjoy',
+      order: 4,
+      color: '#388E3C',
+      contrastColor: '#FFFFFF',
+      icon: 'pi pi-check-circle',
+    },
+    {
+      id: 'favorite',
+      order: 5,
+      color: '#7B1FA2',
+      contrastColor: '#FFFFFF',
+      icon: 'pi pi-heart-fill',
+    },
   ],
   groups: [
     {

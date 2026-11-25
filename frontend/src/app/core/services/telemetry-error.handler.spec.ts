@@ -8,10 +8,7 @@ describe('TelemetryErrorHandler', () => {
     const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => undefined);
 
     TestBed.configureTestingModule({
-      providers: [
-        TelemetryErrorHandler,
-        { provide: TelemetryService, useValue: telemetryMock },
-      ],
+      providers: [TelemetryErrorHandler, { provide: TelemetryService, useValue: telemetryMock }],
     });
 
     const handler = TestBed.inject(TelemetryErrorHandler);

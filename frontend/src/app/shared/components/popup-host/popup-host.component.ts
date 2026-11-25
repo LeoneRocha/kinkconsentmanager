@@ -135,15 +135,13 @@ export class AppPopupHostComponent {
           });
 
     this.opened.emit();
-    obs
-      .pipe(take(1), takeUntilDestroyed(this.destroyRef))
-      .subscribe((accepted) => {
-        if (accepted) {
-          this.confirmed.emit();
-        } else {
-          this.dismissed.emit();
-        }
-        this.closed.emit();
-      });
+    obs.pipe(take(1), takeUntilDestroyed(this.destroyRef)).subscribe((accepted) => {
+      if (accepted) {
+        this.confirmed.emit();
+      } else {
+        this.dismissed.emit();
+      }
+      this.closed.emit();
+    });
   }
 }

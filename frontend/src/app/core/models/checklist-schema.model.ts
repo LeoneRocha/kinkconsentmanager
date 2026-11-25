@@ -1,16 +1,8 @@
 export type ScaleId = 'hard_limit' | 'soft_limit' | 'curious' | 'enjoy' | 'favorite';
 
-export type QuestionType =
-  | 'scale_matrix'
-  | 'single_choice'
-  | 'multiple_choice'
-  | 'restricted_text';
+export type QuestionType = 'scale_matrix' | 'single_choice' | 'multiple_choice' | 'restricted_text';
 
-export type RolePairId =
-  | 'giving_receiving'
-  | 'dominant_submissive'
-  | 'self_partner'
-  | 'general';
+export type RolePairId = 'giving_receiving' | 'dominant_submissive' | 'self_partner' | 'general';
 
 export interface ScaleOption {
   readonly id: ScaleId;

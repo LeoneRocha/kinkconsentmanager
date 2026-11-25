@@ -47,12 +47,16 @@ describe('ThemeService', () => {
     const mediaMock = {
       matches: false,
       media: '(prefers-color-scheme: dark)',
-      addEventListener: jest.fn((_event: string, handler: (event?: { matches: boolean }) => void) => {
-        changeHandler = handler;
-      }),
+      addEventListener: jest.fn(
+        (_event: string, handler: (event?: { matches: boolean }) => void) => {
+          changeHandler = handler;
+        },
+      ),
       removeEventListener: jest.fn(),
     };
-    globalThis.matchMedia = jest.fn().mockReturnValue(mediaMock) as unknown as typeof globalThis.matchMedia;
+    globalThis.matchMedia = jest
+      .fn()
+      .mockReturnValue(mediaMock) as unknown as typeof globalThis.matchMedia;
 
     const service = TestBed.inject(ThemeService);
     expect(service.isDark()).toBe(false);

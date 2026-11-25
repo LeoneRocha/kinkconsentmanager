@@ -53,9 +53,7 @@ export class LocaleCatalogService {
 
   resolveBrowserPreferredLocale(browserLang?: string | null): SupportedLanguage {
     const candidate =
-      browserLang ??
-      (typeof navigator !== 'undefined' ? navigator.language : undefined) ??
-      '';
+      browserLang ?? (typeof navigator !== 'undefined' ? navigator.language : undefined) ?? '';
     const normalized = candidate.trim().toLowerCase();
 
     if (normalized.startsWith('pt')) {

@@ -237,8 +237,7 @@ export class StorageService {
       }
 
       const encryptedPayload = await this.crypto.encrypt(serialized);
-      const hasExpiry =
-        options?.expiresInMs !== undefined && Number.isFinite(options.expiresInMs);
+      const hasExpiry = options?.expiresInMs !== undefined && Number.isFinite(options.expiresInMs);
 
       const envelope: StorageEncryptedEnvelope = {
         __kcmEncryptedEnvelope: true,

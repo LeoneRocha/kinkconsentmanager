@@ -56,7 +56,10 @@ export class AlertFactoryService {
 
   constructor() {
     this.registerProvider('toast', this.createNotificationAdapter(NotificationChannel.Toast));
-    this.registerProvider('snackbar', this.createNotificationAdapter(NotificationChannel.MatSnackBar));
+    this.registerProvider(
+      'snackbar',
+      this.createNotificationAdapter(NotificationChannel.MatSnackBar),
+    );
     this.registerProvider(
       'sweetalert',
       this.createNotificationAdapter(NotificationChannel.SweetAlert2),
@@ -69,8 +72,7 @@ export class AlertFactoryService {
 
   open(request: AlertRequest): void {
     const providerKey = request.provider ?? request.engine ?? this._defaultEngine();
-    const adapter =
-      this.adapters.get(providerKey) ?? this.adapters.get(this._defaultEngine());
+    const adapter = this.adapters.get(providerKey) ?? this.adapters.get(this._defaultEngine());
     if (!adapter) {
       return;
     }

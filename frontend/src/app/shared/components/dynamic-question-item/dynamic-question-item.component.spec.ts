@@ -119,7 +119,8 @@ describe('DynamicQuestionItemComponent', () => {
     component.answerChange.subscribe((val) => emitted.push(val));
 
     const primaryButtons = selectors[0].querySelectorAll<HTMLButtonElement>('button[role="radio"]');
-    const secondaryButtons = selectors[1].querySelectorAll<HTMLButtonElement>('button[role="radio"]');
+    const secondaryButtons =
+      selectors[1].querySelectorAll<HTMLButtonElement>('button[role="radio"]');
 
     primaryButtons[3].click();
     secondaryButtons[4].click();
@@ -155,7 +156,9 @@ describe('DynamicQuestionItemComponent', () => {
     });
 
     const hostEl = fixture.nativeElement as HTMLElement;
-    const radios = hostEl.querySelectorAll<HTMLInputElement>('mat-radio-button input[type="radio"]');
+    const radios = hostEl.querySelectorAll<HTMLInputElement>(
+      'mat-radio-button input[type="radio"]',
+    );
     expect(radios.length).toBe(2);
 
     const emitSpy = jest.fn<void, [Partial<ItemResponseValue>]>();
@@ -219,7 +222,9 @@ describe('DynamicQuestionItemComponent', () => {
     const emittedSingle: Partial<ItemResponseValue>[] = [];
     const sub1 = component.answerChange.subscribe((val) => emittedSingle.push(val));
 
-    const radios = hostEl.querySelectorAll<HTMLInputElement>('mat-radio-button input[type="radio"]');
+    const radios = hostEl.querySelectorAll<HTMLInputElement>(
+      'mat-radio-button input[type="radio"]',
+    );
     expect(radios.length).toBe(2);
     radios[1].click();
     await fixture.whenStable();
@@ -230,7 +235,9 @@ describe('DynamicQuestionItemComponent', () => {
     fixture.componentRef.setInput('answer', { selectedOption: OTHER_OPTION_VALUE, otherText: '' });
     await fixture.whenStable();
 
-    const singleOtherInput = hostEl.querySelector<HTMLInputElement>('input.question-item__text-input');
+    const singleOtherInput = hostEl.querySelector<HTMLInputElement>(
+      'input.question-item__text-input',
+    );
     expect(singleOtherInput).not.toBeNull();
     singleOtherInput!.value = 'Custom protocol';
     singleOtherInput!.dispatchEvent(new Event('input', { bubbles: true }));
@@ -256,7 +263,9 @@ describe('DynamicQuestionItemComponent', () => {
     const emittedMulti: Partial<ItemResponseValue>[] = [];
     component.answerChange.subscribe((val) => emittedMulti.push(val));
 
-    const multiOtherInput = hostEl.querySelector<HTMLInputElement>('input.question-item__text-input');
+    const multiOtherInput = hostEl.querySelector<HTMLInputElement>(
+      'input.question-item__text-input',
+    );
     expect(multiOtherInput).not.toBeNull();
     multiOtherInput!.value = 'Leather';
     multiOtherInput!.dispatchEvent(new Event('input', { bubbles: true }));
@@ -297,10 +306,7 @@ describe('DynamicQuestionItemComponent', () => {
   });
 
   it('should conditionally render tooltip info icon only when itemTooltip is non-empty', async () => {
-    await setBaseInputs(
-      { id: 'item_no_tip', type: 'scale_matrix' },
-      { itemTooltip: '   ' },
-    );
+    await setBaseInputs({ id: 'item_no_tip', type: 'scale_matrix' }, { itemTooltip: '   ' });
 
     const hostEl = fixture.nativeElement as HTMLElement;
     expect(hostEl.querySelector('.fa-circle-info')).toBeNull();
@@ -317,10 +323,7 @@ describe('DynamicQuestionItemComponent', () => {
   // Cenário: Clique no botão de leitura em voz alta do item.
   // Objetivo: Emitir o evento readAloud mantendo rótulo acessível com o nome do item.
   it('should render speak button with accessible label and emit readAloud on click', async () => {
-    await setBaseInputs(
-      { id: 'item_tts', type: 'scale_matrix' },
-      { itemLabel: 'Rope Bondage' },
-    );
+    await setBaseInputs({ id: 'item_tts', type: 'scale_matrix' }, { itemLabel: 'Rope Bondage' });
 
     const speakEmitSpy = jest.fn<void, []>();
     component.readAloud.subscribe(speakEmitSpy);

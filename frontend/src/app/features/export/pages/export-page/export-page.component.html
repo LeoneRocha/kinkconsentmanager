@@ -1,8 +1,10 @@
 <div class="export-page">
   <header class="export-page__header">
     <div class="export-page__heading-group">
-      <h1 class="export-page__title">{{ t('exportTitle') }}</h1>
-      <p class="export-page__subtitle">{{ t('exportSubtitle') }}</p>
+      <h1 class="export-page__title" [attr.title]="t('exportTitle')">{{ t('exportTitle') }}</h1>
+      <p class="export-page__subtitle" [attr.title]="t('exportSubtitle')">
+        {{ t('exportSubtitle') }}
+      </p>
     </div>
   </header>
 
@@ -11,17 +13,22 @@
       <span
         class="export-page__step-badge"
         [class.export-page__step-badge--done]="hasSelectedLayout()"
+        [attr.title]="t('exportStep1Title')"
         aria-hidden="true"
       >
         @if (hasSelectedLayout()) {
-          <i class="fa-solid fa-check"></i>
+          <i class="fa-solid fa-check" [attr.title]="t('exportStep1Title')"></i>
         } @else {
           1
         }
       </span>
       <div class="export-page__step-copy">
-        <h2 class="export-page__step-title">{{ t('exportStep1Title') }}</h2>
-        <p class="export-page__step-hint">{{ t('exportStep1Hint') }}</p>
+        <h2 class="export-page__step-title" [attr.title]="t('exportStep1Title')">
+          {{ t('exportStep1Title') }}
+        </h2>
+        <p class="export-page__step-hint" [attr.title]="t('exportStep1Hint')">
+          {{ t('exportStep1Hint') }}
+        </p>
       </div>
     </div>
 
@@ -32,10 +39,12 @@
         data-layout="modern"
         [class.export-page__layout-card--selected]="previewLayout() === 'modern'"
         [attr.aria-pressed]="previewLayout() === 'modern'"
+        [attr.aria-label]="t('exportLayoutModern') + ' — ' + t('exportLayoutModernDesc')"
+        [attr.title]="t('exportLayoutModern') + ' — ' + t('exportLayoutModernDesc')"
         (click)="onPreviewLayoutChange('modern')"
       >
         <span class="export-page__layout-icon" aria-hidden="true">
-          <i class="fa-solid fa-table-list"></i>
+          <i class="fa-solid fa-table-list" [attr.title]="t('exportLayoutModern')"></i>
         </span>
         <span class="export-page__layout-body">
           <span class="export-page__layout-title">{{ t('exportLayoutModern') }}</span>
@@ -43,7 +52,7 @@
         </span>
         @if (previewLayout() === 'modern') {
           <span class="export-page__layout-check" aria-hidden="true">
-            <i class="fa-solid fa-circle-check"></i>
+            <i class="fa-solid fa-circle-check" [attr.title]="t('exportLayoutModern')"></i>
           </span>
         }
       </button>
@@ -54,10 +63,12 @@
         data-layout="classic"
         [class.export-page__layout-card--selected]="previewLayout() === 'classic'"
         [attr.aria-pressed]="previewLayout() === 'classic'"
+        [attr.aria-label]="t('exportLayoutClassic') + ' — ' + t('exportLayoutClassicDesc')"
+        [attr.title]="t('exportLayoutClassic') + ' — ' + t('exportLayoutClassicDesc')"
         (click)="onPreviewLayoutChange('classic')"
       >
         <span class="export-page__layout-icon" aria-hidden="true">
-          <i class="fa-solid fa-grip"></i>
+          <i class="fa-solid fa-grip" [attr.title]="t('exportLayoutClassic')"></i>
         </span>
         <span class="export-page__layout-body">
           <span class="export-page__layout-title">{{ t('exportLayoutClassic') }}</span>
@@ -65,7 +76,7 @@
         </span>
         @if (previewLayout() === 'classic') {
           <span class="export-page__layout-check" aria-hidden="true">
-            <i class="fa-solid fa-circle-check"></i>
+            <i class="fa-solid fa-circle-check" [attr.title]="t('exportLayoutClassic')"></i>
           </span>
         }
       </button>
@@ -77,11 +88,14 @@
       <span
         class="export-page__step-badge"
         [class.export-page__step-badge--done]="hasSelectedLayout()"
+        [attr.title]="t('exportStep2Title')"
         aria-hidden="true"
       >
         2
       </span>
-      <h2 class="export-page__step-title">{{ t('exportStep2Title') }}</h2>
+      <h2 class="export-page__step-title" [attr.title]="t('exportStep2Title')">
+        {{ t('exportStep2Title') }}
+      </h2>
     </div>
 
     <app-export-actions-toolbar
@@ -108,28 +122,36 @@
   </section>
 
   @if (isLoadingSchema()) {
-    <section class="export-page__status" aria-live="polite">
+    <section class="export-page__status" aria-live="polite" [attr.title]="t('loadingSchema')">
       <mat-progress-spinner
         mode="indeterminate"
         [diameter]="40"
         [strokeWidth]="4"
         [attr.aria-label]="t('loadingSchema')"
+        [attr.title]="t('loadingSchema')"
       />
-      <p class="export-page__status-text">{{ t('loadingSchema') }}</p>
+      <p class="export-page__status-text" [attr.title]="t('loadingSchema')">
+        {{ t('loadingSchema') }}
+      </p>
     </section>
   } @else if (loadError()) {
     <section class="export-page__error" aria-live="assertive">
-      <div class="export-page__error-banner" role="alert">
-        <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+      <div class="export-page__error-banner" role="alert" [attr.title]="t('loadingError')">
+        <i
+          class="fa-solid fa-circle-exclamation"
+          [attr.title]="t('loadingError')"
+          aria-hidden="true"
+        ></i>
         <span>{{ t('loadingError') }}</span>
       </div>
       <button
         mat-stroked-button
         type="button"
         class="export-page__retry-btn"
+        [attr.title]="t('retry')"
         (click)="retryLoadSchema()"
       >
-        <i class="fa-solid fa-arrows-rotate" aria-hidden="true"></i>
+        <i class="fa-solid fa-arrows-rotate" [attr.title]="t('retry')" aria-hidden="true"></i>
         <span>{{ t('retry') }}</span>
       </button>
     </section>
@@ -137,7 +159,9 @@
     @if (previewTexts(); as texts) {
       @if (previewLayout(); as selectedLayout) {
         <section class="export-page__preview" [attr.aria-label]="t('previewHeading')">
-          <h2 class="export-page__preview-heading">{{ t('previewHeading') }}</h2>
+          <h2 class="export-page__preview-heading" [attr.title]="t('previewHeading')">
+            {{ t('previewHeading') }}
+          </h2>
           <div class="export-page__preview-scroll">
             <app-full-grid-preview
               [schema]="activeSchema"
@@ -165,9 +189,19 @@
           </div>
         </div>
       } @else {
-        <div class="export-page__preview-empty" role="status">
-          <i class="fa-solid fa-layer-group export-page__preview-empty-icon" aria-hidden="true"></i>
-          <p class="export-page__preview-empty-text">{{ t('exportSelectLayoutPrompt') }}</p>
+        <div
+          class="export-page__preview-empty"
+          role="status"
+          [attr.title]="t('exportSelectLayoutPrompt')"
+        >
+          <i
+            class="fa-solid fa-layer-group export-page__preview-empty-icon"
+            [attr.title]="t('exportSelectLayoutPrompt')"
+            aria-hidden="true"
+          ></i>
+          <p class="export-page__preview-empty-text" [attr.title]="t('exportSelectLayoutPrompt')">
+            {{ t('exportSelectLayoutPrompt') }}
+          </p>
         </div>
       }
     }

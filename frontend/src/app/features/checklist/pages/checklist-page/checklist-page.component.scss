@@ -11,6 +11,13 @@
     gap: 1rem;
   }
 
+  &__route-nav {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.625rem;
+  }
+
   &__sticky-top {
     display: flex;
     flex-direction: column;
@@ -62,7 +69,11 @@
 }
 
 :host ::ng-deep {
-  .checklist-page__retry-btn {
+  .checklist-page__retry-btn,
+  .checklist-page__nav-btn {
     min-height: v.$min-touch-target;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
   }
 }

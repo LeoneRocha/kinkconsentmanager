@@ -6,7 +6,7 @@ export interface BuildInfo {
 }
 
 export const BUILD_INFO: BuildInfo = {
-  version: '1.1.4',
-  buildDate: '2026.11.24',
+  version: '1.2.4',
+  buildDate: '2026.11.25',
   buildId: 'local',
 };

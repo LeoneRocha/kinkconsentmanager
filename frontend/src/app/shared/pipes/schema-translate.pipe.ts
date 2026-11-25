@@ -2,13 +2,7 @@ import { inject, Pipe, PipeTransform } from '@angular/core';
 import { I18nService } from '../../core/services';
 
 export type SchemaTranslationCategory =
-  | 'ui'
-  | 'scale'
-  | 'groupTitle'
-  | 'groupDesc'
-  | 'itemLabel'
-  | 'itemTooltip'
-  | 'option';
+  'ui' | 'scale' | 'groupTitle' | 'groupDesc' | 'itemLabel' | 'itemTooltip' | 'option';
 
 /**
  * Impure reactive pipe resolving schema and UI translations using I18nService signals.

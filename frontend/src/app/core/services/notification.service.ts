@@ -1,5 +1,10 @@
 import { DestroyRef, Injectable, inject, signal } from '@angular/core';
-import { MatSnackBar, MatSnackBarConfig, MatSnackBarRef, TextOnlySnackBar } from '@angular/material/snack-bar';
+import {
+  MatSnackBar,
+  MatSnackBarConfig,
+  MatSnackBarRef,
+  TextOnlySnackBar,
+} from '@angular/material/snack-bar';
 import { I18nService } from './i18n.service';
 import { SweetAlertService } from './sweet-alert.service';
 

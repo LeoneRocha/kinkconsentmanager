@@ -56,8 +56,7 @@ export class SweetAlertService {
       text: options.text,
       icon: options.icon ?? 'question',
       showCancelButton: true,
-      confirmButtonText:
-        options.confirmButtonText ?? this.i18n.translateUi('dialogConfirmAction'),
+      confirmButtonText: options.confirmButtonText ?? this.i18n.translateUi('dialogConfirmAction'),
       cancelButtonText: options.cancelButtonText ?? this.i18n.translateUi('dialogCancelAction'),
       reverseButtons: true,
     });
@@ -93,8 +92,7 @@ export class SweetAlertService {
 
   private buildThemeDefaults(): SweetAlertOptions {
     const isDark =
-      typeof document !== 'undefined' &&
-      document.documentElement.classList.contains('app-dark');
+      typeof document !== 'undefined' && document.documentElement.classList.contains('app-dark');
 
     return isDark
       ? {

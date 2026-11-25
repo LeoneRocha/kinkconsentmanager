@@ -1,16 +1,5 @@
-import {
-  computed,
-  DestroyRef,
-  inject,
-  Injectable,
-  InjectionToken,
-  signal,
-} from '@angular/core';
-import {
-  ChecklistViewMode,
-  ItemResponseValue,
-  SupportedLanguage,
-} from '../models';
+import { computed, DestroyRef, inject, Injectable, InjectionToken, signal } from '@angular/core';
+import { ChecklistViewMode, ItemResponseValue, SupportedLanguage } from '../models';
 import { BROWSER_STORAGE_REPOSITORY_TOKEN } from '../repositories';
 import { ChecklistStateService } from './checklist-state.service';
 import { CryptoService } from './crypto.service';
@@ -220,11 +209,10 @@ export class ChecklistAutosaveService {
       return false;
     }
 
-    const payload =
-      await this.storageRepository.getEncrypted<ChecklistEncryptedAutosavePayload>(
-        CHECKLIST_ENCRYPTED_AUTOSAVE_KEY,
-        'local',
-      );
+    const payload = await this.storageRepository.getEncrypted<ChecklistEncryptedAutosavePayload>(
+      CHECKLIST_ENCRYPTED_AUTOSAVE_KEY,
+      'local',
+    );
 
     if (!payload) {
       if (this.storageRepository.keys('local').includes(CHECKLIST_ENCRYPTED_AUTOSAVE_KEY)) {

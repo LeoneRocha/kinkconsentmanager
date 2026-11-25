@@ -16,6 +16,7 @@ import { Router } from '@angular/router';
 import { take } from 'rxjs';
 import { ExportFormat, ExportResult, ResolvedPreviewTexts } from '../../../../core/models';
 import { SCHEMA_REPOSITORY_TOKEN } from '../../../../core/repositories';
+import { APP_ROUTE_COMMANDS } from '../../../../core/routes';
 import {
   BackgroundTaskWorkerService,
   ChecklistAutosaveService,
@@ -117,7 +118,11 @@ export class ExportPageComponent implements OnInit {
   }
 
   protected onBackToChecklist(): void {
-    void this.router.navigate(['/checklist']);
+    if (this.checklistState.canEnterFillRoute()) {
+      void this.router.navigate(APP_ROUTE_COMMANDS.checklistFill);
+      return;
+    }
+    void this.router.navigate(APP_ROUTE_COMMANDS.checklist);
   }
 
   protected onPreviewLayoutChange(layout: ExportPreviewLayout): void {

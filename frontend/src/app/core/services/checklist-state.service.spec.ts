@@ -1,9 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import {
-  ChecklistDraft,
-  ChecklistSchema,
-  OTHER_OPTION_VALUE,
-} from '../models';
+import { ChecklistDraft, ChecklistSchema, OTHER_OPTION_VALUE } from '../models';
 import { ChecklistStateService } from './checklist-state.service';
 import {
   CHECKLIST_STORAGE_KEY,

@@ -97,6 +97,11 @@ describe('AppSweetAlertTriggerComponent', () => {
     fixture.componentRef.setInput('title', 'Informação');
     sweetAlertMock.alert.mockResolvedValueOnce({ isConfirmed: true });
     await fixture.componentInstance.open();
-    expect(sweetAlertMock.alert).toHaveBeenCalledWith('Informação', 'Salvo', 'success', 'Confirmar');
+    expect(sweetAlertMock.alert).toHaveBeenCalledWith(
+      'Informação',
+      'Salvo',
+      'success',
+      'Confirmar',
+    );
   });
 });

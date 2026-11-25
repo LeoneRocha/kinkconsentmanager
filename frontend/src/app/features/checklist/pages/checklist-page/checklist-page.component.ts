@@ -23,11 +23,11 @@ import {
   SupportedLanguage,
 } from '../../../../core/models';
 import { SCHEMA_REPOSITORY_TOKEN } from '../../../../core/repositories';
+import { APP_ROUTE_COMMANDS } from '../../../../core/routes';
 import {
   AccessibilityService,
   ChecklistAutosaveService,
   ChecklistStateService,
-  DraftImportWorkerService,
   I18nService,
   TelemetryService,
   UiFeedbackHostService,
@@ -38,10 +38,6 @@ import {
   ChecklistProgressBarComponent,
   ChecklistProgressBarLabels,
 } from '../../components/checklist-progress-bar';
-import {
-  ChecklistModeSelectorComponent,
-  ChecklistModeSelectorLabels,
-} from '../../components/checklist-mode-selector';
 import {
   ChecklistStepRailComponent,
   ChecklistStepperComponent,
@@ -67,7 +63,6 @@ import {
     LegendBarComponent,
     ChecklistHeaderComponent,
     ChecklistProgressBarComponent,
-    ChecklistModeSelectorComponent,
     ChecklistStepRailComponent,
     ChecklistStepperComponent,
     ClassicKinkSheetComponent,
@@ -87,7 +82,6 @@ export class ChecklistPageComponent implements OnInit {
   private readonly accessibility = inject(AccessibilityService);
   private readonly feedbackHost = inject(UiFeedbackHostService);
   private readonly telemetry = inject(TelemetryService);
-  private readonly draftImportWorker = inject(DraftImportWorkerService);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
 
@@ -98,8 +92,6 @@ export class ChecklistPageComponent implements OnInit {
 
   protected readonly isLoading = signal<boolean>(true);
   protected readonly loadError = signal<boolean>(false);
-  protected readonly hasSelectedStartMode = signal<boolean>(false);
-  protected readonly isImportingJson = signal<boolean>(false);
   private readonly reviewStepActive = signal<boolean>(false);
   protected readonly emptyInvalidStepIds: ReadonlySet<string> = new Set();
 
@@ -272,77 +264,14 @@ export class ChecklistPageComponent implements OnInit {
     );
   });
 
-  protected readonly modeSelectorLabels = computed<ChecklistModeSelectorLabels>(() => {
+  protected readonly backToChecklistModesLabel = computed<string>(() => {
     this.i18n.currentLang();
-    return {
-      pageTitle: this.translateWithFallback(
-        'modePickerTitle',
-        'Como você prefere preencher o checklist?',
-      ),
-      pageSubtitle: this.translateWithFallback(
-        'modePickerSubtitle',
-        'Escolha o formato mais confortável para o seu ritmo. Você poderá alternar de modo a qualquer momento sem perder suas respostas.',
-      ),
-      howToFillLabel: this.translateWithFallback('modePickerHowToFillLabel', 'Como preencher'),
-      startButton: this.translateWithFallback('modePickerStartButton', 'Começar neste modo'),
-      continueButton: this.translateWithFallback(
-        'modePickerContinueButton',
-        'Continuar neste modo',
-      ),
-      existingProgressLabel: this.translateWithFallback(
-        'modePickerExistingProgress',
-        'Progresso local encontrado',
-      ),
-      stepperTitle: this.translateWithFallback('stepperMode', 'Guiado (Passos)'),
-      stepperBadge: this.translateWithFallback('modePickerStepperBadge', 'Recomendado'),
-      stepperDesc: this.translateWithFallback(
-        'modePickerStepperDesc',
-        'Avance uma categoria por vez com trilha visual de etapas e validação antes de seguir.',
-      ),
-      stepperHowToFill: this.translateWithFallback(
-        'modePickerStepperHow',
-        'Responda todos os itens do passo atual, avance pelas categorias no topo ou rodapé e confira tudo na Revisão Final antes de exportar.',
-      ),
-      classicTitle: this.translateWithFallback('classicMode', 'Modo Clássico'),
-      classicBadge: this.translateWithFallback('modePickerClassicBadge', 'Folha compacta'),
-      classicDesc: this.translateWithFallback(
-        'modePickerClassicDesc',
-        'Visual tradicional em blocos por categoria com círculos coloridos lado a lado.',
-      ),
-      classicHowToFill: this.translateWithFallback(
-        'modePickerClassicHow',
-        'Clique diretamente nos círculos coloridos (Dar / Receber ou escala geral) para marcar ou desmarcar rapidamente cada prática.',
-      ),
-      fullTitle: this.i18n.translateUi('fullMode'),
-      fullBadge: this.translateWithFallback('modePickerFullBadge', 'Página única'),
-      fullDesc: this.translateWithFallback(
-        'modePickerFullDesc',
-        'Todas as categorias e práticas expandidas em uma única página com navegação rápida.',
-      ),
-      fullHowToFill: this.translateWithFallback(
-        'modePickerFullHow',
-        'Role livremente pela lista completa ou pule direto para qualquer categoria usando os atalhos no topo.',
-      ),
-      quickFillTitle: this.i18n.translateUi('quickFillButton'),
-      quickFillBadge: this.translateWithFallback('modePickerQuickFillBadge', 'Atalhos 1–5'),
-      quickFillDesc: this.translateWithFallback(
-        'modePickerQuickFillDesc',
-        'Fluxo focado em um item por vez para preencher o checklist em poucos minutos.',
-      ),
-      quickFillHowToFill: this.translateWithFallback(
-        'modePickerQuickFillHow',
-        'Use as teclas 1 a 5 (ou clique nas opções) para escolher a escala e avançar automaticamente; pressione 0 para limpar ou ↑/↓ para navegar.',
-      ),
-      importTitle: this.translateWithFallback(
-        'modePickerImportTitle',
-        'Já tem um preenchimento salvo em JSON?',
-      ),
-      importDesc: this.translateWithFallback(
-        'modePickerImportDesc',
-        'Importe um arquivo .json exportado anteriormente para restaurar suas respostas e continuar editando ou exportar novamente.',
-      ),
-      importButton: this.translateWithFallback('modePickerImportButton', 'Importar JSON'),
-    };
+    return this.translateWithFallback('backToChecklistModes', 'Voltar ao Checklist');
+  });
+
+  protected readonly navDashboardLabel = computed<string>(() => {
+    this.i18n.currentLang();
+    return this.translateWithFallback('navDashboard', 'Dashboard');
   });
 
   protected readonly finishLabel = computed<string>(() => {
@@ -442,6 +371,11 @@ export class ChecklistPageComponent implements OnInit {
 
   ngOnInit(): void {
     this.autosave.start(this.destroyRef);
+    if (this.checklistState.schema() !== null) {
+      this.isLoading.set(false);
+      this.loadError.set(false);
+      return;
+    }
     this.loadSchema();
   }
 
@@ -483,92 +417,12 @@ export class ChecklistPageComponent implements OnInit {
     this.telemetry.trackEvent('checklist_mode_selected', { mode, source: 'toolbar' });
   }
 
-  protected onStartModeSelected(mode: ChecklistViewMode): void {
-    this.reviewStepActive.set(false);
-    this.checklistState.setViewMode(mode);
-    this.hasSelectedStartMode.set(true);
-    this.telemetry.trackEvent('checklist_mode_selected', { mode, source: 'mode_selector' });
-    this.scrollToContentTop();
+  protected onBackToModeSelector(): void {
+    void this.router.navigate(APP_ROUTE_COMMANDS.checklist);
   }
 
-  protected async onImportJsonFile(file: File): Promise<void> {
-    const activeSchema = this.schema();
-    if (!activeSchema || this.isImportingJson()) {
-      return;
-    }
-
-    this.isImportingJson.set(true);
-    const importTitle = this.translateWithFallback('importJson', 'Importar JSON');
-    try {
-      const outcome = await this.draftImportWorker.importDraftFile(
-        file,
-        activeSchema.schemaVersion,
-      );
-      const validation = outcome.validation;
-
-      if (validation.valid && validation.draft) {
-        this.reviewStepActive.set(false);
-        this.checklistState.importDraft(validation.draft);
-        void this.autosave.saveNow();
-        this.hasSelectedStartMode.set(true);
-        this.scrollToContentTop();
-        this.telemetry.trackEvent('checklist_json_imported', {
-          source: 'mode_selector',
-          status: 'success',
-          processed_in_worker: String(outcome.processedInWorker),
-        });
-        this.feedbackHost.success(
-          `${importTitle} — ${this.translateWithFallback(
-            'importSuccess',
-            'Rascunho JSON importado e restaurado com sucesso.',
-          )}`,
-          {
-            actionLabel: this.translateWithFallback('notificationOkAction', 'OK'),
-            duration: 4000,
-          },
-        );
-        return;
-      }
-
-      const isIncompatibleVersion = validation.errors.some((error) =>
-        error.toLowerCase().includes('incompatible'),
-      );
-      this.telemetry.trackEvent('checklist_json_imported', {
-        source: 'mode_selector',
-        status: 'error',
-        processed_in_worker: String(outcome.processedInWorker),
-      });
-      this.feedbackHost.error(
-        `${importTitle} — ${
-          isIncompatibleVersion
-            ? this.translateWithFallback(
-                'importErrorIncompatibleVersion',
-                'Versão do schema incompatível com este checklist.',
-              )
-            : this.translateWithFallback(
-                'importErrorInvalidJson',
-                'Arquivo inválido: não foi possível ler um rascunho JSON válido.',
-              )
-        }`,
-        {
-          actionLabel: this.translateWithFallback('notificationOkAction', 'OK'),
-          duration: 5000,
-        },
-      );
-    } catch {
-      this.feedbackHost.error(
-        `${importTitle} — ${this.translateWithFallback(
-          'importErrorInvalidJson',
-          'Arquivo inválido: não foi possível ler um rascunho JSON válido.',
-        )}`,
-        {
-          actionLabel: this.translateWithFallback('notificationOkAction', 'OK'),
-          duration: 5000,
-        },
-      );
-    } finally {
-      this.isImportingJson.set(false);
-    }
+  protected onBackToDashboard(): void {
+    void this.router.navigate(APP_ROUTE_COMMANDS.dashboard);
   }
 
   protected onSearchQueryChange(query: string): void {
@@ -665,7 +519,7 @@ export class ChecklistPageComponent implements OnInit {
     if (this.hasAnswers()) {
       void this.autosave.saveNow();
     }
-    void this.router.navigate(['/export']);
+    void this.router.navigate(APP_ROUTE_COMMANDS.checklistExport);
   }
 
   private translateWithFallback(key: string, fallback: string): string {

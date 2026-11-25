@@ -12,6 +12,4 @@ export interface ISchemaRepository {
 /**
  * Injection token decoupling consumers from concrete schema repository implementations.
  */
-export const SCHEMA_REPOSITORY_TOKEN = new InjectionToken<ISchemaRepository>(
-  'ISchemaRepository',
-);
+export const SCHEMA_REPOSITORY_TOKEN = new InjectionToken<ISchemaRepository>('ISchemaRepository');

@@ -1,8 +1,10 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { ScaleOption } from '../../../core/models';
+import { SchemaTranslatePipe } from '../../pipes';
 
 @Component({
   selector: 'app-legend-bar',
+  imports: [SchemaTranslatePipe],
   templateUrl: './legend-bar.component.html',
   styleUrl: './legend-bar.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

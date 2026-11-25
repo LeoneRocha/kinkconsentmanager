@@ -6,25 +6,33 @@
   @if (layout() === 'classic') {
     <header class="classic-preview__header">
       <div class="classic-preview__heading">
-        <h2 class="classic-preview__title">{{ texts().title }}</h2>
-        <span class="classic-preview__date">
+        <h2 class="classic-preview__title" [attr.title]="texts().title">{{ texts().title }}</h2>
+        <span
+          class="classic-preview__date"
+          [attr.title]="texts().generatedAtLabel + ': ' + texts().generatedAtValue"
+        >
           {{ texts().generatedAtLabel }}: {{ texts().generatedAtValue }}
         </span>
       </div>
 
       <ul class="classic-preview__legend">
-        <li class="classic-preview__legend-item">
+        <li class="classic-preview__legend-item" [attr.title]="texts().notAnsweredLabel">
           <span
             class="classic-preview__legend-dot classic-preview__legend-dot--empty"
+            [attr.title]="texts().notAnsweredLabel"
             aria-hidden="true"
           ></span>
           <span>{{ texts().notAnsweredLabel }}</span>
         </li>
         @for (scale of orderedScales(); track scale.id) {
-          <li class="classic-preview__legend-item">
+          <li
+            class="classic-preview__legend-item"
+            [attr.title]="texts().scales[scale.id] ?? scale.id"
+          >
             <span
               class="classic-preview__legend-dot"
               [style.background-color]="scale.color"
+              [attr.title]="texts().scales[scale.id] ?? scale.id"
               aria-hidden="true"
             ></span>
             <span>{{ texts().scales[scale.id] ?? scale.id }}</span>
@@ -36,9 +44,16 @@
     <div class="classic-preview__columns">
       @for (group of previewGroups(); track group.groupId) {
         <section class="classic-preview__group" [attr.data-group-id]="group.groupId">
-          <h3 class="classic-preview__group-title">{{ group.title }}</h3>
+          <h3 class="classic-preview__group-title" [attr.title]="group.title">{{ group.title }}</h3>
           @if (group.hasDualRoleColumns || group.hasScaleRows) {
-            <p class="classic-preview__group-roles">
+            <p
+              class="classic-preview__group-roles"
+              [attr.title]="
+                group.hasDualRoleColumns
+                  ? group.primaryColumnHeader + ', ' + group.secondaryColumnHeader
+                  : group.primaryColumnHeader
+              "
+            >
               @if (group.hasDualRoleColumns) {
                 {{ group.primaryColumnHeader }}, {{ group.secondaryColumnHeader }}
               } @else {
@@ -75,14 +90,19 @@
                       ></span>
                     }
                   </span>
-                  <span class="classic-preview__item-label">{{ row.itemLabel }}</span>
+                  <span class="classic-preview__item-label" [attr.title]="row.itemLabel">
+                    {{ row.itemLabel }}
+                  </span>
                 </li>
               } @else {
                 <li class="classic-preview__text-row" [attr.data-item-id]="row.itemId">
-                  <span class="classic-preview__text-label">{{ row.itemLabel }}:</span>
+                  <span class="classic-preview__text-label" [attr.title]="row.itemLabel">
+                    {{ row.itemLabel }}:
+                  </span>
                   <span
                     class="classic-preview__text-value"
                     [class.classic-preview__text-value--empty]="!row.isAnswered"
+                    [attr.title]="row.formattedTextValue"
                   >
                     {{ row.formattedTextValue }}
                   </span>
@@ -95,11 +115,15 @@
     </div>
   } @else {
     <header class="full-grid-preview__header">
-      <h2 class="full-grid-preview__title">{{ texts().title }}</h2>
+      <h2 class="full-grid-preview__title" [attr.title]="texts().title">{{ texts().title }}</h2>
       <dl class="full-grid-preview__meta">
         <div class="full-grid-preview__meta-item">
-          <dt class="full-grid-preview__meta-label">{{ texts().generatedAtLabel }}</dt>
-          <dd class="full-grid-preview__meta-value">{{ texts().generatedAtValue }}</dd>
+          <dt class="full-grid-preview__meta-label" [attr.title]="texts().generatedAtLabel">
+            {{ texts().generatedAtLabel }}
+          </dt>
+          <dd class="full-grid-preview__meta-value" [attr.title]="texts().generatedAtValue">
+            {{ texts().generatedAtValue }}
+          </dd>
         </div>
       </dl>
     </header>
@@ -112,9 +136,11 @@
       @for (group of previewGroups(); track group.groupId) {
         <section class="preview-group" [attr.data-group-id]="group.groupId">
           <header class="preview-group__header">
-            <h3 class="preview-group__title">{{ group.title }}</h3>
+            <h3 class="preview-group__title" [attr.title]="group.title">{{ group.title }}</h3>
             @if (group.description) {
-              <p class="preview-group__description">{{ group.description }}</p>
+              <p class="preview-group__description" [attr.title]="group.description">
+                {{ group.description }}
+              </p>
             }
           </header>
 
@@ -123,10 +149,18 @@
               <thead>
                 <tr>
                   <td class="preview-group__col-item" aria-hidden="true"></td>
-                  <th scope="col" class="preview-group__col-role">
+                  <th
+                    scope="col"
+                    class="preview-group__col-role"
+                    [attr.title]="group.primaryColumnHeader"
+                  >
                     {{ group.primaryColumnHeader }}
                   </th>
-                  <th scope="col" class="preview-group__col-role">
+                  <th
+                    scope="col"
+                    class="preview-group__col-role"
+                    [attr.title]="group.secondaryColumnHeader"
+                  >
                     {{ group.secondaryColumnHeader }}
                   </th>
                 </tr>
@@ -135,12 +169,16 @@
             <tbody>
               @for (row of group.rows; track row.itemId) {
                 <tr class="preview-row" [attr.data-item-id]="row.itemId">
-                  <th scope="row" class="preview-row__label">{{ row.itemLabel }}</th>
+                  <th scope="row" class="preview-row__label" [attr.title]="row.itemLabel">
+                    {{ row.itemLabel }}
+                  </th>
 
                   @if (row.type === 'scale_matrix' && row.isDualRole) {
                     <td class="preview-row__value preview-row__value--dual">
                       @if (row.showRoleHint) {
-                        <span class="preview-row__role-hint">{{ row.primaryRoleLabel }}:</span>
+                        <span class="preview-row__role-hint" [attr.title]="row.primaryRoleLabel"
+                          >{{ row.primaryRoleLabel }}:</span
+                        >
                       }
                       @if (row.primaryScaleCell; as cell) {
                         @if (cell.answered) {
@@ -148,20 +186,29 @@
                             class="preview-pill"
                             [style.background-color]="cell.color ?? null"
                             [style.color]="cell.contrastColor ?? null"
+                            [attr.title]="cell.label"
                           >
                             @if (cell.icon) {
-                              <i [class]="cell.icon" aria-hidden="true"></i>
+                              <i
+                                [class]="cell.icon"
+                                [attr.title]="cell.label"
+                                aria-hidden="true"
+                              ></i>
                             }
                             <span>{{ cell.label }}</span>
                           </span>
                         } @else {
-                          <span class="preview-unanswered">{{ cell.label }}</span>
+                          <span class="preview-unanswered" [attr.title]="cell.label">
+                            {{ cell.label }}
+                          </span>
                         }
                       }
                     </td>
                     <td class="preview-row__value preview-row__value--dual">
                       @if (row.showRoleHint && row.secondaryRoleLabel) {
-                        <span class="preview-row__role-hint">{{ row.secondaryRoleLabel }}:</span>
+                        <span class="preview-row__role-hint" [attr.title]="row.secondaryRoleLabel"
+                          >{{ row.secondaryRoleLabel }}:</span
+                        >
                       }
                       @if (row.secondaryScaleCell; as cell) {
                         @if (cell.answered) {
@@ -169,14 +216,21 @@
                             class="preview-pill"
                             [style.background-color]="cell.color ?? null"
                             [style.color]="cell.contrastColor ?? null"
+                            [attr.title]="cell.label"
                           >
                             @if (cell.icon) {
-                              <i [class]="cell.icon" aria-hidden="true"></i>
+                              <i
+                                [class]="cell.icon"
+                                [attr.title]="cell.label"
+                                aria-hidden="true"
+                              ></i>
                             }
                             <span>{{ cell.label }}</span>
                           </span>
                         } @else {
-                          <span class="preview-unanswered">{{ cell.label }}</span>
+                          <span class="preview-unanswered" [attr.title]="cell.label">
+                            {{ cell.label }}
+                          </span>
                         }
                       }
                     </td>
@@ -191,14 +245,21 @@
                             class="preview-pill"
                             [style.background-color]="cell.color ?? null"
                             [style.color]="cell.contrastColor ?? null"
+                            [attr.title]="cell.label"
                           >
                             @if (cell.icon) {
-                              <i [class]="cell.icon" aria-hidden="true"></i>
+                              <i
+                                [class]="cell.icon"
+                                [attr.title]="cell.label"
+                                aria-hidden="true"
+                              ></i>
                             }
                             <span>{{ cell.label }}</span>
                           </span>
                         } @else {
-                          <span class="preview-unanswered">{{ cell.label }}</span>
+                          <span class="preview-unanswered" [attr.title]="cell.label">
+                            {{ cell.label }}
+                          </span>
                         }
                       }
                     </td>
@@ -214,11 +275,14 @@
                               ? 'preview-free-text'
                               : 'preview-options-text'
                           "
+                          [attr.title]="row.formattedTextValue"
                         >
                           {{ row.formattedTextValue }}
                         </span>
                       } @else {
-                        <span class="preview-unanswered">{{ row.formattedTextValue }}</span>
+                        <span class="preview-unanswered" [attr.title]="row.formattedTextValue">
+                          {{ row.formattedTextValue }}
+                        </span>
                       }
                     </td>
                   }

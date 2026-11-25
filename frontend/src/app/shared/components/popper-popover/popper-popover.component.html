@@ -1,8 +1,4 @@
-<div
-  class="kcm-popper"
-  (mouseenter)="onMouseEnter()"
-  (mouseleave)="onMouseLeave()"
->
+<div class="kcm-popper" (mouseenter)="onMouseEnter()" (mouseleave)="onMouseLeave()">
   <div
     #triggerEl
     class="kcm-popper__trigger"
@@ -18,6 +14,7 @@
     [hidden]="!isOpen()"
     role="dialog"
     [attr.aria-label]="ariaLabel() || ('popoverDefaultLabel' | schemaTranslate: 'ui')"
+    [attr.title]="ariaLabel() || ('popoverDefaultLabel' | schemaTranslate: 'ui')"
   >
     <ng-content />
   </div>

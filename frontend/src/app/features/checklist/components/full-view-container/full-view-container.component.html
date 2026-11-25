@@ -1,7 +1,11 @@
 @if (groups().length === 0) {
-  <div class="full-view__empty" role="status">
-    <i class="fa-solid fa-filter-circle-xmark full-view__empty-icon" aria-hidden="true"></i>
-    <p class="full-view__empty-text">{{ noResultsText() }}</p>
+  <div class="full-view__empty" role="status" [attr.title]="noResultsText()">
+    <i
+      class="fa-solid fa-filter-circle-xmark full-view__empty-icon"
+      [attr.title]="noResultsText()"
+      aria-hidden="true"
+    ></i>
+    <p class="full-view__empty-text" [attr.title]="noResultsText()">{{ noResultsText() }}</p>
   </div>
 } @else {
   <div class="full-view">
@@ -28,9 +32,14 @@
         >
           <header class="full-view__section-header" (click)="toggleGroupCollapsed(group.id)">
             <div class="full-view__section-heading">
-              <h2 class="full-view__section-title">{{ groupTitle(group) }}</h2>
+              <h2 class="full-view__section-title" [attr.title]="groupTitle(group)">
+                {{ groupTitle(group) }}
+              </h2>
               <div class="full-view__section-actions">
-                <span class="full-view__section-count">
+                <span
+                  class="full-view__section-count"
+                  [attr.title]="groupAnsweredCount(group) + ' / ' + group.items.length"
+                >
                   {{ groupAnsweredCount(group) }} / {{ group.items.length }}
                 </span>
                 <button
@@ -38,6 +47,7 @@
                   class="full-view__toggle-btn"
                   [attr.aria-expanded]="!isGroupCollapsed(group.id)"
                   [attr.aria-label]="groupToggleAriaLabel(group)"
+                  [attr.title]="groupToggleTooltip(group)"
                   [matTooltip]="groupToggleTooltip(group)"
                   matTooltipPosition="left"
                   (click)="onGroupToggleButtonClick($event, group.id)"
@@ -46,6 +56,7 @@
                     class="fa-solid"
                     [class.fa-angles-up]="!isGroupCollapsed(group.id)"
                     [class.fa-angles-down]="isGroupCollapsed(group.id)"
+                    [attr.title]="groupToggleTooltip(group)"
                     aria-hidden="true"
                   ></i>
                 </button>
@@ -54,7 +65,7 @@
 
             @if (!isGroupCollapsed(group.id)) {
               @if (groupDescription(group); as description) {
-                <p class="full-view__section-desc">{{ description }}</p>
+                <p class="full-view__section-desc" [attr.title]="description">{{ description }}</p>
               }
             }
           </header>
@@ -91,10 +102,11 @@
         type="button"
         class="full-view__finish-btn"
         [class.full-view__finish-btn--ready]="isReadyToFinish()"
+        [attr.title]="finishLabel()"
         (click)="finishChecklist.emit()"
       >
         <span>{{ finishLabel() }}</span>
-        <i class="fa-solid fa-check" aria-hidden="true"></i>
+        <i class="fa-solid fa-check" [attr.title]="finishLabel()" aria-hidden="true"></i>
       </button>
     </div>
   </div>

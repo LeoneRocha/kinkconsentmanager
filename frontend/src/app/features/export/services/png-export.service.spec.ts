@@ -8,9 +8,9 @@ describe('PngExportService', () => {
   let fileDownloadMock: { downloadDataUrl: jest.Mock; downloadBlob: jest.Mock };
 
   beforeEach(() => {
-    rendererMock = jest.fn<Promise<string>, [HTMLElement]>().mockResolvedValue(
-      'data:image/png;base64,MOCKPNG',
-    );
+    rendererMock = jest
+      .fn<Promise<string>, [HTMLElement]>()
+      .mockResolvedValue('data:image/png;base64,MOCKPNG');
     fileDownloadMock = {
       downloadDataUrl: jest.fn(),
       downloadBlob: jest.fn(),

@@ -79,7 +79,13 @@ describe('BaseDataService', () => {
     let pageResult: PageResult<TestPartnerDto> | undefined;
 
     service
-      .getPage({ page: 2, pageSize: 15, sortBy: 'name', sortDirection: 'asc', filters: { role: 'dom' } })
+      .getPage({
+        page: 2,
+        pageSize: 15,
+        sortBy: 'name',
+        sortDirection: 'asc',
+        filters: { role: 'dom' },
+      })
       .subscribe((res) => (pageResult = res));
 
     const req = httpMock.expectOne(

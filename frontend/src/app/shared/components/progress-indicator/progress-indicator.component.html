@@ -1,7 +1,10 @@
 <div class="progress-indicator">
   <div class="progress-indicator__header">
-    <span class="progress-indicator__label">{{ label() }}</span>
-    <span class="progress-indicator__stats">
+    <span class="progress-indicator__label" [attr.title]="label()">{{ label() }}</span>
+    <span
+      class="progress-indicator__stats"
+      [attr.title]="answered() + ' / ' + total() + ' (' + clampedPercentage() + '%)'"
+    >
       {{ answered() }} / {{ total() }} ({{ clampedPercentage() }}%)
     </span>
   </div>
@@ -10,5 +13,6 @@
     mode="determinate"
     [value]="clampedPercentage()"
     [attr.aria-label]="label()"
+    [attr.title]="label() + ': ' + clampedPercentage() + '%'"
   />
 </div>

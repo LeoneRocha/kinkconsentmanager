@@ -1,6 +1,8 @@
 <div class="question-item" role="group" [attr.aria-labelledby]="questionLabelId()">
   <div class="question-item__header">
-    <span class="question-item__label" [id]="questionLabelId()">{{ itemLabel() }}</span>
+    <span class="question-item__label" [id]="questionLabelId()" [attr.title]="itemLabel()">
+      {{ itemLabel() }}
+    </span>
     <div class="question-item__actions">
       @if (hasTooltip()) {
         <button
@@ -9,9 +11,10 @@
           [matTooltip]="itemTooltip()"
           matTooltipPosition="above"
           [attr.aria-label]="itemTooltip()"
+          [attr.title]="itemTooltip()"
           (click)="openInfoPopup()"
         >
-          <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+          <i class="fa-solid fa-circle-info" [attr.title]="itemTooltip()" aria-hidden="true"></i>
         </button>
       }
       <button
@@ -20,9 +23,14 @@
         [matTooltip]="effectiveReadAloudLabel()"
         matTooltipPosition="above"
         [attr.aria-label]="effectiveReadAloudLabel()"
+        [attr.title]="effectiveReadAloudLabel()"
         (click)="readAloud.emit()"
       >
-        <i class="fa-solid fa-volume-high" aria-hidden="true"></i>
+        <i
+          class="fa-solid fa-volume-high"
+          [attr.title]="effectiveReadAloudLabel()"
+          aria-hidden="true"
+        ></i>
       </button>
     </div>
   </div>
@@ -67,16 +75,28 @@
         >
           @for (optId of item().options ?? []; track optId) {
             <div class="question-item__option">
-              <mat-radio-button [id]="optionInputId(optId)" [value]="optId">
-                <span class="question-item__option-label">{{ getOptionLabel(optId) }}</span>
+              <mat-radio-button
+                [id]="optionInputId(optId)"
+                [value]="optId"
+                [attr.title]="getOptionLabel(optId)"
+              >
+                <span class="question-item__option-label" [attr.title]="getOptionLabel(optId)">
+                  {{ getOptionLabel(optId) }}
+                </span>
               </mat-radio-button>
             </div>
           }
 
           @if (item().allowOtherOption) {
             <div class="question-item__option">
-              <mat-radio-button [id]="optionInputId(otherOptionValue)" [value]="otherOptionValue">
-                <span class="question-item__option-label">{{ otherLabel() }}</span>
+              <mat-radio-button
+                [id]="optionInputId(otherOptionValue)"
+                [value]="otherOptionValue"
+                [attr.title]="otherLabel()"
+              >
+                <span class="question-item__option-label" [attr.title]="otherLabel()">
+                  {{ otherLabel() }}
+                </span>
               </mat-radio-button>
             </div>
 
@@ -86,6 +106,7 @@
                   type="text"
                   class="question-item__text-input"
                   [attr.aria-label]="otherLabel()"
+                  [attr.title]="otherLabel()"
                   [placeholder]="otherPlaceholder()"
                   [ngModel]="answer()?.otherText ?? ''"
                   (ngModelChange)="onSingleOtherTextChange($event)"
@@ -103,9 +124,12 @@
               <mat-checkbox
                 [id]="optionInputId(optId)"
                 [checked]="isMultipleOptionSelected(optId)"
+                [attr.title]="getOptionLabel(optId)"
                 (change)="onMultipleOptionToggle(optId, $event.checked)"
               >
-                <span class="question-item__option-label">{{ getOptionLabel(optId) }}</span>
+                <span class="question-item__option-label" [attr.title]="getOptionLabel(optId)">
+                  {{ getOptionLabel(optId) }}
+                </span>
               </mat-checkbox>
             </div>
           }
@@ -115,9 +139,12 @@
               <mat-checkbox
                 [id]="optionInputId(otherOptionValue)"
                 [checked]="isOtherMultipleSelected()"
+                [attr.title]="otherLabel()"
                 (change)="onMultipleOptionToggle(otherOptionValue, $event.checked)"
               >
-                <span class="question-item__option-label">{{ otherLabel() }}</span>
+                <span class="question-item__option-label" [attr.title]="otherLabel()">
+                  {{ otherLabel() }}
+                </span>
               </mat-checkbox>
             </div>
 
@@ -127,6 +154,7 @@
                   type="text"
                   class="question-item__text-input"
                   [attr.aria-label]="otherLabel()"
+                  [attr.title]="otherLabel()"
                   [placeholder]="otherPlaceholder()"
                   [ngModel]="answer()?.otherText ?? ''"
                   (ngModelChange)="onMultipleOtherTextChange($event)"
@@ -143,11 +171,16 @@
             rows="3"
             class="question-item__textarea"
             [attr.aria-labelledby]="questionLabelId()"
+            [attr.title]="itemLabel()"
             [maxlength]="maxTextLength()"
             [ngModel]="answer()?.customText ?? ''"
             (ngModelChange)="onCustomTextChange($event)"
           ></textarea>
-          <div class="question-item__counter" aria-live="polite">
+          <div
+            class="question-item__counter"
+            aria-live="polite"
+            [attr.title]="customTextLength() + ' / ' + maxTextLength()"
+          >
             {{ customTextLength() }} / {{ maxTextLength() }}
           </div>
         </div>

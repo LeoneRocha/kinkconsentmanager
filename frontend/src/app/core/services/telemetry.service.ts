@@ -31,7 +31,10 @@ export interface TelemetryMetric {
 export interface TelemetryClient {
   loadAppInsights(): void;
   addTelemetryInitializer(telemetryInitializer: (item: ITelemetryItem) => boolean | void): unknown;
-  trackPageView(pageView: { name?: string; uri?: string }, customProperties?: Record<string, unknown>): void;
+  trackPageView(
+    pageView: { name?: string; uri?: string },
+    customProperties?: Record<string, unknown>,
+  ): void;
   trackEvent(event: { name: string }, customProperties?: Record<string, unknown>): void;
   trackMetric(
     metric: {
@@ -68,23 +71,20 @@ export const TELEMETRY_CONFIG = new InjectionToken<TelemetryConfig>('TELEMETRY_C
   factory: () => environment.telemetry,
 });
 
-export const TELEMETRY_SDK_LOADER = new InjectionToken<TelemetrySdkLoader>(
-  'TELEMETRY_SDK_LOADER',
-  {
-    providedIn: 'root',
-    factory: () => async (connectionString: string) => {
-      const { ApplicationInsights } = await import('@microsoft/applicationinsights-web');
-      return new ApplicationInsights({
-        config: {
-          connectionString,
-          disableFetchTracking: false,
-          enableAutoRouteTracking: false,
-          autoTrackPageVisitTime: true,
-        },
-      });
-    },
+export const TELEMETRY_SDK_LOADER = new InjectionToken<TelemetrySdkLoader>('TELEMETRY_SDK_LOADER', {
+  providedIn: 'root',
+  factory: () => async (connectionString: string) => {
+    const { ApplicationInsights } = await import('@microsoft/applicationinsights-web');
+    return new ApplicationInsights({
+      config: {
+        connectionString,
+        disableFetchTracking: false,
+        enableAutoRouteTracking: false,
+        autoTrackPageVisitTime: true,
+      },
+    });
   },
-);
+});
 
 /**
  * Servico desacoplado de telemetria (Azure Application Insights SDK JS).
@@ -158,7 +158,9 @@ export class TelemetryService {
       return;
     }
     const normalizedError =
-      error instanceof Error ? error : new Error(typeof error === 'string' ? error : 'Unknown error');
+      error instanceof Error
+        ? error
+        : new Error(typeof error === 'string' ? error : 'Unknown error');
     this.client.trackException({
       exception: normalizedError,
       severityLevel,

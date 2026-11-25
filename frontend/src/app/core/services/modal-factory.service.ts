@@ -97,8 +97,7 @@ export class ModalFactoryService {
 
   confirm(request: ConfirmModalRequest): Observable<boolean> {
     const providerKey = request.provider ?? request.engine ?? this._defaultEngine();
-    const adapter =
-      this.adapters.get(providerKey) ?? this.adapters.get(this._defaultEngine())!;
+    const adapter = this.adapters.get(providerKey) ?? this.adapters.get(this._defaultEngine())!;
 
     return adapter.confirm({
       title: request.title || this.i18n.translateUi('dialogDefaultTitle'),
@@ -114,8 +113,7 @@ export class ModalFactoryService {
 
   alert(request: AlertModalRequest): Observable<boolean> {
     const providerKey = request.provider ?? request.engine ?? this._defaultEngine();
-    const adapter =
-      this.adapters.get(providerKey) ?? this.adapters.get(this._defaultEngine())!;
+    const adapter = this.adapters.get(providerKey) ?? this.adapters.get(this._defaultEngine())!;
 
     return adapter.alert({
       title: request.title || this.i18n.translateUi('dialogDefaultTitle'),

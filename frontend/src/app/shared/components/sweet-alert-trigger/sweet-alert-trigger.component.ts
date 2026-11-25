@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, output } from '@angular/core';
 import type { SweetAlertIcon, SweetAlertPosition } from 'sweetalert2';
 import { I18nService, SweetAlertService } from '../../../core/services';
 
@@ -31,16 +31,18 @@ export class AppSweetAlertTriggerComponent {
   readonly confirmed = output<void>();
   readonly dismissed = output<void>();
 
+  protected readonly buttonTitle = computed<string>(
+    () => this.title().trim() || this.i18n.translateUi('dialogDefaultTitle'),
+  );
+
   async open(): Promise<void> {
     if (this.disabled()) {
       return;
     }
 
     const resolvedTitle = this.title() || this.i18n.translateUi('dialogDefaultTitle');
-    const resolvedConfirmText =
-      this.confirmText() || this.i18n.translateUi('dialogConfirmAction');
-    const resolvedCancelText =
-      this.cancelText() || this.i18n.translateUi('dialogCancelAction');
+    const resolvedConfirmText = this.confirmText() || this.i18n.translateUi('dialogConfirmAction');
+    const resolvedCancelText = this.cancelText() || this.i18n.translateUi('dialogCancelAction');
 
     const activeMode = this.mode();
     if (activeMode === 'toast') {

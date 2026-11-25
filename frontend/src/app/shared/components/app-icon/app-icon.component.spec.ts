@@ -9,7 +9,8 @@ import { AppIconComponent } from './app-icon.component';
   template: `
     <app-icon class="solid-icon" [icon]="solidIcon" size="lg" [fixedWidth]="true" />
     <app-icon class="brand-icon" [icon]="brandIcon" ariaLabel="GitHub" />
-    <app-icon class="css-icon" icon="fa-solid fa-lock" size="sm" [spin]="true" />
+    <app-icon class="titled-icon" [icon]="solidIcon" title="Proteção Local" />
+    <app-icon class="css-icon" icon="fa-solid fa-lock" size="sm" [spin]="true" title="Bloqueado" />
   `,
 })
 class IconHostComponent {
@@ -45,10 +46,20 @@ describe('AppIconComponent', () => {
     expect(brandSvg.getAttribute('data-prefix')).toBe('fab');
     expect(brandSvg.getAttribute('role')).toBe('img');
     expect(brandSvg.getAttribute('aria-label')).toBe('GitHub');
+    expect(brandSvg.getAttribute('title')).toBe('GitHub');
     expect(brandSvg.getAttribute('aria-hidden')).toBeNull();
+    expect(brandSvg.querySelector('title')?.textContent).toBe('GitHub');
+
+    const titledSvg = host.querySelector('.titled-icon svg')!;
+    expect(titledSvg.getAttribute('title')).toBe('Proteção Local');
+    expect(titledSvg.getAttribute('aria-label')).toBe('Proteção Local');
+    expect(titledSvg.getAttribute('role')).toBe('img');
+    expect(titledSvg.querySelector('title')?.textContent).toBe('Proteção Local');
   });
 
-  it('should render fallback Font Awesome CSS class icons when string is passed', async () => {
+  // Cenário: Renderização de ícone com classes CSS e título acessível.
+  // Objetivo: Garantir que o elemento <i> receba classes Font Awesome e atributo title/aria-label.
+  it('should render fallback Font Awesome CSS class icons with accessible title when string is passed', async () => {
     const fixture = TestBed.createComponent(IconHostComponent);
     fixture.detectChanges();
     await fixture.whenStable();
@@ -59,5 +70,8 @@ describe('AppIconComponent', () => {
     expect(cssEl.classList.contains('fa-lock')).toBe(true);
     expect(cssEl.classList.contains('kcm-icon--sm')).toBe(true);
     expect(cssEl.classList.contains('fa-spin')).toBe(true);
+    expect(cssEl.getAttribute('title')).toBe('Bloqueado');
+    expect(cssEl.getAttribute('aria-label')).toBe('Bloqueado');
+    expect(cssEl.getAttribute('role')).toBe('img');
   });
 });

@@ -77,10 +77,10 @@ export class CompositeTranslateLoader implements TranslateLoader {
       this.sources.length === 0
         ? of([])
         : forkJoin(
-          this.sources.map((source) =>
-            this.http.get<TranslationObject>(`${source.prefix}${lang}${source.suffix}`),
-          ),
-        );
+            this.sources.map((source) =>
+              this.http.get<TranslationObject>(`${source.prefix}${lang}${source.suffix}`),
+            ),
+          );
 
     return forkJoin({
       baseDictionaries: baseRequests$,

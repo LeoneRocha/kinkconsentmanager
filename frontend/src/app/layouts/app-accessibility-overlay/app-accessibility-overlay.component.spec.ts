@@ -54,9 +54,7 @@ describe('AppAccessibilityOverlayComponent', () => {
     expect(captionBar?.textContent).toContain('Texto em legenda ao vivo');
 
     const dismissSpy = jest.spyOn(a11yService, 'dismissCaption');
-    const dismissBtn = el.querySelector(
-      'button[aria-label="Fechar legenda"]',
-    ) as HTMLButtonElement;
+    const dismissBtn = el.querySelector('button[aria-label="Fechar legenda"]') as HTMLButtonElement;
     dismissBtn.click();
     fixture.detectChanges();
 

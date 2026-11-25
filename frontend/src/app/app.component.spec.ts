@@ -1,10 +1,16 @@
+import { Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { provideRouter, Router } from '@angular/router';
 import { provideTranslateService, TranslateService } from '@ngx-translate/core';
 import { App } from './app.component';
 import { routes } from './app.routes';
 import { AccessibilityService, I18nService, ThemeService } from './core/services';
 import { environment } from '../environments/environment';
+
+@Component({
+  template: '',
+})
+class DummyShellRouteComponent {}
 
 describe('App', () => {
   const clearRootClasses = (): void => {
@@ -34,6 +40,7 @@ describe('App', () => {
     translate.setTranslation('pt-BR', {
       ui: {
         title: 'Kink Consent Manager',
+        navDashboard: 'Dashboard',
         navChecklist: 'Checklist',
         navExport: 'Exportar',
         privacyNotice: 'Privacidade local: seus dados permanecem exclusivamente no seu navegador.',
@@ -97,7 +104,7 @@ describe('App', () => {
 
     const el = fixture.nativeElement as HTMLElement;
     const brandLink = el.querySelector<HTMLAnchorElement>('a.app-shell__brand');
-    expect(brandLink?.getAttribute('href')).toBe('/checklist');
+    expect(brandLink?.getAttribute('href')).toBe('/dashboard');
     expect(el.querySelector('nav')).toBeNull();
     expect(el.querySelector('.app-shell__utilities')).not.toBeNull();
   });
@@ -122,10 +129,10 @@ describe('App', () => {
     );
   });
 
-  it('should configure lazy routes for checklist and export with fallback redirect', () => {
-    expect(routes.map((route) => route.path)).toEqual(['', 'checklist', 'export', '**']);
-    expect(routes[0]?.redirectTo).toBe('checklist');
-    expect(routes[3]?.redirectTo).toBe('checklist');
+  it('should configure lazy routes for dashboard and checklist with fallback redirect', () => {
+    expect(routes.map((route) => route.path)).toEqual(['', 'dashboard', 'checklist', '**']);
+    expect(routes[0]?.redirectTo).toBe('dashboard');
+    expect(routes[3]?.redirectTo).toBe('dashboard');
   });
 
   // Cenário: Clique no botão de tema claro/escuro na barra superior.
@@ -202,5 +209,46 @@ describe('App', () => {
     const captionBar = fixture.nativeElement.querySelector('.app-shell__caption-bar');
     expect(captionBar).not.toBeNull();
     expect(captionBar.textContent).toContain('Item de teste anunciado');
+  });
+
+  // Cenário: Navegação por foco com leitura audiovisual ativada no shell principal.
+  // Objetivo: Capturar `focusin` no componente raiz e encaminhar ao `AccessibilityService.announceElement`.
+  it('should announce focused controls via AccessibilityService when captions are active', async () => {
+    const fixture = TestBed.createComponent(App);
+    const a11yService = TestBed.inject(AccessibilityService);
+    a11yService.toggleVisualCaptions();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const themeBtn = fixture.nativeElement.querySelector(
+      '.app-shell__icon-btn--theme',
+    ) as HTMLButtonElement;
+    themeBtn.dispatchEvent(new FocusEvent('focusin', { bubbles: true }));
+    await fixture.whenStable();
+
+    expect(a11yService.liveAnnouncement()).toBe('Ativar tema escuro');
+  });
+
+  // Cenário: Clique no título `.app-shell__brand-title` no shell principal após navegação para `/checklist`.
+  // Objetivo: Garantir que o roteador retorne imediatamente à rota `/dashboard`.
+  it('should navigate back to /dashboard when clicking app-shell__brand-title from another route', async () => {
+    const router = TestBed.inject(Router);
+    router.resetConfig([
+      { path: 'dashboard', component: DummyShellRouteComponent },
+      { path: 'checklist', component: DummyShellRouteComponent },
+    ]);
+
+    const fixture = TestBed.createComponent(App);
+    await router.navigateByUrl('/checklist');
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const brandTitle = fixture.nativeElement.querySelector(
+      '.app-shell__brand-title',
+    ) as HTMLSpanElement;
+    brandTitle.click();
+    await fixture.whenStable();
+
+    expect(router.url).toBe('/dashboard');
   });
 });

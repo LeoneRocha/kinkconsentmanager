@@ -85,16 +85,21 @@ describe('BrowserStorageRepository', () => {
     const getSessionEncSpy = jest.spyOn(storageService, 'getSessionEncrypted');
 
     expect(
-      await repository.setEncrypted('kcm_repo_enc', { secret: 'dados-privados' }, undefined, 'local'),
+      await repository.setEncrypted(
+        'kcm_repo_enc',
+        { secret: 'dados-privados' },
+        undefined,
+        'local',
+      ),
     ).toBe(true);
     expect(localStorage.getItem('kcm_repo_enc')).not.toContain('dados-privados');
     expect(await repository.getEncrypted<{ secret: string }>('kcm_repo_enc', 'local')).toEqual({
       secret: 'dados-privados',
     });
 
-    expect(
-      await repository.setEncrypted('kcm_sess_enc', { step: 2 }, undefined, 'session'),
-    ).toBe(true);
+    expect(await repository.setEncrypted('kcm_sess_enc', { step: 2 }, undefined, 'session')).toBe(
+      true,
+    );
     expect(sessionStorage.getItem('kcm_sess_enc')).not.toContain('"step":2');
     expect(await repository.getEncrypted<{ step: number }>('kcm_sess_enc', 'session')).toEqual({
       step: 2,

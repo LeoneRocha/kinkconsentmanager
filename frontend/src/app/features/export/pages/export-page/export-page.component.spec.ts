@@ -240,14 +240,17 @@ describe('ExportPageComponent', () => {
     expect(hostEl.querySelector('.export-page__error')).toBeNull();
   });
 
-  it('should navigate back to /checklist when Back button is clicked', async () => {
+  it('should navigate back to /checklist when fresh or /checklist/fill when checklist state is confirmed/populated', async () => {
     const navigateSpy = jest.spyOn(router, 'navigate').mockResolvedValue(true);
     await createPage();
 
     const hostEl = fixture.nativeElement as HTMLElement;
     hostEl.querySelector<HTMLButtonElement>('button[data-action="back"]')?.click();
-
     expect(navigateSpy).toHaveBeenCalledWith(['/checklist']);
+
+    checklistState.confirmStartMode('stepper');
+    hostEl.querySelector<HTMLButtonElement>('button[data-action="back"]')?.click();
+    expect(navigateSpy).toHaveBeenCalledWith(['/checklist', 'fill']);
   });
 
   it('should capture the offscreen 1200px container for PNG export and display a success snackbar', async () => {

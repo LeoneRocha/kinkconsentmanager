@@ -1,13 +1,17 @@
 @if (groups().length === 0) {
-  <div class="classic-sheet__empty" role="status">
-    <i class="fa-solid fa-filter-circle-xmark classic-sheet__empty-icon" aria-hidden="true"></i>
-    <p class="classic-sheet__empty-text">{{ noResultsText() }}</p>
+  <div class="classic-sheet__empty" role="status" [attr.title]="noResultsText()">
+    <i
+      class="fa-solid fa-filter-circle-xmark classic-sheet__empty-icon"
+      [attr.title]="noResultsText()"
+      aria-hidden="true"
+    ></i>
+    <p class="classic-sheet__empty-text" [attr.title]="noResultsText()">{{ noResultsText() }}</p>
   </div>
 } @else {
   <div class="classic-sheet">
     <div class="classic-sheet__top-bar">
-      <p class="classic-sheet__hint">
-        <i class="fa-solid fa-table-cells" aria-hidden="true"></i>
+      <p class="classic-sheet__hint" [attr.title]="classicHint()">
+        <i class="fa-solid fa-table-cells" [attr.title]="classicHint()" aria-hidden="true"></i>
         <span>{{ classicHint() }}</span>
       </p>
 
@@ -16,6 +20,7 @@
         class="classic-sheet__toggle-all-btn"
         [attr.aria-expanded]="areAllGroupsExpanded()"
         [attr.aria-label]="toggleAllLabel()"
+        [attr.title]="toggleAllLabel()"
         [matTooltip]="toggleAllLabel()"
         matTooltipPosition="left"
         (click)="toggleAllGroups()"
@@ -24,6 +29,7 @@
           class="fa-solid"
           [class.fa-angles-up]="areAllGroupsExpanded()"
           [class.fa-angles-down]="!areAllGroupsExpanded()"
+          [attr.title]="toggleAllLabel()"
           aria-hidden="true"
         ></i>
       </button>
@@ -38,7 +44,9 @@
         >
           <header class="classic-block__header" (click)="toggleGroupCollapsed(group.id)">
             <div class="classic-block__title-wrap">
-              <h2 class="classic-block__title">{{ groupTitle(group) }}</h2>
+              <h2 class="classic-block__title" [attr.title]="groupTitle(group)">
+                {{ groupTitle(group) }}
+              </h2>
               @if (groupDescription(group); as description) {
                 <button
                   type="button"
@@ -46,14 +54,22 @@
                   [matTooltip]="description"
                   matTooltipPosition="above"
                   [attr.aria-label]="description"
+                  [attr.title]="description"
                   (click)="onInfoButtonClick($event, groupTitle(group), description)"
                 >
-                  <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+                  <i
+                    class="fa-solid fa-circle-info"
+                    [attr.title]="description"
+                    aria-hidden="true"
+                  ></i>
                 </button>
               }
             </div>
             <div class="classic-block__header-actions">
-              <span class="classic-block__count">
+              <span
+                class="classic-block__count"
+                [attr.title]="groupAnsweredCount(group) + '/' + group.items.length"
+              >
                 {{ groupAnsweredCount(group) }}/{{ group.items.length }}
               </span>
               <button
@@ -61,6 +77,7 @@
                 class="classic-block__toggle-btn"
                 [attr.aria-expanded]="!isGroupCollapsed(group.id)"
                 [attr.aria-label]="groupToggleAriaLabel(group)"
+                [attr.title]="groupToggleTooltip(group)"
                 [matTooltip]="groupToggleTooltip(group)"
                 matTooltipPosition="above"
                 (click)="onGroupToggleButtonClick($event, group.id)"
@@ -69,6 +86,7 @@
                   class="fa-solid"
                   [class.fa-angles-up]="!isGroupCollapsed(group.id)"
                   [class.fa-angles-down]="isGroupCollapsed(group.id)"
+                  [attr.title]="groupToggleTooltip(group)"
                   aria-hidden="true"
                 ></i>
               </button>
@@ -83,10 +101,14 @@
                 [class.classic-block__roles--dual]="headerRoles.isDual && !!headerRoles.secondary"
                 aria-hidden="true"
               >
-                <span class="classic-block__role-tag">{{ headerRoles.primary }}</span>
+                <span class="classic-block__role-tag" [attr.title]="headerRoles.primary">
+                  {{ headerRoles.primary }}
+                </span>
                 @if (headerRoles.isDual && headerRoles.secondary) {
                   <span class="classic-block__roles-divider" aria-hidden="true"></span>
-                  <span class="classic-block__role-tag">{{ headerRoles.secondary }}</span>
+                  <span class="classic-block__role-tag" [attr.title]="headerRoles.secondary">
+                    {{ headerRoles.secondary }}
+                  </span>
                 }
               </div>
             }
@@ -97,7 +119,9 @@
                   @let itemRoles = roleLabels(group, item);
                   <div class="classic-row">
                     <div class="classic-row__item-meta">
-                      <span class="classic-row__label">{{ itemLabel(item) }}</span>
+                      <span class="classic-row__label" [attr.title]="itemLabel(item)">
+                        {{ itemLabel(item) }}
+                      </span>
                       <div class="classic-row__item-actions">
                         @if (itemTooltip(item); as tip) {
                           <button
@@ -106,9 +130,14 @@
                             [matTooltip]="tip"
                             matTooltipPosition="above"
                             [attr.aria-label]="tip"
+                            [attr.title]="tip"
                             (click)="openInfoPopup(itemLabel(item), tip)"
                           >
-                            <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+                            <i
+                              class="fa-solid fa-circle-info"
+                              [attr.title]="tip"
+                              aria-hidden="true"
+                            ></i>
                           </button>
                         }
                         <button
@@ -117,9 +146,14 @@
                           [matTooltip]="readAloudLabel() + ': ' + itemLabel(item)"
                           matTooltipPosition="above"
                           [attr.aria-label]="readAloudLabel() + ': ' + itemLabel(item)"
+                          [attr.title]="readAloudLabel() + ': ' + itemLabel(item)"
                           (click)="readItemAloud.emit(item)"
                         >
-                          <i class="fa-solid fa-volume-high" aria-hidden="true"></i>
+                          <i
+                            class="fa-solid fa-volume-high"
+                            [attr.title]="readAloudLabel() + ': ' + itemLabel(item)"
+                            aria-hidden="true"
+                          ></i>
                         </button>
                       </div>
                     </div>
@@ -151,6 +185,13 @@
                                 ': ' +
                                 scaleLabel(scale.id)
                               "
+                              [attr.title]="
+                                itemLabel(item) +
+                                ' - ' +
+                                itemRoles.primary +
+                                ': ' +
+                                scaleLabel(scale.id)
+                              "
                               [matTooltip]="itemRoles.primary + ': ' + scaleLabel(scale.id)"
                               matTooltipPosition="above"
                               [style.border-color]="scale.color"
@@ -160,7 +201,11 @@
                               (keydown)="onClassicDotKeydown($event, item.id, 'primaryScale', idx)"
                             >
                               @if (selected) {
-                                <i [class]="scale.icon" aria-hidden="true"></i>
+                                <i
+                                  [class]="scale.icon"
+                                  [attr.title]="scaleLabel(scale.id)"
+                                  aria-hidden="true"
+                                ></i>
                               }
                             </button>
                           }
@@ -193,6 +238,13 @@
                                   ': ' +
                                   scaleLabel(scale.id)
                                 "
+                                [attr.title]="
+                                  itemLabel(item) +
+                                  ' - ' +
+                                  (itemRoles.secondary ?? '') +
+                                  ': ' +
+                                  scaleLabel(scale.id)
+                                "
                                 [matTooltip]="
                                   (itemRoles.secondary ?? '') + ': ' + scaleLabel(scale.id)
                                 "
@@ -206,7 +258,11 @@
                                 "
                               >
                                 @if (selected) {
-                                  <i [class]="scale.icon" aria-hidden="true"></i>
+                                  <i
+                                    [class]="scale.icon"
+                                    [attr.title]="scaleLabel(scale.id)"
+                                    aria-hidden="true"
+                                  ></i>
                                 }
                               </button>
                             }
@@ -248,10 +304,11 @@
         type="button"
         class="classic-sheet__finish-btn"
         [class.classic-sheet__finish-btn--ready]="isReadyToFinish()"
+        [attr.title]="finishLabel()"
         (click)="finishChecklist.emit()"
       >
         <span>{{ finishLabel() }}</span>
-        <i class="fa-solid fa-check" aria-hidden="true"></i>
+        <i class="fa-solid fa-check" [attr.title]="finishLabel()" aria-hidden="true"></i>
       </button>
     </div>
   </div>

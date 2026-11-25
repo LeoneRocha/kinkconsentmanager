@@ -1,198 +1,383 @@
 <header class="app-shell__topbar" role="banner">
   <div class="app-shell__topbar-inner">
-    <a class="app-shell__brand" routerLink="/checklist">
-      <span class="app-shell__brand-badge" aria-hidden="true">
+    <a
+      class="app-shell__brand"
+      [routerLink]="dashboardRoute"
+      [attr.aria-label]="
+        ('title' | schemaTranslate: 'ui') + ' — ' + ('navDashboard' | schemaTranslate: 'ui')
+      "
+      [attr.title]="
+        ('title' | schemaTranslate: 'ui') + ' — ' + ('navDashboard' | schemaTranslate: 'ui')
+      "
+      (click)="onNavigateToDashboard($event)"
+    >
+      <span class="app-shell__brand-badge">
         <img
           src="favicon.svg"
-          alt=""
+          [attr.alt]="'title' | schemaTranslate: 'ui'"
+          [attr.title]="'title' | schemaTranslate: 'ui'"
           class="app-shell__brand-icon"
           width="36"
           height="36"
         />
       </span>
-      <span class="app-shell__brand-title">
+      <span
+        class="app-shell__brand-title"
+        [attr.title]="
+          ('title' | schemaTranslate: 'ui') + ' — ' + ('navDashboard' | schemaTranslate: 'ui')
+        "
+      >
         {{ 'title' | schemaTranslate: 'ui' }}
       </span>
     </a>
 
     <div class="app-shell__utilities">
-      <button type="button" class="app-shell__icon-btn app-shell__icon-btn--theme"
-        [class.app-shell__icon-btn--active]="theme.isDark()" [attr.aria-pressed]="theme.isDark()" [attr.aria-label]="
+      <button
+        type="button"
+        class="app-shell__icon-btn app-shell__icon-btn--theme"
+        [class.app-shell__icon-btn--active]="theme.isDark()"
+        [attr.aria-pressed]="theme.isDark()"
+        [attr.aria-label]="
           (theme.isDark() ? 'themeToggleToLight' : 'themeToggleToDark') | schemaTranslate: 'ui'
-        " [matTooltip]="
+        "
+        [attr.title]="
           (theme.isDark() ? 'themeToggleToLight' : 'themeToggleToDark') | schemaTranslate: 'ui'
-        " matTooltipPosition="below" (click)="onToggleTheme()">
-        <i class="fa-solid" [class.fa-sun]="theme.isDark()" [class.fa-moon]="!theme.isDark()" aria-hidden="true"></i>
+        "
+        [matTooltip]="
+          (theme.isDark() ? 'themeToggleToLight' : 'themeToggleToDark') | schemaTranslate: 'ui'
+        "
+        matTooltipPosition="below"
+        (click)="onToggleTheme()"
+      >
+        <i
+          class="fa-solid"
+          [class.fa-sun]="theme.isDark()"
+          [class.fa-moon]="!theme.isDark()"
+          [attr.title]="
+            (theme.isDark() ? 'themeToggleToLight' : 'themeToggleToDark') | schemaTranslate: 'ui'
+          "
+          aria-hidden="true"
+        ></i>
       </button>
 
       <div class="app-shell__popover-anchor">
-        <button type="button" class="app-shell__icon-btn app-shell__icon-btn--lang"
-          [class.app-shell__icon-btn--active]="langMenuOpen()" aria-haspopup="menu"
-          [attr.aria-expanded]="langMenuOpen()" [attr.aria-label]="'languageMenuLabel' | schemaTranslate: 'ui'"
-          [matTooltip]="'languageMenuLabel' | schemaTranslate: 'ui'" matTooltipPosition="below"
-          (click)="toggleLangMenu()">
-          <i class="fa-solid fa-globe" aria-hidden="true"></i>
-          <span class="app-shell__lang-pill" aria-hidden="true">{{ currentLangShort() }}</span>
+        <button
+          type="button"
+          class="app-shell__icon-btn app-shell__icon-btn--lang"
+          [class.app-shell__icon-btn--active]="langMenuOpen()"
+          aria-haspopup="menu"
+          [attr.aria-expanded]="langMenuOpen()"
+          [attr.aria-label]="'languageMenuLabel' | schemaTranslate: 'ui'"
+          [attr.title]="'languageMenuLabel' | schemaTranslate: 'ui'"
+          [matTooltip]="'languageMenuLabel' | schemaTranslate: 'ui'"
+          matTooltipPosition="below"
+          (click)="toggleLangMenu()"
+        >
+          <i
+            class="fa-solid fa-globe"
+            [attr.title]="'languageMenuLabel' | schemaTranslate: 'ui'"
+            aria-hidden="true"
+          ></i>
+          <span class="app-shell__lang-pill" [attr.title]="currentLangShort()" aria-hidden="true">{{
+            currentLangShort()
+          }}</span>
         </button>
 
         @if (langMenuOpen()) {
-        <div class="app-shell__popover app-shell__popover--menu" role="menu"
-          [attr.aria-label]="'languageMenuLabel' | schemaTranslate: 'ui'">
-          @for (item of supportedLanguages; track item.code) {
-          <button type="button" role="menuitemradio" class="app-shell__menu-item"
-            [class.app-shell__menu-item--selected]="i18n.currentLang() === item.code"
-            [attr.aria-checked]="i18n.currentLang() === item.code" (click)="selectLanguage(item.code)">
-            <span class="app-shell__menu-tag">{{ item.short }}</span>
-            <span class="app-shell__menu-label">{{ item.nativeName }}</span>
-            @if (i18n.currentLang() === item.code) {
-            <i class="fa-solid fa-check app-shell__menu-check" aria-hidden="true"></i>
+          <div
+            class="app-shell__popover app-shell__popover--menu"
+            role="menu"
+            [attr.aria-label]="'languageMenuLabel' | schemaTranslate: 'ui'"
+          >
+            @for (item of supportedLanguages; track item.code) {
+              <button
+                type="button"
+                role="menuitemradio"
+                class="app-shell__menu-item"
+                [class.app-shell__menu-item--selected]="i18n.currentLang() === item.code"
+                [attr.aria-checked]="i18n.currentLang() === item.code"
+                [attr.title]="item.nativeName + ' (' + item.short + ')'"
+                (click)="selectLanguage(item.code)"
+              >
+                <span class="app-shell__menu-tag" [attr.title]="item.short">{{ item.short }}</span>
+                <span class="app-shell__menu-label" [attr.title]="item.nativeName">{{
+                  item.nativeName
+                }}</span>
+                @if (i18n.currentLang() === item.code) {
+                  <i
+                    class="fa-solid fa-check app-shell__menu-check"
+                    [attr.title]="item.nativeName"
+                    aria-hidden="true"
+                  ></i>
+                }
+              </button>
             }
-          </button>
-          }
-        </div>
+          </div>
         }
       </div>
 
       <div class="app-shell__popover-anchor">
-        <button type="button" class="app-shell__icon-btn app-shell__icon-btn--a11y"
+        <button
+          type="button"
+          class="app-shell__icon-btn app-shell__icon-btn--a11y"
           [class.app-shell__icon-btn--active]="
             a11yPanelOpen() || accessibility.hasActiveAssists() || accessibility.isSpeaking()
-          " [attr.aria-expanded]="a11yPanelOpen()" [attr.aria-controls]="'a11y-control-panel'"
+          "
+          [attr.aria-expanded]="a11yPanelOpen()"
+          [attr.aria-controls]="'a11y-control-panel'"
           [attr.aria-label]="'a11yButtonLabel' | schemaTranslate: 'ui'"
-          [matTooltip]="'a11yButtonLabel' | schemaTranslate: 'ui'" matTooltipPosition="below"
-          (click)="toggleA11yPanel()">
-          <i class="fa-solid"
-            [class.fa-volume-high]="accessibility.audioAssistEnabled() || accessibility.isSpeaking()"
+          [attr.title]="'a11yButtonLabel' | schemaTranslate: 'ui'"
+          [matTooltip]="'a11yButtonLabel' | schemaTranslate: 'ui'"
+          matTooltipPosition="below"
+          (click)="toggleA11yPanel()"
+        >
+          <i
+            class="fa-solid"
+            [class.fa-volume-high]="
+              accessibility.audioAssistEnabled() || accessibility.isSpeaking()
+            "
             [class.fa-headphones]="
               !accessibility.audioAssistEnabled() && !accessibility.isSpeaking()
-            " aria-hidden="true"></i>
+            "
+            [attr.title]="'a11yButtonLabel' | schemaTranslate: 'ui'"
+            aria-hidden="true"
+          ></i>
           @if (accessibility.hasActiveAssists() || accessibility.isSpeaking()) {
-          <span class="app-shell__status-dot" aria-hidden="true"></span>
+            <span
+              class="app-shell__status-dot"
+              [attr.title]="'a11yButtonLabel' | schemaTranslate: 'ui'"
+              aria-hidden="true"
+            ></span>
           }
         </button>
 
         @if (a11yPanelOpen()) {
-        <section id="a11y-control-panel" class="app-shell__popover app-shell__popover--panel"
-          [attr.aria-label]="'a11yPanelTitle' | schemaTranslate: 'ui'">
-          <div class="app-shell__panel-header">
-            <h2 class="app-shell__panel-title">
-              <i class="fa-solid fa-headphones" aria-hidden="true"></i>
-              <span>{{ 'a11yPanelTitle' | schemaTranslate: 'ui' }}</span>
-            </h2>
-            <button type="button" class="app-shell__panel-close"
-              [attr.aria-label]="'a11yClosePanel' | schemaTranslate: 'ui'" (click)="closePopovers()">
-              <i class="fa-solid fa-xmark" aria-hidden="true"></i>
-            </button>
-          </div>
-
-          <div class="app-shell__panel-list">
-            <div class="app-shell__panel-row">
-              <div class="app-shell__panel-copy">
-                <label class="app-shell__panel-label" for="a11y-audio-switch">
-                  {{ 'a11yAudioAssist' | schemaTranslate: 'ui' }}
-                </label>
-                <span class="app-shell__panel-hint">
-                  {{ 'a11yAudioAssistHint' | schemaTranslate: 'ui' }}
-                </span>
-              </div>
-              <mat-slide-toggle id="a11y-audio-switch" [checked]="accessibility.audioAssistEnabled()"
-                (change)="accessibility.toggleAudioAssist()" />
+          <section
+            id="a11y-control-panel"
+            class="app-shell__popover app-shell__popover--panel"
+            [attr.aria-label]="'a11yPanelTitle' | schemaTranslate: 'ui'"
+          >
+            <div class="app-shell__panel-header">
+              <h2
+                class="app-shell__panel-title"
+                [attr.title]="'a11yPanelTitle' | schemaTranslate: 'ui'"
+              >
+                <i
+                  class="fa-solid fa-headphones"
+                  [attr.title]="'a11yPanelTitle' | schemaTranslate: 'ui'"
+                  aria-hidden="true"
+                ></i>
+                <span>{{ 'a11yPanelTitle' | schemaTranslate: 'ui' }}</span>
+              </h2>
+              <button
+                type="button"
+                class="app-shell__panel-close"
+                [attr.aria-label]="'a11yClosePanel' | schemaTranslate: 'ui'"
+                [attr.title]="'a11yClosePanel' | schemaTranslate: 'ui'"
+                (click)="closePopovers()"
+              >
+                <i
+                  class="fa-solid fa-xmark"
+                  [attr.title]="'a11yClosePanel' | schemaTranslate: 'ui'"
+                  aria-hidden="true"
+                ></i>
+              </button>
             </div>
 
-            @if (!accessibility.isSpeechSupported()) {
-            <p class="app-shell__panel-note" role="note">
-              {{ 'a11ySpeechUnsupported' | schemaTranslate: 'ui' }}
-            </p>
-            }
+            <div class="app-shell__panel-list">
+              <div class="app-shell__panel-row">
+                <div class="app-shell__panel-copy">
+                  <label
+                    class="app-shell__panel-label"
+                    for="a11y-audio-switch"
+                    [attr.title]="'a11yAudioAssist' | schemaTranslate: 'ui'"
+                  >
+                    {{ 'a11yAudioAssist' | schemaTranslate: 'ui' }}
+                  </label>
+                  <span
+                    class="app-shell__panel-hint"
+                    [attr.title]="'a11yAudioAssistHint' | schemaTranslate: 'ui'"
+                  >
+                    {{ 'a11yAudioAssistHint' | schemaTranslate: 'ui' }}
+                  </span>
+                </div>
+                <mat-slide-toggle
+                  id="a11y-audio-switch"
+                  [checked]="accessibility.audioAssistEnabled()"
+                  [attr.title]="'a11yAudioAssist' | schemaTranslate: 'ui'"
+                  (change)="accessibility.toggleAudioAssist()"
+                />
+              </div>
 
-            @if (accessibility.isSpeaking()) {
-            <button type="button" class="app-shell__stop-btn" (click)="accessibility.stopSpeaking()">
-              <i class="fa-solid fa-stop" aria-hidden="true"></i>
-              <span>{{ 'a11yStopReading' | schemaTranslate: 'ui' }}</span>
-            </button>
-            }
+              @if (!accessibility.isSpeechSupported()) {
+                <p
+                  class="app-shell__panel-note"
+                  role="note"
+                  [attr.title]="'a11ySpeechUnsupported' | schemaTranslate: 'ui'"
+                >
+                  {{ 'a11ySpeechUnsupported' | schemaTranslate: 'ui' }}
+                </p>
+              }
 
-            <div class="app-shell__panel-block">
-              <span class="app-shell__panel-label">
-                {{ 'a11ySpeechRate' | schemaTranslate: 'ui' }}
-              </span>
-              <div class="app-shell__segmented">
-                @for (rate of speechRates; track rate.value) {
-                <button type="button" class="app-shell__segment-btn" [class.app-shell__segment-btn--active]="
+              @if (accessibility.isSpeaking()) {
+                <button
+                  type="button"
+                  class="app-shell__stop-btn"
+                  [attr.title]="'a11yStopReading' | schemaTranslate: 'ui'"
+                  (click)="accessibility.stopSpeaking()"
+                >
+                  <i
+                    class="fa-solid fa-stop"
+                    [attr.title]="'a11yStopReading' | schemaTranslate: 'ui'"
+                    aria-hidden="true"
+                  ></i>
+                  <span>{{ 'a11yStopReading' | schemaTranslate: 'ui' }}</span>
+                </button>
+              }
+
+              <div class="app-shell__panel-block">
+                <span
+                  class="app-shell__panel-label"
+                  [attr.title]="'a11ySpeechRate' | schemaTranslate: 'ui'"
+                >
+                  {{ 'a11ySpeechRate' | schemaTranslate: 'ui' }}
+                </span>
+                <div class="app-shell__segmented">
+                  @for (rate of speechRates; track rate.value) {
+                    <button
+                      type="button"
+                      class="app-shell__segment-btn"
+                      [class.app-shell__segment-btn--active]="
                         accessibility.speechRate() === rate.value
-                      " [attr.aria-pressed]="accessibility.speechRate() === rate.value"
-                  (click)="accessibility.setSpeechRate(rate.value)">
-                  {{ rate.labelKey | schemaTranslate: 'ui' }} ({{ rate.tag }})
-                </button>
-                }
+                      "
+                      [attr.aria-pressed]="accessibility.speechRate() === rate.value"
+                      [attr.title]="(rate.labelKey | schemaTranslate: 'ui') + ' (' + rate.tag + ')'"
+                      (click)="accessibility.setSpeechRate(rate.value)"
+                    >
+                      {{ rate.labelKey | schemaTranslate: 'ui' }} ({{ rate.tag }})
+                    </button>
+                  }
+                </div>
               </div>
-            </div>
 
-            <div class="app-shell__panel-row">
-              <div class="app-shell__panel-copy">
-                <label class="app-shell__panel-label" for="a11y-captions-switch">
-                  {{ 'a11yVisualCaptions' | schemaTranslate: 'ui' }}
-                </label>
-                <span class="app-shell__panel-hint">
-                  {{ 'a11yVisualCaptionsHint' | schemaTranslate: 'ui' }}
+              <div class="app-shell__panel-row">
+                <div class="app-shell__panel-copy">
+                  <label
+                    class="app-shell__panel-label"
+                    for="a11y-captions-switch"
+                    [attr.title]="'a11yVisualCaptions' | schemaTranslate: 'ui'"
+                  >
+                    {{ 'a11yVisualCaptions' | schemaTranslate: 'ui' }}
+                  </label>
+                  <span
+                    class="app-shell__panel-hint"
+                    [attr.title]="'a11yVisualCaptionsHint' | schemaTranslate: 'ui'"
+                  >
+                    {{ 'a11yVisualCaptionsHint' | schemaTranslate: 'ui' }}
+                  </span>
+                </div>
+                <mat-slide-toggle
+                  id="a11y-captions-switch"
+                  [checked]="accessibility.visualCaptionsEnabled()"
+                  [attr.title]="'a11yVisualCaptions' | schemaTranslate: 'ui'"
+                  (change)="accessibility.toggleVisualCaptions()"
+                />
+              </div>
+
+              <div class="app-shell__panel-row">
+                <div class="app-shell__panel-copy">
+                  <label
+                    class="app-shell__panel-label"
+                    for="a11y-contrast-switch"
+                    [attr.title]="'a11yHighContrast' | schemaTranslate: 'ui'"
+                  >
+                    {{ 'a11yHighContrast' | schemaTranslate: 'ui' }}
+                  </label>
+                  <span
+                    class="app-shell__panel-hint"
+                    [attr.title]="'a11yHighContrastHint' | schemaTranslate: 'ui'"
+                  >
+                    {{ 'a11yHighContrastHint' | schemaTranslate: 'ui' }}
+                  </span>
+                </div>
+                <mat-slide-toggle
+                  id="a11y-contrast-switch"
+                  [checked]="accessibility.highContrast()"
+                  [attr.title]="'a11yHighContrast' | schemaTranslate: 'ui'"
+                  (change)="accessibility.toggleHighContrast()"
+                />
+              </div>
+
+              <div class="app-shell__panel-block">
+                <span
+                  class="app-shell__panel-label"
+                  [attr.title]="'a11yFontSize' | schemaTranslate: 'ui'"
+                >
+                  {{ 'a11yFontSize' | schemaTranslate: 'ui' }}
                 </span>
-              </div>
-              <mat-slide-toggle id="a11y-captions-switch" [checked]="accessibility.visualCaptionsEnabled()"
-                (change)="accessibility.toggleVisualCaptions()" />
-            </div>
-
-            <div class="app-shell__panel-row">
-              <div class="app-shell__panel-copy">
-                <label class="app-shell__panel-label" for="a11y-contrast-switch">
-                  {{ 'a11yHighContrast' | schemaTranslate: 'ui' }}
-                </label>
-                <span class="app-shell__panel-hint">
-                  {{ 'a11yHighContrastHint' | schemaTranslate: 'ui' }}
-                </span>
-              </div>
-              <mat-slide-toggle id="a11y-contrast-switch" [checked]="accessibility.highContrast()"
-                (change)="accessibility.toggleHighContrast()" />
-            </div>
-
-            <div class="app-shell__panel-block">
-              <span class="app-shell__panel-label">
-                {{ 'a11yFontSize' | schemaTranslate: 'ui' }}
-              </span>
-              <div class="app-shell__segmented">
-                @for (scale of fontScales; track scale.value) {
-                <button type="button" class="app-shell__segment-btn" [class.app-shell__segment-btn--active]="
+                <div class="app-shell__segmented">
+                  @for (scale of fontScales; track scale.value) {
+                    <button
+                      type="button"
+                      class="app-shell__segment-btn"
+                      [class.app-shell__segment-btn--active]="
                         accessibility.fontScale() === scale.value
-                      " [attr.aria-pressed]="accessibility.fontScale() === scale.value"
-                  (click)="accessibility.setFontScale(scale.value)">
-                  <strong>{{ scale.badge }}</strong>
-                  <span>{{ scale.labelKey | schemaTranslate: 'ui' }}</span>
-                </button>
-                }
+                      "
+                      [attr.aria-pressed]="accessibility.fontScale() === scale.value"
+                      [attr.title]="
+                        (scale.labelKey | schemaTranslate: 'ui') + ' (' + scale.badge + ')'
+                      "
+                      (click)="accessibility.setFontScale(scale.value)"
+                    >
+                      <strong>{{ scale.badge }}</strong>
+                      <span>{{ scale.labelKey | schemaTranslate: 'ui' }}</span>
+                    </button>
+                  }
+                </div>
+              </div>
+
+              <div class="app-shell__panel-row">
+                <div class="app-shell__panel-copy">
+                  <label
+                    class="app-shell__panel-label"
+                    for="a11y-motion-switch"
+                    [attr.title]="'a11yReducedMotion' | schemaTranslate: 'ui'"
+                  >
+                    {{ 'a11yReducedMotion' | schemaTranslate: 'ui' }}
+                  </label>
+                  <span
+                    class="app-shell__panel-hint"
+                    [attr.title]="'a11yReducedMotionHint' | schemaTranslate: 'ui'"
+                  >
+                    {{ 'a11yReducedMotionHint' | schemaTranslate: 'ui' }}
+                  </span>
+                </div>
+                <mat-slide-toggle
+                  id="a11y-motion-switch"
+                  [checked]="accessibility.reducedMotion()"
+                  [attr.title]="'a11yReducedMotion' | schemaTranslate: 'ui'"
+                  (change)="accessibility.toggleReducedMotion()"
+                />
               </div>
             </div>
 
-            <div class="app-shell__panel-row">
-              <div class="app-shell__panel-copy">
-                <label class="app-shell__panel-label" for="a11y-motion-switch">
-                  {{ 'a11yReducedMotion' | schemaTranslate: 'ui' }}
-                </label>
-                <span class="app-shell__panel-hint">
-                  {{ 'a11yReducedMotionHint' | schemaTranslate: 'ui' }}
-                </span>
-              </div>
-              <mat-slide-toggle id="a11y-motion-switch" [checked]="accessibility.reducedMotion()"
-                (change)="accessibility.toggleReducedMotion()" />
+            <div class="app-shell__panel-footer">
+              <button
+                type="button"
+                class="app-shell__reset-btn"
+                [disabled]="!accessibility.hasActiveAssists()"
+                [attr.title]="'a11yReset' | schemaTranslate: 'ui'"
+                (click)="accessibility.resetPreferences()"
+              >
+                <i
+                  class="fa-solid fa-rotate-left"
+                  [attr.title]="'a11yReset' | schemaTranslate: 'ui'"
+                  aria-hidden="true"
+                ></i>
+                <span>{{ 'a11yReset' | schemaTranslate: 'ui' }}</span>
+              </button>
             </div>
-          </div>
-
-          <div class="app-shell__panel-footer">
-            <button type="button" class="app-shell__reset-btn" [disabled]="!accessibility.hasActiveAssists()"
-              (click)="accessibility.resetPreferences()">
-              <i class="fa-solid fa-rotate-left" aria-hidden="true"></i>
-              <span>{{ 'a11yReset' | schemaTranslate: 'ui' }}</span>
-            </button>
-          </div>
-        </section>
+          </section>
         }
       </div>
     </div>

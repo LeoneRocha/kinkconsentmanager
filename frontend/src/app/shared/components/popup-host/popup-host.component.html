@@ -1,26 +1,27 @@
 @if (kind() === 'popover') {
-<app-popper-popover
-  [placement]="placement()"
-  [offset]="offset()"
-  [trigger]="trigger()"
-  [closeOnOutsideClick]="closeOnOutsideClick()"
-  [closeOnEscape]="closeOnEscape()"
-  [ariaLabel]="ariaLabel()"
-  [(isOpen)]="isOpen"
-  (opened)="opened.emit()"
-  (closed)="closed.emit()"
->
-  <ng-content select="[popupTrigger]" popperTrigger />
-  <ng-content />
-</app-popper-popover>
+  <app-popper-popover
+    [placement]="placement()"
+    [offset]="offset()"
+    [trigger]="trigger()"
+    [closeOnOutsideClick]="closeOnOutsideClick()"
+    [closeOnEscape]="closeOnEscape()"
+    [ariaLabel]="ariaLabel()"
+    [(isOpen)]="isOpen"
+    (opened)="opened.emit()"
+    (closed)="closed.emit()"
+  >
+    <ng-content select="[popupTrigger]" popperTrigger />
+    <ng-content />
+  </app-popper-popover>
 } @else {
-<button
-  type="button"
-  class="kcm-popup-host__trigger"
-  [disabled]="disabled()"
-  [attr.aria-label]="ariaLabel() || null"
-  (click)="triggerAction()"
->
-  <ng-content select="[popupTrigger]" />
-</button>
+  <button
+    type="button"
+    class="kcm-popup-host__trigger"
+    [disabled]="disabled()"
+    [attr.aria-label]="ariaLabel() || title() || null"
+    [attr.title]="ariaLabel() || title() || message() || null"
+    (click)="triggerAction()"
+  >
+    <ng-content select="[popupTrigger]" />
+  </button>
 }

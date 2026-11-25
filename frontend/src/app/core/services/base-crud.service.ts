@@ -1,11 +1,5 @@
 import { map, Observable } from 'rxjs';
-import {
-  EntityId,
-  ICrudOperations,
-  PageRequest,
-  PageResult,
-  QueryParams,
-} from '../models';
+import { EntityId, ICrudOperations, PageRequest, PageResult, QueryParams } from '../models';
 
 /**
  * Generic application/domain CRUD service delegating to any `ICrudOperations` source (HTTP data service,

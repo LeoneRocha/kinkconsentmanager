@@ -67,7 +67,9 @@ describe('AppImportLoadingOverlayComponent', () => {
     expect(overlay?.querySelector('.import-overlay__title')?.textContent?.trim()).toBe(
       'Importando rascunho JSON...',
     );
-    expect(overlay?.querySelector('.import-overlay__core i')?.className).toContain('fa-file-import');
+    expect(overlay?.querySelector('.import-overlay__core i')?.className).toContain(
+      'fa-file-import',
+    );
     expect(overlay?.querySelector('.import-overlay__file-name')?.textContent?.trim()).toBe(
       'consentimento-backup.json',
     );

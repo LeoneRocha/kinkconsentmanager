@@ -18,6 +18,7 @@
       [class.checklist-progress-bar__compact-btn--active]="compactMode()"
       [attr.aria-pressed]="compactMode()"
       [attr.aria-label]="compactToggleLabel()"
+      [attr.title]="compactToggleLabel()"
       [matTooltip]="compactToggleLabel()"
       matTooltipPosition="below"
       (click)="toggleCompactMode()"
@@ -26,6 +27,7 @@
         class="fa-solid checklist-progress-bar__compact-icon"
         [class.fa-angles-up]="!compactMode()"
         [class.fa-angles-down]="compactMode()"
+        [attr.title]="compactToggleLabel()"
         aria-hidden="true"
       ></i>
     </button>
@@ -43,6 +45,7 @@
         class="checklist-progress-bar__save-btn"
         [class.checklist-progress-bar__save-btn--dirty]="hasUnsavedChanges()"
         [disabled]="isAutosaving() || !hasUnsavedChanges()"
+        [attr.title]="labels().saveNowTooltip"
         [matTooltip]="labels().saveNowTooltip"
         matTooltipPosition="below"
         (click)="saveNow.emit()"
@@ -52,6 +55,7 @@
           [class.fa-spin]="isAutosaving()"
           [class.fa-spinner]="isAutosaving()"
           [class.fa-floppy-disk]="!isAutosaving()"
+          [attr.title]="labels().saveNowTooltip"
           aria-hidden="true"
         ></i>
         <span>{{ labels().saveButton }}</span>
@@ -63,9 +67,15 @@
         class="checklist-progress-bar__export-btn"
         [class.checklist-progress-bar__export-btn--ready]="isChecklistComplete()"
         [disabled]="!isChecklistComplete()"
+        [attr.title]="labels().exportButton"
+        [attr.aria-label]="labels().exportButton"
         (click)="goToExport.emit()"
       >
-        <i class="fa-solid fa-file-export" aria-hidden="true"></i>
+        <i
+          class="fa-solid fa-file-export"
+          [attr.title]="labels().exportButton"
+          aria-hidden="true"
+        ></i>
         <span>{{ labels().exportButton }}</span>
       </button>
     </div>
@@ -74,15 +84,21 @@
       <mat-slide-toggle
         class="checklist-progress-bar__autosave-toggle"
         [checked]="autosaveEnabled()"
+        [attr.title]="labels().autosaveToggleLabel"
         (change)="onAutosaveEnabledModelChange($event.checked)"
       >
-        {{ labels().autosaveToggleLabel }}
+        <span [attr.title]="labels().autosaveToggleLabel">{{ labels().autosaveToggleLabel }}</span>
       </mat-slide-toggle>
 
       <span class="checklist-progress-bar__sep" aria-hidden="true"></span>
 
-      <span class="checklist-progress-bar__save-meta" role="status" aria-live="polite">
-        <i class="fa-solid fa-lock" aria-hidden="true"></i>
+      <span
+        class="checklist-progress-bar__save-meta"
+        role="status"
+        aria-live="polite"
+        [attr.title]="autosaveText()"
+      >
+        <i class="fa-solid fa-lock" [attr.title]="autosaveText()" aria-hidden="true"></i>
         <span>{{ autosaveText() }}</span>
       </span>
     </div>

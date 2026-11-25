@@ -49,9 +49,9 @@ describe('AppToastContainerComponent', () => {
     expect(toast).not.toBeNull();
     expect(toast?.getAttribute('role')).toBe('status');
     expect(toast?.textContent).toContain('Rascunho importado com sucesso.');
-    expect(
-      container?.querySelector('.kcm-toast__close-btn')?.getAttribute('aria-label'),
-    ).toBe('Fechar notificação');
+    expect(container?.querySelector('.kcm-toast__close-btn')?.getAttribute('aria-label')).toBe(
+      'Fechar notificação',
+    );
 
     const timerBar = toast?.querySelector<HTMLElement>('.kcm-toast__timer');
     expect(timerBar).not.toBeNull();

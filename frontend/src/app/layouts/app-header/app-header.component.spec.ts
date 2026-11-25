@@ -1,8 +1,14 @@
+import { Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { provideRouter, Router } from '@angular/router';
 import { provideTranslateService, TranslateService } from '@ngx-translate/core';
 import { AccessibilityService, I18nService, ThemeService } from '../../core/services';
 import { AppHeaderComponent } from './app-header.component';
+
+@Component({
+  template: '',
+})
+class DummyRouteComponent {}
 
 describe('AppHeaderComponent', () => {
   const clearRootClasses = (): void => {
@@ -23,7 +29,10 @@ describe('AppHeaderComponent', () => {
     await TestBed.configureTestingModule({
       imports: [AppHeaderComponent],
       providers: [
-        provideRouter([]),
+        provideRouter([
+          { path: 'dashboard', component: DummyRouteComponent },
+          { path: 'checklist', component: DummyRouteComponent },
+        ]),
         provideTranslateService({ lang: 'pt-BR', fallbackLang: 'en-US' }),
       ],
     }).compileComponents();
@@ -32,6 +41,7 @@ describe('AppHeaderComponent', () => {
     translate.setTranslation('pt-BR', {
       ui: {
         title: 'Kink Consent Manager',
+        navDashboard: 'Dashboard',
         themeToggleToDark: 'Ativar tema escuro',
         themeToggleToLight: 'Ativar tema claro',
         themeDarkActive: 'Tema escuro ativado.',
@@ -70,18 +80,74 @@ describe('AppHeaderComponent', () => {
     jest.restoreAllMocks();
   });
 
-  it('should render brand link pointing to /checklist and utility controls', async () => {
+  it('should render brand link pointing to /dashboard and utility controls', async () => {
     const fixture = TestBed.createComponent(AppHeaderComponent);
     fixture.detectChanges();
     await fixture.whenStable();
 
     const el = fixture.nativeElement as HTMLElement;
     const brandLink = el.querySelector<HTMLAnchorElement>('a.app-shell__brand');
-    expect(brandLink?.getAttribute('href')).toBe('/checklist');
+    expect(brandLink?.getAttribute('href')).toBe('/dashboard');
+    expect(brandLink?.getAttribute('title')).toContain('Kink Consent Manager');
+    const brandImg = el.querySelector<HTMLImageElement>('img.app-shell__brand-icon');
+    expect(brandImg?.getAttribute('alt')).toBe('Kink Consent Manager');
+    expect(brandImg?.getAttribute('title')).toBe('Kink Consent Manager');
     expect(el.querySelector('.app-shell__brand-title')?.textContent?.trim()).toBe(
       'Kink Consent Manager',
     );
+    expect(el.querySelector('.app-shell__brand-title')?.getAttribute('title')).toBe(
+      'Kink Consent Manager — Dashboard',
+    );
     expect(el.querySelector('.app-shell__lang-pill')?.textContent?.trim()).toBe('PT');
+  });
+
+  // Cenário: Clique direto no título `.app-shell__brand-title` estando em outra rota e com menu aberto.
+  // Objetivo: Garantir que o clique navegue para `/dashboard` e feche popovers abertos do cabeçalho.
+  it('should navigate to /dashboard and close open popovers when clicking app-shell__brand-title', async () => {
+    const fixture = TestBed.createComponent(AppHeaderComponent);
+    const router = TestBed.inject(Router);
+    await router.navigateByUrl('/checklist');
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const langBtn = fixture.nativeElement.querySelector(
+      '.app-shell__icon-btn--lang',
+    ) as HTMLButtonElement;
+    langBtn.click();
+    await fixture.whenStable();
+    expect(fixture.nativeElement.querySelector('.app-shell__popover--menu')).not.toBeNull();
+
+    const brandTitle = fixture.nativeElement.querySelector(
+      '.app-shell__brand-title',
+    ) as HTMLSpanElement;
+    brandTitle.click();
+    await fixture.whenStable();
+
+    expect(router.url).toBe('/dashboard');
+    expect(fixture.nativeElement.querySelector('.app-shell__popover--menu')).toBeNull();
+  });
+
+  // Cenário: Verificação dos atributos title em todos os botões utilitários e ícones do cabeçalho.
+  // Objetivo: Garantir que controles visuais e ícones exponham metadados descritivos para leitores audiovisuais.
+  it('should expose title attributes on header utility buttons and icons', async () => {
+    const fixture = TestBed.createComponent(AppHeaderComponent);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const el = fixture.nativeElement as HTMLElement;
+    const buttons = Array.from(
+      el.querySelectorAll<HTMLButtonElement>('.app-shell__utilities button'),
+    );
+    expect(buttons.length).toBe(3);
+    for (const btn of buttons) {
+      expect(btn.getAttribute('title')?.trim().length).toBeGreaterThan(0);
+    }
+
+    const icons = Array.from(el.querySelectorAll<HTMLElement>('i'));
+    expect(icons.length).toBeGreaterThan(0);
+    for (const icon of icons) {
+      expect(icon.getAttribute('title')?.trim().length).toBeGreaterThan(0);
+    }
   });
 
   it('should toggle dark theme and announce state', async () => {

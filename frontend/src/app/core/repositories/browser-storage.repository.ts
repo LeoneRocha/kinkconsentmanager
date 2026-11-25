@@ -32,12 +32,7 @@ export class BrowserStorageRepository implements IBrowserStorageRepository {
     return scope === 'session' ? this.storage.getSession<T>(key) : this.storage.getLocal<T>(key);
   }
 
-  set<T>(
-    key: string,
-    value: T,
-    options?: StorageOptions,
-    scope: StorageScope = 'local',
-  ): boolean {
+  set<T>(key: string, value: T, options?: StorageOptions, scope: StorageScope = 'local'): boolean {
     return scope === 'session'
       ? this.storage.setSession(key, value, options)
       : this.storage.setLocal(key, value, options);

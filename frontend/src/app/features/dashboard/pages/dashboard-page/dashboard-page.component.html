@@ -1,0 +1,58 @@
+<section class="dashboard" [attr.aria-label]="pageTitle()">
+  <header class="dashboard__hero">
+    <div class="dashboard__hero-copy">
+      <h1 class="dashboard__title" [attr.title]="pageTitle()">{{ pageTitle() }}</h1>
+      <p class="dashboard__subtitle" [attr.title]="pageSubtitle()">{{ pageSubtitle() }}</p>
+    </div>
+  </header>
+
+  <section class="dashboard__section" [attr.aria-label]="sectionTitle()">
+    <h2 class="dashboard__section-title" [attr.title]="sectionTitle()">{{ sectionTitle() }}</h2>
+
+    <div class="dashboard__grid">
+      @for (card of featureCards(); track card.id) {
+        <button
+          type="button"
+          class="dashboard__card"
+          [attr.data-feature-id]="card.id"
+          [attr.aria-label]="card.title + ' — ' + card.ctaLabel"
+          [attr.title]="card.title + ' — ' + card.description"
+          (click)="openFeature(card)"
+        >
+          <div class="dashboard__card-top">
+            <span class="dashboard__icon" aria-hidden="true">
+              <i [class]="card.icon" [attr.title]="card.title"></i>
+            </span>
+            <div class="dashboard__badges">
+              <span class="dashboard__status-badge" [attr.title]="card.statusLabel">
+                {{ card.statusLabel }}
+              </span>
+              @if (card.badgeText; as progressText) {
+                <span class="dashboard__progress-badge" [attr.title]="progressText">
+                  <i
+                    class="fa-solid fa-clock-rotate-left"
+                    [attr.title]="progressText"
+                    aria-hidden="true"
+                  ></i>
+                  <span>{{ progressText }}</span>
+                </span>
+              }
+            </div>
+          </div>
+
+          <div class="dashboard__card-body">
+            <h3 class="dashboard__card-title" [attr.title]="card.title">{{ card.title }}</h3>
+            <p class="dashboard__card-desc" [attr.title]="card.description">
+              {{ card.description }}
+            </p>
+          </div>
+
+          <span class="dashboard__cta" [attr.title]="card.ctaLabel">
+            <span>{{ card.ctaLabel }}</span>
+            <i class="fa-solid fa-arrow-right" [attr.title]="card.ctaLabel" aria-hidden="true"></i>
+          </span>
+        </button>
+      }
+    </div>
+  </section>
+</section>

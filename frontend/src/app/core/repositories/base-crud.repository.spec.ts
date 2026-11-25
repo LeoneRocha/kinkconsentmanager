@@ -11,9 +11,7 @@ interface DemoEntity {
 class CachedDemoRepository extends BaseCrudRepository<DemoEntity, string> {
   protected override readonly enableCache = true;
 
-  constructor(
-    protected override readonly service: ICrudOperations<DemoEntity, string>,
-  ) {
+  constructor(protected override readonly service: ICrudOperations<DemoEntity, string>) {
     super();
   }
 
@@ -142,9 +140,11 @@ describe('BaseCrudRepository', () => {
   it('should delegate getPage when implemented on service or fallback to paginated getAll', () => {
     const serviceWithPage: ICrudOperations<DemoEntity, string> = {
       getAll: jest.fn(),
-      getPage: jest.fn().mockReturnValue(
-        of({ items: [{ id: '1', name: 'paged' }], total: 10, page: 2, pageSize: 1 }),
-      ),
+      getPage: jest
+        .fn()
+        .mockReturnValue(
+          of({ items: [{ id: '1', name: 'paged' }], total: 10, page: 2, pageSize: 1 }),
+        ),
       getById: jest.fn(),
       create: jest.fn(),
       update: jest.fn(),

@@ -1,5 +1,9 @@
 <div class="app-shell">
-  <a class="app-shell__skip-link" href="#main-content">
+  <a
+    class="app-shell__skip-link"
+    href="#main-content"
+    [attr.title]="'skipToContent' | schemaTranslate: 'ui'"
+  >
     {{ 'skipToContent' | schemaTranslate: 'ui' }}
   </a>
 

@@ -8,9 +8,7 @@ interface SampleItem {
 }
 
 class SampleCrudService extends BaseCrudService<SampleItem, string> {
-  constructor(
-    protected override readonly source: ICrudOperations<SampleItem, string>,
-  ) {
+  constructor(protected override readonly source: ICrudOperations<SampleItem, string>) {
     super();
   }
 
@@ -42,9 +40,11 @@ describe('BaseCrudService', () => {
   it('should delegate CRUD methods to source and apply lifecycle hooks', () => {
     const source: ICrudOperations<SampleItem, string> = {
       getAll: jest.fn().mockReturnValue(of([{ id: '1', label: 'alpha' }])),
-      getPage: jest.fn().mockReturnValue(
-        of({ items: [{ id: '1', label: 'alpha' }], total: 1, page: 1, pageSize: 10 }),
-      ),
+      getPage: jest
+        .fn()
+        .mockReturnValue(
+          of({ items: [{ id: '1', label: 'alpha' }], total: 1, page: 1, pageSize: 10 }),
+        ),
       getById: jest.fn().mockReturnValue(of({ id: '1', label: 'alpha' })),
       create: jest.fn((payload) => of({ id: '2', label: payload.label ?? '' })),
       update: jest.fn((id, payload) => of({ id, label: payload.label ?? '' })),

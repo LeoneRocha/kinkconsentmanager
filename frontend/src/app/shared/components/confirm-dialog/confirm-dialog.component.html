@@ -1,9 +1,10 @@
-<h2 mat-dialog-title class="confirm-dialog__title">
+<h2 mat-dialog-title class="confirm-dialog__title" [attr.title]="data.header">
   @if (data.icon) {
     <i
       [class]="data.icon"
       class="confirm-dialog__icon"
       [class.confirm-dialog__icon--danger]="data.danger"
+      [attr.title]="data.header"
       aria-hidden="true"
     ></i>
   }
@@ -11,7 +12,7 @@
 </h2>
 
 <mat-dialog-content class="confirm-dialog__content">
-  <p class="confirm-dialog__message">{{ data.message }}</p>
+  <p class="confirm-dialog__message" [attr.title]="data.message">{{ data.message }}</p>
 </mat-dialog-content>
 
 <mat-dialog-actions align="end" class="confirm-dialog__actions">
@@ -20,6 +21,7 @@
       mat-stroked-button
       type="button"
       class="confirm-dialog__reject-btn"
+      [attr.title]="data.rejectLabel"
       (click)="onReject()"
     >
       {{ data.rejectLabel }}
@@ -30,6 +32,7 @@
     type="button"
     class="confirm-dialog__accept-btn"
     [class.confirm-dialog__accept-btn--danger]="data.danger"
+    [attr.title]="data.acceptLabel"
     (click)="onAccept()"
   >
     {{ data.acceptLabel }}

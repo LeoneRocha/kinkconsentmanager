@@ -87,11 +87,7 @@ describe('SchemaTranslatePipe', () => {
 
   it('should return empty string for empty id and interpolate UI params', () => {
     const pipe = TestBed.runInInjectionContext(() => new SchemaTranslatePipe());
-    translateService.setTranslation(
-      'pt-BR',
-      { ui: { hello: 'Olá {{user}}' } },
-      true,
-    );
+    translateService.setTranslation('pt-BR', { ui: { hello: 'Olá {{user}}' } }, true);
 
     expect(pipe.transform('', 'itemLabel')).toBe('');
     expect(pipe.transform('hello', 'ui', { user: 'Sam' })).toBe('Olá Sam');

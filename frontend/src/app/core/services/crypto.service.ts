@@ -27,11 +27,10 @@ export class CryptoService {
    */
   async generateKey(): Promise<CryptoKey> {
     const subtle = this.requireSubtle();
-    return subtle.generateKey(
-      { name: AES_GCM_ALGORITHM, length: AES_KEY_LENGTH },
-      true,
-      ['encrypt', 'decrypt'],
-    );
+    return subtle.generateKey({ name: AES_GCM_ALGORITHM, length: AES_KEY_LENGTH }, true, [
+      'encrypt',
+      'decrypt',
+    ]);
   }
 
   /**

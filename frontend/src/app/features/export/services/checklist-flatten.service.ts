@@ -28,9 +28,7 @@ export class ChecklistFlattenService {
     answers: Readonly<Record<string, ItemResponseValue>>,
     texts: ResolvedPreviewTexts,
   ): readonly FlattenedChecklistRow[] {
-    const scaleMap = new Map<ScaleId, ScaleOption>(
-      schema.scales.map((scale) => [scale.id, scale]),
-    );
+    const scaleMap = new Map<ScaleId, ScaleOption>(schema.scales.map((scale) => [scale.id, scale]));
     const orderedGroups = [...schema.groups].sort((a, b) => a.order - b.order);
     const rows: FlattenedChecklistRow[] = [];
 
@@ -43,8 +41,7 @@ export class ChecklistFlattenService {
         const itemLabel = texts.items[item.id]?.label ?? item.id;
         const itemRolePairId = item.rolePairId ?? group.rolePairId;
         const itemRoles = texts.roles[itemRolePairId] ?? groupRoles;
-        const isDualRole =
-          item.type === 'scale_matrix' && (item.dualRole ?? group.defaultDualRole);
+        const isDualRole = item.type === 'scale_matrix' && (item.dualRole ?? group.defaultDualRole);
 
         if (item.type === 'scale_matrix') {
           rows.push(
@@ -167,9 +164,7 @@ export class ChecklistFlattenService {
         const optionLabel = isOther ? texts.otherLabel : (texts.options[selected] ?? selected);
         const trimmedOther = isOther ? (answer?.otherText ?? '').trim() : '';
         const primaryValueLabel =
-          isOther && trimmedOther.length > 0
-            ? `${texts.otherLabel}: ${trimmedOther}`
-            : optionLabel;
+          isOther && trimmedOther.length > 0 ? `${texts.otherLabel}: ${trimmedOther}` : optionLabel;
 
         return {
           groupId,

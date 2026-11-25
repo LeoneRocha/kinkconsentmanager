@@ -9,13 +9,14 @@ import {
 } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { ExportFormat } from '../../../../core/models';
+import { SchemaTranslatePipe } from '../../../../shared/pipes';
 
 /**
  * Presentational action toolbar providing visual/data export triggers and JSON draft import.
  */
 @Component({
   selector: 'app-export-actions-toolbar',
-  imports: [MatButtonModule],
+  imports: [MatButtonModule, SchemaTranslatePipe],
   templateUrl: './export-actions-toolbar.component.html',
   styleUrl: './export-actions-toolbar.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

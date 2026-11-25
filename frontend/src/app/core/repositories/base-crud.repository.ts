@@ -1,11 +1,5 @@
 import { catchError, map, Observable, shareReplay, tap, throwError } from 'rxjs';
-import {
-  EntityId,
-  ICrudOperations,
-  PageRequest,
-  PageResult,
-  QueryParams,
-} from '../models';
+import { EntityId, ICrudOperations, PageRequest, PageResult, QueryParams } from '../models';
 import { ICrudRepository } from './crud.repository';
 
 /**

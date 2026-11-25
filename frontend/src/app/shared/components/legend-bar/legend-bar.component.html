@@ -1,14 +1,22 @@
-<ul class="legend-bar" role="list">
+<ul class="legend-bar" role="list" [attr.aria-label]="'legendTitle' | schemaTranslate: 'ui'">
   @for (scale of orderedScales(); track scale.id) {
-    <li class="legend-bar__item" role="listitem">
+    <li class="legend-bar__item" role="listitem" [attr.title]="getScaleLabel(scale)">
       <span
         class="legend-bar__chip"
         [style.background-color]="scale.color"
         [style.color]="scale.contrastColor"
+        [attr.title]="getScaleLabel(scale)"
       >
-        <i [class]="scale.icon" class="legend-bar__icon" aria-hidden="true"></i>
+        <i
+          [class]="scale.icon"
+          class="legend-bar__icon"
+          [attr.title]="getScaleLabel(scale)"
+          aria-hidden="true"
+        ></i>
       </span>
-      <span class="legend-bar__label">{{ getScaleLabel(scale) }}</span>
+      <span class="legend-bar__label" [attr.title]="getScaleLabel(scale)">
+        {{ getScaleLabel(scale) }}
+      </span>
     </li>
   }
 </ul>

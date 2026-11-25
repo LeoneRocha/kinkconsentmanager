@@ -20,6 +20,12 @@ export class AppIconComponent {
   readonly spin = input<boolean>(false);
   readonly fixedWidth = input<boolean>(false);
   readonly ariaLabel = input<string>('');
+  readonly title = input<string>('');
+
+  protected readonly effectiveTitle = computed<string>(
+    () => this.title().trim() || this.ariaLabel().trim(),
+  );
+  protected readonly hasAccessibleLabel = computed<boolean>(() => this.effectiveTitle().length > 0);
 
   protected readonly svgDefinition = computed<IconDefinition | null>(() => {
     const value = this.icon();

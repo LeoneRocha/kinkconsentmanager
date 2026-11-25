@@ -1,6 +1,6 @@
 <div class="scale-selector" [class.scale-selector--compact]="compact()">
   @if (roleTitle().trim().length > 0) {
-    <span class="scale-selector__role">{{ roleTitle() }}</span>
+    <span class="scale-selector__role" [attr.title]="roleTitle()">{{ roleTitle() }}</span>
   }
 
   <div
@@ -27,7 +27,12 @@
         (click)="onSelect(scale.id)"
         (keydown)="onKeydown($event, idx)"
       >
-        <i [class]="scale.icon" class="scale-selector__icon" aria-hidden="true"></i>
+        <i
+          [class]="scale.icon"
+          class="scale-selector__icon"
+          [attr.title]="getScaleLabel(scale)"
+          aria-hidden="true"
+        ></i>
       </button>
     }
   </div>

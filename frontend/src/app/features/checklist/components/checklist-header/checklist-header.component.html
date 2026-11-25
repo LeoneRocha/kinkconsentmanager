@@ -1,9 +1,11 @@
 <header class="checklist-header" [class.checklist-header--collapsed]="!headerExpanded()">
   <div class="checklist-header__top" (click)="toggleHeaderExpanded()">
     <div class="checklist-header__brand">
-      <h1 class="checklist-header__title">{{ labels().title }}</h1>
+      <h1 class="checklist-header__title" [attr.title]="labels().title">{{ labels().title }}</h1>
       @if (headerExpanded()) {
-        <p class="checklist-header__subtitle">{{ labels().subtitle }}</p>
+        <p class="checklist-header__subtitle" [attr.title]="labels().subtitle">
+          {{ labels().subtitle }}
+        </p>
       }
     </div>
 
@@ -13,6 +15,7 @@
       [attr.aria-expanded]="headerExpanded()"
       aria-controls="checklist-header-body"
       [attr.aria-label]="toggleHeaderAriaLabel()"
+      [attr.title]="toggleHeaderLabel()"
       [matTooltip]="toggleHeaderLabel()"
       matTooltipPosition="left"
       (click)="onToggleButtonClick($event)"
@@ -21,6 +24,7 @@
         class="fa-solid checklist-header__toggle-icon"
         [class.fa-angles-up]="headerExpanded()"
         [class.fa-angles-down]="!headerExpanded()"
+        [attr.title]="toggleHeaderLabel()"
         aria-hidden="true"
       ></i>
     </button>
@@ -29,8 +33,12 @@
   @if (headerExpanded()) {
     <div id="checklist-header-body" class="checklist-header__body">
       <div class="checklist-header__controls-panel">
-        <div class="checklist-header__section-title">
-          <i class="fa-solid fa-sliders" aria-hidden="true"></i>
+        <div class="checklist-header__section-title" [attr.title]="controlsSectionTitle()">
+          <i
+            class="fa-solid fa-sliders"
+            [attr.title]="controlsSectionTitle()"
+            aria-hidden="true"
+          ></i>
           <span>{{ controlsSectionTitle() }}</span>
         </div>
 
@@ -39,10 +47,13 @@
             class="checklist-header__mode-select"
             [hideSingleSelectionIndicator]="true"
             [value]="viewMode()"
+            [attr.aria-label]="controlsSectionTitle()"
             (change)="onViewModeModelChange($event.value)"
           >
             @for (opt of viewModeOptions(); track opt.value) {
-              <mat-button-toggle [value]="opt.value">{{ opt.label }}</mat-button-toggle>
+              <mat-button-toggle [value]="opt.value" [attr.title]="opt.label">
+                {{ opt.label }}
+              </mat-button-toggle>
             }
           </mat-button-toggle-group>
 
@@ -51,9 +62,12 @@
               <mat-slide-toggle
                 id="only-unanswered-toggle"
                 [checked]="onlyUnanswered()"
+                [attr.title]="labels().onlyUnanswered"
                 (change)="onOnlyUnansweredModelChange($event.checked)"
               >
-                <span class="checklist-header__filter-label">{{ labels().onlyUnanswered }}</span>
+                <span class="checklist-header__filter-label" [attr.title]="labels().onlyUnanswered">
+                  {{ labels().onlyUnanswered }}
+                </span>
               </mat-slide-toggle>
             </div>
 
@@ -63,9 +77,15 @@
                 type="button"
                 class="checklist-header__clear-btn"
                 [disabled]="!hasAnswers()"
+                [attr.title]="labels().clearAll"
+                [attr.aria-label]="labels().clearAll"
                 (click)="clearAll.emit()"
               >
-                <i class="fa-solid fa-trash" aria-hidden="true"></i>
+                <i
+                  class="fa-solid fa-trash"
+                  [attr.title]="labels().clearAll"
+                  aria-hidden="true"
+                ></i>
                 <span>{{ labels().clearAll }}</span>
               </button>
             </div>

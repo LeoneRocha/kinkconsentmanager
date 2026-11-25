@@ -10,8 +10,9 @@ import {
 import { FormsModule } from '@angular/forms';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { SupportedLanguage } from '../../core/models';
+import { APP_ROUTE_COMMANDS } from '../../core/routes';
 import {
   AccessibilityService,
   FontScale,
@@ -37,19 +38,14 @@ interface FontScaleOption {
 
 @Component({
   selector: 'app-header',
-  imports: [
-    FormsModule,
-    RouterLink,
-    MatSlideToggleModule,
-    MatTooltipModule,
-    SchemaTranslatePipe,
-  ],
+  imports: [FormsModule, RouterLink, MatSlideToggleModule, MatTooltipModule, SchemaTranslatePipe],
   templateUrl: './app-header.component.html',
   styleUrl: './app-header.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AppHeaderComponent {
   private readonly hostElement = inject(ElementRef<HTMLElement>);
+  private readonly router = inject(Router);
   protected readonly i18n = inject(I18nService);
   protected readonly theme = inject(ThemeService);
   protected readonly accessibility = inject(AccessibilityService);
@@ -57,9 +53,9 @@ export class AppHeaderComponent {
 
   protected readonly langMenuOpen = signal(false);
   protected readonly a11yPanelOpen = signal(false);
+  protected readonly dashboardRoute = APP_ROUTE_COMMANDS.dashboard;
 
-  protected readonly supportedLanguages: readonly LocaleMetadata[] =
-    this.i18n.availableLocales;
+  protected readonly supportedLanguages: readonly LocaleMetadata[] = this.i18n.availableLocales;
 
   protected readonly speechRates: readonly SpeechRateOption[] = [
     { value: 0.85, labelKey: 'a11ySpeechSlow', tag: '0.85x' },
@@ -130,5 +126,19 @@ export class AppHeaderComponent {
   protected closePopovers(): void {
     this.langMenuOpen.set(false);
     this.a11yPanelOpen.set(false);
+  }
+
+  protected onNavigateToDashboard(event: MouseEvent): void {
+    this.closePopovers();
+    if (
+      event.button === 0 &&
+      !event.ctrlKey &&
+      !event.metaKey &&
+      !event.shiftKey &&
+      !event.altKey
+    ) {
+      event.preventDefault();
+      void this.router.navigate(this.dashboardRoute);
+    }
   }
 }

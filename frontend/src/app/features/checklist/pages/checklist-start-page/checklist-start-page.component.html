@@ -1,0 +1,63 @@
+<div class="checklist-start">
+  <div class="checklist-start__nav">
+    <button
+      mat-stroked-button
+      type="button"
+      class="checklist-start__back-btn"
+      data-action="back-to-dashboard"
+      [attr.title]="backToDashboardLabel()"
+      [attr.aria-label]="backToDashboardLabel()"
+      (click)="onBackToDashboard()"
+    >
+      <i
+        class="fa-solid fa-arrow-left"
+        [attr.title]="backToDashboardLabel()"
+        aria-hidden="true"
+      ></i>
+      <span>{{ backToDashboardLabel() }}</span>
+    </button>
+  </div>
+
+  @if (isLoading()) {
+    <div
+      class="checklist-start__loading"
+      aria-busy="true"
+      [attr.aria-label]="loadingSchemaLabel()"
+      [attr.title]="loadingSchemaLabel()"
+    >
+      <div class="kcm-skeleton" style="height: 7rem"></div>
+      <div class="kcm-skeleton" style="height: 16rem"></div>
+    </div>
+  } @else if (loadError()) {
+    <div class="checklist-start__error" role="alert" [attr.title]="loadingErrorText()">
+      <i
+        class="fa-solid fa-circle-exclamation checklist-start__error-icon"
+        [attr.title]="loadingErrorText()"
+        aria-hidden="true"
+      ></i>
+      <p class="checklist-start__error-text" [attr.title]="loadingErrorText()">
+        {{ loadingErrorText() }}
+      </p>
+      <button
+        mat-flat-button
+        type="button"
+        class="checklist-start__retry-btn"
+        [attr.title]="retryLabel()"
+        (click)="loadSchema()"
+      >
+        <i class="fa-solid fa-arrows-rotate" [attr.title]="retryLabel()" aria-hidden="true"></i>
+        <span>{{ retryLabel() }}</span>
+      </button>
+    </div>
+  } @else if (schema()) {
+    <app-checklist-mode-selector
+      [labels]="modeSelectorLabels()"
+      [answeredCount]="answeredCount()"
+      [totalCount]="totalCount()"
+      [progressPercentage]="progressPercentage()"
+      [isImporting]="isImportingJson()"
+      (selectMode)="onStartModeSelected($event)"
+      (importJsonFile)="onImportJsonFile($event)"
+    />
+  }
+</div>

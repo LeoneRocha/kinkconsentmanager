@@ -17,9 +17,13 @@
 }
 
 @if (groups().length === 0) {
-  <div class="stepper__empty" role="status">
-    <i class="fa-solid fa-filter-circle-xmark stepper__empty-icon" aria-hidden="true"></i>
-    <p class="stepper__empty-text">{{ labels().noResults }}</p>
+  <div class="stepper__empty" role="status" [attr.title]="labels().noResults">
+    <i
+      class="fa-solid fa-filter-circle-xmark stepper__empty-icon"
+      [attr.title]="labels().noResults"
+      aria-hidden="true"
+    ></i>
+    <p class="stepper__empty-text" [attr.title]="labels().noResults">{{ labels().noResults }}</p>
   </div>
 } @else {
   <div class="stepper__card">
@@ -32,9 +36,14 @@
       >
         <header class="stepper__panel-header">
           <div class="stepper__panel-heading" (click)="toggleGroupCollapsed(group.id)">
-            <h2 class="stepper__panel-title">{{ groupTitle(group) }}</h2>
+            <h2 class="stepper__panel-title" [attr.title]="groupTitle(group)">
+              {{ groupTitle(group) }}
+            </h2>
             <div class="stepper__panel-meta">
-              <span class="stepper__count">
+              <span
+                class="stepper__count"
+                [attr.title]="groupAnsweredCount(group) + ' / ' + group.items.length"
+              >
                 {{ groupAnsweredCount(group) }} / {{ group.items.length }}
               </span>
               <button
@@ -42,6 +51,7 @@
                 class="stepper__group-toggle-btn"
                 [attr.aria-expanded]="!isGroupCollapsed(group.id)"
                 [attr.aria-label]="groupToggleAriaLabel(group)"
+                [attr.title]="groupToggleTooltip(group)"
                 [matTooltip]="groupToggleTooltip(group)"
                 matTooltipPosition="left"
                 (click)="onGroupToggleButtonClick($event, group.id)"
@@ -50,6 +60,7 @@
                   class="fa-solid stepper__toggle-all-icon"
                   [class.fa-angles-up]="!isGroupCollapsed(group.id)"
                   [class.fa-angles-down]="isGroupCollapsed(group.id)"
+                  [attr.title]="groupToggleTooltip(group)"
                   aria-hidden="true"
                 ></i>
               </button>
@@ -58,7 +69,7 @@
 
           @if (!isGroupCollapsed(group.id)) {
             @if (groupDescription(group); as description) {
-              <p class="stepper__description">{{ description }}</p>
+              <p class="stepper__description" [attr.title]="description">{{ description }}</p>
             }
           }
         </header>
@@ -87,8 +98,22 @@
         }
 
         @if (showIncompleteAlert() && !isCurrentStepCompleted()) {
-          <p class="stepper__validation-alert" role="alert">
-            <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+          <p
+            class="stepper__validation-alert"
+            role="alert"
+            [attr.title]="
+              labels().stepIncompleteAlert ??
+              'Preencha todos os itens deste passo antes de avançar.'
+            "
+          >
+            <i
+              class="fa-solid fa-circle-exclamation"
+              [attr.title]="
+                labels().stepIncompleteAlert ??
+                'Preencha todos os itens deste passo antes de avançar.'
+              "
+              aria-hidden="true"
+            ></i>
             <span>{{
               labels().stepIncompleteAlert ??
                 'Preencha todos os itens deste passo antes de avançar.'
@@ -102,9 +127,14 @@
             type="button"
             class="stepper__prev-btn"
             [disabled]="!canGoPrev()"
+            [attr.title]="labels().prevStep"
             (click)="goPrevStep()"
           >
-            <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+            <i
+              class="fa-solid fa-arrow-left"
+              [attr.title]="labels().prevStep"
+              aria-hidden="true"
+            ></i>
             <span>{{ labels().prevStep }}</span>
           </button>
 
@@ -116,9 +146,14 @@
                 class="stepper__review-jump-btn"
                 [class.stepper__ready-btn]="areAllGroupsCompleted()"
                 [disabled]="!areAllGroupsCompleted()"
+                [attr.title]="labels().goToReview"
                 (click)="goToReviewStep()"
               >
-                <i class="fa-solid fa-list-check" aria-hidden="true"></i>
+                <i
+                  class="fa-solid fa-list-check"
+                  [attr.title]="labels().goToReview"
+                  aria-hidden="true"
+                ></i>
                 <span>{{ labels().goToReview }}</span>
               </button>
             }
@@ -127,12 +162,21 @@
               type="button"
               class="stepper__next-btn"
               [class.stepper__ready-btn]="isCurrentStepCompleted()"
+              [attr.title]="
+                safeStep() === groups().length - 1 ? labels().reviewTitle : labels().nextStep
+              "
               (click)="goNextStep()"
             >
               <span>{{
                 safeStep() === groups().length - 1 ? labels().reviewTitle : labels().nextStep
               }}</span>
-              <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+              <i
+                class="fa-solid fa-arrow-right"
+                [attr.title]="
+                  safeStep() === groups().length - 1 ? labels().reviewTitle : labels().nextStep
+                "
+                aria-hidden="true"
+              ></i>
             </button>
           </div>
         </footer>
@@ -145,8 +189,12 @@
       >
         <header class="stepper__review-header">
           <div class="stepper__review-copy">
-            <h2 class="stepper__panel-title">{{ labels().reviewTitle }}</h2>
-            <p class="stepper__review-subtitle">{{ labels().reviewSubtitle }}</p>
+            <h2 class="stepper__panel-title" [attr.title]="labels().reviewTitle">
+              {{ labels().reviewTitle }}
+            </h2>
+            <p class="stepper__review-subtitle" [attr.title]="labels().reviewSubtitle">
+              {{ labels().reviewSubtitle }}
+            </p>
           </div>
 
           <div class="stepper__review-actions">
@@ -156,6 +204,7 @@
               [class.stepper__toggle-all-btn--expanded]="areAllReviewPanelsExpanded()"
               [attr.aria-expanded]="areAllReviewPanelsExpanded()"
               [attr.aria-label]="reviewToggleLabel()"
+              [attr.title]="reviewToggleLabel()"
               [matTooltip]="reviewToggleLabel()"
               matTooltipPosition="left"
               (click)="toggleAllReviewPanels()"
@@ -164,6 +213,7 @@
                 class="fa-solid stepper__toggle-all-icon"
                 [class.fa-angles-up]="areAllReviewPanelsExpanded()"
                 [class.fa-angles-down]="!areAllReviewPanelsExpanded()"
+                [attr.title]="reviewToggleLabel()"
                 aria-hidden="true"
               ></i>
             </button>
@@ -180,10 +230,13 @@
             >
               <mat-expansion-panel-header>
                 <mat-panel-title>
-                  <div class="stepper__acc-header">
+                  <div class="stepper__acc-header" [attr.title]="groupTitle(group)">
                     <span class="stepper__acc-title">{{ groupTitle(group) }}</span>
                     <div class="stepper__acc-meta">
-                      <span class="stepper__count">
+                      <span
+                        class="stepper__count"
+                        [attr.title]="groupAnsweredCount(group) + ' / ' + group.items.length"
+                      >
                         {{ groupAnsweredCount(group) }} / {{ group.items.length }}
                       </span>
                       <span class="stepper__acc-toggle-icon" aria-hidden="true">
@@ -191,6 +244,7 @@
                           class="fa-solid stepper__toggle-all-icon"
                           [class.fa-angles-up]="isReviewPanelExpanded(i)"
                           [class.fa-angles-down]="!isReviewPanelExpanded(i)"
+                          [attr.title]="groupTitle(group)"
                         ></i>
                       </span>
                     </div>
@@ -200,7 +254,7 @@
 
               <div class="stepper__acc-body">
                 @if (groupDescription(group); as description) {
-                  <p class="stepper__description">{{ description }}</p>
+                  <p class="stepper__description" [attr.title]="description">{{ description }}</p>
                 }
 
                 <div class="stepper__items">
@@ -229,8 +283,18 @@
         </mat-accordion>
 
         <footer class="stepper__footer">
-          <button mat-stroked-button type="button" class="stepper__prev-btn" (click)="goPrevStep()">
-            <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+          <button
+            mat-stroked-button
+            type="button"
+            class="stepper__prev-btn"
+            [attr.title]="labels().prevStep"
+            (click)="goPrevStep()"
+          >
+            <i
+              class="fa-solid fa-arrow-left"
+              [attr.title]="labels().prevStep"
+              aria-hidden="true"
+            ></i>
             <span>{{ labels().prevStep }}</span>
           </button>
 
@@ -240,10 +304,11 @@
             class="stepper__finish-btn"
             [class.stepper__ready-btn]="areAllGroupsCompleted()"
             [disabled]="!areAllGroupsCompleted()"
+            [attr.title]="labels().finish"
             (click)="finishChecklist.emit()"
           >
             <span>{{ labels().finish }}</span>
-            <i class="fa-solid fa-check" aria-hidden="true"></i>
+            <i class="fa-solid fa-check" [attr.title]="labels().finish" aria-hidden="true"></i>
           </button>
         </footer>
       </section>

@@ -1,13 +1,7 @@
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { inject, InjectionToken } from '@angular/core';
 import { map, Observable } from 'rxjs';
-import {
-  EntityId,
-  ICrudOperations,
-  PageRequest,
-  PageResult,
-  QueryParams,
-} from '../models';
+import { EntityId, ICrudOperations, PageRequest, PageResult, QueryParams } from '../models';
 
 /**
  * Configurable base API URL injected into HTTP data services (empty string by default for same-origin/relative calls).
@@ -47,10 +41,12 @@ export abstract class BaseDataService<
    * Fetches a paginated list of resources using page, pageSize, sorting, and optional filter parameters.
    */
   getPage(request?: PageRequest): Observable<PageResult<T>> {
-    const query: Record<string, string | number | boolean | readonly (string | number | boolean)[]> =
-      {
-        ...(request?.filters ?? {}),
-      };
+    const query: Record<
+      string,
+      string | number | boolean | readonly (string | number | boolean)[]
+    > = {
+      ...(request?.filters ?? {}),
+    };
 
     if (request?.page !== undefined) {
       query['page'] = request.page;
@@ -210,8 +206,7 @@ export abstract class BaseDataService<
       };
     }
 
-    const record =
-      raw !== null && typeof raw === 'object' ? (raw as Record<string, unknown>) : {};
+    const record = raw !== null && typeof raw === 'object' ? (raw as Record<string, unknown>) : {};
     const items = this.mapCollection(record['items']);
     const total = typeof record['total'] === 'number' ? record['total'] : items.length;
     const page = typeof record['page'] === 'number' ? record['page'] : (request?.page ?? 1);

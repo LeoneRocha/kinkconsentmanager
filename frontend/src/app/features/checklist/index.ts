@@ -1,4 +1,6 @@
 export * from './checklist.routes';
+export * from './guards';
+export * from './pages/checklist-start-page';
 export * from './pages/checklist-page';
 export * from './components/checklist-header';
 export * from './components/checklist-progress-bar';

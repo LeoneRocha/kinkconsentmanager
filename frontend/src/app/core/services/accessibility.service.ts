@@ -47,6 +47,8 @@ export class AccessibilityService extends BaseStateService<AccessibilityState> {
   private readonly document = inject(DOCUMENT);
   private readonly preferencesRepo = inject(USER_PREFERENCES_REPOSITORY_TOKEN);
   private readonly i18n = inject(I18nService);
+  private lastFocusedTarget: Element | null = null;
+  private lastFocusedText = '';
 
   readonly audioAssistEnabled = this.select('audioAssistEnabled');
   readonly visualCaptionsEnabled = this.select('visualCaptionsEnabled');
@@ -175,10 +177,84 @@ export class AccessibilityService extends BaseStateService<AccessibilityState> {
   }
 
   /**
+   * Resolves the best descriptive text from an element (`aria-label`, `alt`, `title`,
+   * nested `img[alt]`, `aria-labelledby`, or normalized text content).
+   */
+  extractAccessibleText(element: Element | null): string {
+    if (!element) {
+      return '';
+    }
+
+    const ariaLabel = element.getAttribute('aria-label')?.trim() ?? '';
+    if (ariaLabel.length > 0) {
+      return ariaLabel;
+    }
+
+    const alt = element.getAttribute('alt')?.trim() ?? '';
+    if (alt.length > 0) {
+      return alt;
+    }
+
+    const title = element.getAttribute('title')?.trim() ?? '';
+    if (title.length > 0) {
+      return title;
+    }
+
+    const nestedImgAlt = element.querySelector('img[alt]')?.getAttribute('alt')?.trim() ?? '';
+    if (nestedImgAlt.length > 0) {
+      return nestedImgAlt;
+    }
+
+    const labelledBy = element.getAttribute('aria-labelledby')?.trim() ?? '';
+    if (labelledBy.length > 0 && this.document) {
+      const referencedText = labelledBy
+        .split(/\s+/)
+        .map(
+          (id) => this.document.getElementById(id)?.textContent?.replace(/\s+/g, ' ').trim() ?? '',
+        )
+        .filter((part) => part.length > 0)
+        .join(' ');
+      if (referencedText.length > 0) {
+        return referencedText;
+      }
+    }
+
+    return element.textContent?.replace(/\s+/g, ' ').trim() ?? '';
+  }
+
+  /**
+   * Announces the focused element's accessible label when audio assist or visual captions are active.
+   */
+  announceElement(element: Element | null): void {
+    if (!element || (!this.audioAssistEnabled() && !this.visualCaptionsEnabled())) {
+      return;
+    }
+
+    if (element.closest('[aria-live]')) {
+      return;
+    }
+
+    const label = this.extractAccessibleText(element);
+    if (label.length === 0) {
+      return;
+    }
+
+    if (element === this.lastFocusedTarget && label === this.lastFocusedText) {
+      return;
+    }
+
+    this.lastFocusedTarget = element;
+    this.lastFocusedText = label;
+    this.announce(label, true);
+  }
+
+  /**
    * Stops audio playback and clears the active live caption text.
    */
   dismissCaption(): void {
     this.stopSpeaking();
+    this.lastFocusedTarget = null;
+    this.lastFocusedText = '';
     this.setState({ liveAnnouncement: '' });
   }
 
@@ -215,6 +291,8 @@ export class AccessibilityService extends BaseStateService<AccessibilityState> {
    */
   resetPreferences(): void {
     this.stopSpeaking();
+    this.lastFocusedTarget = null;
+    this.lastFocusedText = '';
     this.setState({
       ...DEFAULT_PREFERENCES,
       liveAnnouncement: '',

@@ -90,8 +90,7 @@ export class FullGridPreviewComponent {
           const secondaryScaleCell = isDualRole
             ? this.buildScaleCell(answer?.secondaryScale, scaleMap, texts)
             : undefined;
-          const isAnswered =
-            primaryScaleCell.answered || (secondaryScaleCell?.answered ?? false);
+          const isAnswered = primaryScaleCell.answered || (secondaryScaleCell?.answered ?? false);
 
           return {
             itemId: item.id,

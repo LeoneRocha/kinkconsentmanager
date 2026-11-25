@@ -1,11 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { MatDialogRef } from '@angular/material/dialog';
 import { Observable } from 'rxjs';
-import {
-  AlertFactoryService,
-  AlertProvider,
-  AlertRequest,
-} from './alert-factory.service';
+import { AlertFactoryService, AlertProvider, AlertRequest } from './alert-factory.service';
 import {
   AlertModalRequest,
   ConfirmModalRequest,
@@ -32,8 +28,12 @@ export class UiFeedbackHostService {
   private readonly modalFactory = inject(ModalFactoryService);
 
   open(request: { readonly kind: 'alert' } & AlertRequest): void;
-  open(request: { readonly kind: 'modal'; readonly modalType?: 'confirm' } & ConfirmModalRequest): Observable<boolean>;
-  open(request: { readonly kind: 'modal'; readonly modalType: 'alert' } & AlertModalRequest): Observable<boolean>;
+  open(
+    request: { readonly kind: 'modal'; readonly modalType?: 'confirm' } & ConfirmModalRequest,
+  ): Observable<boolean>;
+  open(
+    request: { readonly kind: 'modal'; readonly modalType: 'alert' } & AlertModalRequest,
+  ): Observable<boolean>;
   open(request: UiFeedbackRequest): Observable<boolean> | void;
   open(request: UiFeedbackRequest): Observable<boolean> | void {
     if (request.kind === 'alert') {

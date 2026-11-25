@@ -1,5 +1,6 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import { AccessibilityService } from './core/services';
 import {
   AppAccessibilityOverlayComponent,
   AppFooterComponent,
@@ -22,5 +23,16 @@ import { SchemaTranslatePipe } from './shared/pipes';
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: {
+    '(focusin)': 'onFocusIn($event)',
+  },
 })
-export class App {}
+export class App {
+  private readonly accessibility = inject(AccessibilityService);
+
+  protected onFocusIn(event: FocusEvent): void {
+    if (event.target instanceof Element) {
+      this.accessibility.announceElement(event.target);
+    }
+  }
+}

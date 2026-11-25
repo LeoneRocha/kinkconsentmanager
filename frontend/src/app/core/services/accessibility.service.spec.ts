@@ -164,4 +164,58 @@ describe('AccessibilityService', () => {
     expect(service.isSpeaking()).toBe(false);
     expect(() => service.stopSpeaking()).not.toThrow();
   });
+
+  // Cenário: Extração de texto acessível por prioridade (aria-label > alt > title > img[alt] > textContent).
+  // Objetivo: Garantir que botões, imagens, ícones e textos forneçam rótulo claro ao leitor audiovisual.
+  it('should extract accessible label by priority across attributes and nested media', () => {
+    const service = TestBed.inject(AccessibilityService);
+
+    const btn = document.createElement('button');
+    btn.setAttribute('aria-label', 'Botão Prioritário');
+    btn.setAttribute('title', 'Título Secundário');
+    btn.textContent = 'Texto Visível';
+    expect(service.extractAccessibleText(btn)).toBe('Botão Prioritário');
+
+    const img = document.createElement('img');
+    img.setAttribute('alt', 'Logotipo KCM');
+    img.setAttribute('title', 'Título Imagem');
+    expect(service.extractAccessibleText(img)).toBe('Logotipo KCM');
+
+    const icon = document.createElement('i');
+    icon.setAttribute('title', 'Ícone de Informação');
+    expect(service.extractAccessibleText(icon)).toBe('Ícone de Informação');
+
+    const linkWithImg = document.createElement('a');
+    linkWithImg.innerHTML = '<img src="favicon.svg" alt="Painel Inicial" />';
+    expect(service.extractAccessibleText(linkWithImg)).toBe('Painel Inicial');
+
+    const labelSpan = document.createElement('span');
+    labelSpan.textContent = '   Texto   Normalizado   ';
+    expect(service.extractAccessibleText(labelSpan)).toBe('Texto Normalizado');
+    expect(service.extractAccessibleText(null)).toBe('');
+  });
+
+  // Cenário: Foco em elemento com assistente de áudio/legenda desativado ou ativado.
+  // Objetivo: Não anunciar quando inativo, ignorar regiões aria-live e anunciar via legenda/voz quando ativo.
+  it('should announce focused elements only when audio assist or visual captions are enabled', () => {
+    const service = TestBed.inject(AccessibilityService);
+    const targetBtn = document.createElement('button');
+    targetBtn.setAttribute('title', 'Abrir Checklist');
+
+    service.announceElement(targetBtn);
+    expect(service.liveAnnouncement()).toBe('');
+
+    service.toggleVisualCaptions();
+    service.announceElement(targetBtn);
+    expect(service.liveAnnouncement()).toBe('Abrir Checklist');
+    expect(service.showCaptionBar()).toBe(true);
+
+    const liveContainer = document.createElement('div');
+    liveContainer.setAttribute('aria-live', 'polite');
+    const nested = document.createElement('span');
+    nested.setAttribute('title', 'Ignorar');
+    liveContainer.appendChild(nested);
+    service.announceElement(nested);
+    expect(service.liveAnnouncement()).toBe('Abrir Checklist');
+  });
 });

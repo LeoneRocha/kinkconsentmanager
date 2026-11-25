@@ -65,14 +65,24 @@ export class ChecklistStateService extends BaseStateService<ChecklistState> {
   private readonly persistence = inject(LocalStoragePersistenceService);
   private readonly schemaSignal = signal<ChecklistSchema | null>(null);
   private readonly searchableLabelsSignal = signal<Readonly<Record<string, string>>>({});
+  private readonly startModeConfirmedSignal = signal<boolean>(false);
+  private readonly hasPersistedStateSignal = signal<boolean>(false);
 
   readonly schema = this.schemaSignal.asReadonly();
+  readonly hasConfirmedStartMode = this.startModeConfirmedSignal.asReadonly();
   readonly answers = this.select('answers');
   readonly viewMode = this.select('viewMode');
   readonly activeCategoryIndex = this.select('activeCategoryIndex');
   readonly searchQuery = this.select('searchQuery');
   readonly onlyUnanswered = this.select('onlyUnanswered');
   readonly lastUpdatedAt = this.select('lastUpdatedAt');
+
+  readonly canEnterFillRoute = computed<boolean>(
+    () =>
+      this.startModeConfirmedSignal() ||
+      this.hasPersistedStateSignal() ||
+      Object.keys(this.answers()).length > 0,
+  );
 
   readonly totalItemsCount = computed<number>(() => {
     const schema = this.schemaSignal();
@@ -223,6 +233,16 @@ export class ChecklistStateService extends BaseStateService<ChecklistState> {
   }
 
   /**
+   * Marca o modo inicial como confirmado para liberar o acesso à rota de preenchimento (`/checklist/fill`).
+   */
+  confirmStartMode(mode?: ChecklistViewMode): void {
+    if (mode) {
+      this.setViewMode(mode);
+    }
+    this.startModeConfirmedSignal.set(true);
+  }
+
+  /**
    * Sets the active category index (clamped to loaded schema bounds) and persists it.
    */
   setActiveCategory(index: number): void {
@@ -287,6 +307,7 @@ export class ChecklistStateService extends BaseStateService<ChecklistState> {
       answers: nextAnswers,
       lastUpdatedAt: new Date().toISOString(),
     });
+    this.startModeConfirmedSignal.set(true);
   }
 
   /**
@@ -323,9 +344,7 @@ export class ChecklistStateService extends BaseStateService<ChecklistState> {
         : this.stateSignal().activeCategoryIndex;
 
     const nextLastUpdatedAt =
-      typeof snapshot.savedAt === 'string'
-        ? snapshot.savedAt
-        : this.stateSignal().lastUpdatedAt;
+      typeof snapshot.savedAt === 'string' ? snapshot.savedAt : this.stateSignal().lastUpdatedAt;
 
     this.setState({
       answers: restoredAnswers,
@@ -333,6 +352,7 @@ export class ChecklistStateService extends BaseStateService<ChecklistState> {
       activeCategoryIndex: nextCategoryIndex,
       lastUpdatedAt: nextLastUpdatedAt,
     });
+    this.hasPersistedStateSignal.set(true);
     this.persistCurrentState();
   }
 
@@ -346,9 +366,7 @@ export class ChecklistStateService extends BaseStateService<ChecklistState> {
     for (const [itemId, response] of Object.entries(current.answers)) {
       clonedAnswers[itemId] = {
         ...response,
-        ...(response.selectedOptions
-          ? { selectedOptions: [...response.selectedOptions] }
-          : {}),
+        ...(response.selectedOptions ? { selectedOptions: [...response.selectedOptions] } : {}),
       };
     }
 
@@ -369,6 +387,7 @@ export class ChecklistStateService extends BaseStateService<ChecklistState> {
       activeCategoryIndex: 0,
       lastUpdatedAt: null,
     });
+    this.hasPersistedStateSignal.set(false);
     this.persistence.clear();
   }
 
@@ -431,14 +450,13 @@ export class ChecklistStateService extends BaseStateService<ChecklistState> {
 
     const rawIndex = persisted['activeCategoryIndex'];
     const activeCategoryIndex =
-      typeof rawIndex === 'number' && Number.isInteger(rawIndex) && rawIndex >= 0
-        ? rawIndex
-        : 0;
+      typeof rawIndex === 'number' && Number.isInteger(rawIndex) && rawIndex >= 0 ? rawIndex : 0;
 
     this.setState({
       viewMode,
       activeCategoryIndex,
     });
+    this.hasPersistedStateSignal.set(true);
 
     // Purge legacy plaintext answer payloads from unencrypted storage immediately.
     if (hasOwn(persisted, 'answers') || hasOwn(persisted, 'lastUpdatedAt')) {

@@ -75,13 +75,17 @@ describe('TelemetryService', () => {
     expect(mockClient.addTelemetryInitializer).toHaveBeenCalledTimes(1);
 
     const initializer = mockClient.addTelemetryInitializer.mock.calls[0][0];
-    const item = { name: 'evt', tags: {} as unknown[] } as unknown as Parameters<typeof initializer>[0];
+    const item = { name: 'evt', tags: {} as unknown[] } as unknown as Parameters<
+      typeof initializer
+    >[0];
     initializer(item);
     expect((item.tags as unknown as Record<string, string>)['ai.cloud.role']).toBe(
       'kinkconsentmanager-ui',
     );
 
-    routerEvents$.next(new NavigationEnd(1, '/export?draft=secret#hash', '/export?draft=secret#hash'));
+    routerEvents$.next(
+      new NavigationEnd(1, '/export?draft=secret#hash', '/export?draft=secret#hash'),
+    );
     expect(mockClient.trackPageView).toHaveBeenCalledWith(
       { name: '/export', uri: '/export' },
       undefined,

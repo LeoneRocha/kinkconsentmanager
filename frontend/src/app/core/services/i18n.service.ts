@@ -35,21 +35,17 @@ export class I18nService {
   readonly currentLang = this.currentLangSignal.asReadonly();
 
   constructor() {
-    this.translateService?.onLangChange
-      ?.pipe(takeUntilDestroyed())
-      .subscribe((event) => {
-        if (this.localeCatalog.isSupportedLocale(event.lang)) {
-          this.currentLangSignal.set(event.lang);
-          this.syncDocumentLang(event.lang);
-        }
-        this.translationRevisionSignal.update((rev) => rev + 1);
-      });
+    this.translateService?.onLangChange?.pipe(takeUntilDestroyed()).subscribe((event) => {
+      if (this.localeCatalog.isSupportedLocale(event.lang)) {
+        this.currentLangSignal.set(event.lang);
+        this.syncDocumentLang(event.lang);
+      }
+      this.translationRevisionSignal.update((rev) => rev + 1);
+    });
 
-    this.translateService?.onTranslationRefresh
-      ?.pipe(takeUntilDestroyed())
-      .subscribe(() => {
-        this.translationRevisionSignal.update((rev) => rev + 1);
-      });
+    this.translateService?.onTranslationRefresh?.pipe(takeUntilDestroyed()).subscribe(() => {
+      this.translationRevisionSignal.update((rev) => rev + 1);
+    });
 
     const persistedLang = this.preferencesRepo.getLanguage();
     const serviceLang = this.translateService?.getCurrentLang() ?? '';
@@ -62,7 +58,10 @@ export class I18nService {
     this.currentLangSignal.set(initialLang);
     this.syncDocumentLang(initialLang);
     if (this.translateService && serviceLang !== initialLang) {
-      this.translateService.use(initialLang).pipe(take(1)).subscribe({ error: () => { } });
+      this.translateService
+        .use(initialLang)
+        .pipe(take(1))
+        .subscribe({ error: () => {} });
     }
   }
 
@@ -73,7 +72,10 @@ export class I18nService {
     this.currentLangSignal.set(lang);
     this.syncDocumentLang(lang);
     this.preferencesRepo.saveLanguage(lang);
-    this.translateService?.use(lang).pipe(take(1)).subscribe({ error: () => { } });
+    this.translateService
+      ?.use(lang)
+      .pipe(take(1))
+      .subscribe({ error: () => {} });
     this.translationRevisionSignal.update((rev) => rev + 1);
   }
 
@@ -246,10 +248,7 @@ export class I18nService {
     return fallback;
   }
 
-  private resolveRaw(
-    fullKey: string,
-    params?: Record<string, string | number>,
-  ): string | null {
+  private resolveRaw(fullKey: string, params?: Record<string, string | number>): string | null {
     this.currentLangSignal();
     this.translationRevisionSignal();
 

@@ -5,7 +5,10 @@ import { FileDownloadService } from './file-download.service';
 
 describe('CsvExportService', () => {
   let service: CsvExportService;
-  let fileDownloadMock: { downloadBlob: ReturnType<typeof jest.fn>; downloadDataUrl: ReturnType<typeof jest.fn> };
+  let fileDownloadMock: {
+    downloadBlob: ReturnType<typeof jest.fn>;
+    downloadDataUrl: ReturnType<typeof jest.fn>;
+  };
 
   beforeEach(() => {
     fileDownloadMock = {
