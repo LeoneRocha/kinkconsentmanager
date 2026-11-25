@@ -60,11 +60,6 @@ export class ChecklistStartPageComponent implements OnInit {
   protected readonly totalCount = this.checklistState.totalItemsCount;
   protected readonly progressPercentage = this.checklistState.progressPercentage;
 
-  protected readonly backToDashboardLabel = computed<string>(() => {
-    this.i18n.currentLang();
-    return this.translateWithFallback('backToDashboard', 'Voltar ao Dashboard');
-  });
-
   protected readonly loadingSchemaLabel = computed<string>(() => {
     this.i18n.currentLang();
     return this.i18n.translateUi('loadingSchema');
@@ -182,10 +177,6 @@ export class ChecklistStartPageComponent implements OnInit {
           this.isLoading.set(false);
         },
       });
-  }
-
-  protected onBackToDashboard(): void {
-    void this.router.navigate(APP_ROUTE_COMMANDS.dashboard);
   }
 
   protected onStartModeSelected(mode: ChecklistViewMode): void {

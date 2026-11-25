@@ -269,11 +269,6 @@ export class ChecklistPageComponent implements OnInit {
     return this.translateWithFallback('backToChecklistModes', 'Voltar ao Checklist');
   });
 
-  protected readonly navDashboardLabel = computed<string>(() => {
-    this.i18n.currentLang();
-    return this.translateWithFallback('navDashboard', 'Dashboard');
-  });
-
   protected readonly finishLabel = computed<string>(() => {
     this.i18n.currentLang();
     return this.i18n.translateUi('finishAndExport');
@@ -419,10 +414,6 @@ export class ChecklistPageComponent implements OnInit {
 
   protected onBackToModeSelector(): void {
     void this.router.navigate(APP_ROUTE_COMMANDS.checklist);
-  }
-
-  protected onBackToDashboard(): void {
-    void this.router.navigate(APP_ROUTE_COMMANDS.dashboard);
   }
 
   protected onSearchQueryChange(query: string): void {

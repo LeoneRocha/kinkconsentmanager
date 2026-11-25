@@ -51,18 +51,6 @@
           ></i>
           <span>{{ backToChecklistModesLabel() }}</span>
         </button>
-        <button
-          mat-stroked-button
-          type="button"
-          class="checklist-page__nav-btn"
-          data-action="go-to-dashboard"
-          [attr.title]="navDashboardLabel()"
-          [attr.aria-label]="navDashboardLabel()"
-          (click)="onBackToDashboard()"
-        >
-          <i class="fa-solid fa-house" [attr.title]="navDashboardLabel()" aria-hidden="true"></i>
-          <span>{{ navDashboardLabel() }}</span>
-        </button>
       </div>
 
       <div class="checklist-page__sticky-top">

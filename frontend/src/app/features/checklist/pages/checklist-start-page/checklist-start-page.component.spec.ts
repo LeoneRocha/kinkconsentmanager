@@ -110,15 +110,14 @@ describe('ChecklistStartPageComponent', () => {
     expect(hostEl.querySelector('app-checklist-mode-selector')).not.toBeNull();
   });
 
-  // Cenário: Escolha do modo de preenchimento e botão Voltar ao Dashboard.
-  // Objetivo: Confirmar viewMode no estado, liberar rota de preenchimento e navegar para `/checklist/fill` ou `/dashboard`.
-  it('should confirm selected mode and navigate to /checklist/fill, or go back to /dashboard', async () => {
+  // Cenário: Escolha do modo de preenchimento na rota `/checklist`.
+  // Objetivo: Confirmar viewMode no estado, omitir botão redundante de Dashboard e navegar para `/checklist/fill`.
+  it('should confirm selected mode and navigate to /checklist/fill without a dashboard back button', async () => {
     await setup();
     const navigateSpy = jest.spyOn(router, 'navigate').mockResolvedValue(true);
     const hostEl = fixture.nativeElement as HTMLElement;
 
-    hostEl.querySelector<HTMLButtonElement>('button[data-action="back-to-dashboard"]')?.click();
-    expect(navigateSpy).toHaveBeenCalledWith(['/dashboard']);
+    expect(hostEl.querySelector('button[data-action="back-to-dashboard"]')).toBeNull();
 
     hostEl.querySelector<HTMLButtonElement>('button[data-start-mode="classic"]')?.click();
     expect(checklistState.viewMode()).toBe('classic');

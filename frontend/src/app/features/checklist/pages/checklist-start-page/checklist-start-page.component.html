@@ -1,23 +1,4 @@
 <div class="checklist-start">
-  <div class="checklist-start__nav">
-    <button
-      mat-stroked-button
-      type="button"
-      class="checklist-start__back-btn"
-      data-action="back-to-dashboard"
-      [attr.title]="backToDashboardLabel()"
-      [attr.aria-label]="backToDashboardLabel()"
-      (click)="onBackToDashboard()"
-    >
-      <i
-        class="fa-solid fa-arrow-left"
-        [attr.title]="backToDashboardLabel()"
-        aria-hidden="true"
-      ></i>
-      <span>{{ backToDashboardLabel() }}</span>
-    </button>
-  </div>
-
   @if (isLoading()) {
     <div
       class="checklist-start__loading"

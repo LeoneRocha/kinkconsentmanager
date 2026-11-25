@@ -541,17 +541,16 @@ describe('ChecklistPageComponent', () => {
     expect(checklistState.answers()['item_rope']).toEqual({ primaryScale: 'favorite' });
   });
 
-  it('should navigate back to /checklist (mode selector) or /dashboard from top route nav buttons', async () => {
+  it('should navigate back to /checklist (mode selector) without a dashboard button in top route nav', async () => {
     await createTestModule(() => of(MOCK_SCHEMA));
     const hostEl = await startInMode('stepper');
     const navigateSpy = jest.spyOn(router, 'navigate').mockResolvedValue(true);
+
+    expect(hostEl.querySelector('button[data-action="go-to-dashboard"]')).toBeNull();
 
     hostEl
       .querySelector<HTMLButtonElement>('button[data-action="back-to-checklist-start"]')
       ?.click();
     expect(navigateSpy).toHaveBeenCalledWith(['/checklist']);
-
-    hostEl.querySelector<HTMLButtonElement>('button[data-action="go-to-dashboard"]')?.click();
-    expect(navigateSpy).toHaveBeenCalledWith(['/dashboard']);
   });
 });
