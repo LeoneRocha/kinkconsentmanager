@@ -183,18 +183,20 @@
     align-self: flex-start;
     padding: 0.5rem 1rem;
     border-radius: 9999px;
-    background-color: v.$btn-enabled-bg;
-    color: v.$btn-enabled-fg;
-    border: 1px solid v.$btn-enabled-border;
+    background-color: transparent;
+    color: v.$text-primary;
+    border: 1px solid v.$border-strong;
     font-size: 0.875rem;
     font-weight: 700;
     transition:
       background-color 0.15s ease,
-      border-color 0.15s ease;
+    border-color 0.15s ease,
+    color 0.15s ease;
 
     .dashboard__card:hover & {
-      background-color: v.$btn-enabled-hover;
-      border-color: v.$btn-enabled-hover;
+      background-color: v.$accent-soft;
+      border-color: v.$accent-primary;
+      color: v.$accent-text;
     }
   }
 }

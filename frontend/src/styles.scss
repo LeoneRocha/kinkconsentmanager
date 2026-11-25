@@ -35,14 +35,10 @@
 }
 
 html {
-  @include mat.theme(
-    (
-      color: (
-        primary: mat.$red-palette,
+  @include mat.theme((color: (primary: mat.$red-palette,
         theme-type: light,
       ),
-      typography: (
-        'Nunito',
+      typography: ('Nunito',
         ui-rounded,
         'Segoe UI',
         system-ui,
@@ -50,8 +46,7 @@ html {
         sans-serif,
       ),
       density: 0,
-    )
-  );
+    ));
   --mat-sys-plain-font: var(--kcm-font-family);
   --mat-sys-brand-font: var(--kcm-font-family);
   --mat-sys-primary: var(--kcm-accent-primary);
@@ -73,14 +68,10 @@ html {
 }
 
 html.app-dark {
-  @include mat.theme(
-    (
-      color: (
-        primary: mat.$red-palette,
+  @include mat.theme((color: (primary: mat.$red-palette,
         theme-type: dark,
       ),
-    )
-  );
+    ));
   color-scheme: dark;
   --kcm-surface-bg: #0f1117;
   --kcm-surface-card: #181c26;
@@ -152,14 +143,10 @@ html.app-dark {
 }
 
 html[data-theme='sober'] {
-  @include mat.theme(
-    (
-      color: (
-        primary: mat.$azure-palette,
+  @include mat.theme((color: (primary: mat.$azure-palette,
         theme-type: light,
       ),
-    )
-  );
+    ));
   color-scheme: light;
   --kcm-surface-bg: #f8fafc;
   --kcm-surface-card: #ffffff;
@@ -352,155 +339,173 @@ select {
   }
 }
 
-.mat-mdc-unelevated-button:disabled,
-.mat-mdc-raised-button:disabled,
-.mat-mdc-outlined-button:disabled,
-.mat-mdc-button:disabled {
-  --mat-button-filled-disabled-container-color: var(--kcm-btn-disabled-bg);
-  --mat-button-filled-disabled-label-text-color: var(--kcm-btn-disabled-fg);
-  --mat-button-protected-disabled-container-color: var(--kcm-btn-disabled-bg);
-  --mat-button-protected-disabled-label-text-color: var(--kcm-btn-disabled-fg);
-  --mat-button-outlined-disabled-label-text-color: var(--kcm-btn-disabled-fg);
-  --mat-button-outlined-disabled-outline-color: var(--kcm-btn-disabled-border);
-  --mat-button-text-disabled-label-text-color: var(--kcm-btn-disabled-fg);
-  background-color: var(--kcm-btn-disabled-bg);
-  color: var(--kcm-btn-disabled-fg);
-  border-color: var(--kcm-btn-disabled-border);
-}
+.mat-mdc-outlined-button.checklist-page__nav-btn:not(:disabled),
+  .mat-mdc-outlined-button.export-toolbar__btn--back:not(:disabled),
+  .mat-mdc-outlined-button.mode-selector__import-btn:not(:disabled) {
+    --mat-button-outlined-label-text-color: var(--kcm-text-primary);
+    --mat-button-outlined-outline-color: var(--kcm-border-strong);
+    --mat-button-outlined-state-layer-color: var(--kcm-accent-primary);
+    background-color: transparent;
+    color: var(--kcm-text-primary);
+    border-color: var(--kcm-border-strong);
 
-.mat-mdc-slide-toggle .mdc-form-field {
-  gap: 0.5rem;
-}
-
-:focus-visible {
-  outline: 2px solid v.$accent-primary;
-  outline-offset: 2px;
-}
-
-html.app-high-contrast :focus-visible {
-  outline-width: 3px;
-  outline-offset: 3px;
-}
-
-html.app-reduced-motion {
-  scroll-behavior: auto;
-
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
+    &:hover {
+      --mat-button-outlined-label-text-color: var(--kcm-accent-text);
+      --mat-button-outlined-outline-color: var(--kcm-accent-primary);
+      background-color: var(--kcm-accent-soft);
+      color: var(--kcm-accent-text);
+      border-color: var(--kcm-accent-primary);
+    }
   }
-}
 
-@media (prefers-reduced-motion: reduce) {
-  html {
+  .mat-mdc-unelevated-button:disabled,
+  .mat-mdc-raised-button:disabled,
+  .mat-mdc-outlined-button:disabled,
+  .mat-mdc-button:disabled {
+    --mat-button-filled-disabled-container-color: var(--kcm-btn-disabled-bg);
+    --mat-button-filled-disabled-label-text-color: var(--kcm-btn-disabled-fg);
+    --mat-button-protected-disabled-container-color: var(--kcm-btn-disabled-bg);
+    --mat-button-protected-disabled-label-text-color: var(--kcm-btn-disabled-fg);
+    --mat-button-outlined-disabled-label-text-color: var(--kcm-btn-disabled-fg);
+    --mat-button-outlined-disabled-outline-color: var(--kcm-btn-disabled-border);
+    --mat-button-text-disabled-label-text-color: var(--kcm-btn-disabled-fg);
+    background-color: var(--kcm-btn-disabled-bg);
+    color: var(--kcm-btn-disabled-fg);
+    border-color: var(--kcm-btn-disabled-border);
+  }
+
+  .mat-mdc-slide-toggle .mdc-form-field {
+    gap: 0.5rem;
+  }
+
+  :focus-visible {
+    outline: 2px solid v.$accent-primary;
+    outline-offset: 2px;
+  }
+
+  html.app-high-contrast :focus-visible {
+    outline-width: 3px;
+    outline-offset: 3px;
+  }
+
+  html.app-reduced-motion {
     scroll-behavior: auto;
+
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
   }
 
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
-}
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
 
-.kcm-skeleton {
-  display: block;
-  width: 100%;
-  border-radius: 10px;
-  background: linear-gradient(
-    90deg,
-    var(--kcm-surface-subtle) 25%,
-    var(--kcm-border-color) 50%,
-    var(--kcm-surface-subtle) 75%
-  );
-  background-size: 200% 100%;
-  animation: kcm-skeleton-pulse 1.5s ease-in-out infinite;
-}
-
-@keyframes kcm-skeleton-pulse {
-  0% {
-    background-position: 200% 0;
-  }
-  100% {
-    background-position: -200% 0;
-  }
-}
-
-.kcm-snackbar-success {
-  --mat-snack-bar-container-color: #15803d;
-  --mat-snack-bar-supporting-text-color: #ffffff;
-  --mat-snack-bar-button-color: #dcfce7;
-}
-
-.kcm-snackbar-error {
-  --mat-snack-bar-container-color: #b91c1c;
-  --mat-snack-bar-supporting-text-color: #ffffff;
-  --mat-snack-bar-button-color: #fee2e2;
-}
-
-.kcm-snackbar-warning {
-  --mat-snack-bar-container-color: #b45309;
-  --mat-snack-bar-supporting-text-color: #ffffff;
-  --mat-snack-bar-button-color: #fef3c7;
-}
-
-.kcm-snackbar-info {
-  --mat-snack-bar-container-color: #1d4ed8;
-  --mat-snack-bar-supporting-text-color: #ffffff;
-  --mat-snack-bar-button-color: #dbeafe;
-}
-
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-}
-
-@media print {
-  @page {
-    margin: 10mm;
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
   }
 
-  html,
-  html.app-dark,
-  html[data-theme='sober'],
-  body,
-  .app-shell {
-    background: #ffffff !important;
-    color: #0f172a !important;
-    min-height: 0 !important;
-    height: auto !important;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
+  .kcm-skeleton {
+    display: block;
+    width: 100%;
+    border-radius: 10px;
+    background: linear-gradient(90deg,
+        var(--kcm-surface-subtle) 25%,
+        var(--kcm-border-color) 50%,
+        var(--kcm-surface-subtle) 75%);
+    background-size: 200% 100%;
+    animation: kcm-skeleton-pulse 1.5s ease-in-out infinite;
   }
 
-  app-header,
-  app-footer,
-  app-toast-container,
-  app-accessibility-overlay,
-  .app-shell__topbar,
-  .app-shell__footer,
-  .app-shell__skip-link,
-  .app-shell__caption-bar {
-    display: none !important;
+  @keyframes kcm-skeleton-pulse {
+    0% {
+      background-position: 200% 0;
+    }
+
+    100% {
+      background-position: -200% 0;
+    }
   }
 
-  .app-shell__main {
-    width: 100% !important;
-    max-width: none !important;
-    padding: 0 !important;
-    margin: 0 !important;
+  .kcm-snackbar-success {
+    --mat-snack-bar-container-color: #15803d;
+    --mat-snack-bar-supporting-text-color: #ffffff;
+    --mat-snack-bar-button-color: #dcfce7;
   }
-}
+
+  .kcm-snackbar-error {
+    --mat-snack-bar-container-color: #b91c1c;
+    --mat-snack-bar-supporting-text-color: #ffffff;
+    --mat-snack-bar-button-color: #fee2e2;
+  }
+
+  .kcm-snackbar-warning {
+    --mat-snack-bar-container-color: #b45309;
+    --mat-snack-bar-supporting-text-color: #ffffff;
+    --mat-snack-bar-button-color: #fef3c7;
+  }
+
+  .kcm-snackbar-info {
+    --mat-snack-bar-container-color: #1d4ed8;
+    --mat-snack-bar-supporting-text-color: #ffffff;
+    --mat-snack-bar-button-color: #dbeafe;
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  @media print {
+    @page {
+      margin: 10mm;
+    }
+
+    html,
+    html.app-dark,
+    html[data-theme='sober'],
+    body,
+    .app-shell {
+      background: #ffffff !important;
+      color: #0f172a !important;
+      min-height: 0 !important;
+      height: auto !important;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+
+    app-header,
+    app-footer,
+    app-toast-container,
+    app-accessibility-overlay,
+    .app-shell__topbar,
+    .app-shell__footer,
+    .app-shell__skip-link,
+    .app-shell__caption-bar {
+      display: none !important;
+    }
+
+    .app-shell__main {
+      width: 100% !important;
+      max-width: none !important;
+      padding: 0 !important;
+      margin: 0 !important;
+    }
+  }
