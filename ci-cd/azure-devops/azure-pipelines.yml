@@ -398,8 +398,9 @@ stages:
             inputs:
               command: 'publish'
               publishWebProjects: false
+              modifyOutputPath: false
               projects: '$(backendApiProject)'
-              arguments: '-c Release --no-build /p:UseAppHost=false -o "$(Build.ArtifactStagingDirectory)/backend-api-publish"'
+              arguments: '-c Release --no-restore /p:UseAppHost=false -o "$(Build.ArtifactStagingDirectory)/backend-api-publish"'
               zipAfterPublish: false
             env:
               NUGET_PACKAGES: '$(nugetCacheFolder)'
@@ -409,7 +410,11 @@ stages:
             condition: succeeded()
             inputs:
               script: |
-                test -f "$(Build.ArtifactStagingDirectory)/backend-api-publish/KinkConsentManager.API.dll" || { echo "ERRO: KinkConsentManager.API.dll não encontrado"; exit 1; }
+                if [ ! -f "$(Build.ArtifactStagingDirectory)/backend-api-publish/KinkConsentManager.API.dll" ]; then
+                  echo "ERRO: KinkConsentManager.API.dll não encontrado em $(Build.ArtifactStagingDirectory)/backend-api-publish"
+                  ls -la "$(Build.ArtifactStagingDirectory)/backend-api-publish" || true
+                  exit 1
+                fi
                 ls -lh "$(Build.ArtifactStagingDirectory)/backend-api-publish"
 
           - task: ArchiveFiles@2

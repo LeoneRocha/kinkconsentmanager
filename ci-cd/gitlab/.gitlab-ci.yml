@@ -98,7 +98,7 @@ ci_backend_build_and_test:
     - dotnet test KinkConsentManager.sln -c Release --no-build --logger "trx;LogFilePrefix=test-results" --results-directory TestResults --collect:"XPlat Code Coverage"
     - test "$(find TestResults -name '*.trx' | wc -l)" -ge 1
     - test "$(find TestResults -name 'coverage.cobertura.xml' | wc -l)" -ge 1
-    - dotnet publish APIs/KinkConsentManager.API/KinkConsentManager.API.csproj -c Release --no-build /p:UseAppHost=false -o publish/api
+    - dotnet publish APIs/KinkConsentManager.API/KinkConsentManager.API.csproj -c Release --no-restore /p:UseAppHost=false -o publish/api
     - test -f publish/api/KinkConsentManager.API.dll
   artifacts:
     when: always

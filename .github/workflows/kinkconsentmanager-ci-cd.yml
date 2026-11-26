@@ -243,7 +243,7 @@ jobs:
           test "${COV_COUNT}" -ge 1
 
       - name: Publish Release da API Backend (portável /p:UseAppHost=false)
-        run: dotnet publish "${{ env.BACKEND_API_PROJECT }}" -c Release --no-build /p:UseAppHost=false -o "${{ env.BACKEND_DIR }}/publish/api"
+        run: dotnet publish "${{ env.BACKEND_API_PROJECT }}" -c Release --no-restore /p:UseAppHost=false -o "${{ env.BACKEND_DIR }}/publish/api"
 
       - name: Validar saída publicada e gerar pacote ZIP tradicional da API Backend
         run: |
