@@ -167,7 +167,7 @@ kinkconsentmanager/
 - **Provedor:** `Npgsql.EntityFrameworkCore.PostgreSQL` (`9.0.4`, alinhado ao EF Core `9.0.23` referenciado pelo `SmartCoreHub.Core.SDK`).
 - **Isolamento Mandatório de Schema:** Todas as tabelas **e** a tabela de histórico de migrations residem exclusivamente no schema `kink_consent` (`modelBuilder.HasDefaultSchema("kink_consent")` + `MigrationsHistoryTable(EfMigrationsHistoryHelper.PostgreSqlTable, "kink_consent")`), blindando `auth`, `storage`, `realtime` e `public`.
 - **Migrations e Direct Connection:** Para executar `dotnet ef database update`, utilizar sempre **Direct Connection (`5432`)** ou Session Mode; o Transaction Pooler (`6543`) não suporta DDL locks do EF Core (usar `Database:SkipInitialization = true` se rodando atrás de pooler transacional).
-- **Persistência do Report (Respostas — Etapa 2):** Coluna nativa PostgreSQL `jsonb` na tabela `kink_consent.UserReports` (com índice GIN e token de concorrência em `Version`), preservando atomicidade e alinhamento direto com `ChecklistDraft`.
+- **Persistência do Report (Respostas — Etapa 2):** Coluna nativa PostgreSQL `jsonb` na tabela `kink_consent.UserKinkCheclists` (entidade `UserKinkCheclist`, com índice GIN e token de concorrência em `Version`), preservando atomicidade e alinhamento direto com `ChecklistDraft`.
 
 ### 3.3 Alinhamento com os Contratos já Preparados no Frontend
 

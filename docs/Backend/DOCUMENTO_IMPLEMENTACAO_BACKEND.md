@@ -57,7 +57,7 @@ graph TB
         API["APIs/KinkConsentManager.API\n(AuthController, Program.cs)"]
         Service["Implementations/KinkConsentManager.Service\n(CQRS Handlers, AuthService, JwtTokenService, DI)"]
         Infra["Implementations/KinkConsentManager.Infrastructure\n(DbContext, PgSql, Configurations, Repositories)"]
-        Domain["Implementations/KinkConsentManager.Domain\n(User, UserRefreshToken, Validators, MessageKeys)"]
+        Domain["Implementations/KinkConsentManager.Domain\n(UserKink, UserKinkRefreshToken, Validators, MessageKeys)"]
     end
 
     subgraph NuGet["NuGet Oficial: SmartCoreHub.Core.SDK"]
@@ -84,7 +84,7 @@ graph TB
 ```
 
 ### 1.2 Convenções de Idioma e Qualidade (Alinhadas ao `SmartCoreHub` e `KinkConsentManager`)
-- **Código e identificadores C#:** estritamente em **inglês** (`User`, `AuthenticationService`, `RegisterUserCommand`).
+- **Código e identificadores C#:** estritamente em **inglês** (`UserKink`, `AuthenticationService`, `RegisterUserKinkCommand`).
 - **Comentários e XML-docs:** em **português** (com documentação bilíngue PT-BR/EN nos endpoints públicos de Controllers, seguindo `AuthController.cs` do `SmartCoreHub`). Nos testes unitários, usar comentários `// Cenário:` e `// Objetivo:`.
 - **Mensagens runtime da API:** em **inglês** (`ServiceResponse.Message`, `ErrorResponse.Description`, logs), acompanhadas de **`MessageKey` canônicas** para tradução client-side no Angular (`pt-BR` / `en-US`).
 - **Regra de Enums (`R-ARCH-ENUM-NUMERIC`):** enums são sempre serializados como inteiros (`0, 1, 2...`) pelo `System.Text.Json`.
@@ -99,7 +99,7 @@ graph TB
 
 | Área | Namespace no SDK | Tipos / Métodos Reaproveitados | Papel no `KinkConsentManager` |
 | :--- | :--- | :--- | :--- |
-| **Entidade Base** | `SmartCoreHub.Core.SDK.Domain.Entities.Common` | `LongEntityBase` (`long Id`, `CreatedAt`, `UpdatedAt`, `IsActive`, `UpdateTimestamp()`, `Activate()`, `Deactivate()`) | Classe base de `User`, `UserRefreshToken` e `UserReport`. Obrigatória para compatibilidade com `IGenericRepository<T>` e `JwtAccessTokenService`. |
+| **Entidade Base** | `SmartCoreHub.Core.SDK.Domain.Entities.Common` | `LongEntityBase` (`long Id`, `CreatedAt`, `UpdatedAt`, `IsActive`, `UpdateTimestamp()`, `Activate()`, `Deactivate()`) | Classe base de `UserKink`, `UserKinkRefreshToken` e `UserKinkCheclist`. Obrigatória para compatibilidade com `IGenericRepository<T>` e `JwtAccessTokenService`. |
 | **Value Objects** | `SmartCoreHub.Core.SDK.Domain.ValueObjects` | `Email` | Validação regex com timeout 250ms (anti-ReDoS), normalização automática para minúsculas e conversão implícita/explícita. |
 | **Envelopes & DTOs** | `SmartCoreHub.Core.SDK.Domain.DTOs.Common` | `ServiceResponse<T>`, `ErrorResponse`, `ErrorCodeType`, `PaginationResponse`, `LoginDto`, `RefreshTokenDto`, `PasswordVerificationInput` | Contrato único de resposta HTTP e DTOs de entrada de login, refresh e verificação de senha. |
 | **Config Token** | `SmartCoreHub.Core.SDK.Domain.DTOs.Entities` | `ITokenConfigurationDto`, `TokenConfigurationDto` | Binding da seção `TokenConfigurations` do `appsettings.json`. |
@@ -117,11 +117,11 @@ graph TB
 ### 2.2 O que Permanece no Host do Produto (`KinkConsentManager`)
 
 Seguindo exatamente a divisão oficial documentada no `README.md` do `SmartCoreHub.Core.SDK`:
-- **Entidades e Mapeamentos de Domínio:** `User`, `UserRefreshToken`, `UserReport` e suas `IEntityTypeConfiguration` em `kink_consent`.
+- **Entidades e Mapeamentos de Domínio:** `UserKink`, `UserKinkRefreshToken`, `UserKinkCheclist` e suas `IEntityTypeConfiguration` em `kink_consent`.
 - **`KinkConsentManagerDbContext` + `KinkConsentManagerDbContextPostgreSql` + `IKinkConsentManagerDbScope`:** Contexto específico do produto com `Migrations/PostgreSql`.
 - **`AuthenticationExtensions` (registro do esquema `JwtBearer`):** O SDK fornece a leitura e parâmetros de `TokenConfigurations`, mas o pacote `Microsoft.AspNetCore.Authentication.JwtBearer` fica no host.
-- **`JwtTokenService` (`User` → claims):** Wrapper fino sobre `IJwtAccessTokenService` do SDK.
-- **`AuthenticationService` e CQRS Handlers:** Regras de negócio de cadastro, login, rotação de refresh token e futuramente `UserReport`.
+- **`JwtTokenService` (`UserKink` → claims):** Wrapper fino sobre `IJwtAccessTokenService` do SDK.
+- **`AuthenticationService` e CQRS Handlers:** Regras de negócio de cadastro, login, rotação de refresh token e futuramente `UserKinkCheclist`.
 - **`KinkConsentManagerDocumentationOptions.Branding` e `DatabaseExtensions`:** Branding da API e configuração `UseNpgsql` para Supabase.
 
 ---
@@ -238,7 +238,7 @@ No `SmartCoreHub.Core.SDK`, tanto `IGenericRepository<T>` quanto `GenericReposit
 
 ### 4.2 Entidades de Domínio
 
-#### `Entities/User.cs` (Etapa 1)
+#### `Entities/UserKink.cs` (Etapa 1)
 ```csharp
 using SmartCoreHub.Core.SDK.Domain.Entities.Common;
 using SmartCoreHub.Core.SDK.Domain.ValueObjects;
@@ -248,7 +248,7 @@ namespace KinkConsentManager.Domain.Entities;
 /// <summary>
 /// Entidade de usuário da plataforma KinkConsentManager (somente dados e estado de domínio).
 /// </summary>
-public class User : LongEntityBase
+public class UserKink : LongEntityBase
 {
     /// <summary>Nome ou pseudônimo de exibição do usuário.</summary>
     public string Name { get; set; } = string.Empty;
@@ -277,14 +277,14 @@ public class User : LongEntityBase
 
     // Navegações
     /// <summary>Coleção de refresh tokens emitidos para as sessões do usuário.</summary>
-    public virtual ICollection<UserRefreshToken> RefreshTokens { get; set; } = new List<UserRefreshToken>();
+    public virtual ICollection<UserKinkRefreshToken> RefreshTokens { get; set; } = new List<UserKinkRefreshToken>();
 
     /// <summary>Relatório de respostas do checklist sincronizado na nuvem (Etapa 2).</summary>
-    public virtual UserReport? Report { get; set; }
+    public virtual UserKinkCheclist? Checklist { get; set; }
 }
 ```
 
-#### `Entities/UserRefreshToken.cs` (Etapa 1)
+#### `Entities/UserKinkRefreshToken.cs` (Etapa 1)
 ```csharp
 using SmartCoreHub.Core.SDK.Domain.Entities.Common;
 
@@ -293,10 +293,10 @@ namespace KinkConsentManager.Domain.Entities;
 /// <summary>
 /// Persiste o hash SHA-256 do refresh token emitido para suportar rotação e detecção de reúso.
 /// </summary>
-public class UserRefreshToken : LongEntityBase
+public class UserKinkRefreshToken : LongEntityBase
 {
     /// <summary>Identificador do usuário proprietário da sessão.</summary>
-    public long UserId { get; set; }
+    public long UserKinkId { get; set; }
 
     /// <summary>Hash SHA-256 (hexadecimal/Base64) do refresh token; o segredo bruto nunca é salvo.</summary>
     public string TokenHash { get; set; } = string.Empty;
@@ -318,11 +318,11 @@ public class UserRefreshToken : LongEntityBase
         IsActive && RevokedAtUtc == null && ExpiresAtUtc > utcNow;
 
     /// <summary>Usuário proprietário do token.</summary>
-    public virtual User User { get; set; } = null!;
+    public virtual UserKink UserKink { get; set; } = null!;
 }
 ```
 
-#### `Entities/UserReport.cs` (Preparada para Etapa 2 — Schema `jsonb`)
+#### `Entities/UserKinkCheclist.cs` (Preparada para Etapa 2 — Schema `jsonb`)
 ```csharp
 using SmartCoreHub.Core.SDK.Domain.Entities.Common;
 
@@ -331,10 +331,10 @@ namespace KinkConsentManager.Domain.Entities;
 /// <summary>
 /// Armazena o rascunho/relatório de respostas do checklist do usuário em formato jsonb no Supabase.
 /// </summary>
-public class UserReport : LongEntityBase
+public class UserKinkCheclist : LongEntityBase
 {
     /// <summary>Identificador do usuário proprietário (1:1 na V2).</summary>
-    public long UserId { get; set; }
+    public long UserKinkId { get; set; }
 
     /// <summary>Versão do schema estrutural do checklist (ex.: "1.0.0").</summary>
     public string SchemaVersion { get; set; } = "1.0.0";
@@ -352,7 +352,7 @@ public class UserReport : LongEntityBase
     public int Version { get; set; } = 1;
 
     /// <summary>Usuário proprietário do relatório.</summary>
-    public virtual User User { get; set; } = null!;
+    public virtual UserKink UserKink { get; set; } = null!;
 }
 ```
 
@@ -364,7 +364,7 @@ public class UserReport : LongEntityBase
 namespace KinkConsentManager.Domain.DTOs.Authentication;
 
 /// <summary>Dados de entrada para cadastro de novo usuário.</summary>
-public sealed record RegisterUserRequestDto(
+public sealed record RegisterUserKinkRequestDto(
     string Name,
     string Login,
     string Email,
@@ -373,7 +373,7 @@ public sealed record RegisterUserRequestDto(
 );
 
 /// <summary>Dados públicos resumidos do usuário autenticado.</summary>
-public sealed record UserDto(
+public sealed record UserKinkDto(
     long Id,
     string Name,
     string Login,
@@ -389,7 +389,7 @@ public sealed record LoginResponseDto(
     string RefreshToken,
     DateTime ExpiresAtUtc,
     DateTime RefreshTokenExpiresAtUtc,
-    UserDto User,
+    UserKinkDto User,
     string TokenType = "Bearer"
 );
 
@@ -403,7 +403,7 @@ public sealed record LogoutRequestDto(
 ### 4.4 Internacionalização Centralizada e Validadores Desacoplados (`IValidationMessageService` + `FluentValidation`)
 
 > [!IMPORTANT]
-> **Regra Obrigatória para TODOS os Validadores:** Nenhum validador (`PasswordValidator`, `RegisterUserRequestValidator`, `LoginDtoValidator`, `RefreshTokenDtoValidator`, `PasswordVerificationInputValidator` ou futuros validadores) pode conter mensagens de erro acopladas a um idioma fixo ou depender de `ResourceManager`/`HttpContext`. Todos devem injetar **`IValidationMessageService`**, utilizar **avaliação dinâmica por requisição** via lambda (`.WithMessage(_ => _messages.GetMessage(...))`), código estável (`.WithErrorCode(...)`) e chave semântica (`.WithMessageKey(...)`).
+> **Regra Obrigatória para TODOS os Validadores:** Nenhum validador (`PasswordValidator`, `RegisterUserKinkRequestValidator`, `LoginDtoValidator`, `RefreshTokenDtoValidator`, `PasswordVerificationInputValidator` ou futuros validadores) pode conter mensagens de erro acopladas a um idioma fixo ou depender de `ResourceManager`/`HttpContext`. Todos devem injetar **`IValidationMessageService`**, utilizar **avaliação dinâmica por requisição** via lambda (`.WithMessage(_ => _messages.GetMessage(...))`), código estável (`.WithErrorCode(...)`) e chave semântica (`.WithMessageKey(...)`).
 
 #### Por que usar `.WithMessage(_ => _messages.GetMessage(...))` (Lazy) em vez de `.WithMessage(_messages.GetMessage(...))` (Eager)?
 O FluentValidation permite registrar validadores como *Scoped* ou *Singleton*; além disso, uma regra declarada com `string` direta no construtor avalia o texto apenas no instante da construção. Ao passar uma **expressão lambda (`_ => ...`)**, o texto é resolvido dinamicamente no momento da validação usando o `CultureInfo.CurrentUICulture` já definido pelo `LocalizationHeaderCultureMiddleware` do `SmartCoreHub.Core.SDK` para a requisição HTTP corrente.
@@ -560,9 +560,9 @@ public sealed class PasswordValidator : AbstractValidator<string>
     }
 }
 
-public sealed class RegisterUserRequestValidator : AbstractValidator<RegisterUserRequestDto>
+public sealed class RegisterUserKinkRequestValidator : AbstractValidator<RegisterUserKinkRequestDto>
 {
-    public RegisterUserRequestValidator(IValidator<string> passwordValidator, IValidationMessageService messages)
+    public RegisterUserKinkRequestValidator(IValidator<string> passwordValidator, IValidationMessageService messages)
     {
         ArgumentNullException.ThrowIfNull(passwordValidator);
         ArgumentNullException.ThrowIfNull(messages);
@@ -726,7 +726,7 @@ namespace KinkConsentManager.Service.Security;
 
 public interface IJwtTokenService
 {
-    string GenerateAccessToken(User user);
+    string GenerateAccessToken(UserKink user);
     (string RawToken, string TokenHash) GenerateSecureRefreshToken();
     string ComputeTokenHash(string rawToken);
     bool ValidateToken(string token, out long? userId);
@@ -744,7 +744,7 @@ public sealed class JwtTokenService : IJwtTokenService
         _accessTokens = accessTokens ?? throw new ArgumentNullException(nameof(accessTokens));
     }
 
-    public string GenerateAccessToken(User user)
+    public string GenerateAccessToken(UserKink user)
     {
         ArgumentNullException.ThrowIfNull(user);
 
@@ -852,9 +852,9 @@ public class KinkConsentManagerDbContext : DbContext
     {
     }
 
-    public DbSet<User> Users => Set<User>();
-    public DbSet<UserRefreshToken> UserRefreshTokens => Set<UserRefreshToken>();
-    public DbSet<UserReport> UserReports => Set<UserReport>();
+    public DbSet<UserKink> UserKinks => Set<UserKink>();
+    public DbSet<UserKinkRefreshToken> UserKinkRefreshTokens => Set<UserKinkRefreshToken>();
+    public DbSet<UserKinkCheclist> UserKinkCheclists => Set<UserKinkCheclist>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -948,7 +948,7 @@ public sealed class KinkConsentManagerDbContextPostgreSqlFactory
 
 ### 6.4 Mapeamentos Fluent API (`IEntityTypeConfiguration`)
 
-#### `UserConfiguration.cs`
+#### `UserKinkConfiguration.cs`
 ```csharp
 using KinkConsentManager.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -957,11 +957,11 @@ using SmartCoreHub.Core.SDK.Domain.ValueObjects;
 
 namespace KinkConsentManager.Infrastructure.Data.Configurations;
 
-public sealed class UserConfiguration : IEntityTypeConfiguration<User>
+public sealed class UserKinkConfiguration : IEntityTypeConfiguration<UserKink>
 {
-    public void Configure(EntityTypeBuilder<User> entity)
+    public void Configure(EntityTypeBuilder<UserKink> entity)
     {
-        entity.ToTable("Users");
+        entity.ToTable("UserKinks");
         entity.HasKey(u => u.Id);
         entity.Property(u => u.Id).ValueGeneratedOnAdd();
 
@@ -984,15 +984,15 @@ public sealed class UserConfiguration : IEntityTypeConfiguration<User>
 
         // No PostgreSQL (Supabase), colunas varchar e índices UNIQUE são case-sensitive por padrão;
         // NormalizedLogin + Email VO garantem unicidade e busca rápida B-Tree case-insensitive.
-        entity.HasIndex(u => u.Email).IsUnique().HasDatabaseName("IX_Users_Email");
-        entity.HasIndex(u => u.NormalizedLogin).IsUnique().HasDatabaseName("IX_Users_NormalizedLogin");
-        entity.HasIndex(u => u.Login).IsUnique().HasDatabaseName("IX_Users_Login");
-        entity.HasIndex(u => u.IsActive).HasDatabaseName("IX_Users_IsActive");
+        entity.HasIndex(u => u.Email).IsUnique().HasDatabaseName("IX_UserKinks_Email");
+        entity.HasIndex(u => u.NormalizedLogin).IsUnique().HasDatabaseName("IX_UserKinks_NormalizedLogin");
+        entity.HasIndex(u => u.Login).IsUnique().HasDatabaseName("IX_UserKinks_Login");
+        entity.HasIndex(u => u.IsActive).HasDatabaseName("IX_UserKinks_IsActive");
     }
 }
 ```
 
-#### `UserRefreshTokenConfiguration.cs`
+#### `UserKinkRefreshTokenConfiguration.cs`
 ```csharp
 using KinkConsentManager.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -1000,11 +1000,11 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace KinkConsentManager.Infrastructure.Data.Configurations;
 
-public sealed class UserRefreshTokenConfiguration : IEntityTypeConfiguration<UserRefreshToken>
+public sealed class UserKinkRefreshTokenConfiguration : IEntityTypeConfiguration<UserKinkRefreshToken>
 {
-    public void Configure(EntityTypeBuilder<UserRefreshToken> entity)
+    public void Configure(EntityTypeBuilder<UserKinkRefreshToken> entity)
     {
-        entity.ToTable("UserRefreshTokens");
+        entity.ToTable("UserKinkRefreshTokens");
         entity.HasKey(t => t.Id);
         entity.Property(t => t.Id).ValueGeneratedOnAdd();
 
@@ -1014,12 +1014,12 @@ public sealed class UserRefreshTokenConfiguration : IEntityTypeConfiguration<Use
         entity.Property(t => t.ExpiresAtUtc).IsRequired();
         entity.Property(t => t.RevokedAtUtc).IsRequired(false);
 
-        entity.HasIndex(t => t.TokenHash).IsUnique().HasDatabaseName("IX_UserRefreshTokens_TokenHash");
-        entity.HasIndex(t => t.UserId).HasDatabaseName("IX_UserRefreshTokens_UserId");
+        entity.HasIndex(t => t.TokenHash).IsUnique().HasDatabaseName("IX_UserKinkRefreshTokens_TokenHash");
+        entity.HasIndex(t => t.UserKinkId).HasDatabaseName("IX_UserKinkRefreshTokens_UserKinkId");
 
-        entity.HasOne(t => t.User)
+        entity.HasOne(t => t.UserKink)
             .WithMany(u => u.RefreshTokens)
-            .HasForeignKey(t => t.UserId)
+            .HasForeignKey(t => t.UserKinkId)
             .OnDelete(DeleteBehavior.Cascade);
     }
 }
@@ -1049,23 +1049,23 @@ public sealed class KinkConsentManagerGenericRepository<TEntity>
 /// <summary>
 /// Repositório de usuários suportando autenticação dual (Login ou Email) case-insensitive no PostgreSQL.
 /// </summary>
-public sealed class UserRepository : GenericRepository<User, KinkConsentManagerDbContext>, IUserRepository
+public sealed class UserKinkRepository : GenericRepository<UserKink, KinkConsentManagerDbContext>, IUserKinkRepository
 {
-    public UserRepository(IKinkConsentManagerDbScope dbScope, IAppLogger logger)
+    public UserKinkRepository(IKinkConsentManagerDbScope dbScope, IAppLogger logger)
         : base(dbScope, logger)
     {
     }
 
-    public Task<User?> GetByLoginAsync(string login, CancellationToken cancellationToken = default)
+    public Task<UserKink?> GetByLoginAsync(string login, CancellationToken cancellationToken = default)
     {
         var normalized = login.Trim().ToLowerInvariant();
         return _dbSet.FirstOrDefaultAsync(u => u.NormalizedLogin == normalized, cancellationToken);
     }
 
-    public Task<User?> GetByEmailAsync(Email email, CancellationToken cancellationToken = default) =>
+    public Task<UserKink?> GetByEmailAsync(Email email, CancellationToken cancellationToken = default) =>
         _dbSet.FirstOrDefaultAsync(u => u.Email == email, cancellationToken);
 
-    public async Task<User?> GetByLoginOrEmailAsync(string loginOrEmail, CancellationToken cancellationToken = default)
+    public async Task<UserKink?> GetByLoginOrEmailAsync(string loginOrEmail, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(loginOrEmail))
             return null;
@@ -1114,20 +1114,20 @@ public sealed class UserRepository : GenericRepository<User, KinkConsentManagerD
 | Critério | Opção B: Coluna `jsonb` no PostgreSQL (**Adotada para Reports/Autosave**) | Opção A: Supabase Storage (`AWSSDK.S3` / `supabase-csharp`) |
 | :--- | :--- | :--- |
 | **Caso de Uso** | Respostas do checklist (`ChecklistDraft`), autosave frequente, payloads estruturados (10 KB – 500 KB). | Arquivos binários/baixáveis gerados (`.pdf`, `.xlsx`, `.png`, ou backups `.json` arquivados). |
-| **Atomicidade** | Transação ACID junto ao `UserId`, `Version` e `UpdatedAt`. | Consistência eventual (banco separado do bucket S3). |
+| **Atomicidade** | Transação ACID junto ao `UserKinkId`, `Version` e `UpdatedAt`. | Consistência eventual (banco separado do bucket S3). |
 | **Latência** | Baixa (1 round-trip SQL com `UseNpgsql`). | Maior (upload HTTP multipart + assinatura de URL). |
 | **Consultabilidade** | Suporta consultas LINQ/JSONPath e índices GIN (`HasIndex(...).HasMethod("gin")`). | Nenhuma (apenas leitura/download opaco de objeto). |
 
-#### Configuração da Entidade `UserReport` para Etapa 2 (`UserReportConfiguration.cs`)
+#### Configuração da Entidade `UserKinkCheclist` para Etapa 2 (`UserKinkCheclistConfiguration.cs`)
 ```csharp
-entity.ToTable("UserReports");
+entity.ToTable("UserKinkCheclists");
 entity.HasKey(r => r.Id);
 entity.Property(r => r.AnswersJson).HasColumnType("jsonb").IsRequired();
 entity.Property(r => r.SchemaVersion).HasMaxLength(20).IsRequired();
 entity.Property(r => r.Language).HasMaxLength(10).IsRequired();
 entity.Property(r => r.Version).IsConcurrencyToken().HasDefaultValue(1);
-entity.HasIndex(r => r.UserId).IsUnique().HasDatabaseName("IX_UserReports_UserId");
-entity.HasIndex(r => r.AnswersJson).HasMethod("gin").HasDatabaseName("IX_UserReports_AnswersJson_Gin");
+entity.HasIndex(r => r.UserKinkId).IsUnique().HasDatabaseName("IX_UserKinkCheclists_UserKinkId");
+entity.HasIndex(r => r.AnswersJson).HasMethod("gin").HasDatabaseName("IX_UserKinkCheclists_AnswersJson_Gin");
 ```
 
 ### 6.7 Arquivos de Recursos `.resx` (`Localization/Resources/`)
@@ -1253,15 +1253,15 @@ public static class WebApplicationBuilderServicesConfigure
         builder.Services.AddScoped<IValidationMessageService, ValidationMessageService>();
         builder.Services.AddScoped<IErrorGetLocalizationService>(sp =>
             (ValidationMessageService)sp.GetRequiredService<IValidationMessageService>());
-        builder.Services.AddValidatorsFromAssemblyContaining<RegisterUserRequestValidator>();
+        builder.Services.AddValidatorsFromAssemblyContaining<RegisterUserKinkRequestValidator>();
         builder.Services.AddSmartCoreHubMediatRAdapter(typeof(WebApplicationBuilderServicesConfigure).Assembly);
         builder.Services.AddDatabase(builder.Configuration);
         builder.Services.AddScoped<ISecurityTokenAdapterFactory, SecurityTokenAdapterFactory>();
         builder.Services.AddScoped<IJwtAccessTokenService, JwtAccessTokenService>();
         builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
         builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(KinkConsentManagerGenericRepository<>));
-        builder.Services.AddScoped<IUserRepository, UserRepository>();
-        builder.Services.AddScoped<IUserRefreshTokenRepository, UserRefreshTokenRepository>();
+        builder.Services.AddScoped<IUserKinkRepository, UserKinkRepository>();
+        builder.Services.AddScoped<IUserKinkRefreshTokenRepository, UserKinkRefreshTokenRepository>();
         builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
         builder.Services.AddJwtAuthentication(builder.Configuration);
 
@@ -1312,9 +1312,9 @@ Os endpoints podem delegar comandos para handlers via `IApplicationDispatcher` (
 Espelhando `SmartCoreHub.Service/Services/Imp/AuthenticationService.cs`:
 
 ```csharp
-private async Task<User?> AuthenticateUserAsync(string loginOrEmail, string password, CancellationToken cancellationToken)
+private async Task<UserKink?> AuthenticateUserAsync(string loginOrEmail, string password, CancellationToken cancellationToken)
 {
-    var user = await _userRepository.GetByLoginOrEmailAsync(loginOrEmail, cancellationToken);
+    var user = await _userKinkRepository.GetByLoginOrEmailAsync(loginOrEmail, cancellationToken);
     if (user is null || !user.IsActive)
         return null;
 
@@ -1327,7 +1327,7 @@ private async Task<User?> AuthenticateUserAsync(string loginOrEmail, string pass
 ### 7.3 Classe Service Centralizada de Recursos e Idiomas (`ValidationMessageService.cs`)
 
 Para garantir **desacoplamento total** dos validadores e **ponto único de manutenção** de idiomas/resources, a classe `ValidationMessageService` na camada `Service` implementa simultaneamente:
-- **`IValidationMessageService` (Domain):** consumida por todos os validadores (`PasswordValidator`, `RegisterUserRequestValidator`, `LoginDtoValidator`, etc.) para resolver textos dinâmicos no `CultureInfo.CurrentUICulture`.
+- **`IValidationMessageService` (Domain):** consumida por todos os validadores (`PasswordValidator`, `RegisterUserKinkRequestValidator`, `LoginDtoValidator`, etc.) para resolver textos dinâmicos no `CultureInfo.CurrentUICulture`.
 - **`IErrorGetLocalizationService` (`SmartCoreHub.Core.SDK`):** consumida automaticamente pelo `FluentValidationBehavior` e `FluentValidationErrorMappingHelper.MapAsync` do SDK.
 
 Se no futuro a aplicação migrar de `.resx` para JSON em banco ou para o `SmartCoreHub.Localization.API`, **apenas `ValidationMessageService` (e o DI) será alterado**, sem tocar em nenhum validador.
@@ -1612,7 +1612,7 @@ Rotas automáticas herdadas do `SmartCoreHub.Core.SDK`:
 ## 9. Estratégia de Testes (`*.Tests`) e Playbook CLI de Implantação
 
 ### 9.1 Padrão de Testes (`NUnit 4` + `Moq` + `AwesomeAssertions` + `Bogus` + `Testcontainers`)
-- **Domain.Tests:** Validação exaustiva de todas as regras de `PasswordValidator`, `RegisterUserRequestValidator`, `LoginDtoValidator`, `RefreshTokenDtoValidator` e `PasswordVerificationInputValidator` injetando `NullValidationMessageService` ou mock de `IValidationMessageService` (validando `ErrorCode`, `MessageKey` e chamada dinâmica ao serviço, sem depender de `.resx`).
+- **Domain.Tests:** Validação exaustiva de todas as regras de `PasswordValidator`, `RegisterUserKinkRequestValidator`, `LoginDtoValidator`, `RefreshTokenDtoValidator` e `PasswordVerificationInputValidator` injetando `NullValidationMessageService` ou mock de `IValidationMessageService` (validando `ErrorCode`, `MessageKey` e chamada dinâmica ao serviço, sem depender de `.resx`).
 - **Infrastructure.Tests:** Mapeamento do `KinkConsentManagerDbContext` garantindo `HasDefaultSchema("kink_consent")`, índices únicos de `Login`/`Email`/`TokenHash`, presença das chaves nos `.resx` (`ValidationMessages.resx` vs `ValidationMessages.pt-BR.resx` com 100% de paridade) e testes de integração contra PostgreSQL real via `Testcontainers.PostgreSql`.
 - **Service.Tests:** Testes unitários de `ValidationMessageService` comprovando resolução dinâmica em `en-US` e `pt-BR` (para chaves `SmartCoreHub.Core.SDK.*` e chaves do produto + fallback seguro), além de testes de `AuthenticationService` e `JwtTokenService`.
 - **API.Tests:** `WebApplicationFactory<Program>` validando endpoints `/api/v1/auth/*`, negociação de idioma via `Accept-Language: pt-BR` e `X-Locale: en-US`, `/health`, `/ready` e resposta `ServiceResponse<T>`.

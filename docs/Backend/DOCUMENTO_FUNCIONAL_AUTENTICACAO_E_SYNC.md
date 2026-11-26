@@ -35,7 +35,7 @@ Na evolução para a **V2**, os usuários ganham a possibilidade opcional (*opt-
 3. **Reaproveitamento Direto de `SmartCoreHub.Core.SDK`:** Toda a fundação genérica (entidades base `LongEntityBase`, Value Object `Email`, envelope `ServiceResponse<T>`, DTOs `LoginDto`/`RefreshTokenDto`, hashing BCrypt, serviço JWT, middlewares de segurança/cultura/correlação, CQRS e health/readiness) é consumida diretamente do pacote NuGet oficial `SmartCoreHub.Core.SDK`, garantindo maturidade operacional e zero duplicação.
 4. **Separação Estrita em 3 Etapas:**
    - **Etapa 1 (Escopo Imediato desta Entrega):** Fundação do backend espelhando `C:\git\SmartCoreHub\backend`, banco PostgreSQL no Supabase via EF Core Code First com schema isolado `kink_consent`, API de Cadastro (`register`), Login (`login`), Renovação (`refresh`), Logout (`logout`) e Perfil (`me`).
-   - **Etapa 2 (Próxima):** Persistência e recuperação do Report (`UserReports` com coluna nativa PostgreSQL `jsonb`) via `PUT /api/v1/reports/current`, `GET /api/v1/reports/current` e `DELETE /api/v1/reports/current`.
+   - **Etapa 2 (Próxima):** Persistência e recuperação do Report (`kink_consent."UserKinkCheclists"`, entidade `UserKinkCheclist` com coluna nativa PostgreSQL `jsonb`) via `PUT /api/v1/reports/current`, `GET /api/v1/reports/current` e `DELETE /api/v1/reports/current`.
    - **Etapa 3 (Integração Frontend):** Modais de Login/Cadastro no Angular 22, interceptor JWT, chave seletora de Cloud Autosave em `/checklist/fill` e resolução de conflitos Local vs. Nuvem.
 
 ---
@@ -52,8 +52,8 @@ Na evolução para a **V2**, os usuários ganham a possibilidade opcional (*opt-
 ### 2.2 Ciclo de Vida da Conta e Sessão
 
 1. **Anônimo:** Navega e preenche o checklist localmente.
-2. **Cadastrado (`POST /api/v1/auth/register`):** Conta persistida em `kink_consent.Users` com `IsActive = true` e `PasswordHash` gerado via BCrypt.
-3. **Autenticado (`POST /api/v1/auth/login`):** Emissão de `AccessToken` JWT (`HS512`, validade padrão de 60 minutos) e `RefreshToken` opaco (validade padrão de 7 dias, armazenado em hash SHA-256 na tabela `kink_consent.UserRefreshTokens`).
+2. **Cadastrado (`POST /api/v1/auth/register`):** Conta persistida em `kink_consent."UserKinks"` (entidade `UserKink`) com `IsActive = true` e `PasswordHash` gerado via BCrypt.
+3. **Autenticado (`POST /api/v1/auth/login`):** Emissão de `AccessToken` JWT (`HS512`, validade padrão de 60 minutos) e `RefreshToken` opaco (validade padrão de 7 dias, armazenado em hash SHA-256 na tabela `kink_consent."UserKinkRefreshTokens"`, entidade `UserKinkRefreshToken`).
 4. **Sessão Renovada (`POST /api/v1/auth/refresh`):** *Refresh Token Rotation* — o token anterior é marcado como revogado (`RevokedAtUtc`) com registro de `ReplacedByTokenHash`, emitindo um novo par de tokens.
 5. **Comprometida (Reuse Detection):** Caso um `RefreshToken` já revogado seja reutilizado, **todas** as sessões ativas daquele usuário são revogadas imediatamente por segurança.
 6. **Encerrada (`POST /api/v1/auth/logout`):** O usuário revoga explicitamente o refresh token da sessão atual (ou todos os seus tokens ativos).
@@ -65,7 +65,7 @@ Na evolução para a **V2**, os usuários ganham a possibilidade opcional (*opt-
 ### RF-01 — Cadastro Simplificado de Usuário (`POST /api/v1/auth/register`)
 
 * **Objetivo:** Permitir a criação de uma conta simples com nome, login, e-mail e senha forte.
-* **Campos de Entrada (`RegisterUserRequestDto`):**
+* **Campos de Entrada (`RegisterUserKinkRequestDto`):**
 
 | Campo | Tipo | Obrigatório | Regras de Validação e Normalização |
 | :--- | :---: | :---: | :--- |
@@ -80,7 +80,7 @@ Na evolução para a **V2**, os usuários ganham a possibilidade opcional (*opt-
   2. Antes de persistir, verifica-se unicidade de `Login` (normalizado em comparação *case-insensitive*) e de `Email` (já normalizado pelo Value Object `Email`). Em caso de duplicidade, retorna `409 Conflict` com `MessageKey` específica (`Auth.LoginAlreadyExists` ou `Auth.EmailAlreadyExists`).
   3. O hash da senha é gerado obrigatoriamente por `PasswordHasherFactory.GetHasher(PasswordAlgorithm.Bcrypt)` do `SmartCoreHub.Core.SDK` (salt aleatório embutido no próprio hash).
   4. A senha em texto claro e `confirmPassword` jamais são persistidas, retornadas ou registradas em logs/Application Insights/Serilog.
-* **Saída de Sucesso:** HTTP `201 Created` encapsulado em `ServiceResponse<UserDto>` contendo `{ id, name, login, email, isActive, createdAt, lastLoginAt }`.
+* **Saída de Sucesso:** HTTP `201 Created` encapsulado em `ServiceResponse<UserKinkDto>` contendo `{ id, name, login, email, isActive, createdAt, lastLoginAt }`.
 
 ---
 
@@ -97,9 +97,9 @@ Na evolução para a **V2**, os usuários ganham a possibilidade opcional (*opt-
   2. **Anti-enumeração de usuários:** Se o usuário não existir, o valor com `@` for malformado, a conta estiver inativa (`IsActive == false`) ou a senha não corresponder ao hash BCrypt (`VerifyPassword`), o retorno deve ser sempre `401 Unauthorized` com mensagem e `MessageKey` genéricas (`Auth.InvalidCredentials` / `"Invalid login/email or password"`), sem revelar se o e-mail/login existe.
   3. A verificação de senha valida primeiro o par `(password, hash)` via `PasswordVerificationInput` e executa `BcryptPasswordHasher.VerifyPassword` (comparação *timing-safe*).
   4. Em caso de sucesso:
-     - Atualiza `LastLoginAt` (UTC) na entidade `User`.
+     - Atualiza `LastLoginAt` (UTC) na entidade `UserKink`.
      - Gera `AccessToken` JWT assinado com **`HS512`** (`HmacSha512`, padrão do `JwtTokenAdapter` do SDK) contendo as claims padrão (`jti`, `nameid`, `name`, `email`) mais a claim `login`.
-     - Gera `RefreshToken` criptograficamente aleatório de 64 bytes (`RandomNumberGenerator.GetBytes(64)` em Base64Url) e persiste apenas seu **hash SHA-256** em `kink_consent.UserRefreshTokens`.
+     - Gera `RefreshToken` criptograficamente aleatório de 64 bytes (`RandomNumberGenerator.GetBytes(64)` em Base64Url) e persiste apenas seu **hash SHA-256** em `kink_consent."UserKinkRefreshTokens"`.
   5. O endpoint é protegido por **Rate Limiting** herdado de `ApiPerformanceExtensions` do SDK para mitigar ataques de força bruta.
 * **Saída de Sucesso:** HTTP `200 OK` encapsulado em `ServiceResponse<LoginResponseDto>` contendo `{ accessToken, refreshToken, expiresAt, refreshTokenExpiresAt, tokenType: "Bearer", user }`.
 
@@ -111,9 +111,9 @@ Na evolução para a **V2**, os usuários ganham a possibilidade opcional (*opt-
 * **Entrada (`RefreshTokenDto` reutilizado de `SmartCoreHub.Core.SDK.Domain.DTOs.Common`):**
   - `token` (`string`, obrigatório): o `RefreshToken` atual mantido pelo cliente.
 * **Regras de Negócio:**
-  1. O servidor calcula o hash SHA-256 do `token` recebido e busca o registro em `kink_consent.UserRefreshTokens`.
+  1. O servidor calcula o hash SHA-256 do `token` recebido e busca o registro em `kink_consent."UserKinkRefreshTokens"`.
   2. Se não existir ou estiver expirado (`ExpiresAtUtc <= UtcNow`), retorna `401 Unauthorized` (`Auth.InvalidRefreshToken`).
-  3. **Detecção de Reúso (Reuse Detection):** Se o token encontrado já estiver revogado (`RevokedAtUtc != null`), o sistema assume possível comprometimento de sessão, revoga imediatamente **todos** os refresh tokens ativos daquele `UserId` e retorna `401 Unauthorized` (`Auth.RefreshTokenReused`).
+  3. **Detecção de Reúso (Reuse Detection):** Se o token encontrado já estiver revogado (`RevokedAtUtc != null`), o sistema assume possível comprometimento de sessão, revoga imediatamente **todos** os refresh tokens ativos daquele `UserKinkId` e retorna `401 Unauthorized` (`Auth.RefreshTokenReused`).
   4. Se o usuário vinculado estiver inativo (`IsActive == false`), revoga o token e retorna `401 Unauthorized`.
   5. Caso válido: dentro de uma transação (`ITransactionExecutor` / `EfTransactionExecutor`), marca o token atual como revogado (`RevokedAtUtc = UtcNow`), preenche `ReplacedByTokenHash`, gera novo `AccessToken` + novo `RefreshToken` e devolve `200 OK` com `LoginResponseDto`.
 
@@ -125,7 +125,7 @@ Na evolução para a **V2**, os usuários ganham a possibilidade opcional (*opt-
 * **Entrada (`LogoutRequestDto`):**
   - `refreshToken` (`string?`, opcional se `revokeAllSessions = true`).
   - `revokeAllSessions` (`bool`, padrão `false`): quando `true`, revoga todos os refresh tokens ativos do usuário autenticado.
-* **Segurança:** Endpoint protegido por `[Authorize]`. Valida que o token revogado pertence ao `userId` extraído da claim `nameid` do JWT (`UserClaimsHelper.TryGetUserId`).
+* **Segurança:** Endpoint protegido por `[Authorize]`. Valida que o token revogado pertence ao `UserKinkId` extraído da claim `nameid` do JWT (`UserClaimsHelper.TryGetUserId`).
 * **Saída:** HTTP `200 OK` com `ServiceResponse<bool>` (`data: true`).
 
 ---
@@ -135,7 +135,7 @@ Na evolução para a **V2**, os usuários ganham a possibilidade opcional (*opt-
 * **Objetivo:** Permitir que o frontend valide a sessão corrente e recupere dados atualizados do perfil ao inicializar a aplicação.
 * **Entrada:** Cabeçalho `Authorization: Bearer <AccessToken>` (controller herdando `BaseApiController` do `SmartCoreHub.Core.SDK`).
 * **Regras:** Extrai o `long userId` via `UserClaimsHelper` / `BaseApiController`; caso usuário não exista ou esteja inativo, retorna `401 Unauthorized`.
-* **Saída:** HTTP `200 OK` com `ServiceResponse<UserDto>`.
+* **Saída:** HTTP `200 OK` com `ServiceResponse<UserKinkDto>`.
 
 ---
 
@@ -164,7 +164,7 @@ Na evolução para a **V2**, os usuários ganham a possibilidade opcional (*opt-
 
 ### RF-07 — Salvar Report de Respostas (`PUT /api/v1/reports/current`)
 
-* **Objetivo:** Persistir o estado atual do checklist do usuário autenticado em coluna PostgreSQL nativa `jsonb` (`kink_consent.UserReports`).
+* **Objetivo:** Persistir o estado atual do checklist do usuário autenticado em coluna PostgreSQL nativa `jsonb` (`kink_consent."UserKinkCheclists"`, entidade `UserKinkCheclist`).
 * **Estrutura Alinhada ao Modelo Real do Frontend (`ChecklistDraft`):**
 
 | Campo | Tipo | Origem no Frontend (`checklist-answer.model.ts`) | Descrição |
@@ -176,7 +176,7 @@ Na evolução para a **V2**, os usuários ganham a possibilidade opcional (*opt-
 | `expectedVersion` | `int?` | Controle de concorrência | Versão otimista opcional para detectar edições simultâneas em dois aparelhos. |
 
 * **Regras de Negócio:**
-  1. Um usuário autenticado possui 1 report ativo principal na V2 (`UNIQUE` em `UserId` na tabela `UserReports`), atualizado via operação idempotente de *Upsert* (`PUT`).
+  1. Um usuário autenticado possui 1 checklist salvo ativo principal na V2 (`UNIQUE` em `UserKinkId` na tabela `UserKinkCheclists`), atualizado via operação idempotente de *Upsert* (`PUT`).
   2. Tamanho máximo do payload limitado via `RequestSizeLimitMiddleware` do SDK (ex.: teto de 2 MiB para `answers`, muito acima dos ~50 KB médios de um checklist completo).
   3. **Privacidade nos Logs:** O conteúdo do campo `answers` **nunca** deve ser logado em console, arquivos Serilog ou telemetria Application Insights.
 
@@ -216,7 +216,7 @@ Na evolução para a **V2**, os usuários ganham a possibilidade opcional (*opt-
 | **RNF-08** | **Isolamento Supabase** | Tabelas e histórico de migrations não podem tocar `public`, `auth`, `storage` ou `realtime`. | `HasDefaultSchema("kink_consent")` e `MigrationsHistoryTable(..., "kink_consent")`. |
 | **RNF-09** | **Contrato de Enums (`R-ARCH-ENUM-NUMERIC`)** | Quaisquer enums serializados pela API devem trafegar como valores numéricos inteiros (`0, 1, 2...`), padrão nativo `System.Text.Json`. | Diretriz `R-ARCH-ENUM-NUMERIC` do `SmartCoreHub`. |
 | **RNF-10** | **Observabilidade & Saúde** | Endpoints `/health` (liveness sem DB) e `/ready` (readiness com `CanConnect()` no Supabase) disponíveis. | `MapBasicLiveness` e `MapDatabaseReadiness<KinkConsentManagerDbContext>` do Core.SDK. |
-| **RNF-11** | **Idiomas & Resources em Validadores** | **Todos os validadores** (`PasswordValidator`, `RegisterUserRequestValidator`, `LoginDtoValidator`, etc.) devem suportar múltiplos idiomas e `.resx` de forma desacoplada via serviço centralizado (`IValidationMessageService` → `ValidationMessageService`), sem strings fixas no domínio. | `LocalizationHeaderCultureMiddleware` + `IFunctionalMessageProvider` + `FunctionalMessageResultFilter` do Core.SDK + `ValidationMessages*.resx`. |
+| **RNF-11** | **Idiomas & Resources em Validadores** | **Todos os validadores** (`PasswordValidator`, `RegisterUserKinkRequestValidator`, `LoginDtoValidator`, etc.) devem suportar múltiplos idiomas e `.resx` de forma desacoplada via serviço centralizado (`IValidationMessageService` → `ValidationMessageService`), sem strings fixas no domínio. | `LocalizationHeaderCultureMiddleware` + `IFunctionalMessageProvider` + `FunctionalMessageResultFilter` do Core.SDK + `ValidationMessages*.resx`. |
 
 ---
 
@@ -268,7 +268,7 @@ sequenceDiagram
     Note over User,DB: 1. Cadastro de Usuário (RF-01)
     User->>Front: Preenche Nome, Login, Email, Senha, Confirmação
     Front->>API: POST /api/v1/auth/register
-    API->>App: IApplicationDispatcher.SendAsync(RegisterUserCommand)
+    API->>App: IApplicationDispatcher.SendAsync(RegisterUserKinkCommand)
     App->>App: FluentValidationBehavior (complexidade senha, formato, match)
     App->>DB: Verifica unicidade de Login e Email (VO)
     alt Login ou Email já existe
@@ -278,9 +278,9 @@ sequenceDiagram
     else Dados únicos e válidos
         App->>SDK: PasswordHasherFactory.GetHasher(Bcrypt).HashPassword(password)
         SDK-->>App: Hash BCrypt (salt embutido)
-        App->>DB: INSERT INTO kink_consent."Users"
+        App->>DB: INSERT INTO kink_consent."UserKinks"
         DB-->>App: LongEntityBase.Id gerado
-        App-->>API: ServiceResponse.Ok(UserDto, 201)
+        App-->>API: ServiceResponse.Ok(UserKinkDto, 201)
         API-->>Front: 201 Created
     end
 
@@ -296,9 +296,9 @@ sequenceDiagram
     else Credenciais válidas
         App->>SDK: JwtTokenAdapter.GenerateAccessToken(claims) [HS512]
         App->>App: Gera RefreshToken 64B + SHA-256 Hash
-        App->>DB: UPDATE Users.LastLoginAt + INSERT UserRefreshTokens
+        App->>DB: UPDATE UserKinks.LastLoginAt + INSERT UserKinkRefreshTokens
         App-->>API: ServiceResponse.Ok(LoginResponseDto)
-        API-->>Front: 200 OK (AccessToken, RefreshToken, UserDto)
+        API-->>Front: 200 OK (AccessToken, RefreshToken, UserKinkDto)
     end
 
     Note over User,DB: 3. Refresh Token Rotation & Reuse Detection (RF-03)
@@ -306,7 +306,7 @@ sequenceDiagram
     API->>App: RefreshTokenAsync(token)
     App->>DB: Busca por SHA-256(token)
     alt Token já revogado anteriormente
-        App->>DB: Revoga TODOS os RefreshTokens do UserId (Reuse Detection)
+        App->>DB: Revoga TODOS os UserKinkRefreshTokens do UserKinkId (Reuse Detection)
         App-->>API: 401 Unauthorized (Auth.RefreshTokenReused)
     else Token ativo e não expirado
         App->>DB: Transação: Revoga atual + Grava novo RefreshTokenHash
@@ -324,13 +324,13 @@ sequenceDiagram
     participant UI as /checklist/fill (Angular)
     participant Local as LocalStorage (AES-GCM)
     participant API as KinkConsentManager.API (ReportsController)
-    participant DB as Supabase (kink_consent.UserReports)
+    participant DB as Supabase (kink_consent.UserKinkCheclists)
 
     Note over UI,DB: Abertura da Tela de Preenchimento (RF-08)
     UI->>Local: Lê rascunho local cifrado (T_local)
     alt Usuário está logado
         UI->>API: GET /api/v1/reports/current (Bearer JWT)
-        API->>DB: SELECT AnswersJson, UpdatedAt, Version FROM kink_consent."UserReports"
+        API->>DB: SELECT AnswersJson, UpdatedAt, Version FROM kink_consent."UserKinkCheclists"
         alt Nuvem tem dados e Local vazio
             DB-->>UI: Retorna Report (T_nuvem)
             UI->>Local: Salva cópia local e hidrata Signals
@@ -345,7 +345,7 @@ sequenceDiagram
     alt Usuário logado AND Toggle "Salvar na nuvem" == ON
         UI->>UI: Aguarda debounce 2.5s (dirty-check)
         UI->>API: PUT /api/v1/reports/current (ChecklistDraft + Version)
-        API->>DB: UPSERT AnswersJson (jsonb) WHERE UserId = @uid
+        API->>DB: UPSERT AnswersJson (jsonb) WHERE UserKinkId = @uid
         DB-->>API: Version++ & UpdatedAt
         API-->>UI: 200 OK (SavedAtUtc, Version)
         UI-->>User: Badge: "Salvo na nuvem às HH:mm"
@@ -379,7 +379,7 @@ stateDiagram-v2
 * **CA-01 (Cadastro com sucesso e hash BCrypt):**
   - **Dado** um payload válido com `name`, `login` único, `email` único, `password` forte (`Abc@1234`) e `confirmPassword` idêntico,
   - **Quando** for enviado `POST /api/v1/auth/register`,
-  - **Então** a API deve persistir o usuário em `kink_consent."Users"` com `PasswordHash` iniciado em `$2a$`/`$2b$` (BCrypt), normalizar o e-mail em minúsculas e retornar HTTP `201 Created` sem expor o hash.
+  - **Então** a API deve persistir o usuário em `kink_consent."UserKinks"` com `PasswordHash` iniciado em `$2a$`/`$2b$` (BCrypt), normalizar o e-mail em minúsculas e retornar HTTP `201 Created` sem expor o hash.
 
 * **CA-02 (Rejeição de senha fraca):**
   - **Dado** uma senha sem caractere especial ou com menos de 8 caracteres (ex.: `"abcdef12"`),
@@ -394,7 +394,7 @@ stateDiagram-v2
 * **CA-04 (Login válido com login OU e-mail *case-insensitive* + JWT HS512):**
   - **Dado** um usuário ativo cadastrado (`login: "Alex_Silva"`, `email: "alex@example.com"`),
   - **Quando** autenticar via `POST /api/v1/auth/login` enviando `"alex_silva"` em `loginOrEmail` **ou** enviando `"ALEX@EXAMPLE.COM"` em `loginOrEmail` com a senha correta,
-  - **Então** ambos os caminhos devem retornar HTTP `200 OK` com `AccessToken` válido assinado em `HS512`, `RefreshToken` e `UserDto`, além de atualizar `LastLoginAt`.
+  - **Então** ambos os caminhos devem retornar HTTP `200 OK` com `AccessToken` válido assinado em `HS512`, `RefreshToken` e `UserKinkDto`, além de atualizar `LastLoginAt`.
 
 * **CA-05 (Login inválido sem enumeração e tratamento seguro de `@` malformado):**
   - **Dado** um `loginOrEmail` inexistente, uma string malformada contendo `@` (ex.: `"foo@invalido"`) ou uma senha incorreta,

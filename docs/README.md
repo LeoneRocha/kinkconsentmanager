@@ -153,7 +153,7 @@ As versões vivas constam em [frontend/package.json](../frontend/package.json), 
 
 O ecossistema do backend divide-se em 3 fases:
 1. **Fase 1 (Escopo Imediato):** API de Cadastro e Login do Usuário (`LongEntityBase`, `Email` VO, `ServiceResponse<T>` e `JwtAccessTokenService` via `SmartCoreHub.Core.SDK`), senhas fortes com BCrypt, JWT `HS512` e Refresh Token com rotação + detecção de reúso.
-2. **Fase 2 (Próxima):** Persistência do Report (`ChecklistDraft`) em coluna nativa `jsonb` no PostgreSQL (`kink_consent.UserReports`).
+2. **Fase 2 (Próxima):** Persistência do Report (`ChecklistDraft`) em coluna nativa `jsonb` no PostgreSQL (`kink_consent.UserKinkCheclists`, entidade `UserKinkCheclist`).
 3. **Fase 3:** Interface frontend Angular 22 (modais de autenticação, interceptor JWT e chave opt-in de Cloud Autosave na tela de preenchimento).
 
 Consulte os guias completos em [`docs/Backend/`](./Backend/):

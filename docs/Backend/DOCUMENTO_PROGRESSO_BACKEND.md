@@ -33,11 +33,11 @@ flowchart TB
 | Fase / Onda | Escopo Principal | Tarefas | Concluídas | Cobertura Alvo | Status Geral |
 | :--- | :--- | :---: | :---: | :---: | :--- |
 | **Fase 1 — Onda 0** | Fundação, Estrutura `SmartCoreHub`, CPM & `Core.SDK` | 2 | 0 | N/A (Build Gate) | 🟡 Planejado |
-| **Fase 1 — Onda 1** | Domínio (`User`, `UserRefreshToken`), FluentValidation & Supabase EF (`kink_consent`) | 4 | 0 | ≥ 90% Domain / ≥ 85% Infra | 🟡 Planejado |
+| **Fase 1 — Onda 1** | Domínio (`UserKink`, `UserKinkRefreshToken`), FluentValidation & Supabase EF (`kink_consent`) | 4 | 0 | ≥ 90% Domain / ≥ 85% Infra | 🟡 Planejado |
 | **Fase 1 — Onda 2** | `ValidationMessageService`, `JwtTokenService` (`HS512`), `AuthService`, CQRS & DI | 5 | 0 | ≥ 90% Service | 🟡 Planejado |
 | **Fase 1 — Onda 3** | `AuthController`, `Program.cs`, OpenAPI/Health & Suíte Integrada | 3 | 0 | ≥ 85% API / 100% Endpoints | 🟡 Planejado |
 | **Subtotal Fase 1** | **API de Login e Cadastro (Escopo Imediato)** | **14** | **0** | **≥ 85% Global** | 🟡 **Pronto para Execução** |
-| **Fase 2** | Entidade `UserReport` (`jsonb`), `ReportsController` & Testes | 7 | 0 | ≥ 85% | ⚪ Aguardando Fase 1 |
+| **Fase 2** | Entidade `UserKinkCheclist` (`jsonb`), `ReportsController` & Testes | 7 | 0 | ≥ 85% | ⚪ Aguardando Fase 1 |
 | **Fase 3** | Frontend Angular 22 (Auth Modal, Interceptor, Cloud Autosave Toggle) | 8 | 0 | ≥ 85% Jest | ⚪ Aguardando Fase 2 |
 | **TOTAL GERAL** | **Backend V2 Completo + Cloud Sync** | **29** | **0** | **—** | **Especificado** |
 
@@ -69,31 +69,31 @@ flowchart TB
 
 - [ ] **B1.3 — Modelar Entidades e DTOs de Autenticação (`KinkConsentManager.Domain`)**
   - **Camada:** Domain
-  - **Artefatos:** `Entities/User.cs` (incluindo `NormalizedLogin` + `SetLogin`), `Entities/UserRefreshToken.cs`, `DTOs/Authentication/` (`RegisterUserRequestDto`, `UserDto`, `LoginResponseDto`, `LogoutRequestDto`), `Localization/AuthenticationMessageKeys.cs`, `Interfaces/Repositories/` (`IUserRepository` com `GetByLoginOrEmailAsync`, `IUserRefreshTokenRepository`), `Interfaces/Services/IAuthenticationService.cs`.
+  - **Artefatos:** `Entities/UserKink.cs` (incluindo `NormalizedLogin` + `SetLogin`), `Entities/UserKinkRefreshToken.cs`, `DTOs/Authentication/` (`RegisterUserKinkRequestDto`, `UserKinkDto`, `LoginResponseDto`, `LogoutRequestDto`), `Localization/AuthenticationMessageKeys.cs`, `Interfaces/Repositories/` (`IUserKinkRepository` com `GetByLoginOrEmailAsync`, `IUserKinkRefreshTokenRepository`), `Interfaces/Services/IAuthenticationService.cs`.
   - **Reaproveitamento SDK:** Herdar `LongEntityBase`; usar Value Object `Email`; reutilizar `LoginDto`, `RefreshTokenDto`, `PasswordVerificationInput` e `ServiceResponse<T>` diretamente do SDK.
   - **Verificação:** `dotnet build Implementations/KinkConsentManager.Domain`.
   - **DoD:** Zero classes duplicadas do SDK; XML-docs em português em todos os tipos e membros públicos.
 
 - [ ] **B1.4 — Implementar Contratos de i18n no Domínio e Validadores Desacoplados**
   - **Camada:** Domain + Domain.Tests
-  - **Artefatos:** `Interfaces/Localization/IValidationMessageService.cs` (+ `NullValidationMessageService`), `Localization/MessageKeys/ValidationMessageKeys.cs`, `Validators/Extensions/FluentValidationLocalizationExtensions.cs` (`WithMessageKey`), `Validators/Authentication/` (`PasswordValidator`, `RegisterUserRequestValidator`, `LoginDtoValidator`, `RefreshTokenDtoValidator`, `PasswordVerificationInputValidator`), `KinkConsentManager.Domain.Tests/...`.
+  - **Artefatos:** `Interfaces/Localization/IValidationMessageService.cs` (+ `NullValidationMessageService`), `Localization/MessageKeys/ValidationMessageKeys.cs`, `Validators/Extensions/FluentValidationLocalizationExtensions.cs` (`WithMessageKey`), `Validators/Authentication/` (`PasswordValidator`, `RegisterUserKinkRequestValidator`, `LoginDtoValidator`, `RefreshTokenDtoValidator`, `PasswordVerificationInputValidator`), `KinkConsentManager.Domain.Tests/...`.
   - **Reaproveitamento SDK:** Reutiliza chaves nativas `SmartCoreHub.Core.SDK.Validation.*`, compatibilidade com `FluentValidationBehavior` via `IHasValidationPayload<T>` e `FunctionalMessageTextResolver.TryReadMessageKey`.
   - **Verificação:** `dotnet test Implementations/KinkConsentManager.Domain.Tests`.
   - **DoD:** **Todos** os validadores injetam `IValidationMessageService`, usam avaliação dinâmica por requisição (`.WithMessage(_ => ...)`), `WithErrorCode` e `WithMessageKey`, sem dependência de `.resx` no Domain; testes NUnit + AwesomeAssertions + Bogus cobrindo 100% das regras.
 
 - [ ] **B1.5 — Configurar `DbContext`, `DbScope`, `.resx` de Localização, Mapeamentos e Repositórios**
   - **Camada:** Infrastructure + Infrastructure.Tests
-  - **Artefatos:** `Data/KinkConsentManagerDbContext.cs`, `Data/KinkConsentManagerDbContextPostgreSql.cs`, `Data/KinkConsentManagerDbContextScope.cs`, `Data/KinkConsentManagerDbContextPostgreSqlFactory.cs`, `Data/Configurations/UserConfiguration.cs`, `Data/Configurations/UserRefreshTokenConfiguration.cs`, `Localization/Resources/ValidationMessages.resx`, `Localization/Resources/ValidationMessages.pt-BR.resx`, `Localization/Resources/AuthMessages*.resx`, `Repositories/KinkConsentManagerGenericRepository.cs`, `Repositories/UserRepository.cs`, `Repositories/UserRefreshTokenRepository.cs`.
+  - **Artefatos:** `Data/KinkConsentManagerDbContext.cs`, `Data/KinkConsentManagerDbContextPostgreSql.cs`, `Data/KinkConsentManagerDbContextScope.cs`, `Data/KinkConsentManagerDbContextPostgreSqlFactory.cs`, `Data/Configurations/UserKinkConfiguration.cs`, `Data/Configurations/UserKinkRefreshTokenConfiguration.cs`, `Localization/Resources/ValidationMessages.resx`, `Localization/Resources/ValidationMessages.pt-BR.resx`, `Localization/Resources/AuthMessages*.resx`, `Repositories/KinkConsentManagerGenericRepository.cs`, `Repositories/UserKinkRepository.cs`, `Repositories/UserKinkRefreshTokenRepository.cs`.
   - **Reaproveitamento SDK:** `EfDbContextScope<T>`, `GenericRepository<T, TCtx>`, `EfMigrationsHistoryHelper.PostgreSqlTable`, `DesignTimeDatabaseBootstrap`, `Email` VO conversion.
   - **Verificação:** `dotnet test Implementations/KinkConsentManager.Infrastructure.Tests` (schema `kink_consent` com Testcontainers PostgreSQL + testes de `GetByLoginOrEmailAsync` *case-insensitive* + paridade 100% entre `.resx` `en-US` e `pt-BR`).
-  - **DoD:** Nenhuma tabela ou histórico de migration mapeado em `public`; índices únicos em `Users(Email)`, `Users(NormalizedLogin)`, `Users(Login)` e `UserRefreshTokens(TokenHash)`; 100% das chaves de `ValidationMessageKeys` presentes nos `.resx`.
+  - **DoD:** Nenhuma tabela ou histórico de migration mapeado em `public`; índices únicos em `UserKinks(Email)`, `UserKinks(NormalizedLogin)`, `UserKinks(Login)` e `UserKinkRefreshTokens(TokenHash)`; 100% das chaves de `ValidationMessageKeys` presentes nos `.resx`.
 
 - [ ] **B1.6 — Gerar e Aplicar Migration Inicial `InitialCreateAuth` no Supabase**
   - **Camada:** Infrastructure / Supabase DB
   - **Artefatos:** `Migrations/PostgreSql/*_InitialCreateAuth.cs`.
   - **Reaproveitamento SDK:** `EfMigrationsHistoryHelper.PostgreSqlTable` no schema `kink_consent`.
   - **Verificação:** `dotnet ef migrations add InitialCreateAuth ...` e `dotnet ef database update ...` usando **Direct Connection (porta `5432`)**.
-  - **DoD:** Tabelas `kink_consent."Users"`, `kink_consent."UserRefreshTokens"` e `kink_consent."__EFMigrationsHistory_PostgreSql"` criadas com sucesso no Supabase sem tocar nos schemas `auth`, `storage` ou `public`.
+  - **DoD:** Tabelas `kink_consent."UserKinks"`, `kink_consent."UserKinkRefreshTokens"` e `kink_consent."__EFMigrationsHistory_PostgreSql"` criadas com sucesso no Supabase sem tocar nos schemas `auth`, `storage` ou `public`.
 
 ---
 
@@ -122,7 +122,7 @@ flowchart TB
 
 - [ ] **B1.10 — Implementar Comandos/Handlers CQRS e Composição DI do Host**
   - **Camada:** Service
-  - **Artefatos:** `Cqrs/Authentication/Commands/` (`RegisterUserCommand`, `LoginCommand`, `RefreshTokenCommand`, `LogoutCommand`), `API/DI/WebApplicationBuilderServicesConfigure.cs`, `API/DI/WebApplicationExtensions.cs`, `API/DI/DatabaseExtensions.cs`, `API/DI/KinkConsentManagerDocumentationOptions.cs`.
+  - **Artefatos:** `Cqrs/Authentication/Commands/` (`RegisterUserKinkCommand`, `LoginCommand`, `RefreshTokenCommand`, `LogoutCommand`), `API/DI/WebApplicationBuilderServicesConfigure.cs`, `API/DI/WebApplicationExtensions.cs`, `API/DI/DatabaseExtensions.cs`, `API/DI/KinkConsentManagerDocumentationOptions.cs`.
   - **Reaproveitamento SDK:** `AddSmartCoreHubMediatRAdapter`, `IApplicationDispatcher`, `IHasValidationPayload<T>`, `ITransactionalCommand`, `AddAspNetCoreApiBasics`, `AddSdkCorePrimitives`, `AddApiPerformance`, `AddCustomSwagger`, `AddCustomOpenApi`, `AddCustomCors`, `ValidateNoCircularDependencies`, `UseSdkNetworkAndCrossCutting`, `UseSdkCorsAndDocumentation`, `UseSdkSecurityAndEndpoints<T>`, `InitializeDatabaseAtStartup<T>`.
   - **Verificação:** Teste de composição DI confirmando que `ValidateNoCircularDependencies()` passa sem exceções.
   - **DoD:** `WebApplicationBuilderServicesConfigure` e `WebApplicationExtensions` espelhando fielmente o `SmartCoreHub.Service`.
@@ -161,14 +161,14 @@ flowchart TB
 
 ## 3. Planejamento das Fases Seguintes (Etapas 2 e 3)
 
-### Fase 2: Persistência e Recuperação do Report em `jsonb` (`UserReports`)
-- [ ] **B2.1** — Criar `UserReportConfiguration` com `HasColumnType("jsonb")`, índice único em `UserId`, token de concorrência em `Version` e índice GIN.
-- [ ] **B2.2** — Criar e aplicar Migration `AddUserReports` no schema `kink_consent` do Supabase.
-- [ ] **B2.3** — Criar `UserReportDto`, `UpsertUserReportRequestDto`, `UpsertUserReportRequestValidator` (validando `SchemaVersion`, `Language` e JSON válido) e `IUserReportRepository`.
-- [ ] **B2.4** — Implementar `UserReportService` + comandos/queries CQRS (`UpsertUserReportCommand`, `GetCurrentUserReportQuery`, `DeleteCurrentUserReportCommand`).
+### Fase 2: Persistência e Recuperação do Report em `jsonb` (`UserKinkCheclists`)
+- [ ] **B2.1** — Criar `UserKinkCheclistConfiguration` com `HasColumnType("jsonb")`, índice único em `UserKinkId`, token de concorrência em `Version` e índice GIN.
+- [ ] **B2.2** — Criar e aplicar Migration `AddUserKinkCheclists` no schema `kink_consent` do Supabase.
+- [ ] **B2.3** — Criar `UserKinkCheclistDto`, `UpsertUserKinkCheclistRequestDto`, `UpsertUserKinkCheclistRequestValidator` (validando `SchemaVersion`, `Language` e JSON válido) e `IUserKinkCheclistRepository`.
+- [ ] **B2.4** — Implementar `UserKinkCheclistService` + comandos/queries CQRS (`UpsertUserKinkCheclistCommand`, `GetCurrentUserKinkCheclistQuery`, `DeleteCurrentUserKinkCheclistCommand`).
 - [ ] **B2.5** — Implementar `ReportsController : BaseApiController` com rotas `GET /api/v1/reports/current`, `PUT /api/v1/reports/current` e `DELETE /api/v1/reports/current` (`[Authorize]`).
 - [ ] **B2.6** — Configurar `RequestSizeLimitMiddleware` com limite adequado para o payload JSON de respostas.
-- [ ] **B2.7** — Criar testes unitários e de integração com PostgreSQL real (`Testcontainers`) validando serialização `jsonb`, concorrência otimista (`409`) e isolamento por `UserId`.
+- [ ] **B2.7** — Criar testes unitários e de integração com PostgreSQL real (`Testcontainers`) validando serialização `jsonb`, concorrência otimista (`409`) e isolamento por `UserKinkId`.
 
 ### Fase 3: Integração Frontend (`frontend/` — Angular 22 + Padrão 4+1 + i18n)
 - [ ] **B3.1** — Criar contratos TypeScript em `frontend/src/app/core/models/auth.model.ts` e `service-response.model.ts` alinhados ao `ServiceResponse<T>`.

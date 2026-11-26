@@ -24,7 +24,7 @@ Nesta primeira etapa, o escopo concentra-se **estritamente na fundação do back
 - Cadastro simples com nome, login, email e confirmação de senha forte (`FluentValidation`);
 - Autenticação JWT assinada com **`HS512`** (`TokenConfigurations:Secret` ≥ 64 bytes) e **Refresh Token Rotation** + **Reuse Detection** (persistência em hash SHA-256);
 - Banco de dados PostgreSQL no **Supabase** via **EF Core 9 (`Npgsql.EntityFrameworkCore.PostgreSQL` `9.0.4`)**, com isolamento obrigatório de schema em `kink_consent` (`HasDefaultSchema("kink_consent")` + `MigrationsHistoryTable(..., "kink_consent")`) e migrations aplicadas via **Direct Connection (porta `5432`)**;
-- Arquitetura já preparada para a **Fase 2** (persistência do Report `ChecklistDraft` em coluna nativa `jsonb` em `kink_consent.UserReports`) e **Fase 3** (toggle *Cloud Autosave* na tela `/checklist/fill`).
+- Arquitetura já preparada para a **Fase 2** (persistência do Report `ChecklistDraft` em coluna nativa `jsonb` em `kink_consent.UserKinkCheclists`, entidade `UserKinkCheclist`) e **Fase 3** (toggle *Cloud Autosave* na tela `/checklist/fill`).
 
 ---
 
