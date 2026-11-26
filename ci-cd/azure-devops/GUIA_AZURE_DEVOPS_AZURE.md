@@ -1,13 +1,14 @@
 # Guia Passo a Passo — Configurar CI/CD no Azure DevOps para o Azure App Service (`kinkconsentmanagerapp`)
 
-Este guia detalha tudo o que você precisa fazer no **Azure DevOps**, no **GitHub**, no **Azure Portal / Microsoft Entra ID** e no **SonarCloud** para habilitar o pipeline [`azure-pipelines.yml`](./azure-devops/azure-pipelines.yml) com:
+Este guia detalha tudo o que você precisa fazer no **Azure DevOps**, no **GitHub**, no **Azure Portal / Microsoft Entra ID** e no **SonarCloud** para habilitar o pipeline [`azure-pipelines.yml`](./azure-pipelines.yml) com:
 
 - Build Angular 22 (`npm run build:prod`) + Testes Jest 30 + Cobertura (`Cobertura`, `LCOV`, `JUnit`, `Sonar`) e relatório HTML via `ReportGenerator@5`;
+- Build .NET 10 (`KinkConsentManager.sln`) + Testes NUnit + Cobertura XPlat/Cobertura + publicação ZIP portável da API (`KinkConsentManager.API.dll` + `web.config`);
 - Análise e Quality Gate no **SonarCloud** (`SonarCloudPrepare@3`, `SonarCloudAnalyze@3`, `SonarCloudPublish@3`);
-- Estágio separado opcional de **Docker Build + Smoke Test (`/health`) + Push** (`CD_Docker_Image`);
-- Deploy no **Azure App Service Linux (`kinkconsentmanagerapp`)** via `AzureWebApp@1` com **Workload Identity Federation (OIDC)**, **aprovação humana obrigatória** e controle de **branch única `main`** (`CD_Deploy_Azure`).
+- Estágios separados opcionais de **Docker Build + Smoke Test (`/health`) + Push** (`CD_Docker_Image` e `CD_Docker_Image_Backend`);
+- Deploy no **Azure App Service Linux (`kinkconsentmanagerapp`)** e no **Azure App Service Windows (`kinkconsentmanagerappapi`)** via `AzureWebApp@1` com **Workload Identity Federation (OIDC)**, **aprovação humana obrigatória** e controle de **branch única `main`** (`CD_Deploy_Azure` e `CD_Deploy_Azure_Backend`).
 
-> **Links rápidos:** [Visão Geral `ci-cd/README.md`](./README.md) · [Pipeline Azure DevOps](./azure-devops/azure-pipelines.yml) · [Guia GitHub Actions](./GUIA_GITHUB_ACTIONS_AZURE.md) · [SonarCloud Config](../frontend/sonar-project.properties) · [Documentação Central](../docs/README.md)
+> **Links rápidos:** [Guia Variable Group `kinkconsentmanager-ci-vars`](./GUIA_VARIABLE_GROUP_CI_VARS.md) · [Visão Geral `ci-cd/README.md`](../README.md) · [Pipeline Azure DevOps](./azure-pipelines.yml) · [Guia GitHub Actions](../github/GUIA_GITHUB_ACTIONS_AZURE.md) · [SonarCloud Config](../../frontend/sonar-project.properties) · [Documentação Central](../../docs/README.md)
 
 ---
 
@@ -23,7 +24,7 @@ Este guia detalha tudo o que você precisa fazer no **Azure DevOps**, no **GitHu
 
 ### Pontos críticos se você usar Projeto Público no Azure DevOps + GitHub Privado (Cenário 2)
 
-1. **Vazamento indireto via relatórios e artefatos:** Mesmo com o código no GitHub privado e o serviço *Repos* desabilitado no Azure DevOps, um projeto **Public** permite que qualquer usuário na internet consulte os runs do **Azure Pipelines**. No pipeline atual ([`azure-pipelines.yml`](./azure-devops/azure-pipelines.yml)):
+1. **Vazamento indireto via relatórios e artefatos:** Mesmo com o código no GitHub privado e o serviço *Repos* desabilitado no Azure DevOps, um projeto **Public** permite que qualquer usuário na internet consulte os runs do **Azure Pipelines**. No pipeline atual ([`azure-pipelines.yml`](./azure-pipelines.yml)):
    - O `ReportGenerator@5` (`HtmlInline_AzurePipelines`) embute a visualização linha a linha dos arquivos `.ts` de `frontend/src` na aba **Code Coverage**;
    - O `PublishPipelineArtifact@1` publica o bundle compilado (`drop-webapp`) e o `dockercompose.prod.yml` (`drop-docker-compose`);
    - Logs detalhados de comandos e variáveis não marcadas como *secret* ficam legíveis publicamente.
@@ -120,7 +121,7 @@ Sem o parâmetro `--spa`, o Azure App Service Linux (Node) executa `node /opt/st
    ```
 4. Clique em **Salvar (Save)** e confirme o reinício.
 
-> **Nota sobre o pipeline:** A task `AzureWebApp@1` no [`azure-pipelines.yml`](./azure-devops/azure-pipelines.yml) também envia explicitamente `runtimeStack: 'NODE|24-lts'` e `startUpCommand: '$(azureStartupCommand)'` (`pm2 serve /home/site/wwwroot --no-daemon --spa`) durante o deploy, reforçando essa configuração a cada publicação.
+> **Nota sobre o pipeline:** A task `AzureWebApp@1` no [`azure-pipelines.yml`](./azure-pipelines.yml) também envia explicitamente `runtimeStack: 'NODE|24-lts'` e `startUpCommand: '$(azureStartupCommand)'` (`pm2 serve /home/site/wwwroot --no-daemon --spa`) durante o deploy, reforçando essa configuração a cada publicação.
 
 ---
 
@@ -176,6 +177,8 @@ Necessária apenas quando você quiser rodar com `enableSnykScan: true`:
 
 ## Passo 5 — Criar o Variable Group `kinkconsentmanager-ci-vars`
 
+> **Guia dedicado:** Consulte também o passo a passo completo e as receitas prontas de configuração no guia específico [`GUIA_VARIABLE_GROUP_CI_VARS.md`](./GUIA_VARIABLE_GROUP_CI_VARS.md).
+
 O arquivo [`azure-pipelines.yml`](./azure-pipelines.yml) referencia explicitamente `- group: kinkconsentmanager-ci-vars`. Sem esse Variable Group criado e autorizado, o Azure DevOps recusa iniciar o pipeline.
 
 1. No Azure DevOps, acesse **Pipelines → Library → + Variable group**.
@@ -184,43 +187,65 @@ O arquivo [`azure-pipelines.yml`](./azure-pipelines.yml) referencia explicitamen
 
 ### 5.1 Tabela Completa de Variáveis (`kinkconsentmanager-ci-vars`)
 
-| Categoria | Nome da Variável | Obrigatória Cadastrar? | Valor Inicial a Colocar | Secret? | Descrição / Observação |
-| --------- | ---------------- | ---------------------- | ----------------------- | ------- | ---------------------- |
-| Service Connection | `azureServiceConnection` | Sim (se usar Deploy Azure) | `azure-kinkconsentmanager-oidc` *(ou nome exato da sua conexão no Passo 4.1)* | Não | Conexão Azure Resource Manager (OIDC) para `AzureWebApp@1` |
+| Categoria | Nome da Variável | Obrigatória Cadastrar? | Valor Inicial / Padrão YAML | Secret? | Descrição / Observação |
+| --------- | ---------------- | ---------------------- | --------------------------- | ------- | ---------------------- |
+| Service Connection | `azureServiceConnection` | Sim (se usar Deploy Azure) | `azure-kinkconsentmanager-oidc` *(ou nome exato da sua conexão no Passo 4.1)* | Não | Conexão Azure Resource Manager (OIDC) para `AzureWebApp@1` (Frontend e Backend) |
 | Service Connection | `sonarCloudServiceConnection` | **Sim** | `SonarCloud` *(ou nome exato da sua conexão no Passo 4.2)* | Não | Mantenha cadastrada mesmo com Sonar em `false`, para validação inicial do YAML |
 | Service Connection | `snykServiceConnection` | **Sim** | `Snyk` *(ou nome exato da sua conexão no Passo 4.4)* | Não | Mantenha cadastrada mesmo com Snyk em `false`, para validação inicial do YAML |
-| Service Connection | `dockerRegistryServiceConnection` | Não *(só se `enableDockerPublish: true`)* | `Docker HUB` *(ou nome exato da sua conexão no Passo 4.3)* | Não | Conexão com Docker Hub / ACR para `Docker@2` (`push`) |
-| URL / Smoke Test | `AZURE_WEBAPP_URL` | Recomendada *(se usar Deploy Azure)* | `https://kinkconsentmanagerapp.azurewebsites.net` *(copie a URL exata de Domínios padrão)* | Não | URL alvo do smoke test HTTPS pós-deploy |
-| Controle (Parâmetro) | `nodeVersion` | Não *(Opcional)* | `24.x` | Não | Se cadastrada, prevalece sobre o parâmetro no nível final |
+| Service Connection | `dockerRegistryServiceConnection` | Não *(só se publicar Docker)* | `Docker HUB` *(ou nome exato da sua conexão no Passo 4.3)* | Não | Conexão com Docker Hub / ACR para `Docker@2` (`push`) |
+| Controle (Parâmetro) | `nodeVersion` | Não *(Opcional)* | `24.x` | Não | Versão do Node.js no Frontend (se cadastrada, prevalece sobre o parâmetro) |
+| Controle (Parâmetro) | `dotnetVersion` | Não *(Opcional)* | `10.0.x` | Não | Versão do .NET SDK no Backend (se cadastrada, prevalece sobre o parâmetro) |
 | Controle (Parâmetro) | `useLegacyPeerDeps` | Não *(Opcional)* | `true` | Não | `true` = `npm ci --legacy-peer-deps`; `false` = `npm ci` estrito (se cadastrada, prevalece) |
 | Controle (Parâmetro) | `enableSonarCloud` | Não *(Opcional)* | `false` | Não | Liga/desliga análise e Quality Gate no SonarCloud (se cadastrada, prevalece) |
 | Controle (Parâmetro) | `enableSnykScan` | Não *(Opcional)* | `false` | Não | Liga/desliga a task `SnykSecurityScan@1` (se cadastrada, prevalece) |
-| Controle (Parâmetro) | `enableDockerPublish` | Não *(Opcional)* | `false` | Não | Liga/desliga o estágio `CD_Docker_Image` na `main` (se cadastrada, prevalece) |
-| Controle (Parâmetro) | `enableAzureDeploy` | Não *(Opcional)* | `false` | Não | Liga/desliga o estágio `CD_Deploy_Azure` na `main` (se cadastrada, prevalece) |
+| Controle (Parâmetro) | `enableDockerPublish` | Não *(Opcional)* | `false` | Não | Liga/desliga o estágio `CD_Docker_Image` (Frontend) na `main` (se cadastrada, prevalece) |
+| Controle (Parâmetro) | `enableBackendDockerPublish` | Não *(Opcional)* | `false` | Não | Liga/desliga o estágio `CD_Docker_Image_Backend` (Backend) na `main` (se cadastrada, prevalece) |
+| Controle (Parâmetro) | `enableAzureDeploy` | Não *(Opcional)* | `false` | Não | Liga/desliga o estágio `CD_Deploy_Azure` (Frontend) na `main` (se cadastrada, prevalece) |
+| Controle (Parâmetro) | `enableBackendAzureDeploy` | Não *(Opcional)* | `false` | Não | Liga/desliga o estágio `CD_Deploy_Azure_Backend` (Backend) na `main` (se cadastrada, prevalece) |
+| App Service Frontend | `azureWebAppName` | Não *(Opcional)* | `kinkconsentmanagerapp` | Não | Nome do Web App Frontend no Azure (default no YAML) |
+| App Service Frontend | `azureWebAppType` | Não *(Opcional)* | `webAppLinux` | Não | Tipo do Web App Frontend (`webAppLinux` ou `webApp`) |
+| App Service Frontend | `azureWebAppRuntimeStack` | Não *(Opcional)* | `NODE\|24-lts` | Não | Stack de runtime do Frontend no Azure |
+| App Service Frontend | `azureStartupCommand` | Não *(Opcional)* | `pm2 serve /home/site/wwwroot --no-daemon --spa` | Não | Startup command SPA aplicado pelo `AzureWebApp@1` |
+| App Service Frontend | `azureWebAppDeploymentMethod` | Não *(Opcional)* | `auto` | Não | Método de deploy do Frontend (`auto`, `zipDeploy`, etc.) |
+| App Service Frontend | `azureWebAppUrl` | Não *(Opcional)* | `https://kinkconsentmanagerapp.azurewebsites.net` | Não | URL padrão do Frontend usada no smoke test pós-deploy |
+| URL / Smoke Test | `AZURE_WEBAPP_URL` | Não *(Opcional)* | *(fallback para `azureWebAppUrl`)* | Não | Sobrescreve `azureWebAppUrl` no script de smoke test do Frontend |
+| App Service Backend | `azureBackendWebAppName` | Não *(Opcional)* | `kinkconsentmanagerappapi` | Não | Nome do Web App Backend no Azure (default no YAML) |
+| App Service Backend | `azureBackendWebAppType` | Não *(Opcional)* | `webApp` | Não | Tipo do Web App Backend (`webApp` para Windows; `webAppLinux` para Linux) |
+| App Service Backend | `azureBackendRuntimeStack` | Não *(Opcional)* | `''` *(vazio)* | Não | Runtime Stack do Backend (vazio em Windows; ex. `DOTNETCORE\|10.0` em Linux) |
+| App Service Backend | `azureBackendStartupCommand` | Não *(Opcional)* | `''` *(vazio)* | Não | Startup command do Backend (vazio em Windows; ex. `dotnet KinkConsentManager.API.dll` em Linux) |
+| App Service Backend | `azureBackendDeploymentMethod` | Não *(Opcional)* | `auto` | Não | Método de deploy do Backend (`auto`, `zipDeploy`, etc.) |
+| App Service Backend | `azureBackendWebAppUrl` | Não *(Opcional)* | `https://kinkconsentmanagerappapi-b7eaezc7cbhxftfb.brazilsouth-01.azurewebsites.net` | Não | URL padrão do Backend usada no smoke test `/health` pós-deploy |
+| URL / Smoke Test | `AZURE_BACKEND_WEBAPP_URL` | Não *(Opcional)* | *(fallback para `azureBackendWebAppUrl`)* | Não | Sobrescreve `azureBackendWebAppUrl` no script de smoke test `/health` do Backend |
 | Infraestrutura | `sonarOrganization` | Não *(Opcional)* | `lionscorp` | Não | Organização no SonarCloud (já possui default no YAML) |
-| Infraestrutura | `azureWebAppName` | Não *(Opcional)* | `kinkconsentmanagerapp` | Não | Nome do Azure App Service Linux (já possui default no YAML) |
-| Infraestrutura | `azureStartupCommand` | Não *(Opcional)* | `pm2 serve /home/site/wwwroot --no-daemon --spa` | Não | Startup command SPA aplicado pelo `AzureWebApp@1` (já possui default no YAML) |
-| Infraestrutura | `dockerImageRepository` | Não *(Opcional)* | `leonecr/kinkconsentmanager-ui` | Não | Repositório da imagem Docker publicada em `CD_Docker_Image` (já possui default no YAML) |
+| Infraestrutura | `dockerImageRepository` | Não *(Opcional)* | `leonecr/kinkconsentmanager-ui` | Não | Repositório da imagem Docker publicada em `CD_Docker_Image` (Frontend) |
+| Infraestrutura | `backendDockerImageRepository` | Não *(Opcional)* | `leonecr/kinkconsentmanager-api` | Não | Repositório da imagem Docker publicada em `CD_Docker_Image_Backend` (Backend) |
 | Caminho | `frontendDir` | Não *(Opcional)* | `$(Build.SourcesDirectory)/frontend` | Não | Diretório de trabalho do Angular (já possui default no YAML) |
 | Caminho | `distBrowserDir` | Não *(Opcional)* | `$(Build.SourcesDirectory)/frontend/dist/kinkconsentmanager/browser` | Não | Pasta do bundle SPA validada e compactada (já possui default no YAML) |
+| Caminho | `backendDir` | Não *(Opcional)* | `$(Build.SourcesDirectory)/backend` | Não | Diretório raiz do Backend .NET 10 (já possui default no YAML) |
+| Caminho | `backendSln` | Não *(Opcional)* | `$(Build.SourcesDirectory)/backend/KinkConsentManager.sln` | Não | Caminho da solution .NET usada em restore/build/test (já possui default no YAML) |
+| Caminho | `backendApiProject` | Não *(Opcional)* | `$(Build.SourcesDirectory)/backend/APIs/KinkConsentManager.API/KinkConsentManager.API.csproj` | Não | Projeto da API Backend publicado via `dotnet publish` (já possui default no YAML) |
 | Caminho | `npmCacheFolder` | Não *(Opcional)* | `$(Pipeline.Workspace)/.npm` | Não | Pasta de cache do npm usada por `Cache@2` e `NPM_CONFIG_CACHE` (já possui default no YAML) |
+| Caminho | `nugetCacheFolder` | Não *(Opcional)* | `$(Pipeline.Workspace)/.nuget/packages` | Não | Pasta de cache do NuGet usada por `Cache@2` e `NUGET_PACKAGES` (já possui default no YAML) |
 
-> **Regra de precedência das 6 variáveis de Controle (`nodeVersion`, `useLegacyPeerDeps`, `enableSonarCloud`, `enableSnykScan`, `enableDockerPublish`, `enableAzureDeploy`):**
+> **Regra de precedência das 9 variáveis de Controle (`nodeVersion`, `dotnetVersion`, `useLegacyPeerDeps`, `enableSonarCloud`, `enableSnykScan`, `enableDockerPublish`, `enableBackendDockerPublish`, `enableAzureDeploy`, `enableBackendAzureDeploy`):**
 > **1º Parâmetro no Run → 2º Default do parâmetro → 3º Variável em `kinkconsentmanager-ci-vars` / Pipeline UI (se cadastrada, a variável de ambiente sempre prevalece no nível final).**
 > Se você só quiser controlar essas flags manualmente na tela **Run pipeline**, **não** as cadastre no Variable Group.
 
 ### 5.2 Variáveis Internas Resolvidas em Runtime (Não cadastrar)
 
-Calculadas automaticamente no [`azure-pipelines.yml`](./azure-pipelines.yml) após `- group: kinkconsentmanager-ci-vars` e propagadas pelo step `ResolveCdFlags` (`isOutput=true`) para os estágios de CD (`CD_Docker_Image` e `CD_Deploy_Azure`):
+Calculadas automaticamente no [`azure-pipelines.yml`](./azure-pipelines.yml) após `- group: kinkconsentmanager-ci-vars` e propagadas pelos steps `ResolveCdFlags` e `ResolveBackendCdFlags` (`isOutput=true`) para os estágios de CD (`CD_Docker_Image`, `CD_Docker_Image_Backend`, `CD_Deploy_Azure` e `CD_Deploy_Azure_Backend`):
 
 | Nome da Variável | Regra de Resolução (Ambiente prevalece se existir) | Finalidade |
 | ---------------- | ---------------------------------------------------- | ---------- |
 | `resolvedNodeVersion` | `variables['nodeVersion']` → `parameters.nodeVersion` (default `'24.x'`) | Versão efetiva aplicada ao `NodeTool@0` |
+| `resolvedDotnetVersion` | `variables['dotnetVersion']` → `parameters.dotnetVersion` (default `'10.0.x'`) | Versão efetiva aplicada ao `UseDotNet@2` |
 | `resolvedUseLegacyPeerDeps` | `variables['useLegacyPeerDeps']` → `parameters.useLegacyPeerDeps` (default `'true'`) | Define qual step `Npm@1` de `ci` executará |
 | `resolvedEnableSonarCloud` | `variables['enableSonarCloud']` → `parameters.enableSonarCloud` (default `'false'`) | Controla execução das tasks do SonarCloud |
 | `resolvedEnableSnykScan` | `variables['enableSnykScan']` → `parameters.enableSnykScan` (default `'false'`) | Controla execução da task `SnykSecurityScan@1` |
 | `resolvedEnableDockerPublish` | `variables['enableDockerPublish']` → `parameters.enableDockerPublish` (default `'false'`) | Propagada via `ResolveCdFlags` para o estágio `CD_Docker_Image` |
+| `resolvedEnableBackendDockerPublish` | `variables['enableBackendDockerPublish']` → `parameters.enableBackendDockerPublish` (default `'false'`) | Propagada via `ResolveBackendCdFlags` para o estágio `CD_Docker_Image_Backend` |
 | `resolvedEnableAzureDeploy` | `variables['enableAzureDeploy']` → `parameters.enableAzureDeploy` (default `'false'`) | Propagada via `ResolveCdFlags` para o estágio `CD_Deploy_Azure` |
+| `resolvedEnableBackendAzureDeploy` | `variables['enableBackendAzureDeploy']` → `parameters.enableBackendAzureDeploy` (default `'false'`) | Propagada via `ResolveBackendCdFlags` para o estágio `CD_Deploy_Azure_Backend` |
 
 4. Clique em **Save** no Variable Group `kinkconsentmanager-ci-vars`.
 5. *(Opcional)* Após criar o pipeline no Passo 7, volte em **Pipelines → Library → `kinkconsentmanager-ci-vars` → Pipeline permissions** e autorize o pipeline (ou clique em **Authorize resources** na primeira execução).
@@ -300,7 +325,7 @@ Como o repositório usa **branch única (`main`)**, o Environment `production` i
 
 Quando quiser que alterações em `frontend/` ou `ci-cd/` na branch `main` disparem o estágio de CI automaticamente (mantendo os estágios de CD protegidos pelos parâmetros `false` por padrão e pelo gate do Environment `production`):
 
-1. Abra [`ci-cd/azure-devops/azure-pipelines.yml`](./azure-devops/azure-pipelines.yml).
+1. Abra [`ci-cd/azure-devops/azure-pipelines.yml`](./azure-pipelines.yml).
 2. Remova `trigger: none` e descomente o bloco `trigger:` (linhas 26–36):
    ```yaml
    trigger:

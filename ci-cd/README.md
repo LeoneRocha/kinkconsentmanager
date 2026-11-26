@@ -2,7 +2,7 @@
 
 Esta pasta centraliza os pipelines e scripts de **Integração Contínua (CI)** e **Entrega/Implantação Contínua (CD)** do **KinkConsentManager** (**Frontend Angular 22** + **Backend .NET 10**), padronizados a partir do `SmartCoreHub`, com os estágios de **Docker (Frontend e Backend) e Deploy Azure desativados por padrão** até habilitação explícita.
 
-> **Links relacionados:** [Guia Azure DevOps -> Azure](./azure-devops/GUIA_AZURE_DEVOPS_AZURE.md) · [Guia GitHub Actions -> Azure](./github/GUIA_GITHUB_ACTIONS_AZURE.md) · [Guia Publicação Manual Azure](./manualdeploy/GUIA_PUBLICACAO_MANUAL_AZURE.md) · [README da Documentação](../docs/README.md) · [Arquitetura](../docs/ARCHITECTURE.md) · [Diretrizes do Projeto](../docs/PROJECT_GUIDELINES.md) · [SonarCloud Config](../frontend/sonar-project.properties) · [Jest Config](../frontend/jest.config.js) · [Dockerfile Frontend](../frontend/Dockerfile) · [Dockerfile Backend](../backend/APIs/KinkConsentManager.API/Dockerfile)
+> **Links relacionados:** [Guia Azure DevOps -> Azure](./azure-devops/GUIA_AZURE_DEVOPS_AZURE.md) · [Guia `kinkconsentmanager-ci-vars`](./azure-devops/GUIA_VARIABLE_GROUP_CI_VARS.md) · [Guia GitHub Actions -> Azure](./github/GUIA_GITHUB_ACTIONS_AZURE.md) · [Guia Publicação Manual Azure](./manualdeploy/GUIA_PUBLICACAO_MANUAL_AZURE.md) · [README da Documentação](../docs/README.md) · [Arquitetura](../docs/ARCHITECTURE.md) · [Diretrizes do Projeto](../docs/PROJECT_GUIDELINES.md) · [SonarCloud Config](../frontend/sonar-project.properties) · [Jest Config](../frontend/jest.config.js) · [Dockerfile Frontend](../frontend/Dockerfile) · [Dockerfile Backend](../backend/APIs/KinkConsentManager.API/Dockerfile)
 
 ---
 
@@ -11,6 +11,7 @@ Esta pasta centraliza os pipelines e scripts de **Integração Contínua (CI)** 
 | Arquivo | Plataforma / Uso | Estado Padrão |
 | ------- | ---------------- | ------------- |
 | [`GUIA_AZURE_DEVOPS_AZURE.md`](./azure-devops/GUIA_AZURE_DEVOPS_AZURE.md) | Passo a passo completo para Azure DevOps Pipelines (projeto público vs. privado + repositório privado, OIDC, Service Connections, Variable Group e Environment `production`) | Guia de referência |
+| [`GUIA_VARIABLE_GROUP_CI_VARS.md`](./azure-devops/GUIA_VARIABLE_GROUP_CI_VARS.md) | Guia exclusivo para configurar todas as variáveis do Variable Group `kinkconsentmanager-ci-vars` no Azure DevOps (defaults, flags, App Service Frontend/Backend, receitas prontas) | Guia de referência |
 | [`GUIA_GITHUB_ACTIONS_AZURE.md`](./github/GUIA_GITHUB_ACTIONS_AZURE.md) | Passo a passo completo de OIDC, Secrets, Environment `production`, SonarCloud e Deploy Azure no GitHub Actions | Guia de referência |
 | [`manualdeploy/GUIA_PUBLICACAO_MANUAL_AZURE.md`](./manualdeploy/GUIA_PUBLICACAO_MANUAL_AZURE.md) | Passo a passo de build, ZIP, deploy manual no Azure Portal/CLI, diagnóstico de `default-static-site.js` / `oryx-manifest.toml` e Plano B Node 26 | Guia de referência |
 | [`azure-devops/azure-pipelines.yml`](./azure-devops/azure-pipelines.yml) | Azure DevOps Pipelines (`CI_Build_Quality` Frontend + Backend -> `CD_Docker_Image` / `CD_Docker_Image_Backend` / `CD_Deploy_Azure`) | **CI ativo em `main`; Docker Frontend/Backend e Deploy `false`** |
