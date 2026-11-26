@@ -57,6 +57,11 @@ Desktop.ini
 *.swo
 *~
 
+# .NET / ASP.NET Core local configs
+**/appsettings.Development.json
+**/appsettings.*.local.json
+!**/appsettings.Development.json.example
+
 # Environment variables
 .env
 .env.local
@@ -90,3 +95,5 @@ site/
 *.lscache
 sensitivedata.txt
 artifacts/**
+backend/APIs/KinkConsentManager.API/appsettings.Development.json.example
+backend/APIs/KinkConsentManager.API/appsettings.Development.json.example

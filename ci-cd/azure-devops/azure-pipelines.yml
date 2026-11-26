@@ -242,26 +242,6 @@ stages:
               pathToSources: '$(frontendDir)/src'
               failIfCoverageEmpty: true
 
-          - task: SonarCloudPrepare@3
-            displayName: 'SonarCloud — Preparar análise (CLI)'
-            condition: and(succeeded(), eq(variables['resolvedEnableSonarCloud'], 'true'))
-            inputs:
-              SonarCloud: '$(sonarCloudServiceConnection)'
-              organization: '$(sonarOrganization)'
-              scannerMode: 'CLI'
-              configMode: 'file'
-              configFile: 'frontend/sonar-project.properties'
-
-          - task: SonarCloudAnalyze@3
-            displayName: 'SonarCloud — Executar análise de código e cobertura'
-            condition: and(succeeded(), eq(variables['resolvedEnableSonarCloud'], 'true'))
-
-          - task: SonarCloudPublish@3
-            displayName: 'SonarCloud — Publicar Quality Gate'
-            condition: and(succeeded(), eq(variables['resolvedEnableSonarCloud'], 'true'))
-            inputs:
-              pollingTimeoutSec: '300'
-
           - task: CmdLine@2
             displayName: 'Validar saída SPA em dist/kinkconsentmanager/browser'
             condition: succeeded()
@@ -303,6 +283,26 @@ stages:
               targetPath: '$(Build.ArtifactStagingDirectory)/docker-compose'
               artifact: 'drop-docker-compose'
               publishLocation: 'pipeline'
+
+          - task: SonarCloudPrepare@3
+            displayName: 'SonarCloud — Preparar análise (CLI)'
+            condition: and(succeeded(), eq(variables['resolvedEnableSonarCloud'], 'true'))
+            inputs:
+              SonarCloud: '$(sonarCloudServiceConnection)'
+              organization: '$(sonarOrganization)'
+              scannerMode: 'CLI'
+              configMode: 'file'
+              configFile: 'frontend/sonar-project.properties'
+
+          - task: SonarCloudAnalyze@3
+            displayName: 'SonarCloud — Executar análise de código e cobertura'
+            condition: and(succeeded(), eq(variables['resolvedEnableSonarCloud'], 'true'))
+
+          - task: SonarCloudPublish@3
+            displayName: 'SonarCloud — Publicar Quality Gate'
+            condition: and(succeeded(), eq(variables['resolvedEnableSonarCloud'], 'true'))
+            inputs:
+              pollingTimeoutSec: '300'
 
           - task: CmdLine@2
             name: ResolveCdFlags

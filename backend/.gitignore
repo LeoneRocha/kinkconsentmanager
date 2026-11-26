@@ -7,3 +7,6 @@ coverage/
 *.user
 *.suo
 .vs/
+appsettings.Development.json
+appsettings.*.local.json
+!appsettings.Development.json.example

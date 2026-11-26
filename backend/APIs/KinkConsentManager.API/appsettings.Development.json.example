@@ -4,10 +4,10 @@
     "SkipInitialization": false
   },
   "ConnectionStrings": {
-    "DefaultConnection": ""
+    "DefaultConnection": "Host=localhost;Port=5432;Database=kinkconsentmanager;Username=postgres;Password=postgres;"
   },
   "TokenConfigurations": {
-    "Secret": "",
+    "Secret": "ChaveSecretaParaAmbienteDeDesenvolvimentoLocalComPeloMenos32Caracteres!",
     "Issuer": "KinkConsentManager.API",
     "Audience": "KinkConsentManager.Client",
     "Minutes": 60,

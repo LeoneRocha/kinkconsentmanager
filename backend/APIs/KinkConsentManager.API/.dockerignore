@@ -11,6 +11,8 @@
 **/*.db
 **/logs/
 **/data-protection-keys/
+**/appsettings.Development.json
+**/appsettings.*.local.json
 .git/
 .env
 .env.*
