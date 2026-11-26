@@ -21,7 +21,7 @@ variables:
   DIST_BROWSER_DIR: "frontend/dist/kinkconsentmanager/browser"
   BACKEND_DIR: "backend"
   AZURE_WEBAPP_NAME: "kinkconsentmanagerapp"
-  AZURE_BACKEND_WEBAPP_NAME: "kinkconsentmanagerapi"
+  AZURE_BACKEND_WEBAPP_NAME: "kinkconsentmanagerappapi"
   AZURE_RESOURCE_GROUP: "kinkconsentmanagerrg"
   DOCKER_IMAGE: "leonecr/kinkconsentmanager-ui"
   BACKEND_DOCKER_IMAGE: "leonecr/kinkconsentmanager-api"
@@ -100,6 +100,7 @@ ci_backend_build_and_test:
     - test "$(find TestResults -name 'coverage.cobertura.xml' | wc -l)" -ge 1
     - dotnet publish APIs/KinkConsentManager.API/KinkConsentManager.API.csproj -c Release --no-restore /p:UseAppHost=false -o publish/api
     - test -f publish/api/KinkConsentManager.API.dll
+    - test -f publish/api/web.config
   artifacts:
     when: always
     expire_in: 14 days
@@ -226,7 +227,7 @@ cd_backend_deploy_azure_webapp:
     - ci_backend_build_and_test
   environment:
     name: production
-    url: https://kinkconsentmanagerapi.azurewebsites.net
+    url: https://kinkconsentmanagerappapi-b7eaezc7cbhxftfb.brazilsouth-01.azurewebsites.net
   rules:
     - if: '$CI_COMMIT_BRANCH == "main" && $ENABLE_BACKEND_AZURE_DEPLOY == "true"'
       when: manual

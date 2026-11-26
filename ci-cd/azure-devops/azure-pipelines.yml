@@ -85,12 +85,28 @@ variables:
     value: 'lionscorp'
   - name: azureWebAppName
     value: 'kinkconsentmanagerapp'
+  - name: azureWebAppType
+    value: 'webAppLinux'
+  - name: azureWebAppRuntimeStack
+    value: 'NODE|24-lts'
   - name: azureStartupCommand
     value: 'pm2 serve /home/site/wwwroot --no-daemon --spa'
+  - name: azureWebAppDeploymentMethod
+    value: 'auto'
+  - name: azureWebAppUrl
+    value: 'https://kinkconsentmanagerapp.azurewebsites.net'
   - name: azureBackendWebAppName
-    value: 'kinkconsentmanagerapi'
+    value: 'kinkconsentmanagerappapi'
+  - name: azureBackendWebAppType
+    value: 'webApp'
+  - name: azureBackendRuntimeStack
+    value: ''
   - name: azureBackendStartupCommand
-    value: 'dotnet KinkConsentManager.API.dll'
+    value: ''
+  - name: azureBackendDeploymentMethod
+    value: 'auto'
+  - name: azureBackendWebAppUrl
+    value: 'https://kinkconsentmanagerappapi-b7eaezc7cbhxftfb.brazilsouth-01.azurewebsites.net'
   - name: dockerImageRepository
     value: 'leonecr/kinkconsentmanager-ui'
   - name: backendDockerImageRepository
@@ -316,6 +332,9 @@ stages:
                 echo "enableSnykScan=$(resolvedEnableSnykScan)"
                 echo "enableDockerPublish=$(resolvedEnableDockerPublish)"
                 echo "enableAzureDeploy=$(resolvedEnableAzureDeploy)"
+                echo "azureWebAppName=$(azureWebAppName)"
+                echo "azureWebAppType=$(azureWebAppType)"
+                echo "azureWebAppUrl=$(azureWebAppUrl)"
                 echo "##vso[task.setvariable variable=enableDockerPublish;isOutput=true]$(resolvedEnableDockerPublish)"
                 echo "##vso[task.setvariable variable=enableAzureDeploy;isOutput=true]$(resolvedEnableAzureDeploy)"
 
@@ -406,12 +425,17 @@ stages:
               NUGET_PACKAGES: '$(nugetCacheFolder)'
 
           - task: CmdLine@2
-            displayName: 'Validar saída publicada da API Backend (KinkConsentManager.API.dll)'
+            displayName: 'Validar saída publicada da API Backend (KinkConsentManager.API.dll e web.config)'
             condition: succeeded()
             inputs:
               script: |
                 if [ ! -f "$(Build.ArtifactStagingDirectory)/backend-api-publish/KinkConsentManager.API.dll" ]; then
                   echo "ERRO: KinkConsentManager.API.dll não encontrado em $(Build.ArtifactStagingDirectory)/backend-api-publish"
+                  ls -la "$(Build.ArtifactStagingDirectory)/backend-api-publish" || true
+                  exit 1
+                fi
+                if [ ! -f "$(Build.ArtifactStagingDirectory)/backend-api-publish/web.config" ]; then
+                  echo "ERRO: web.config não encontrado em $(Build.ArtifactStagingDirectory)/backend-api-publish (necessário para Azure Web App Windows/IIS)"
                   ls -la "$(Build.ArtifactStagingDirectory)/backend-api-publish" || true
                   exit 1
                 fi
@@ -460,6 +484,9 @@ stages:
                 echo "dotnetVersion=$(resolvedDotnetVersion)"
                 echo "enableBackendDockerPublish=$(resolvedEnableBackendDockerPublish)"
                 echo "enableBackendAzureDeploy=$(resolvedEnableBackendAzureDeploy)"
+                echo "azureBackendWebAppName=$(azureBackendWebAppName)"
+                echo "azureBackendWebAppType=$(azureBackendWebAppType)"
+                echo "azureBackendWebAppUrl=$(azureBackendWebAppUrl)"
                 echo "##vso[task.setvariable variable=enableBackendDockerPublish;isOutput=true]$(resolvedEnableBackendDockerPublish)"
                 echo "##vso[task.setvariable variable=enableBackendAzureDeploy;isOutput=true]$(resolvedEnableBackendAzureDeploy)"
 
@@ -610,26 +637,27 @@ stages:
                   displayName: 'Baixar pacote ZIP do frontend'
 
                 - task: AzureWebApp@1
-                  displayName: 'Deploy no Azure Web App Linux ($(azureWebAppName))'
+                  displayName: 'Deploy no Azure Web App ($(azureWebAppName))'
                   inputs:
                     azureSubscription: '$(azureServiceConnection)'
-                    appType: 'webAppLinux'
+                    appType: '$(azureWebAppType)'
                     appName: '$(azureWebAppName)'
                     package: '$(Pipeline.Workspace)/drop-webapp/kinkconsentmanager-ui-$(Build.BuildId).zip'
-                    runtimeStack: 'NODE|24-lts'
+                    runtimeStack: '$(azureWebAppRuntimeStack)'
                     startUpCommand: '$(azureStartupCommand)'
+                    deploymentMethod: '$(azureWebAppDeploymentMethod)'
 
                 - task: CmdLine@2
                   displayName: 'Smoke test pós-deploy HTTPS'
                   continueOnError: true
                   inputs:
                     script: |
-                      URL="${AZURE_WEBAPP_URL:-https://$(azureWebAppName).azurewebsites.net}"
+                      URL="${AZURE_WEBAPP_URL:-$(azureWebAppUrl)}"
                       echo "Verificando disponibilidade em $URL ..."
                       curl -fsS --retry 3 --retry-delay 5 -o /dev/null "$URL"
 
   # ============================================================================
-  # ESTÁGIO 3B — CD Backend: Deploy ZIP Tradicional no Azure Web App Linux (desativado por padrão)
+  # ESTÁGIO 3B — CD Backend: Deploy ZIP Tradicional no Azure Web App (desativado por padrão)
   # ============================================================================
   - stage: CD_Deploy_Azure_Backend
     displayName: 'CD Backend — Deploy ZIP Azure Web App (com Aprovação)'
@@ -658,20 +686,21 @@ stages:
                   displayName: 'Baixar pacote ZIP da API Backend'
 
                 - task: AzureWebApp@1
-                  displayName: 'Deploy da API no Azure Web App Linux ($(azureBackendWebAppName))'
+                  displayName: 'Deploy da API no Azure Web App ($(azureBackendWebAppName))'
                   inputs:
                     azureSubscription: '$(azureServiceConnection)'
-                    appType: 'webAppLinux'
+                    appType: '$(azureBackendWebAppType)'
                     appName: '$(azureBackendWebAppName)'
                     package: '$(Pipeline.Workspace)/drop-backend-api/kinkconsentmanager-api-$(Build.BuildId).zip'
-                    runtimeStack: 'DOTNETCORE|10.0'
+                    runtimeStack: '$(azureBackendRuntimeStack)'
                     startUpCommand: '$(azureBackendStartupCommand)'
+                    deploymentMethod: '$(azureBackendDeploymentMethod)'
 
                 - task: CmdLine@2
                   displayName: 'Smoke test pós-deploy HTTPS (/health)'
                   continueOnError: true
                   inputs:
                     script: |
-                      URL="${AZURE_BACKEND_WEBAPP_URL:-https://$(azureBackendWebAppName).azurewebsites.net}"
+                      URL="${AZURE_BACKEND_WEBAPP_URL:-$(azureBackendWebAppUrl)}"
                       echo "Verificando disponibilidade em $URL/health ..."
-                      curl -fsS --retry 3 --retry-delay 5 "$URL/health"
+                      curl -fsS --retry 5 --retry-delay 10 "$URL/health"

@@ -1,4 +1,5 @@
 using KinkConsentManager.Core.Domain.Entities;
+using KinkConsentManager.Core.Infrastructure.DataSeed;
 using Microsoft.EntityFrameworkCore;
 
 namespace KinkConsentManager.Core.Infrastructure.Data;
@@ -42,6 +43,7 @@ public class KinkConsentManagerDbContext : DbContext
         base.OnModelCreating(modelBuilder);
         modelBuilder.HasDefaultSchema(DefaultSchema);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(KinkConsentManagerDbContext).Assembly);
+        UserKinkDataSeeder.Seed(modelBuilder);
     }
 }
 

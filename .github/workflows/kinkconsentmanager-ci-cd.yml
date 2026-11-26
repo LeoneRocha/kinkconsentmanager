@@ -249,6 +249,7 @@ jobs:
         run: |
           set -euo pipefail
           test -f "${{ env.BACKEND_DIR }}/publish/api/KinkConsentManager.API.dll"
+          test -f "${{ env.BACKEND_DIR }}/publish/api/web.config"
           mkdir -p "${{ env.BACKEND_DIR }}/dist"
           rm -f "${{ env.BACKEND_DIR }}/dist/kinkconsentmanager-api.zip"
           (cd "${{ env.BACKEND_DIR }}/publish/api" && zip -rq "../../dist/kinkconsentmanager-api.zip" .)
@@ -451,10 +452,10 @@ jobs:
         run: az logout || true
 
   # ============================================================================
-  # ESTÁGIO 3B — CD Backend: Deploy ZIP Tradicional no Azure Web App Linux (desativado por padrão)
+  # ESTÁGIO 3B — CD Backend: Deploy ZIP Tradicional no Azure Web App Windows (desativado por padrão)
   # ============================================================================
   cd_backend_deploy_azure:
-    name: 'CD Backend — Deploy ZIP Azure Web App (com Aprovação)'
+    name: 'CD Backend — Deploy ZIP Azure Web App Windows (com Aprovação)'
     needs: ci_backend_build_test
     if: ${{ github.ref == 'refs/heads/main' && inputs.run_backend_azure_deploy == true }}
     runs-on: ubuntu-latest
@@ -463,7 +464,7 @@ jobs:
     # - Habilitar "Deployment branches and tags" -> apenas `main`
     environment:
       name: production
-      url: ${{ vars.AZURE_BACKEND_WEBAPP_URL || 'https://kinkconsentmanagerapi.azurewebsites.net' }}
+      url: ${{ vars.AZURE_BACKEND_WEBAPP_URL || 'https://kinkconsentmanagerappapi-b7eaezc7cbhxftfb.brazilsouth-01.azurewebsites.net' }}
 
     permissions:
       id-token: write
@@ -483,18 +484,18 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: Deploy ZIP da API Backend no Azure Web App Linux (Production)
+      - name: Deploy ZIP da API Backend no Azure Web App Windows (Production)
         uses: azure/webapps-deploy@v3
         with:
-          app-name: ${{ vars.AZURE_BACKEND_WEBAPP_NAME || 'kinkconsentmanagerapi' }}
+          app-name: ${{ vars.AZURE_BACKEND_WEBAPP_NAME || 'kinkconsentmanagerappapi' }}
           slot-name: 'Production'
           package: ./backend-api-zip/kinkconsentmanager-api.zip
 
       - name: Smoke test pós-deploy (/health)
         continue-on-error: true
         run: |
-          URL="${{ vars.AZURE_BACKEND_WEBAPP_URL || 'https://kinkconsentmanagerapi.azurewebsites.net' }}"
-          curl -fsS --retry 3 --retry-delay 5 "$URL/health"
+          URL="${{ vars.AZURE_BACKEND_WEBAPP_URL || 'https://kinkconsentmanagerappapi-b7eaezc7cbhxftfb.brazilsouth-01.azurewebsites.net' }}"
+          curl -fsS --retry 5 --retry-delay 10 "$URL/health"
 
       - name: Encerrar sessão Azure CLI
         if: always()

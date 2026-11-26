@@ -34,7 +34,7 @@ Baseado no App Service provisionado e nos arquivos de container em [`frontend/`]
 | **Pacote de Deploy SPA** | Conteúdo direto de `frontend/dist/kinkconsentmanager/browser/` (sem subpasta raiz no `.zip`) |
 | **Imagem Docker (Frontend)** | `leonecr/kinkconsentmanager-ui` (Nginx na porta `80`, healthcheck `/health`, Compose [`dockercompose.prod.yml`](../frontend/dockercompose.prod.yml) — CD desativado por padrão) |
 | **Runtime & Solution Backend** | `.NET 10` (`net10.0`, SDK `10.0.x`), [`KinkConsentManager.sln`](../backend/KinkConsentManager.sln) (4 projetos: `API`, `API.Tests`, `Core`, `Core.Tests`) |
-| **Modo 1 — Publicação Tradicional Backend (ZIP)** | `dotnet publish ... /p:UseAppHost=false` gerando `kinkconsentmanager-api*.zip` com `KinkConsentManager.API.dll` e `appsettings.json` na raiz do ZIP (`DOTNETCORE\|10.0`, startup `dotnet KinkConsentManager.API.dll` — CD Azure Web App `kinkconsentmanagerapi` desativado por padrão) |
+| **Modo 1 — Publicação Tradicional Backend (ZIP)** | `dotnet publish ... /p:UseAppHost=false` gerando `kinkconsentmanager-api*.zip` com `KinkConsentManager.API.dll`, `web.config` e `appsettings.json` na raiz do ZIP para Azure Web App `kinkconsentmanagerappapi` (`Windows`, `F1 Free`, `Brazil South`, `.NET 10 (LTS)`, Application Insights `kinkconsentmanagerappapi`, URL `https://kinkconsentmanagerappapi-b7eaezc7cbhxftfb.brazilsouth-01.azurewebsites.net` — CD desativado por padrão) |
 | **Modo 2 — Imagem Docker (Backend)** | `leonecr/kinkconsentmanager-api` (ASP.NET Core 10 na porta `8080`, healthcheck `/health`, Compose [`docker-compose.prod.yml`](../backend/APIs/KinkConsentManager.API/docker-compose.prod.yml) — **CD desativado por padrão**) |
 | **Projeto SonarCloud** | `sonar.projectKey=lionscorp_kinkconsentmanager-ui` · `sonar.organization=lionscorp` ([`sonar-project.properties`](../frontend/sonar-project.properties)) |
 
@@ -97,9 +97,21 @@ Nenhum GUID de assinatura, Client ID, Tenant ID ou token foi fixado nos arquivos
   - `dockerImageRepository` (`leonecr/kinkconsentmanager-ui`)
   - `backendDockerImageRepository` (`leonecr/kinkconsentmanager-api` — usado apenas se `enableBackendDockerPublish=true`)
   - `azureServiceConnection` (Azure Resource Manager Service Connection com acesso ao RG `kinkconsentmanagerrg`)
-  - `azureWebAppName` (`kinkconsentmanagerapp`)
-  - `azureBackendWebAppName` (`kinkconsentmanagerapi` — usado apenas se `enableBackendAzureDeploy=true`)
-  - `AZURE_WEBAPP_URL` e `AZURE_BACKEND_WEBAPP_URL` (URLs públicas dos Web Apps para smoke test pós-deploy)
+  - **App Service Frontend** *(sobrescrevem os defaults do YAML se cadastradas no Variable Group)*:
+    - `azureWebAppName` (default `kinkconsentmanagerapp`)
+    - `azureWebAppType` (default `webAppLinux`)
+    - `azureWebAppRuntimeStack` (default `NODE|24-lts`)
+    - `azureStartupCommand` (default `pm2 serve /home/site/wwwroot --no-daemon --spa`)
+    - `azureWebAppDeploymentMethod` (default `auto`)
+    - `azureWebAppUrl` (default `https://kinkconsentmanagerapp.azurewebsites.net`)
+  - **App Service Backend** *(sobrescrevem os defaults do YAML se cadastradas no Variable Group)*:
+    - `azureBackendWebAppName` (default `kinkconsentmanagerappapi`)
+    - `azureBackendWebAppType` (default `webApp` para Windows; use `webAppLinux` se migrar para Linux)
+    - `azureBackendRuntimeStack` (default `''` em Windows; ex. `DOTNETCORE|10.0` em Linux)
+    - `azureBackendStartupCommand` (default `''` em Windows; ex. `dotnet KinkConsentManager.API.dll` em Linux)
+    - `azureBackendDeploymentMethod` (default `auto`)
+    - `azureBackendWebAppUrl` (default `https://kinkconsentmanagerappapi-b7eaezc7cbhxftfb.brazilsouth-01.azurewebsites.net`)
+  - `AZURE_WEBAPP_URL` e `AZURE_BACKEND_WEBAPP_URL` *(opcionais — precedência no script de smoke test sobre `azureWebAppUrl`/`azureBackendWebAppUrl`)*
 
 ### GitHub Actions (`kinkconsentmanager-ci-cd.yml`)
 - **Repository / Environment (`production`) Secrets:**
@@ -108,7 +120,7 @@ Nenhum GUID de assinatura, Client ID, Tenant ID ou token foi fixado nos arquivos
   - `DOCKER_USERNAME` e `DOCKER_PASSWORD` *(quando `run_docker_publish=true` ou `run_backend_docker_publish=true`)*
   - `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID` *(OIDC Federated Credentials no Azure AD / Entra ID para o Environment `production`)*
 - **Repository / Environment Variables (`vars`):**
-  - `AZURE_WEBAPP_NAME` (padrão `kinkconsentmanagerapp`) e `AZURE_BACKEND_WEBAPP_NAME` (padrão `kinkconsentmanagerapi`)
+  - `AZURE_WEBAPP_NAME` (padrão `kinkconsentmanagerapp`) e `AZURE_BACKEND_WEBAPP_NAME` (padrão `kinkconsentmanagerappapi`)
   - `AZURE_WEBAPP_URL` e `AZURE_BACKEND_WEBAPP_URL` (URLs completas `https://...azurewebsites.net`)
   - `DOCKER_REGISTRY` (padrão `docker.io`), `DOCKER_IMAGE` (padrão `leonecr/kinkconsentmanager-ui`) e `BACKEND_DOCKER_IMAGE` (padrão `leonecr/kinkconsentmanager-api`)
 
