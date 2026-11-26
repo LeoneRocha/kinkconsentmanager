@@ -138,17 +138,35 @@ kinkconsentmanager/
 
 ---
 
-## 3. Backend (Genérico — Coming Soon)
+## 3. Backend (Arquitetura SmartCoreHub + Supabase EF Core — V2)
 
-> **Status Atual:** Não há backend neste repositório na V1 (`frontend/` opera de forma autônoma). As diretrizes abaixo definem o contrato mínimo esperado para manter o futuro backend coerente com a infraestrutura já preparada no frontend.
+> **Status Atual:** **Fase 1 em Especificação e Implantação** — Aprovada a adoção da arquitetura corporativa do **SmartCoreHub** (`C:\git\SmartCoreHub\backend`) com banco de dados PostgreSQL no **Supabase** via **Entity Framework Core** (`Npgsql.EntityFrameworkCore.PostgreSQL`).
+> 
+> Documentação técnica detalhada disponível em [`docs/Backend/`](./Backend/):
+> - [Documento Funcional de Autenticação e Sync](./Backend/DOCUMENTO_FUNCIONAL_AUTENTICACAO_E_SYNC.md)
+> - [Documento Técnico de Implementação do Backend](./Backend/DOCUMENTO_IMPLEMENTACAO_BACKEND.md)
+> - [Documento de Progresso e Checklist](./Backend/DOCUMENTO_PROGRESSO_BACKEND.md)
 
-### 3.1 Princípios Arquiteturais Gerais (Para V2+)
+### 3.1 Princípios Arquiteturais e Padrão SmartCoreHub
 
-- **Separação de Camadas:** isolar claramente camada de apresentação/API (roteamento, autenticação, validação de entrada e serialização), camada de serviço/aplicação (regras de negócio) e camada de repositórios/persistência (acesso a banco ou storage).
-- **Agnóstico até Decisão da V2+:** a stack concreta de servidor, banco de dados e autenticação ainda **não foi fixada**; o container `.devcontainer/backend/` existe apenas como placeholder de workspace.
-- **Zero-Knowledge & Minimização de Dados:** quando houver armazenamento remoto ou compartilhamento entre participantes, priorizar payloads criptografados no cliente (*end-to-end*), expiração/revogação de links e mínima retenção de metadados.
+- **Clean Architecture em 4 Camadas:**
+  - `KinkConsentManager.Domain`: Entidades (`User`, `UserRefreshToken`, `UserReport`), DTOs, Contratos e FluentValidation.
+  - `KinkConsentManager.Infrastructure`: `KinkConsentManagerDbContext`, mapeamentos Fluent API, migrations PostgreSQL, Hasher BCrypt e repositórios.
+  - `KinkConsentManager.Service`: Orquestração de negócio, geração de JWT e serviços de autenticação.
+  - `KinkConsentManager.API`: ASP.NET Core Web API, controllers RESTful, Swagger/OpenAPI, Middlewares e Health Checks.
+- **Segurança Criptográfica Padrão SmartCoreHub:**
+  - Hashing de senhas com **BCrypt** (`workFactor: 11/12`) com salt embutido e verificação *timing-safe*. Proibido salvar senhas em texto puro.
+  - Validação rigorosa de senha via FluentValidation (mínimo 8 caracteres, maiúscula, minúscula, dígito, caractere especial).
+  - Autenticação por **JWT Bearer** com tokens de curta duração (60 minutos) e **Refresh Tokens** persistidos e rotacionáveis (7 dias).
 
-### 3.2 Alinhamento com os Contratos já Preparados no Frontend
+### 3.2 Integração com Supabase (PostgreSQL) e EF Core
+
+- **Provedor:** Pacote oficial `Npgsql.EntityFrameworkCore.PostgreSQL`.
+- **Isolamento Mandatório de Schema:** Todas as tabelas da aplicação residem no schema dedicado `kink_consent` (`modelBuilder.HasDefaultSchema("kink_consent")`), blindando os schemas nativos do Supabase (`auth`, `storage`, `realtime`, `public`).
+- **Migrations e Direct Connection:** Para executar `dotnet ef database update`, utilizar sempre a conexão direta (porta `5432` / Session Mode). O Transaction Pooler não suporta DDL locks exigidos pelo EF Core.
+- **Persistência do Report (Respostas):** Coluna nativa PostgreSQL `jsonb` na tabela `UserReport` para o rascunho de preenchimento, garantindo atomicidade, alta performance e zero chamadas extras de rede S3.
+
+### 3.3 Alinhamento com os Contratos já Preparados no Frontend
 
 O frontend já expõe contratos genéricos em [crud.model.ts](../frontend/src/app/core/models/crud.model.ts), [base-data.service.ts](../frontend/src/app/core/services/base-data.service.ts), [base-crud.service.ts](../frontend/src/app/core/services/base-crud.service.ts) e [base-crud.repository.ts](../frontend/src/app/core/repositories/base-crud.repository.ts). Ao criar APIs futuras:
 
@@ -156,7 +174,7 @@ O frontend já expõe contratos genéricos em [crud.model.ts](../frontend/src/ap
 - **Paginação e filtros padronizados:** manter compatibilidade com `PageRequest` (`page`, `pageSize`, `sortBy`, `sortDirection`, filtros por query) e `PageResult<T>` (`items`, `total`, `page`, `pageSize`).
 - **Operações CRUD consistentes:** `GET` (coleção/item), `POST` (criação), `PUT`/`PATCH` (atualização total/parcial) e `DELETE` (remoção).
 
-### 3.3 Requisitos Operacionais Mínimos (Quando Criado)
+### 3.4 Requisitos Operacionais Mínimos (Quando Criado)
 
 - Endpoints explícitos de saúde/prontidão (ex.: `/health` e `/ready`) sem exposição de dados sensíveis.
 - Documentação de contrato (OpenAPI/Swagger ou equivalente) antes da integração com o frontend.

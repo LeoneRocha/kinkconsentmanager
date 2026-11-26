@@ -75,6 +75,15 @@ As versões vivas constam em [frontend/package.json](../frontend/package.json), 
 | Checklist de Implementação, Etapas e Progresso | [CHECKLIST_IMPLEMENTACAO_PROGRESSO.md](./Features/Feito/CHECKLIST_IMPLEMENTACAO_PROGRESSO.md) |
 | Notas Futuras — i18n de Questões & Checklist Personalizável | [ESPECIFICACAO_I18N_CHECKLIST_PERSONALIZAVEL.md](./Features/ESPECIFICACAO_I18N_CHECKLIST_PERSONALIZAVEL.md) |
 
+### Backend — Especificação e Implantação (V2)
+
+| Tema | Documento |
+| ---- | --------- |
+| Especificação Funcional (Auth & Sincronização em Nuvem) | [DOCUMENTO_FUNCIONAL_AUTENTICACAO_E_SYNC.md](./Backend/DOCUMENTO_FUNCIONAL_AUTENTICACAO_E_SYNC.md) |
+| Especificação Técnica de Implementação (SmartCoreHub + Supabase EF Core) | [DOCUMENTO_IMPLEMENTACAO_BACKEND.md](./Backend/DOCUMENTO_IMPLEMENTACAO_BACKEND.md) |
+| Matriz de Progresso e Checklist de Implantação | [DOCUMENTO_PROGRESSO_BACKEND.md](./Backend/DOCUMENTO_PROGRESSO_BACKEND.md) |
+| Visão Geral da Feature no Catálogo de Features | [BACKEND_AUTENTICACAO_E_RESPOSTAS.md](./Features/BACKEND_AUTENTICACAO_E_RESPOSTAS.md) |
+
 ### Frontend — Testes, Cobertura e Code Smells (`docs/Frontend/COVERAGE AND TEST/`)
 
 | Tema | Documento |
@@ -138,15 +147,19 @@ As versões vivas constam em [frontend/package.json](../frontend/package.json), 
 
 ---
 
-## Backend (Coming Soon)
+## Backend & Persistência em Nuvem (V2)
 
-> **Status Atual:** **Coming Soon (Roadmap V2+)** — Não há backend, banco de dados ou API implementados neste repositório durante a V1.
+> **Status Atual:** **Fase 1 em Especificação e Implantação** — Arquitetura baseada no `SmartCoreHub.backend`, persistência PostgreSQL no Supabase com EF Core Code First & Migrations, isolamento no schema `kink_consent`, segurança BCrypt e emissão de JWT.
 
-Apesar de a V1 executar 100% no navegador, a arquitetura frontend já mantém prontos os pontos genéricos de extensão para integração futura:
+O ecossistema do backend divide-se em 3 fases:
+1. **Fase 1 (Atual):** API de Cadastro e Login do Usuário, senhas fortes com BCrypt, JWT Bearer e Refresh Token.
+2. **Fase 2 (Próxima):** Persistência do Report (respostas do checklist) em coluna nativa `jsonb` no PostgreSQL.
+3. **Fase 3:** Interface frontend (modais de autenticação e chave de autosave na nuvem no preenchimento).
 
-- **Schema Repository Abstraction:** `ISchemaRepository` e token `SCHEMA_REPOSITORY_TOKEN` (hoje servidos por `StaticJsonSchemaRepository`, substituíveis por provedor HTTP sem alterar a UI).
-- **Generic CRUD Layer:** `ICrudOperations`, `PageRequest`, `PageResult<T>`, `API_BASE_URL`, `BaseDataService`, `BaseCrudService`, `BaseCrudRepository` e `createCrudRepositoryToken`.
-- **Workspace Container Reservado:** o arquivo [.devcontainer/docker-compose.yml](../.devcontainer/docker-compose.yml) já declara `backend-container` marcado como *Roadmap V2+*, além da definição em [.devcontainer/backend/devcontainer.json](../.devcontainer/backend/devcontainer.json).
+Consulte os guias completos em [`docs/Backend/`](./Backend/):
+- [Documento Funcional](./Backend/DOCUMENTO_FUNCIONAL_AUTENTICACAO_E_SYNC.md)
+- [Documento de Implementação do Backend](./Backend/DOCUMENTO_IMPLEMENTACAO_BACKEND.md)
+- [Documento de Progresso](./Backend/DOCUMENTO_PROGRESSO_BACKEND.md)
 
 ---
 
