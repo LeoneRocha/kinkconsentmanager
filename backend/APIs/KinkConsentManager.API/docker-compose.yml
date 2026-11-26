@@ -1,0 +1,24 @@
+name: KinkConsentManagerAPIProject
+services:
+  kinkconsentmanager-api:
+    image: kinkconsentmanager-api:local
+    container_name: kinkconsentmanager-api
+    build:
+      context: ../..
+      dockerfile: APIs/KinkConsentManager.API/Dockerfile
+    ports:
+      - "8081:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
+      DatabaseProvider: ${DATABASE_PROVIDER:-PostgreSQL}
+      Database__SkipInitialization: ${DATABASE_SKIP_INITIALIZATION:-true}
+      ConnectionStrings__DefaultConnection: ${KINKCONSENT_CONNECTION_STRING:-}
+      TokenConfigurations__Secret: ${KINKCONSENT_TOKEN_SECRET:-KinkConsentManagerLocalDockerTestingSecretKeyOnlyForDev2026_1234567890}
+      APPLICATIONINSIGHTS_CONNECTION_STRING: ${APPLICATIONINSIGHTS_CONNECTION_STRING:-}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s

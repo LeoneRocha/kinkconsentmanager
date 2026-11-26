@@ -1,0 +1,9 @@
+bin/
+obj/
+data-protection-keys/
+logs/
+TestResults/
+coverage/
+*.user
+*.suo
+.vs/

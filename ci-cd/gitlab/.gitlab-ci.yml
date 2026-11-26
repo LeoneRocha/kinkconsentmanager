@@ -1,25 +1,28 @@
 # ==============================================================================
-# KinkConsentManager UI — Pipeline Multiestágio de CI/CD (GitLab CI/CD)
+# KinkConsentManager (Frontend + Backend) — Pipeline Multiestágio de CI/CD (GitLab CI/CD)
 # ==============================================================================
-# ESTADO ATUAL: DESATIVADO POR PADRÃO
+# ESTADO ATUAL: DESATIVADO POR PADRÃO (DOCKER FRONTEND E BACKEND DESATIVADOS)
 # - `PIPELINE_ENABLED: "false"` impede qualquer disparo automático.
 # - Para utilizar no GitLab, crie/referencie `.gitlab-ci.yml` na raiz apontando
 #   para este arquivo (`include: local: '/ci-cd/gitlab/.gitlab-ci.yml'`) e ajuste
 #   `PIPELINE_ENABLED: "true"` quando desejar ativar.
-# - Deploy em `production` exige execução manual (`when: manual`), branch única
-#   `main` e GitLab Protected Environment com aprovadores configurados.
+# - Os estágios Docker (`ENABLE_DOCKER_PUBLISH`, `ENABLE_BACKEND_DOCKER_PUBLISH`) e
+#   Deploy Azure (`ENABLE_AZURE_DEPLOY`) permanecem `"false"` por padrão.
 # ==============================================================================
 
 variables:
   PIPELINE_ENABLED: "false"
   ENABLE_SONARCLOUD: "true"
   ENABLE_DOCKER_PUBLISH: "false"
+  ENABLE_BACKEND_DOCKER_PUBLISH: "false"
   ENABLE_AZURE_DEPLOY: "false"
   FRONTEND_DIR: "frontend"
   DIST_BROWSER_DIR: "frontend/dist/kinkconsentmanager/browser"
+  BACKEND_DIR: "backend"
   AZURE_WEBAPP_NAME: "kinkconsentmanagerapp"
   AZURE_RESOURCE_GROUP: "kinkconsentmanagerrg"
   DOCKER_IMAGE: "leonecr/kinkconsentmanager-ui"
+  BACKEND_DOCKER_IMAGE: "leonecr/kinkconsentmanager-api"
   GIT_DEPTH: "0"
 
 workflow:
@@ -37,7 +40,7 @@ stages:
   - deploy_azure
 
 # ==============================================================================
-# ESTÁGIO 1 — Build Angular, Testes Jest, JUnit e Cobertura XML
+# ESTÁGIO 1A — Build Angular, Testes Jest, JUnit e Cobertura XML
 # ==============================================================================
 ci_build_and_test:
   stage: build_test
@@ -73,6 +76,40 @@ ci_build_and_test:
         path: frontend/coverage/cobertura-coverage.xml
 
 # ==============================================================================
+# ESTÁGIO 1B — Build Backend .NET 10, Testes NUnit & Cobertura XML
+# ==============================================================================
+ci_backend_build_and_test:
+  stage: build_test
+  image: mcr.microsoft.com/dotnet/sdk:10.0
+  variables:
+    NUGET_PACKAGES: "${CI_PROJECT_DIR}/backend/.nuget/packages"
+  cache:
+    key:
+      files:
+        - backend/Directory.Packages.props
+    paths:
+      - backend/.nuget/packages/
+  script:
+    - cd "$BACKEND_DIR"
+    - dotnet restore KinkConsentManager.sln
+    - dotnet build KinkConsentManager.sln -c Release --no-restore
+    - dotnet test KinkConsentManager.sln -c Release --no-build --logger "trx;LogFilePrefix=test-results" --results-directory TestResults --collect:"XPlat Code Coverage"
+    - test "$(find TestResults -name '*.trx' | wc -l)" -ge 1
+    - test "$(find TestResults -name 'coverage.cobertura.xml' | wc -l)" -ge 1
+    - dotnet publish APIs/KinkConsentManager.API/KinkConsentManager.API.csproj -c Release --no-build -o publish/api
+  artifacts:
+    when: always
+    expire_in: 14 days
+    paths:
+      - backend/publish/api/
+      - backend/TestResults/
+      - backend/APIs/KinkConsentManager.API/docker-compose.prod.yml
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: backend/TestResults/*/coverage.cobertura.xml
+
+# ==============================================================================
 # ESTÁGIO 2 — SonarCloud & Auditoria de Dependências
 # ==============================================================================
 ci_npm_audit:
@@ -104,7 +141,7 @@ ci_sonarcloud:
     - sonar-scanner -Dproject.settings=frontend/sonar-project.properties -Dsonar.host.url=https://sonarcloud.io -Dsonar.qualitygate.wait=true
 
 # ==============================================================================
-# ESTÁGIO 3 — CD: Build, Smoke Test & Push da Imagem Docker (separado)
+# ESTÁGIO 3A — CD Frontend: Build, Smoke Test & Push da Imagem Docker (desativado por padrão)
 # ==============================================================================
 cd_docker_build_push:
   stage: docker_image
@@ -126,6 +163,30 @@ cd_docker_build_push:
     - echo "$DOCKER_PASSWORD" | docker login "${DOCKER_REGISTRY:-docker.io}" -u "$DOCKER_USERNAME" --password-stdin
     - docker push "$DOCKER_IMAGE:$CI_COMMIT_SHORT_SHA"
     - docker push "$DOCKER_IMAGE:latest"
+
+# ==============================================================================
+# ESTÁGIO 3B — CD Backend: Build, Smoke Test & Push da Imagem Docker (desativado por padrão)
+# ==============================================================================
+cd_backend_docker_build_push:
+  stage: docker_image
+  image: docker:27-cli
+  services:
+    - docker:27-dind
+  needs:
+    - ci_backend_build_and_test
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main" && $ENABLE_BACKEND_DOCKER_PUBLISH == "true"'
+      when: on_success
+    - when: never
+  script:
+    - docker build -f backend/APIs/KinkConsentManager.API/Dockerfile -t "$BACKEND_DOCKER_IMAGE:$CI_COMMIT_SHORT_SHA" -t "$BACKEND_DOCKER_IMAGE:latest" backend
+    - docker run -d --name kcm-api-smoke -p 18081:8080 -e ASPNETCORE_ENVIRONMENT=Development -e DatabaseProvider=InMemory -e Database__SkipInitialization=true -e TokenConfigurations__Secret=KinkConsentManagerCiSmokeTestSecretKeyOnlyForValidation2026_1234567890 "$BACKEND_DOCKER_IMAGE:$CI_COMMIT_SHORT_SHA"
+    - sleep 5
+    - wget -q -O- http://docker:18081/health || wget -q -O- http://127.0.0.1:18081/health
+    - docker rm -f kcm-api-smoke
+    - echo "$DOCKER_PASSWORD" | docker login "${DOCKER_REGISTRY:-docker.io}" -u "$DOCKER_USERNAME" --password-stdin
+    - docker push "$BACKEND_DOCKER_IMAGE:$CI_COMMIT_SHORT_SHA"
+    - docker push "$BACKEND_DOCKER_IMAGE:latest"
 
 # ==============================================================================
 # ESTÁGIO 4 — CD: Deploy no Azure Web App Linux (Aprovação Manual + main)

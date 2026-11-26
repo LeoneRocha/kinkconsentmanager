@@ -1,8 +1,8 @@
-# CI/CD — KinkConsentManager UI
+# CI/CD — KinkConsentManager (Frontend + Backend)
 
-Esta pasta centraliza os pipelines e scripts de **Integração Contínua (CI)** e **Entrega/Implantação Contínua (CD)** do **KinkConsentManager UI**, padronizados a partir da referência `SmartCoreHub-UI.yml`, com suporte multi-plataforma e **desativados por padrão** até ativação explícita.
+Esta pasta centraliza os pipelines e scripts de **Integração Contínua (CI)** e **Entrega/Implantação Contínua (CD)** do **KinkConsentManager** (**Frontend Angular 22** + **Backend .NET 10**), padronizados a partir do `SmartCoreHub`, com os estágios de **Docker (Frontend e Backend) e Deploy Azure desativados por padrão** até habilitação explícita.
 
-> **Links relacionados:** [Guia Azure DevOps -> Azure](./GUIA_AZURE_DEVOPS_AZURE.md) · [Guia GitHub Actions -> Azure](./GUIA_GITHUB_ACTIONS_AZURE.md) · [Guia Publicação Manual Azure](./manualdeploy/GUIA_PUBLICACAO_MANUAL_AZURE.md) · [README da Documentação](../docs/README.md) · [Arquitetura](../docs/ARCHITECTURE.md) · [Diretrizes do Projeto](../docs/PROJECT_GUIDELINES.md) · [SonarCloud Config](../frontend/sonar-project.properties) · [Jest Config](../frontend/jest.config.js) · [Dockerfile](../frontend/Dockerfile)
+> **Links relacionados:** [Guia Azure DevOps -> Azure](./azure-devops/GUIA_AZURE_DEVOPS_AZURE.md) · [Guia GitHub Actions -> Azure](./github/GUIA_GITHUB_ACTIONS_AZURE.md) · [Guia Publicação Manual Azure](./manualdeploy/GUIA_PUBLICACAO_MANUAL_AZURE.md) · [README da Documentação](../docs/README.md) · [Arquitetura](../docs/ARCHITECTURE.md) · [Diretrizes do Projeto](../docs/PROJECT_GUIDELINES.md) · [SonarCloud Config](../frontend/sonar-project.properties) · [Jest Config](../frontend/jest.config.js) · [Dockerfile Frontend](../frontend/Dockerfile) · [Dockerfile Backend](../backend/APIs/KinkConsentManager.API/Dockerfile)
 
 ---
 
@@ -10,13 +10,13 @@ Esta pasta centraliza os pipelines e scripts de **Integração Contínua (CI)** 
 
 | Arquivo | Plataforma / Uso | Estado Padrão |
 | ------- | ---------------- | ------------- |
-| [`GUIA_AZURE_DEVOPS_AZURE.md`](./GUIA_AZURE_DEVOPS_AZURE.md) | Passo a passo completo para Azure DevOps Pipelines (projeto público vs. privado + repositório privado, OIDC, Service Connections, Variable Group e Environment `production`) | Guia de referência |
-| [`GUIA_GITHUB_ACTIONS_AZURE.md`](./GUIA_GITHUB_ACTIONS_AZURE.md) | Passo a passo completo de OIDC, Secrets, Environment `production`, SonarCloud e Deploy Azure no GitHub Actions | Guia de referência |
+| [`GUIA_AZURE_DEVOPS_AZURE.md`](./azure-devops/GUIA_AZURE_DEVOPS_AZURE.md) | Passo a passo completo para Azure DevOps Pipelines (projeto público vs. privado + repositório privado, OIDC, Service Connections, Variable Group e Environment `production`) | Guia de referência |
+| [`GUIA_GITHUB_ACTIONS_AZURE.md`](./github/GUIA_GITHUB_ACTIONS_AZURE.md) | Passo a passo completo de OIDC, Secrets, Environment `production`, SonarCloud e Deploy Azure no GitHub Actions | Guia de referência |
 | [`manualdeploy/GUIA_PUBLICACAO_MANUAL_AZURE.md`](./manualdeploy/GUIA_PUBLICACAO_MANUAL_AZURE.md) | Passo a passo de build, ZIP, deploy manual no Azure Portal/CLI, diagnóstico de `default-static-site.js` / `oryx-manifest.toml` e Plano B Node 26 | Guia de referência |
-| [`azure-devops/azure-pipelines.yml`](./azure-devops/azure-pipelines.yml) | Azure DevOps Pipelines (`CI_Build_Quality` -> `CD_Docker_Image` / `CD_Deploy_Azure`) | **Desativado** (`trigger: none`, `pr: none`, parâmetros CD `false`) |
-| [`github/kinkconsentmanager-ci-cd.yml`](./github/kinkconsentmanager-ci-cd.yml) | GitHub Actions (`ci_build_quality` -> `cd_docker_image` / `cd_deploy_azure`) | **Desativado para CI automático** (`workflow_dispatch` manual; fora de `.github/workflows/`) |
-| [`gitlab/.gitlab-ci.yml`](./gitlab/.gitlab-ci.yml) | GitLab CI/CD (JUnit + Cobertura + Sonar + Docker + Azure manual) | **Desativado** (`PIPELINE_ENABLED: "false"`) |
-| [`scripts/ci-build-test.sh`](./scripts/ci-build-test.sh) | Script Bash portável (Jenkins, Bitbucket, CircleCI, TeamCity ou execução local) | Sob demanda |
+| [`azure-devops/azure-pipelines.yml`](./azure-devops/azure-pipelines.yml) | Azure DevOps Pipelines (`CI_Build_Quality` Frontend + Backend -> `CD_Docker_Image` / `CD_Docker_Image_Backend` / `CD_Deploy_Azure`) | **CI ativo em `main`; Docker Frontend/Backend e Deploy `false`** |
+| [`github/kinkconsentmanager-ci-cd.yml`](./github/kinkconsentmanager-ci-cd.yml) | GitHub Actions (`ci_build_quality` + `ci_backend_build_test` -> `cd_docker_image` / `cd_backend_docker_image` / `cd_deploy_azure`) | **CI automático comentado (`workflow_dispatch`); Docker Frontend/Backend `false`** |
+| [`gitlab/.gitlab-ci.yml`](./gitlab/.gitlab-ci.yml) | GitLab CI/CD (Frontend + Backend .NET 10 + Cobertura + Sonar + Docker Frontend/Backend desativados + Azure manual) | **Desativado** (`PIPELINE_ENABLED: "false"`) |
+| [`scripts/ci-build-test.sh`](./scripts/ci-build-test.sh) | Script Bash portável para Frontend e Backend (`RUN_BACKEND_DOCKER=false` por padrão) | Sob demanda |
 
 ---
 
@@ -32,21 +32,25 @@ Baseado no App Service provisionado e nos arquivos de container em [`frontend/`]
 | **Runtime Azure** | `NODE\|24-lts` (alinhado ao `node:24-alpine` do [`Dockerfile`](../frontend/Dockerfile)) |
 | **Comando de Startup SPA (Azure Linux)** | `pm2 serve /home/site/wwwroot --no-daemon --spa` |
 | **Pacote de Deploy SPA** | Conteúdo direto de `frontend/dist/kinkconsentmanager/browser/` (sem subpasta raiz no `.zip`) |
-| **Imagem Docker** | `leonecr/kinkconsentmanager-ui` (Nginx na porta `80`, healthcheck `/health`, Compose [`dockercompose.prod.yml`](../frontend/dockercompose.prod.yml)) |
+| **Imagem Docker (Frontend)** | `leonecr/kinkconsentmanager-ui` (Nginx na porta `80`, healthcheck `/health`, Compose [`dockercompose.prod.yml`](../frontend/dockercompose.prod.yml) — CD desativado por padrão) |
+| **Runtime & Solution Backend** | `.NET 10` (`net10.0`, SDK `10.0.x`), [`KinkConsentManager.sln`](../backend/KinkConsentManager.sln) (4 projetos: `API`, `API.Tests`, `Core`, `Core.Tests`) |
+| **Imagem Docker (Backend)** | `leonecr/kinkconsentmanager-api` (ASP.NET Core 10 na porta `8080`, healthcheck `/health`, Compose [`docker-compose.prod.yml`](../backend/APIs/KinkConsentManager.API/docker-compose.prod.yml) — **CD desativado por padrão**) |
 | **Projeto SonarCloud** | `sonar.projectKey=lionscorp_kinkconsentmanager-ui` · `sonar.organization=lionscorp` ([`sonar-project.properties`](../frontend/sonar-project.properties)) |
 
 ---
 
 ## Coleta de Testes Unitários, Cobertura e SonarCloud
 
-O arquivo [`frontend/jest.config.js`](../frontend/jest.config.js) está configurado para gerar, em uma única execução (`npm run test:ci`), todos os formatos exigidos pelos pipelines:
+O arquivo [`frontend/jest.config.js`](../frontend/jest.config.js) (Frontend) e a solution [`backend/KinkConsentManager.sln`](../backend/KinkConsentManager.sln) (Backend NUnit + Coverlet) geram os relatórios exigidos pelos pipelines:
 
-| Formato | Arquivo Gerado | Consumidor |
-| ------- | -------------- | ---------- |
-| **JUnit XML** | `frontend/coverage/junit/test-results.xml` | `PublishTestResults@2` (Azure DevOps), `dorny/test-reporter@v1` (GitHub), GitLab `reports.junit` |
-| **Cobertura XML** | `frontend/coverage/cobertura-coverage.xml` | `ReportGenerator@5` e `PublishCodeCoverageResults@2` (Azure DevOps), GitLab `coverage_report` |
-| **LCOV** | `frontend/coverage/lcov.info` | SonarCloud (`sonar.typescript.lcov.reportPaths` / `sonar.javascript.lcov.reportPaths`) |
-| **Sonar Test Execution** | `frontend/coverage/sonar/sonar-report.xml` | SonarCloud (`sonar.testExecutionReportPaths`) |
+| Stack | Formato | Arquivo Gerado | Consumidor |
+| ----- | ------- | -------------- | ---------- |
+| **Frontend** | **JUnit XML** | `frontend/coverage/junit/test-results.xml` | `PublishTestResults@2` (Azure DevOps), `dorny/test-reporter@v1` (GitHub), GitLab `reports.junit` |
+| **Frontend** | **Cobertura XML** | `frontend/coverage/cobertura-coverage.xml` | `ReportGenerator@5` e `PublishCodeCoverageResults@2` (Azure DevOps), GitLab `coverage_report` |
+| **Frontend** | **LCOV** | `frontend/coverage/lcov.info` | SonarCloud (`sonar.typescript.lcov.reportPaths` / `sonar.javascript.lcov.reportPaths`) |
+| **Frontend** | **Sonar Test Execution** | `frontend/coverage/sonar/sonar-report.xml` | SonarCloud (`sonar.testExecutionReportPaths`) |
+| **Backend** | **TRX (VSTest)** | `backend/TestResults/**/test-results*.trx` | `PublishTestResults@2` (Azure DevOps `VSTest`), `dorny/test-reporter@v1` (`dotnet-trx` no GitHub) |
+| **Backend** | **Cobertura XML** | `backend/TestResults/**/coverage.cobertura.xml` | `ReportGenerator@5` + `PublishCodeCoverageResults@2` (Azure DevOps), GitLab `coverage_report` |
 
 > **Observação técnica:** A referência `SmartCoreHub-UI.yml` passava `test-results.xml` (JUnit) para o `ReportGenerator@5`. Aqui o fluxo foi corrigido para usar `frontend/coverage/cobertura-coverage.xml`, garantindo exibição completa de cobertura por linha e branch no Azure DevOps e GitLab.
 
@@ -90,6 +94,7 @@ Nenhum GUID de assinatura, Client ID, Tenant ID ou token foi fixado nos arquivos
   - `snykServiceConnection` (opcional, se `enableSnykScan=true`)
   - `dockerRegistryServiceConnection` (Service Connection Docker Hub / ACR)
   - `dockerImageRepository` (`leonecr/kinkconsentmanager-ui`)
+  - `backendDockerImageRepository` (`leonecr/kinkconsentmanager-api` — usado apenas se `enableBackendDockerPublish=true`)
   - `azureServiceConnection` (Azure Resource Manager Service Connection com acesso ao RG `kinkconsentmanagerrg`)
   - `azureWebAppName` (`kinkconsentmanagerapp`)
   - `AZURE_WEBAPP_URL` (URL pública do Web App para smoke test pós-deploy)
@@ -98,20 +103,15 @@ Nenhum GUID de assinatura, Client ID, Tenant ID ou token foi fixado nos arquivos
 - **Repository / Environment (`production`) Secrets:**
   - `SONAR_TOKEN`
   - `SNYK_TOKEN` *(opcional)*
-  - `DOCKER_USERNAME` e `DOCKER_PASSWORD` *(quando `run_docker_publish=true`)*
+  - `DOCKER_USERNAME` e `DOCKER_PASSWORD` *(quando `run_docker_publish=true` ou `run_backend_docker_publish=true`)*
   - `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID` *(OIDC Federated Credentials no Azure AD / Entra ID para o Environment `production`)*
 - **Repository / Environment Variables (`vars`):**
   - `AZURE_WEBAPP_NAME` (padrão `kinkconsentmanagerapp`)
   - `AZURE_WEBAPP_URL` (URL completa `https://...azurewebsites.net`)
-  - `DOCKER_REGISTRY` (padrão `docker.io`) e `DOCKER_IMAGE` (padrão `leonecr/kinkconsentmanager-ui`)
+  - `DOCKER_REGISTRY` (padrão `docker.io`), `DOCKER_IMAGE` (padrão `leonecr/kinkconsentmanager-ui`) e `BACKEND_DOCKER_IMAGE` (padrão `leonecr/kinkconsentmanager-api`)
 
 ---
 
-## Atenção: Workflow QuickDeploy Existente em `.github/workflows/`
+## Sincronização em `.github/workflows/`
 
-O repositório já possui o arquivo [`.github/workflows/main_kinkconsentmanagerapp.yml`](../.github/workflows/main_kinkconsentmanagerapp.yml), gerado automaticamente pelo **Azure Portal QuickDeploy**. Note que ele:
-1. Dispara automaticamente a cada push em `main`;
-2. Tenta rodar `npm install` na raiz do repositório em vez de `frontend/`;
-3. Contém identificadores OIDC diretamente no YAML em vez de usar `${{ secrets.* }}`.
-
-**Recomendação:** Ao ativar o novo pipeline [`github/kinkconsentmanager-ci-cd.yml`](./github/kinkconsentmanager-ci-cd.yml) movendo-o para `.github/workflows/`, migre os dados OIDC para GitHub Secrets e remova ou desative `main_kinkconsentmanagerapp.yml` para evitar conflitos e falhas de build na raiz.
+O workflow [`github/kinkconsentmanager-ci-cd.yml`](./github/kinkconsentmanager-ci-cd.yml) encontra-se espelhado em [`.github/workflows/kinkconsentmanager-ci-cd.yml`](../.github/workflows/kinkconsentmanager-ci-cd.yml) com disparo apenas manual (`workflow_dispatch`). Caso seja adicionado no futuro um workflow gerado pelo Azure Portal QuickDeploy (`main_kinkconsentmanagerapp.yml`), remova-o ou desative-o para evitar conflitos de execução na raiz.

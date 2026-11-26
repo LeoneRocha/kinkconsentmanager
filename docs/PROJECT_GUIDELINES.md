@@ -140,7 +140,7 @@ kinkconsentmanager/
 
 ## 3. Backend (Arquitetura `SmartCoreHub\backend` + `SmartCoreHub.Core.SDK` + Supabase EF Core — V2)
 
-> **Status Atual:** **Fase 1 em Especificação e Planejamento** — Aprovada a adoção fiel da arquitetura de `C:\git\SmartCoreHub\backend` com consumo direto do NuGet [`SmartCoreHub.Core.SDK`](https://www.nuget.org/packages/SmartCoreHub.Core.SDK), runtime **.NET 10 (`net10.0`)** e persistência PostgreSQL no **Supabase** via **Entity Framework Core 9** (`Npgsql.EntityFrameworkCore.PostgreSQL` `9.0.4`, compatível com o SDK).
+> **Status Atual:** **Fase 1 Implementada (Aguardando `dotnet ef database update` com Credenciais Supabase)** — Estrutura em **4 projetos** alinhada aos padrões de `C:\git\SmartCoreHub\backend` com consumo direto do NuGet [`SmartCoreHub.Core.SDK`](https://www.nuget.org/packages/SmartCoreHub.Core.SDK) (`20261120.2351.0`), runtime **.NET 10 (`net10.0`)** e persistência PostgreSQL no **Supabase** via **Entity Framework Core 9** (`Npgsql.EntityFrameworkCore.PostgreSQL` `9.0.4`). Build Release com `0` warnings/`0` erros, **`131/131` testes aprovados** (`112` em `Core.Tests` + `19` em `API.Tests`) e migration inicial `20261126193756_InitialCreateAuth.cs` gerada no schema `kink_consent`.
 > 
 > Documentação técnica detalhada disponível em [`docs/Backend/`](./Backend/):
 > - [Documento Funcional de Autenticação e Sync](./Backend/DOCUMENTO_FUNCIONAL_AUTENTICACAO_E_SYNC.md)
@@ -149,7 +149,7 @@ kinkconsentmanager/
 
 ### 3.1 Princípios Arquiteturais e Reaproveitamento do `SmartCoreHub.Core.SDK`
 
-- **Estrutura de Pastas Espelho (`backend/`):** `APIs/` (`KinkConsentManager.API` + `*.Tests`) e `Implementations/` (`KinkConsentManager.Domain`, `KinkConsentManager.Infrastructure`, `KinkConsentManager.Service` + respectivos `*.Tests`), governados por `global.json`, `Directory.Build.props`, `Directory.Packages.props` (Central Package Management) e `build/TestAssertions.props` (`NUnit 4` + `Moq` + `AwesomeAssertions`).
+- **Estrutura de Pastas Espelho (`backend/`):** **4 projetos** unificados: `APIs/` (`KinkConsentManager.API` + `KinkConsentManager.API.Tests`) e `Core/` (`KinkConsentManager.Core` organizado nas pastas `Domain/`, `Infrastructure/`, `Service/` + `KinkConsentManager.Core.Tests`), governados por `global.json`, `Directory.Build.props`, `Directory.Packages.props` (Central Package Management) e `build/TestAssertions.props` (`NUnit 4` + `Moq` + `AwesomeAssertions`).
 - **Consumo Obrigatório do `SmartCoreHub.Core.SDK` (Zero Duplicação):**
   - Entidades herdam `LongEntityBase` (`long Id`, `CreatedAt`, `UpdatedAt`, `IsActive`) e utilizam o Value Object `Email` do SDK;
   - Contratos e respostas utilizam `ServiceResponse<T>`, `ErrorResponse`, `LoginDto`, `RefreshTokenDto` e `PasswordVerificationInput` do SDK;

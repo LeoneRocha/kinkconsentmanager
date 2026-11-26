@@ -1,19 +1,19 @@
 # ==============================================================================
-# KinkConsentManager UI — Pipeline Multiestágio de CI/CD (GitHub Actions)
+# KinkConsentManager (Frontend + Backend) — Pipeline Multiestágio de CI/CD (GitHub Actions)
 # ==============================================================================
-# ESTADO ATUAL: DESATIVADO PARA EXECUÇÕES AUTOMÁTICAS
-# - Mantido fora de `.github/workflows/` e configurado apenas com
-#   `workflow_dispatch` (execução manual) para não disparar automaticamente.
-# - Os estágios de CD exigem flag explícita (`true`), execução na branch `main`
-#   e aprovação humana configurada no Environment `production` do GitHub.
+# ESTADO ATUAL: DESATIVADO PARA EXECUÇÕES AUTOMÁTICAS (CD / DOCKER DESATIVADOS POR PADRÃO)
+# - Mantido em `ci-cd/github/` e espelhado em `.github/workflows/`, configurado
+#   com `workflow_dispatch` (execução manual).
+# - Os estágios de CD (Docker Frontend, Docker Backend e Azure Deploy) exigem flag
+#   explícita (`true`), execução na branch `main` e aprovação humana configurada
+#   no Environment `production` do GitHub.
 #
 # ATENÇÃO SOBRE WORKFLOW EXISTENTE:
-# - Já existe `.github/workflows/main_kinkconsentmanagerapp.yml` gerado pelo
-#   Azure QuickDeploy. Antes de ativar este workflow em `.github/workflows/`,
-#   revise ou substitua o workflow antigo para evitar deploys duplicados.
+# - Caso exista `.github/workflows/main_kinkconsentmanagerapp.yml` gerado pelo
+#   Azure QuickDeploy, revise ou substitua-o para evitar deploys duplicados.
 #
 # COMO ATIVAR NO FUTURO:
-# 1. Copie este arquivo para `.github/workflows/kinkconsentmanager-ci-cd.yml`.
+# 1. Mantenha este arquivo sincronizado com `.github/workflows/kinkconsentmanager-ci-cd.yml`.
 # 2. Configure Secrets/Variables e o Environment `production` no repositório
 #    com "Required reviewers" e "Deployment branches -> main" (ver `ci-cd/README.md`).
 # 3. Quando desejar CI automático, descomente os blocos `push` e `pull_request`.
@@ -30,7 +30,12 @@ on:
         required: true
         default: true
       run_docker_publish:
-        description: 'Executar estágio CD — Build & Push da imagem Docker (somente main)'
+        description: 'Executar estágio CD — Build & Push da imagem Docker Frontend (somente main)'
+        type: boolean
+        required: false
+        default: false
+      run_backend_docker_publish:
+        description: 'Executar estágio CD — Build & Push da imagem Docker Backend (somente main)'
         type: boolean
         required: false
         default: false
@@ -45,12 +50,14 @@ on:
   #   branches: [ main ]
   #   paths:
   #     - 'frontend/**'
+  #     - 'backend/**'
   #     - 'ci-cd/**'
   #     - '.github/workflows/kinkconsentmanager-ci-cd.yml'
   # pull_request:
   #   branches: [ main ]
   #   paths:
   #     - 'frontend/**'
+  #     - 'backend/**'
 
 permissions:
   contents: read
@@ -61,15 +68,19 @@ concurrency:
 
 env:
   NODE_VERSION: '24'
+  DOTNET_VERSION: '10.0.x'
   FRONTEND_DIR: 'frontend'
   DIST_BROWSER_DIR: 'frontend/dist/kinkconsentmanager/browser'
+  BACKEND_DIR: 'backend'
+  BACKEND_SLN: 'backend/KinkConsentManager.sln'
+  BACKEND_API_PROJECT: 'backend/APIs/KinkConsentManager.API/KinkConsentManager.API.csproj'
 
 jobs:
   # ============================================================================
-  # ESTÁGIO 1 — CI: Build, Segurança, Testes Jest, Cobertura e SonarCloud
+  # ESTÁGIO 1A — CI Frontend: Build, Segurança, Testes Jest, Cobertura e SonarCloud
   # ============================================================================
   ci_build_quality:
-    name: 'CI — Build, Testes, Cobertura & SonarCloud'
+    name: 'CI Frontend — Build, Testes, Cobertura & SonarCloud'
     runs-on: ubuntu-latest
     env:
       SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
@@ -176,10 +187,86 @@ jobs:
           retention-days: 14
 
   # ============================================================================
-  # ESTÁGIO 2 — CD: Build, Smoke Test e Push da Imagem Docker (separado)
+  # ESTÁGIO 1B — CI Backend: Build .NET 10, Testes NUnit & Cobertura
+  # ============================================================================
+  ci_backend_build_test:
+    name: 'CI Backend — Build, Testes NUnit & Cobertura'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout completo do repositório
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configurar .NET SDK ${{ env.DOTNET_VERSION }} com cache NuGet
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+          cache: true
+          cache-dependency-path: 'backend/Directory.Packages.props'
+
+      - name: Restore da Solution Backend (KinkConsentManager.sln)
+        run: dotnet restore "${{ env.BACKEND_SLN }}"
+
+      - name: Build Release da Solution Backend
+        run: dotnet build "${{ env.BACKEND_SLN }}" -c Release --no-restore
+
+      - name: Executar testes NUnit e cobertura do Backend
+        run: |
+          dotnet test "${{ env.BACKEND_SLN }}" -c Release --no-build \
+            --logger "trx;LogFilePrefix=test-results" \
+            --results-directory "${{ env.BACKEND_DIR }}/TestResults" \
+            --collect:"XPlat Code Coverage"
+
+      - name: Validar relatórios TRX e Cobertura XML gerados
+        run: |
+          set -euo pipefail
+          TRX_COUNT=$(find "${{ env.BACKEND_DIR }}/TestResults" -name '*.trx' | wc -l)
+          COV_COUNT=$(find "${{ env.BACKEND_DIR }}/TestResults" -name 'coverage.cobertura.xml' | wc -l)
+          echo "Arquivos TRX: ${TRX_COUNT} | Arquivos Cobertura: ${COV_COUNT}"
+          test "${TRX_COUNT}" -ge 1
+          test "${COV_COUNT}" -ge 1
+
+      - name: Publicar resumo de testes NUnit (TRX) no PR / Workflow
+        if: always()
+        uses: dorny/test-reporter@v1
+        with:
+          name: NUnit Tests (KinkConsentManager Backend)
+          path: backend/TestResults/**/*.trx
+          reporter: dotnet-trx
+          fail-on-error: true
+
+      - name: Publish Release da API Backend
+        run: dotnet publish "${{ env.BACKEND_API_PROJECT }}" -c Release --no-build -o "${{ env.BACKEND_DIR }}/publish/api"
+
+      - name: Upload do artefato publicado da API Backend (backend-api-dist)
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-api-dist
+          path: backend/publish/api/
+          retention-days: 14
+
+      - name: Upload dos relatórios de testes e cobertura do Backend
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-coverage-reports
+          path: backend/TestResults/
+          retention-days: 14
+
+      - name: Upload de docker-compose.prod.yml do Backend
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-docker-compose-prod
+          path: backend/APIs/KinkConsentManager.API/docker-compose.prod.yml
+          retention-days: 14
+
+  # ============================================================================
+  # ESTÁGIO 2A — CD Frontend: Build, Smoke Test e Push da Imagem Docker (desativado por padrão)
   # ============================================================================
   cd_docker_image:
-    name: 'CD — Build, Smoke Test & Push Docker Image'
+    name: 'CD Frontend — Build, Smoke Test & Push Docker Image'
     needs: ci_build_quality
     if: ${{ github.ref == 'refs/heads/main' && inputs.run_docker_publish == true }}
     runs-on: ubuntu-latest
@@ -227,6 +314,69 @@ jobs:
             ${{ vars.DOCKER_IMAGE || 'leonecr/kinkconsentmanager-ui' }}:${{ github.sha }}
             ${{ vars.DOCKER_IMAGE || 'leonecr/kinkconsentmanager-ui' }}:latest
           build-args: BUILD_ID=${{ github.run_number }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # ============================================================================
+  # ESTÁGIO 2B — CD Backend: Build, Smoke Test e Push da Imagem Docker (desativado por padrão)
+  # ============================================================================
+  cd_backend_docker_image:
+    name: 'CD Backend — Build, Smoke Test & Push Docker Image'
+    needs: ci_backend_build_test
+    if: ${{ github.ref == 'refs/heads/main' && inputs.run_backend_docker_publish == true }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Configurar Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build local da imagem Docker Backend para smoke test
+        uses: docker/build-push-action@v6
+        with:
+          context: backend
+          file: backend/APIs/KinkConsentManager.API/Dockerfile
+          load: true
+          tags: ${{ vars.BACKEND_DOCKER_IMAGE || 'leonecr/kinkconsentmanager-api' }}:smoke
+
+      - name: Smoke test do container Backend (/health)
+        run: |
+          set -euo pipefail
+          IMAGE="${{ vars.BACKEND_DOCKER_IMAGE || 'leonecr/kinkconsentmanager-api' }}:smoke"
+          docker run -d --name kcm-api-smoke -p 18081:8080 \
+            -e ASPNETCORE_ENVIRONMENT=Development \
+            -e DatabaseProvider=InMemory \
+            -e Database__SkipInitialization=true \
+            -e TokenConfigurations__Secret=KinkConsentManagerCiSmokeTestSecretKeyOnlyForValidation2026_1234567890 \
+            "$IMAGE"
+          trap 'docker rm -f kcm-api-smoke >/dev/null 2>&1 || true' EXIT
+          for attempt in $(seq 1 15); do
+            if curl -fsS http://127.0.0.1:18081/health; then
+              exit 0
+            fi
+            sleep 2
+          done
+          docker logs kcm-api-smoke || true
+          exit 1
+
+      - name: Login no Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ vars.DOCKER_REGISTRY || 'docker.io' }}
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build e Push da imagem Docker Backend (tag SHA + latest)
+        uses: docker/build-push-action@v6
+        with:
+          context: backend
+          file: backend/APIs/KinkConsentManager.API/Dockerfile
+          push: true
+          tags: |
+            ${{ vars.BACKEND_DOCKER_IMAGE || 'leonecr/kinkconsentmanager-api' }}:${{ github.sha }}
+            ${{ vars.BACKEND_DOCKER_IMAGE || 'leonecr/kinkconsentmanager-api' }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 

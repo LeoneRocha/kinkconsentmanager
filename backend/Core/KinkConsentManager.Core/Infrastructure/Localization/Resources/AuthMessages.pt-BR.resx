@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Auth.UserRegistered" xml:space="preserve">
+    <value>Usuário cadastrado com sucesso.</value>
+  </data>
+  <data name="Auth.LoginSuccessful" xml:space="preserve">
+    <value>Login realizado com sucesso.</value>
+  </data>
+  <data name="Auth.TokenRefreshed" xml:space="preserve">
+    <value>Sessão renovada com sucesso.</value>
+  </data>
+  <data name="Auth.LogoutSuccessful" xml:space="preserve">
+    <value>Logout realizado com sucesso.</value>
+  </data>
+  <data name="Auth.CurrentUserRetrieved" xml:space="preserve">
+    <value>Perfil do usuário autenticado obtido com sucesso.</value>
+  </data>
+  <data name="Auth.InvalidCredentials" xml:space="preserve">
+    <value>Credenciais de acesso inválidas.</value>
+  </data>
+  <data name="Auth.UserInactive" xml:space="preserve">
+    <value>A conta do usuário está inativa.</value>
+  </data>
+  <data name="Auth.InvalidRefreshToken" xml:space="preserve">
+    <value>O refresh token é inválido ou expirou.</value>
+  </data>
+  <data name="Auth.RefreshTokenReused" xml:space="preserve">
+    <value>Reutilização de refresh token detectada. Todas as sessões ativas foram revogadas.</value>
+  </data>
+  <data name="Auth.LoginAlreadyExists" xml:space="preserve">
+    <value>Este login já está em uso.</value>
+  </data>
+  <data name="Auth.EmailAlreadyExists" xml:space="preserve">
+    <value>Este e-mail já está em uso.</value>
+  </data>
+</root>

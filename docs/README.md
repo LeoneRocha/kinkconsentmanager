@@ -149,7 +149,7 @@ As versões vivas constam em [frontend/package.json](../frontend/package.json), 
 
 ## Backend & Persistência em Nuvem (V2)
 
-> **Status Atual:** **Fase 1 Especificada e Planejada** — Arquitetura espelhada em `C:\git\SmartCoreHub\backend` (`APIs/` + `Implementations/` + CPM) com reaproveitamento direto do NuGet [`SmartCoreHub.Core.SDK`](https://www.nuget.org/packages/SmartCoreHub.Core.SDK), **.NET 10**, **EF Core 9 (`Npgsql.EntityFrameworkCore.PostgreSQL` `9.0.4`)** no **Supabase**, isolamento total no schema `kink_consent`, segurança BCrypt (`PasswordHasherFactory`) e JWT `HS512` (`TokenConfigurations`).
+> **Status Atual:** **Fase 1 Implementada (131/131 Testes Aprovados · Aguardando Credenciais Supabase para `database update`)** — Topologia de **4 projetos** (`APIs/` + `Core/` com pastas `Domain/`, `Infrastructure/`, `Service/` + CPM) seguindo `C:\git\SmartCoreHub\backend` com reaproveitamento direto do NuGet [`SmartCoreHub.Core.SDK`](https://www.nuget.org/packages/SmartCoreHub.Core.SDK) (`20261120.2351.0`), **.NET 10**, **EF Core 9 (`Npgsql.EntityFrameworkCore.PostgreSQL` `9.0.4`)** no **Supabase**, isolamento total no schema `kink_consent` (`InitialCreateAuth`), segurança BCrypt (`PasswordHasherFactory`) e JWT `HS512` (`TokenConfigurations`).
 
 O ecossistema do backend divide-se em 3 fases:
 1. **Fase 1 (Escopo Imediato):** API de Cadastro e Login do Usuário (`LongEntityBase`, `Email` VO, `ServiceResponse<T>` e `JwtAccessTokenService` via `SmartCoreHub.Core.SDK`), senhas fortes com BCrypt, JWT `HS512` e Refresh Token com rotação + detecção de reúso.

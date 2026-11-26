@@ -2,8 +2,8 @@
 
 **Projeto:** KinkConsentManager  
 **Documento:** Especificação Técnica Completa da Arquitetura, Padrões, Código de Referência, Contratos e Setup do Backend  
-**Arquitetura Espelho:** `C:\git\SmartCoreHub\backend` (`APIs/` + `Implementations/` + `build/` + CPM)  
-**SDK Central Reaproveitado:** [`SmartCoreHub.Core.SDK`](https://www.nuget.org/packages/SmartCoreHub.Core.SDK) (NuGet oficial)  
+**Arquitetura Espelho:** `C:\git\SmartCoreHub\backend` (`APIs/` + `Core/` em 4 projetos + `build/` + CPM)  
+**SDK Central Reaproveitado:** [`SmartCoreHub.Core.SDK`](https://www.nuget.org/packages/SmartCoreHub.Core.SDK) (`20261120.2351.0` — NuGet oficial)  
 **Banco de Dados & ORM:** Supabase (PostgreSQL 16) + Entity Framework Core 9 (`Npgsql.EntityFrameworkCore.PostgreSQL` `9.0.4`)  
 **Runtime Alvo:** .NET 10 (`net10.0`, SDK `10.0.300`)  
 **Versão:** 2.0 (Revisão Alinhada ao `SmartCoreHub.Core.SDK`)  
@@ -25,42 +25,43 @@
 
 ---
 
-## 1. Arquitetura Espelhada do `SmartCoreHub\backend`
+## 1. Arquitetura Espelhada do `SmartCoreHub\backend` (Topologia Unificada em 4 Projetos)
 
-O backend do **KinkConsentManager** replica fielmente a organização física e lógica do projeto `C:\git\SmartCoreHub\backend`, com uma diferença fundamental e estratégica: **não existe pasta `Core/` local** — todas as primitivas genéricas, abstrações, adapters e infraestrutura transversal são consumidas diretamente via pacote NuGet **`SmartCoreHub.Core.SDK`**.
+O backend do **KinkConsentManager** replica fielmente os padrões lógicos, contratos, segurança, CQRS e CPM de `C:\git\SmartCoreHub\backend`, consolidando as camadas de negócio em um único **`KinkConsentManager.Core`** dividido por pastas (`Domain/`, `Infrastructure/`, `Service/`) — totalizando **4 projetos** na solution — onde a pasta `Core/` abriga exclusivamente o código do produto (`KinkConsentManager.Core`), sem duplicar o **`SmartCoreHub.Core.SDK`** (`20261120.2351.0`), consumido diretamente via NuGet para todas as primitivas genéricas, abstrações, adapters e infraestrutura transversal.
 
 ```text
 backend/
-├── global.json                                      # Pinagem do .NET SDK (10.0.300, rollForward: latestFeature)
-├── Directory.Build.props                            # TargetFramework=net10.0, LangVersion=latest, Nullable, ImplicitUsings, Import TestAssertions
-├── Directory.Packages.props                         # Central Package Management (CPM) idêntico ao SmartCoreHub
-├── KinkConsentManager.sln                           # Solution unificada
+├── global.json                                           # Pinagem do .NET SDK (10.0.300, rollForward: latestFeature)
+├── Directory.Build.props                                 # TargetFramework=net10.0, LangVersion=latest, Nullable, ImplicitUsings, TreatWarningsAsErrors, Import TestAssertions
+├── Directory.Packages.props                              # Central Package Management (CPM) alinhado ao SmartCoreHub
+├── KinkConsentManager.sln                                # Solution unificada (4 projetos)
 ├── build/
-│   └── TestAssertions.props                         # Switch único para AwesomeAssertions + Coverlet MSBuild nos projetos *.Tests
+│   └── TestAssertions.props                              # Switch único para AwesomeAssertions + Coverlet MSBuild nos projetos *.Tests
 ├── APIs/
-│   ├── KinkConsentManager.API/                      # Host ASP.NET Core 10, Program.cs, AuthController, appsettings*.json
-│   └── KinkConsentManager.API.Tests/                # Testes de controllers e integração HTTP (WebApplicationFactory + Testcontainers)
-└── Implementations/
-    ├── KinkConsentManager.Domain/                   # Entidades (LongEntityBase), DTOs específicos, MessageKeys, Validators, Contratos
-    ├── KinkConsentManager.Domain.Tests/             # Testes NUnit + AwesomeAssertions de validadores e regras de domínio
-    ├── KinkConsentManager.Infrastructure/           # DbContext, Subclasse PostgreSql, DbScope, Configurations, Repositories, Migrations
-    ├── KinkConsentManager.Infrastructure.Tests/     # Testes de DbContext, Configurations, Repositories e EF Migrations
-    ├── KinkConsentManager.Service/                  # Services, CQRS Handlers, JwtTokenService, Composição DI (WebApplicationBuilderServicesConfigure)
-    └── KinkConsentManager.Service.Tests/            # Testes de serviços, handlers CQRS, DI circular check e geração JWT
+│   ├── KinkConsentManager.API/                           # Host ASP.NET Core 10, Program.cs, Controllers/V1/AuthController.cs, appsettings*.json
+│   └── KinkConsentManager.API.Tests/                     # Testes unitários de controllers e integração HTTP (CustomWebApplicationFactory + EF Core InMemory)
+└── Core/
+    ├── KinkConsentManager.Core/                       # Projeto único da aplicação separado por pastas arquiteturais:
+    │   ├── Domain/                                       # Entidades (LongEntityBase), DTOs, MessageKeys, Validators, Contratos
+    │   ├── Infrastructure/                               # DbContext, PostgreSql, DbScope, Configurations, Repositories, .resx, Migrations/PostgreSql
+    │   └── Service/                                      # Services, CQRS Handlers, JwtTokenService, ValidationMessageService, Composição DI
+    └── KinkConsentManager.Core.Tests/                 # Testes NUnit + AwesomeAssertions + Moq + Bogus (Domain/Validators, Infrastructure, Service)
 ```
 
 ### 1.1 Diagrama de Camadas e Integração com `SmartCoreHub.Core.SDK`
 
 ```mermaid
 graph TB
-    subgraph Host["KinkConsentManager (Produto)"]
+    subgraph Host["KinkConsentManager (Topologia em 4 Projetos)"]
         API["APIs/KinkConsentManager.API\n(AuthController, Program.cs)"]
-        Service["Implementations/KinkConsentManager.Service\n(CQRS Handlers, AuthService, JwtTokenService, DI)"]
-        Infra["Implementations/KinkConsentManager.Infrastructure\n(DbContext, PgSql, Configurations, Repositories)"]
-        Domain["Implementations/KinkConsentManager.Domain\n(UserKink, UserKinkRefreshToken, Validators, MessageKeys)"]
+        subgraph Core["Core/KinkConsentManager.Core"]
+            Service["Service/\n(CQRS Handlers, AuthService, JwtTokenService, DI)"]
+            Infra["Infrastructure/\n(DbContext, PgSql, Configurations, Repositories, .resx, Migrations)"]
+            Domain["Domain/\n(UserKink, UserKinkRefreshToken, UserKinkCheclist, Validators, MessageKeys)"]
+        end
     end
 
-    subgraph NuGet["NuGet Oficial: SmartCoreHub.Core.SDK"]
+    subgraph NuGet["NuGet Oficial: SmartCoreHub.Core.SDK (20261120.2351.0)"]
         SDK_Domain["Domain: LongEntityBase, Email VO,\nServiceResponse<T>, LoginDto, RefreshTokenDto, Guard"]
         SDK_Infra["Infrastructure: GenericRepository<T,TCtx>, EfDbContextScope,\nEfTransactionExecutor, BcryptPasswordHasher, JwtTokenAdapter"]
         SDK_App["Application.Cqrs: IApplicationDispatcher,\nMediatRAdapter, FluentValidationBehavior, TransactionBehavior"]
@@ -69,8 +70,7 @@ graph TB
 
     Supabase[("Supabase PostgreSQL 16\nSchema: kink_consent")]
 
-    API --> Service
-    API --> Domain
+    API --> Core
     Service --> Domain
     Service --> Infra
     Infra --> Domain
@@ -191,7 +191,7 @@ Seguindo exatamente a divisão oficial documentada no `README.md` do `SmartCoreH
   </PropertyGroup>
   <ItemGroup>
     <!-- SDK Corporativo Central -->
-    <PackageVersion Include="SmartCoreHub.Core.SDK" Version="*" />
+    <PackageVersion Include="SmartCoreHub.Core.SDK" Version="20261120.2351.0" />
 
     <!-- ASP.NET Core & Auth (.NET 10) -->
     <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.15" />
@@ -211,6 +211,8 @@ Seguindo exatamente a divisão oficial documentada no `README.md` do `SmartCoreH
     <PackageVersion Include="FluentValidation" Version="12.2.0" />
     <PackageVersion Include="FluentValidation.DependencyInjectionExtensions" Version="12.2.0" />
     <PackageVersion Include="Serilog.AspNetCore" Version="10.0.0" />
+    <PackageVersion Include="Serilog.Sinks.Console" Version="6.1.1" />
+    <PackageVersion Include="Serilog.Sinks.File" Version="7.0.0" />
     <PackageVersion Include="Swashbuckle.AspNetCore" Version="10.3.1" />
     <PackageVersion Include="Swashbuckle.AspNetCore.Annotations" Version="10.3.1" />
 
@@ -224,7 +226,6 @@ Seguindo exatamente a divisão oficial documentada no `README.md` do `SmartCoreH
     <PackageVersion Include="Bogus" Version="35.6.5" />
     <PackageVersion Include="coverlet.collector" Version="10.1.1" />
     <PackageVersion Include="coverlet.msbuild" Version="10.1.1" />
-    <PackageVersion Include="Testcontainers.PostgreSql" Version="4.16.0" />
   </ItemGroup>
 </Project>
 ```
@@ -1135,7 +1136,7 @@ entity.HasIndex(r => r.AnswersJson).HasMethod("gin").HasDatabaseName("IX_UserKin
 Seguindo `SmartCoreHub.Infrastructure/Localization/Resources/`, os arquivos de recursos compilados da camada de infraestrutura centralizam os textos específicos do produto por idioma, mantendo o Domain completamente desacoplado:
 
 ```text
-Implementations/KinkConsentManager.Infrastructure/Localization/Resources/
+Core/KinkConsentManager.Core/Infrastructure/Localization/Resources/
 ├── ValidationMessages.resx          # Cultura neutra (Inglês - fallback garantido)
 ├── ValidationMessages.pt-BR.resx    # Português (Brasil)
 ├── AuthMessages.resx                # Mensagens funcionais de Auth (Inglês)
@@ -1611,37 +1612,35 @@ Rotas automáticas herdadas do `SmartCoreHub.Core.SDK`:
 
 ## 9. Estratégia de Testes (`*.Tests`) e Playbook CLI de Implantação
 
-### 9.1 Padrão de Testes (`NUnit 4` + `Moq` + `AwesomeAssertions` + `Bogus` + `Testcontainers`)
-- **Domain.Tests:** Validação exaustiva de todas as regras de `PasswordValidator`, `RegisterUserKinkRequestValidator`, `LoginDtoValidator`, `RefreshTokenDtoValidator` e `PasswordVerificationInputValidator` injetando `NullValidationMessageService` ou mock de `IValidationMessageService` (validando `ErrorCode`, `MessageKey` e chamada dinâmica ao serviço, sem depender de `.resx`).
-- **Infrastructure.Tests:** Mapeamento do `KinkConsentManagerDbContext` garantindo `HasDefaultSchema("kink_consent")`, índices únicos de `Login`/`Email`/`TokenHash`, presença das chaves nos `.resx` (`ValidationMessages.resx` vs `ValidationMessages.pt-BR.resx` com 100% de paridade) e testes de integração contra PostgreSQL real via `Testcontainers.PostgreSql`.
-- **Service.Tests:** Testes unitários de `ValidationMessageService` comprovando resolução dinâmica em `en-US` e `pt-BR` (para chaves `SmartCoreHub.Core.SDK.*` e chaves do produto + fallback seguro), além de testes de `AuthenticationService` e `JwtTokenService`.
-- **API.Tests:** `WebApplicationFactory<Program>` validando endpoints `/api/v1/auth/*`, negociação de idioma via `Accept-Language: pt-BR` e `X-Locale: en-US`, `/health`, `/ready` e resposta `ServiceResponse<T>`.
+### 9.1 Padrão de Testes (`NUnit 4` + `Moq` + `AwesomeAssertions` + `Bogus` + `WebApplicationFactory`)
+- **`KinkConsentManager.Core.Tests` (`112` testes aprovados na Fase 1):**
+  - **`Domain/Validators/`:** Validação exaustiva de todas as regras de `PasswordValidator`, `RegisterUserKinkRequestValidator`, `LoginDtoValidator`, `RefreshTokenDtoValidator` e `PasswordVerificationInputValidator` injetando `NullValidationMessageService` ou mock de `IValidationMessageService` (validando `ErrorCode`, `MessageKey` e chamada dinâmica ao serviço por cultura, sem depender de `.resx`).
+  - **`Infrastructure/`:** Mapeamento do `KinkConsentManagerDbContext` garantindo `HasDefaultSchema("kink_consent")`, índices únicos de `Login`/`NormalizedLogin`/`Email`/`TokenHash`, coluna `jsonb` + índice GIN de `UserKinkCheclists`, repositórios com EF Core InMemory (`GetByLoginOrEmailAsync` *case-insensitive*, rotação/revogação de refresh token) e paridade 100% entre `.resx` `en-US` e `pt-BR`.
+  - **`Service/`:** Testes unitários de `ValidationMessageService` comprovando resolução dinâmica em `en-US` e `pt-BR` (para chaves `SmartCoreHub.Core.SDK.*` e chaves do produto + fallback seguro), `AuthenticationService`, `JwtTokenService` (`HS512`), handlers CQRS (`RegisterUserKinkCommand`, `LoginCommand`, `RefreshTokenCommand`, `LogoutCommand`, `GetCurrentUserKinkQuery`) e verificação de grafo DI (`ValidateNoCircularDependencies`).
+- **`KinkConsentManager.API.Tests` (`19` testes aprovados na Fase 1):**
+  - Testes unitários de `AuthController` e testes de integração HTTP com `CustomWebApplicationFactory` (`WebApplicationFactory<Program>` + `Microsoft.EntityFrameworkCore.InMemory`), validando `/api/v1/auth/*`, login dual por `login` ou `email`, rotação e detecção de reúso de refresh token, negociação de idioma via `Accept-Language: pt-BR` e `X-Locale: en-US`, `/health`, `/ready` e contrato `ServiceResponse<T>`.
 
-### 9.2 Playbook CLI Passo a Passo (Para Execução Quando Iniciar a Codificação)
+### 9.2 Playbook CLI Passo a Passo (Para Reproduzir e Aplicar no Supabase)
 
 ```powershell
-# 1. Criar estrutura idêntica ao SmartCoreHub\backend
-mkdir backend\build, backend\APIs, backend\Implementations
+# 1. Estrutura adotada em backend/ (4 projetos espelhando os padrões do SmartCoreHub\backend)
+mkdir backend\build, backend\APIs, backend\Core
 cd backend
 
-dotnet new sln -n KinkConsentManager
+dotnet new sln -n KinkConsentManager -f sln
 
-dotnet new classlib -n KinkConsentManager.Domain -o Implementations\KinkConsentManager.Domain
-dotnet new classlib -n KinkConsentManager.Infrastructure -o Implementations\KinkConsentManager.Infrastructure
-dotnet new classlib -n KinkConsentManager.Service -o Implementations\KinkConsentManager.Service
-dotnet new webapi   -n KinkConsentManager.API -o APIs\KinkConsentManager.API
+dotnet new classlib -n KinkConsentManager.Core -o Core\KinkConsentManager.Core
+dotnet new webapi   -n KinkConsentManager.API     -o APIs\KinkConsentManager.API
 
-dotnet new nunit -n KinkConsentManager.Domain.Tests -o Implementations\KinkConsentManager.Domain.Tests
-dotnet new nunit -n KinkConsentManager.Infrastructure.Tests -o Implementations\KinkConsentManager.Infrastructure.Tests
-dotnet new nunit -n KinkConsentManager.Service.Tests -o Implementations\KinkConsentManager.Service.Tests
-dotnet new nunit -n KinkConsentManager.API.Tests -o APIs\KinkConsentManager.API.Tests
+dotnet new nunit -n KinkConsentManager.Core.Tests -o Core\KinkConsentManager.Core.Tests
+dotnet new nunit -n KinkConsentManager.API.Tests     -o APIs\KinkConsentManager.API.Tests
 
-# 2. Associar projetos à Solution e instalar SmartCoreHub.Core.SDK
+# 2. Associar projetos à Solution e instalar pacotes (versões centralizadas em Directory.Packages.props)
 dotnet sln add (Get-ChildItem -Recurse -Filter *.csproj)
-dotnet add Implementations\KinkConsentManager.Domain package SmartCoreHub.Core.SDK
-dotnet add Implementations\KinkConsentManager.Infrastructure package Npgsql.EntityFrameworkCore.PostgreSQL
-dotnet add Implementations\KinkConsentManager.Infrastructure package Microsoft.EntityFrameworkCore.Design
+dotnet add Core\KinkConsentManager.Core package SmartCoreHub.Core.SDK
+dotnet add Core\KinkConsentManager.Core package Npgsql.EntityFrameworkCore.PostgreSQL
 dotnet add APIs\KinkConsentManager.API package Microsoft.AspNetCore.Authentication.JwtBearer
+dotnet add APIs\KinkConsentManager.API package Microsoft.EntityFrameworkCore.Design
 
 # 3. Configurar segredos locais com dotnet user-secrets (nunca commitar segredos!)
 cd APIs\KinkConsentManager.API
@@ -1652,17 +1651,17 @@ dotnet user-secrets set "TokenConfigurations:Secret" "<CHAVE_ALEATORIA_MINIMO_64
 # 4. Gerar e aplicar Migration inicial no schema kink_consent (via Direct Connection porta 5432)
 cd ..\..
 dotnet ef migrations add InitialCreateAuth `
-  --project Implementations\KinkConsentManager.Infrastructure `
+  --project Core\KinkConsentManager.Core `
   --startup-project APIs\KinkConsentManager.API `
   --context KinkConsentManagerDbContextPostgreSql `
-  --output-dir Migrations\PostgreSql
+  --output-dir Infrastructure\Migrations\PostgreSql
 
 dotnet ef database update `
-  --project Implementations\KinkConsentManager.Infrastructure `
+  --project Core\KinkConsentManager.Core `
   --startup-project APIs\KinkConsentManager.API `
   --context KinkConsentManagerDbContextPostgreSql
 
 # 5. Compilar em modo estrito e rodar testes com cobertura
-dotnet build -c Release
-dotnet test -c Release --collect:"XPlat Code Coverage"
+dotnet build KinkConsentManager.sln -c Release
+dotnet test KinkConsentManager.sln -c Release --collect:"XPlat Code Coverage"
 ```

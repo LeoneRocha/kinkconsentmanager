@@ -1,0 +1,19 @@
+<Project>
+  <PropertyGroup Condition="$(MSBuildProjectName.EndsWith('.Tests'))">
+    <TestAssertionPackageId>AwesomeAssertions</TestAssertionPackageId>
+    <TestAssertionLibraryNamespace>AwesomeAssertions</TestAssertionLibraryNamespace>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <SingleHit Condition="'$(SingleHit)' == ''">true</SingleHit>
+    <IncludeTestAssembly Condition="'$(IncludeTestAssembly)' == ''">false</IncludeTestAssembly>
+    <ExcludeByFile Condition="'$(ExcludeByFile)' == ''">**/Migrations/**/*.cs,**/*.Designer.cs,**/*ModelSnapshot.cs,**/*.g.cs</ExcludeByFile>
+    <ExcludeByAttribute Condition="'$(ExcludeByAttribute)' == ''">Obsolete,GeneratedCodeAttribute,CompilerGeneratedAttribute,ExcludeFromCodeCoverageAttribute</ExcludeByAttribute>
+    <Exclude Condition="'$(Exclude)' == ''">[*.Tests]*</Exclude>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(TestAssertionLibraryNamespace)' != ''">
+    <Using Include="$(TestAssertionLibraryNamespace)" />
+    <PackageReference Include="$(TestAssertionPackageId)" />
+  </ItemGroup>
+</Project>
