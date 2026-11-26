@@ -34,7 +34,8 @@ Baseado no App Service provisionado e nos arquivos de container em [`frontend/`]
 | **Pacote de Deploy SPA** | Conteúdo direto de `frontend/dist/kinkconsentmanager/browser/` (sem subpasta raiz no `.zip`) |
 | **Imagem Docker (Frontend)** | `leonecr/kinkconsentmanager-ui` (Nginx na porta `80`, healthcheck `/health`, Compose [`dockercompose.prod.yml`](../frontend/dockercompose.prod.yml) — CD desativado por padrão) |
 | **Runtime & Solution Backend** | `.NET 10` (`net10.0`, SDK `10.0.x`), [`KinkConsentManager.sln`](../backend/KinkConsentManager.sln) (4 projetos: `API`, `API.Tests`, `Core`, `Core.Tests`) |
-| **Imagem Docker (Backend)** | `leonecr/kinkconsentmanager-api` (ASP.NET Core 10 na porta `8080`, healthcheck `/health`, Compose [`docker-compose.prod.yml`](../backend/APIs/KinkConsentManager.API/docker-compose.prod.yml) — **CD desativado por padrão**) |
+| **Modo 1 — Publicação Tradicional Backend (ZIP)** | `dotnet publish ... /p:UseAppHost=false` gerando `kinkconsentmanager-api*.zip` com `KinkConsentManager.API.dll` e `appsettings.json` na raiz do ZIP (`DOTNETCORE\|10.0`, startup `dotnet KinkConsentManager.API.dll` — CD Azure Web App `kinkconsentmanagerapi` desativado por padrão) |
+| **Modo 2 — Imagem Docker (Backend)** | `leonecr/kinkconsentmanager-api` (ASP.NET Core 10 na porta `8080`, healthcheck `/health`, Compose [`docker-compose.prod.yml`](../backend/APIs/KinkConsentManager.API/docker-compose.prod.yml) — **CD desativado por padrão**) |
 | **Projeto SonarCloud** | `sonar.projectKey=lionscorp_kinkconsentmanager-ui` · `sonar.organization=lionscorp` ([`sonar-project.properties`](../frontend/sonar-project.properties)) |
 
 ---
@@ -63,7 +64,7 @@ O arquivo [`frontend/jest.config.js`](../frontend/jest.config.js) (Frontend) e a
 3. **Empacotamento da pasta correta (`dist/kinkconsentmanager/browser`):** O Angular CLI (`@angular/build:application`) emite os arquivos finais em `browser/`; compactar sem `includeRootFolder` coloca `index.html` diretamente em `/home/site/wwwroot` do Azure Web App.
 4. **Startup Command SPA (`--spa`):** Garante fallback de rotas internas do Angular (`/checklist`, `/export`) no Azure Linux App Service sem retornar `404` em refresh direto.
 5. **Smoke Test do Container Docker (`/health`):** Antes de fazer `push` da imagem Docker, o pipeline sobe o container localmente e valida `HTTP 200` em `/health` e `/`.
-6. **Segurança e Qualidade (SonarCloud + Snyk + `npm audit`):** Quality Gate do SonarCloud, `npm audit --audit-level=high` e suporte opcional ao `SnykSecurityScan@1` / Snyk Action (como na referência `SmartCoreHub-UI.yml`).
+6. **Segurança, Quality Gate e Bloqueio Estrito Pós-Testes:** Se qualquer teste unitário/integração falhar no **Frontend** (`jest --ci`) ou no **Backend** (`dotnet test`), os pipelines publicam apenas o resumo de testes JUnit/TRX para diagnóstico e **bloqueiam** automaticamente a execução do SonarCloud, a geração/upload dos pacotes `.zip` de deploy e todos os estágios de CD (Docker / Azure Web App). O mesmo bloqueio vale se o Quality Gate do SonarCloud reprovar.
 
 ---
 
@@ -97,7 +98,8 @@ Nenhum GUID de assinatura, Client ID, Tenant ID ou token foi fixado nos arquivos
   - `backendDockerImageRepository` (`leonecr/kinkconsentmanager-api` — usado apenas se `enableBackendDockerPublish=true`)
   - `azureServiceConnection` (Azure Resource Manager Service Connection com acesso ao RG `kinkconsentmanagerrg`)
   - `azureWebAppName` (`kinkconsentmanagerapp`)
-  - `AZURE_WEBAPP_URL` (URL pública do Web App para smoke test pós-deploy)
+  - `azureBackendWebAppName` (`kinkconsentmanagerapi` — usado apenas se `enableBackendAzureDeploy=true`)
+  - `AZURE_WEBAPP_URL` e `AZURE_BACKEND_WEBAPP_URL` (URLs públicas dos Web Apps para smoke test pós-deploy)
 
 ### GitHub Actions (`kinkconsentmanager-ci-cd.yml`)
 - **Repository / Environment (`production`) Secrets:**
@@ -106,9 +108,16 @@ Nenhum GUID de assinatura, Client ID, Tenant ID ou token foi fixado nos arquivos
   - `DOCKER_USERNAME` e `DOCKER_PASSWORD` *(quando `run_docker_publish=true` ou `run_backend_docker_publish=true`)*
   - `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID` *(OIDC Federated Credentials no Azure AD / Entra ID para o Environment `production`)*
 - **Repository / Environment Variables (`vars`):**
-  - `AZURE_WEBAPP_NAME` (padrão `kinkconsentmanagerapp`)
-  - `AZURE_WEBAPP_URL` (URL completa `https://...azurewebsites.net`)
+  - `AZURE_WEBAPP_NAME` (padrão `kinkconsentmanagerapp`) e `AZURE_BACKEND_WEBAPP_NAME` (padrão `kinkconsentmanagerapi`)
+  - `AZURE_WEBAPP_URL` e `AZURE_BACKEND_WEBAPP_URL` (URLs completas `https://...azurewebsites.net`)
   - `DOCKER_REGISTRY` (padrão `docker.io`), `DOCKER_IMAGE` (padrão `leonecr/kinkconsentmanager-ui`) e `BACKEND_DOCKER_IMAGE` (padrão `leonecr/kinkconsentmanager-api`)
+
+### Geração Manual do Pacote `.zip` Tradicional do Backend (PowerShell)
+```powershell
+dotnet publish backend\APIs\KinkConsentManager.API\KinkConsentManager.API.csproj -c Release /p:UseAppHost=false -o backend\publish\api
+Compress-Archive -Path backend\publish\api\* -DestinationPath ci-cd\out\kinkconsentmanager-api.zip -Force
+```
+*(Em Linux/macOS, utilize `(cd backend/publish/api && zip -rq ../../ci-cd/out/kinkconsentmanager-api.zip .)` para manter `KinkConsentManager.API.dll` e `appsettings.json` na raiz do `.zip`.)*
 
 ---
 

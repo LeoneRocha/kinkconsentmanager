@@ -16,10 +16,12 @@ variables:
   ENABLE_DOCKER_PUBLISH: "false"
   ENABLE_BACKEND_DOCKER_PUBLISH: "false"
   ENABLE_AZURE_DEPLOY: "false"
+  ENABLE_BACKEND_AZURE_DEPLOY: "false"
   FRONTEND_DIR: "frontend"
   DIST_BROWSER_DIR: "frontend/dist/kinkconsentmanager/browser"
   BACKEND_DIR: "backend"
   AZURE_WEBAPP_NAME: "kinkconsentmanagerapp"
+  AZURE_BACKEND_WEBAPP_NAME: "kinkconsentmanagerapi"
   AZURE_RESOURCE_GROUP: "kinkconsentmanagerrg"
   DOCKER_IMAGE: "leonecr/kinkconsentmanager-ui"
   BACKEND_DOCKER_IMAGE: "leonecr/kinkconsentmanager-api"
@@ -96,7 +98,8 @@ ci_backend_build_and_test:
     - dotnet test KinkConsentManager.sln -c Release --no-build --logger "trx;LogFilePrefix=test-results" --results-directory TestResults --collect:"XPlat Code Coverage"
     - test "$(find TestResults -name '*.trx' | wc -l)" -ge 1
     - test "$(find TestResults -name 'coverage.cobertura.xml' | wc -l)" -ge 1
-    - dotnet publish APIs/KinkConsentManager.API/KinkConsentManager.API.csproj -c Release --no-build -o publish/api
+    - dotnet publish APIs/KinkConsentManager.API/KinkConsentManager.API.csproj -c Release --no-build /p:UseAppHost=false -o publish/api
+    - test -f publish/api/KinkConsentManager.API.dll
   artifacts:
     when: always
     expire_in: 14 days
@@ -149,7 +152,9 @@ cd_docker_build_push:
   services:
     - docker:27-dind
   needs:
-    - ci_build_and_test
+    - job: ci_build_and_test
+    - job: ci_sonarcloud
+      optional: true
   rules:
     - if: '$CI_COMMIT_BRANCH == "main" && $ENABLE_DOCKER_PUBLISH == "true"'
       when: on_success
@@ -195,7 +200,9 @@ cd_deploy_azure_webapp:
   stage: deploy_azure
   image: mcr.microsoft.com/azure-cli:latest
   needs:
-    - ci_build_and_test
+    - job: ci_build_and_test
+    - job: ci_sonarcloud
+      optional: true
   environment:
     name: production
     url: https://kinkconsentmanagerapp.azurewebsites.net
@@ -210,4 +217,25 @@ cd_deploy_azure_webapp:
     - az login --service-principal -u "$AZURE_CLIENT_ID" -p "$AZURE_CLIENT_SECRET" --tenant "$AZURE_TENANT_ID"
     - az account set --subscription "$AZURE_SUBSCRIPTION_ID"
     - az webapp deploy --resource-group "$AZURE_RESOURCE_GROUP" --name "$AZURE_WEBAPP_NAME" --src-path "${CI_PROJECT_DIR}/webapp-dist.zip" --type zip
+    - az logout
+
+cd_backend_deploy_azure_webapp:
+  stage: deploy_azure
+  image: mcr.microsoft.com/azure-cli:latest
+  needs:
+    - ci_backend_build_and_test
+  environment:
+    name: production
+    url: https://kinkconsentmanagerapi.azurewebsites.net
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main" && $ENABLE_BACKEND_AZURE_DEPLOY == "true"'
+      when: manual
+    - when: never
+  script:
+    - apk add --no-cache zip curl
+    - cd "${BACKEND_DIR}/publish/api"
+    - zip -r "${CI_PROJECT_DIR}/kinkconsentmanager-api.zip" .
+    - az login --service-principal -u "$AZURE_CLIENT_ID" -p "$AZURE_CLIENT_SECRET" --tenant "$AZURE_TENANT_ID"
+    - az account set --subscription "$AZURE_SUBSCRIPTION_ID"
+    - az webapp deploy --resource-group "$AZURE_RESOURCE_GROUP" --name "$AZURE_BACKEND_WEBAPP_NAME" --src-path "${CI_PROJECT_DIR}/kinkconsentmanager-api.zip" --type zip
     - az logout

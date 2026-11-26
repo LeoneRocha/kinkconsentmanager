@@ -127,7 +127,11 @@ if [ "${RUN_BACKEND}" = "true" ]; then
   if [ "${ARCHIVE_ARTIFACT}" = "true" ]; then
     PUBLISH_DIR="${BACKEND_DIR}/publish/api"
     rm -rf "${PUBLISH_DIR}"
-    dotnet publish "${BACKEND_API_PROJECT}" -c Release --no-build -o "${PUBLISH_DIR}"
+    dotnet publish "${BACKEND_API_PROJECT}" -c Release --no-build /p:UseAppHost=false -o "${PUBLISH_DIR}"
+    if [ ! -f "${PUBLISH_DIR}/KinkConsentManager.API.dll" ]; then
+      echo "[ERRO] KinkConsentManager.API.dll não encontrado em ${PUBLISH_DIR}" >&2
+      exit 1
+    fi
 
     mkdir -p "${OUT_DIR}"
     API_ARCHIVE_PATH="${OUT_DIR}/kinkconsentmanager-api.zip"

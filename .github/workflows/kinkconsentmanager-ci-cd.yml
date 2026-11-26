@@ -44,6 +44,11 @@ on:
         type: boolean
         required: false
         default: false
+      run_backend_azure_deploy:
+        description: 'Executar estágio CD — Deploy ZIP da API Backend no Azure Web App com aprovação (somente main)'
+        type: boolean
+        required: false
+        default: false
 
   # Para habilitar CI automático em commits/PRs para a branch única `main`:
   # push:
@@ -127,6 +132,15 @@ jobs:
         working-directory: ${{ env.FRONTEND_DIR }}
         run: npm run test:ci
 
+      - name: Publicar resumo de testes Jest (JUnit) no PR / Workflow
+        if: ${{ !cancelled() && hashFiles('frontend/coverage/junit/test-results.xml') != '' }}
+        uses: dorny/test-reporter@v1
+        with:
+          name: Jest Unit Tests (KinkConsentManager UI)
+          path: frontend/coverage/junit/test-results.xml
+          reporter: java-junit
+          fail-on-error: true
+
       - name: Validar artefatos de cobertura e bundle SPA
         run: |
           test -f "${{ env.FRONTEND_DIR }}/coverage/junit/test-results.xml"
@@ -135,17 +149,8 @@ jobs:
           test -f "${{ env.FRONTEND_DIR }}/coverage/sonar/sonar-report.xml"
           test -f "${{ env.DIST_BROWSER_DIR }}/index.html"
 
-      - name: Publicar resumo de testes Jest (JUnit) no PR / Workflow
-        if: always()
-        uses: dorny/test-reporter@v1
-        with:
-          name: Jest Unit Tests (KinkConsentManager UI)
-          path: frontend/coverage/junit/test-results.xml
-          reporter: java-junit
-          fail-on-error: true
-
       - name: Análise & Quality Gate no SonarCloud
-        if: ${{ (inputs.run_sonarcloud == true || github.event_name != 'workflow_dispatch') && env.SONAR_TOKEN != '' }}
+        if: ${{ success() && (inputs.run_sonarcloud == true || github.event_name != 'workflow_dispatch') && env.SONAR_TOKEN != '' }}
         uses: SonarSource/sonarqube-scan-action@v5
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -154,7 +159,7 @@ jobs:
             -Dproject.settings=frontend/sonar-project.properties
 
       - name: Aguardar Quality Gate do SonarCloud
-        if: ${{ (inputs.run_sonarcloud == true || github.event_name != 'workflow_dispatch') && env.SONAR_TOKEN != '' }}
+        if: ${{ success() && (inputs.run_sonarcloud == true || github.event_name != 'workflow_dispatch') && env.SONAR_TOKEN != '' }}
         uses: SonarSource/sonarqube-quality-gate-action@v1
         timeout-minutes: 5
         env:
@@ -168,7 +173,7 @@ jobs:
           retention-days: 14
 
       - name: Upload dos relatórios de testes e cobertura (Jest / Cobertura / LCOV)
-        if: always()
+        if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v4
         with:
           name: frontend-coverage-reports
@@ -219,6 +224,15 @@ jobs:
             --results-directory "${{ env.BACKEND_DIR }}/TestResults" \
             --collect:"XPlat Code Coverage"
 
+      - name: Publicar resumo de testes NUnit (TRX) no PR / Workflow
+        if: ${{ !cancelled() && hashFiles('backend/TestResults/**/*.trx') != '' }}
+        uses: dorny/test-reporter@v1
+        with:
+          name: NUnit Tests (KinkConsentManager Backend)
+          path: backend/TestResults/**/*.trx
+          reporter: dotnet-trx
+          fail-on-error: true
+
       - name: Validar relatórios TRX e Cobertura XML gerados
         run: |
           set -euo pipefail
@@ -228,19 +242,25 @@ jobs:
           test "${TRX_COUNT}" -ge 1
           test "${COV_COUNT}" -ge 1
 
-      - name: Publicar resumo de testes NUnit (TRX) no PR / Workflow
-        if: always()
-        uses: dorny/test-reporter@v1
+      - name: Publish Release da API Backend (portável /p:UseAppHost=false)
+        run: dotnet publish "${{ env.BACKEND_API_PROJECT }}" -c Release --no-build /p:UseAppHost=false -o "${{ env.BACKEND_DIR }}/publish/api"
+
+      - name: Validar saída publicada e gerar pacote ZIP tradicional da API Backend
+        run: |
+          set -euo pipefail
+          test -f "${{ env.BACKEND_DIR }}/publish/api/KinkConsentManager.API.dll"
+          mkdir -p "${{ env.BACKEND_DIR }}/dist"
+          rm -f "${{ env.BACKEND_DIR }}/dist/kinkconsentmanager-api.zip"
+          (cd "${{ env.BACKEND_DIR }}/publish/api" && zip -rq "../../dist/kinkconsentmanager-api.zip" .)
+
+      - name: Upload do pacote ZIP tradicional da API Backend (backend-api-zip)
+        uses: actions/upload-artifact@v4
         with:
-          name: NUnit Tests (KinkConsentManager Backend)
-          path: backend/TestResults/**/*.trx
-          reporter: dotnet-trx
-          fail-on-error: true
+          name: backend-api-zip
+          path: backend/dist/kinkconsentmanager-api.zip
+          retention-days: 14
 
-      - name: Publish Release da API Backend
-        run: dotnet publish "${{ env.BACKEND_API_PROJECT }}" -c Release --no-build -o "${{ env.BACKEND_DIR }}/publish/api"
-
-      - name: Upload do artefato publicado da API Backend (backend-api-dist)
+      - name: Upload dos arquivos publicados da API Backend (backend-api-dist)
         uses: actions/upload-artifact@v4
         with:
           name: backend-api-dist
@@ -248,7 +268,7 @@ jobs:
           retention-days: 14
 
       - name: Upload dos relatórios de testes e cobertura do Backend
-        if: always()
+        if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v4
         with:
           name: backend-coverage-reports
@@ -425,6 +445,56 @@ jobs:
         run: |
           URL="${{ vars.AZURE_WEBAPP_URL || 'https://kinkconsentmanagerapp.azurewebsites.net' }}"
           curl -fsS --retry 3 --retry-delay 5 -o /dev/null "$URL"
+
+      - name: Encerrar sessão Azure CLI
+        if: always()
+        run: az logout || true
+
+  # ============================================================================
+  # ESTÁGIO 3B — CD Backend: Deploy ZIP Tradicional no Azure Web App Linux (desativado por padrão)
+  # ============================================================================
+  cd_backend_deploy_azure:
+    name: 'CD Backend — Deploy ZIP Azure Web App (com Aprovação)'
+    needs: ci_backend_build_test
+    if: ${{ github.ref == 'refs/heads/main' && inputs.run_backend_azure_deploy == true }}
+    runs-on: ubuntu-latest
+    # Environment `production` no GitHub Settings -> Environments:
+    # - Habilitar "Required reviewers" (aprovação manual obrigatória)
+    # - Habilitar "Deployment branches and tags" -> apenas `main`
+    environment:
+      name: production
+      url: ${{ vars.AZURE_BACKEND_WEBAPP_URL || 'https://kinkconsentmanagerapi.azurewebsites.net' }}
+
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Baixar pacote ZIP da API Backend (backend-api-zip)
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-api-zip
+          path: ./backend-api-zip
+
+      - name: Autenticar no Azure via OIDC (sem credenciais hardcoded)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Deploy ZIP da API Backend no Azure Web App Linux (Production)
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ vars.AZURE_BACKEND_WEBAPP_NAME || 'kinkconsentmanagerapi' }}
+          slot-name: 'Production'
+          package: ./backend-api-zip/kinkconsentmanager-api.zip
+
+      - name: Smoke test pós-deploy (/health)
+        continue-on-error: true
+        run: |
+          URL="${{ vars.AZURE_BACKEND_WEBAPP_URL || 'https://kinkconsentmanagerapi.azurewebsites.net' }}"
+          curl -fsS --retry 3 --retry-delay 5 "$URL/health"
 
       - name: Encerrar sessão Azure CLI
         if: always()

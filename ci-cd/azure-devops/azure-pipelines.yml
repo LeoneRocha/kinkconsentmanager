@@ -74,6 +74,11 @@ parameters:
     type: boolean
     default: false
 
+  - name: enableBackendAzureDeploy
+    displayName: 'Executar estágio CD — Deploy ZIP da API Backend no Azure Web App com aprovação (somente main)'
+    type: boolean
+    default: false
+
 variables:
   # Defaults sobrescrevíveis via Variable Group `kinkconsentmanager-ci-vars` ou Variáveis da Pipeline:
   - name: sonarOrganization
@@ -82,6 +87,10 @@ variables:
     value: 'kinkconsentmanagerapp'
   - name: azureStartupCommand
     value: 'pm2 serve /home/site/wwwroot --no-daemon --spa'
+  - name: azureBackendWebAppName
+    value: 'kinkconsentmanagerapi'
+  - name: azureBackendStartupCommand
+    value: 'dotnet KinkConsentManager.API.dll'
   - name: dockerImageRepository
     value: 'leonecr/kinkconsentmanager-ui'
   - name: backendDockerImageRepository
@@ -119,6 +128,8 @@ variables:
     value: $[ coalesce(variables['enableBackendDockerPublish'], '${{ parameters.enableBackendDockerPublish }}') ]
   - name: resolvedEnableAzureDeploy
     value: $[ coalesce(variables['enableAzureDeploy'], '${{ parameters.enableAzureDeploy }}') ]
+  - name: resolvedEnableBackendAzureDeploy
+    value: $[ coalesce(variables['enableBackendAzureDeploy'], '${{ parameters.enableBackendAzureDeploy }}') ]
 
 stages:
   # ============================================================================
@@ -205,6 +216,32 @@ stages:
               workingDir: '$(frontendDir)'
               customCommand: 'run test:ci'
 
+          - task: PublishTestResults@2
+            displayName: 'Publicar resultados JUnit dos testes Jest'
+            condition: succeededOrFailed()
+            inputs:
+              testResultsFormat: 'JUnit'
+              testResultsFiles: 'frontend/coverage/junit/test-results.xml'
+              searchFolder: '$(Build.SourcesDirectory)'
+              testRunTitle: 'Jest Unit Tests — KinkConsentManager UI'
+              failTaskOnFailedTests: true
+
+          - task: ReportGenerator@5
+            displayName: 'Gerar relatório consolidado de cobertura (Cobertura + HTML)'
+            condition: succeeded()
+            inputs:
+              reports: '$(frontendDir)/coverage/cobertura-coverage.xml'
+              targetdir: '$(frontendDir)/coverage/reportgenerator'
+              reporttypes: 'HtmlInline_AzurePipelines;Cobertura'
+
+          - task: PublishCodeCoverageResults@2
+            displayName: 'Publicar cobertura no Azure Pipelines (Cobertura XML)'
+            condition: succeeded()
+            inputs:
+              summaryFileLocation: '$(frontendDir)/coverage/cobertura-coverage.xml'
+              pathToSources: '$(frontendDir)/src'
+              failIfCoverageEmpty: true
+
           - task: SonarCloudPrepare@3
             displayName: 'SonarCloud — Preparar análise (CLI)'
             condition: and(succeeded(), eq(variables['resolvedEnableSonarCloud'], 'true'))
@@ -225,31 +262,9 @@ stages:
             inputs:
               pollingTimeoutSec: '300'
 
-          - task: PublishTestResults@2
-            displayName: 'Publicar resultados JUnit dos testes Jest'
-            inputs:
-              testResultsFormat: 'JUnit'
-              testResultsFiles: 'frontend/coverage/junit/test-results.xml'
-              searchFolder: '$(Build.SourcesDirectory)'
-              testRunTitle: 'Jest Unit Tests — KinkConsentManager UI'
-              failTaskOnFailedTests: true
-
-          - task: ReportGenerator@5
-            displayName: 'Gerar relatório consolidado de cobertura (Cobertura + HTML)'
-            inputs:
-              reports: '$(frontendDir)/coverage/cobertura-coverage.xml'
-              targetdir: '$(frontendDir)/coverage/reportgenerator'
-              reporttypes: 'HtmlInline_AzurePipelines;Cobertura'
-
-          - task: PublishCodeCoverageResults@2
-            displayName: 'Publicar cobertura no Azure Pipelines (Cobertura XML)'
-            inputs:
-              summaryFileLocation: '$(frontendDir)/coverage/cobertura-coverage.xml'
-              pathToSources: '$(frontendDir)/src'
-              failIfCoverageEmpty: true
-
           - task: CmdLine@2
             displayName: 'Validar saída SPA em dist/kinkconsentmanager/browser'
+            condition: succeeded()
             inputs:
               script: |
                 test -f "$(distBrowserDir)/index.html" || { echo "ERRO: index.html não encontrado em $(distBrowserDir)"; exit 1; }
@@ -257,6 +272,7 @@ stages:
 
           - task: ArchiveFiles@2
             displayName: 'Compactar pacote SPA para Azure Web App (.zip)'
+            condition: succeeded()
             inputs:
               rootFolderOrFile: '$(distBrowserDir)'
               includeRootFolder: false
@@ -266,6 +282,7 @@ stages:
 
           - task: CopyFiles@2
             displayName: 'Copiar dockercompose.prod.yml para artefato'
+            condition: succeeded()
             inputs:
               SourceFolder: '$(frontendDir)'
               Contents: 'dockercompose.prod.yml'
@@ -273,6 +290,7 @@ stages:
 
           - task: PublishPipelineArtifact@1
             displayName: 'Publicar artefato WebApp (drop-webapp)'
+            condition: succeeded()
             inputs:
               targetPath: '$(Build.ArtifactStagingDirectory)/webapp'
               artifact: 'drop-webapp'
@@ -280,6 +298,7 @@ stages:
 
           - task: PublishPipelineArtifact@1
             displayName: 'Publicar artefato Docker Compose (drop-docker-compose)'
+            condition: succeeded()
             inputs:
               targetPath: '$(Build.ArtifactStagingDirectory)/docker-compose'
               artifact: 'drop-docker-compose'
@@ -288,6 +307,7 @@ stages:
           - task: CmdLine@2
             name: ResolveCdFlags
             displayName: 'Exibir configuração efetiva e propagar flags para CD (Frontend)'
+            condition: succeeded()
             inputs:
               script: |
                 echo "nodeVersion=$(resolvedNodeVersion)"
@@ -348,7 +368,7 @@ stages:
 
           - task: PublishTestResults@2
             displayName: 'Publicar resultados TRX dos testes NUnit (Backend)'
-            condition: always()
+            condition: succeededOrFailed()
             inputs:
               testResultsFormat: 'VSTest'
               testResultsFiles: '**/*.trx'
@@ -358,6 +378,7 @@ stages:
 
           - task: ReportGenerator@5
             displayName: 'Gerar relatório consolidado de cobertura Backend (Cobertura + HTML)'
+            condition: succeeded()
             inputs:
               reports: '$(Agent.TempDirectory)/backend-test-results/**/coverage.cobertura.xml'
               targetdir: '$(Agent.TempDirectory)/backend-coverage-report'
@@ -365,31 +386,53 @@ stages:
 
           - task: PublishCodeCoverageResults@2
             displayName: 'Publicar cobertura do Backend no Azure Pipelines'
+            condition: succeeded()
             inputs:
               summaryFileLocation: '$(Agent.TempDirectory)/backend-coverage-report/Cobertura.xml'
               pathToSources: '$(backendDir)'
               failIfCoverageEmpty: true
 
           - task: DotNetCoreCLI@2
-            displayName: 'Publish Release da API Backend (.zip)'
+            displayName: 'Publish Release da API Backend (portável /p:UseAppHost=false)'
+            condition: succeeded()
             inputs:
               command: 'publish'
               publishWebProjects: false
               projects: '$(backendApiProject)'
-              arguments: '-c Release --no-build -o "$(Build.ArtifactStagingDirectory)/backend-api"'
-              zipAfterPublish: true
+              arguments: '-c Release --no-build /p:UseAppHost=false -o "$(Build.ArtifactStagingDirectory)/backend-api-publish"'
+              zipAfterPublish: false
             env:
               NUGET_PACKAGES: '$(nugetCacheFolder)'
 
+          - task: CmdLine@2
+            displayName: 'Validar saída publicada da API Backend (KinkConsentManager.API.dll)'
+            condition: succeeded()
+            inputs:
+              script: |
+                test -f "$(Build.ArtifactStagingDirectory)/backend-api-publish/KinkConsentManager.API.dll" || { echo "ERRO: KinkConsentManager.API.dll não encontrado"; exit 1; }
+                ls -lh "$(Build.ArtifactStagingDirectory)/backend-api-publish"
+
+          - task: ArchiveFiles@2
+            displayName: 'Compactar pacote tradicional da API Backend (.zip)'
+            condition: succeeded()
+            inputs:
+              rootFolderOrFile: '$(Build.ArtifactStagingDirectory)/backend-api-publish'
+              includeRootFolder: false
+              archiveType: 'zip'
+              archiveFile: '$(Build.ArtifactStagingDirectory)/backend-api/kinkconsentmanager-api-$(Build.BuildId).zip'
+              replaceExistingArchive: true
+
           - task: CopyFiles@2
             displayName: 'Copiar docker-compose.prod.yml do Backend para artefato'
+            condition: succeeded()
             inputs:
               SourceFolder: '$(backendDir)/APIs/KinkConsentManager.API'
               Contents: 'docker-compose.prod.yml'
               TargetFolder: '$(Build.ArtifactStagingDirectory)/backend-docker-compose'
 
           - task: PublishPipelineArtifact@1
-            displayName: 'Publicar artefato da API Backend (drop-backend-api)'
+            displayName: 'Publicar pacote ZIP tradicional da API Backend (drop-backend-api)'
+            condition: succeeded()
             inputs:
               targetPath: '$(Build.ArtifactStagingDirectory)/backend-api'
               artifact: 'drop-backend-api'
@@ -397,6 +440,7 @@ stages:
 
           - task: PublishPipelineArtifact@1
             displayName: 'Publicar artefato Docker Compose Backend (drop-backend-docker-compose)'
+            condition: succeeded()
             inputs:
               targetPath: '$(Build.ArtifactStagingDirectory)/backend-docker-compose'
               artifact: 'drop-backend-docker-compose'
@@ -405,11 +449,14 @@ stages:
           - task: CmdLine@2
             name: ResolveBackendCdFlags
             displayName: 'Exibir configuração efetiva e propagar flags para CD (Backend)'
+            condition: succeeded()
             inputs:
               script: |
                 echo "dotnetVersion=$(resolvedDotnetVersion)"
                 echo "enableBackendDockerPublish=$(resolvedEnableBackendDockerPublish)"
+                echo "enableBackendAzureDeploy=$(resolvedEnableBackendAzureDeploy)"
                 echo "##vso[task.setvariable variable=enableBackendDockerPublish;isOutput=true]$(resolvedEnableBackendDockerPublish)"
+                echo "##vso[task.setvariable variable=enableBackendAzureDeploy;isOutput=true]$(resolvedEnableBackendAzureDeploy)"
 
   # ============================================================================
   # ESTÁGIO 2A — CD Frontend: Build, Smoke Test e Push da Imagem Docker (desativado por padrão)
@@ -575,3 +622,51 @@ stages:
                       URL="${AZURE_WEBAPP_URL:-https://$(azureWebAppName).azurewebsites.net}"
                       echo "Verificando disponibilidade em $URL ..."
                       curl -fsS --retry 3 --retry-delay 5 -o /dev/null "$URL"
+
+  # ============================================================================
+  # ESTÁGIO 3B — CD Backend: Deploy ZIP Tradicional no Azure Web App Linux (desativado por padrão)
+  # ============================================================================
+  - stage: CD_Deploy_Azure_Backend
+    displayName: 'CD Backend — Deploy ZIP Azure Web App (com Aprovação)'
+    dependsOn: CI_Build_Quality
+    condition: |
+      and(
+        succeeded(),
+        eq(dependencies.CI_Build_Quality.outputs['BuildAndTestBackend.ResolveBackendCdFlags.enableBackendAzureDeploy'], 'true'),
+        eq(variables['Build.SourceBranch'], 'refs/heads/main')
+      )
+    pool:
+      vmImage: 'ubuntu-latest'
+    jobs:
+      - deployment: DeployAzureBackendWebApp
+        displayName: 'Deploy ZIP da API para Azure Web App ($(azureBackendWebAppName))'
+        # Configurar no Environment `production` do Azure DevOps:
+        # 1) Approvals -> Aprovadores obrigatórios antes do deploy
+        # 2) Branch control -> Permitir apenas refs/heads/main
+        environment: 'production'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - download: current
+                  artifact: 'drop-backend-api'
+                  displayName: 'Baixar pacote ZIP da API Backend'
+
+                - task: AzureWebApp@1
+                  displayName: 'Deploy da API no Azure Web App Linux ($(azureBackendWebAppName))'
+                  inputs:
+                    azureSubscription: '$(azureServiceConnection)'
+                    appType: 'webAppLinux'
+                    appName: '$(azureBackendWebAppName)'
+                    package: '$(Pipeline.Workspace)/drop-backend-api/kinkconsentmanager-api-$(Build.BuildId).zip'
+                    runtimeStack: 'DOTNETCORE|10.0'
+                    startUpCommand: '$(azureBackendStartupCommand)'
+
+                - task: CmdLine@2
+                  displayName: 'Smoke test pós-deploy HTTPS (/health)'
+                  continueOnError: true
+                  inputs:
+                    script: |
+                      URL="${AZURE_BACKEND_WEBAPP_URL:-https://$(azureBackendWebAppName).azurewebsites.net}"
+                      echo "Verificando disponibilidade em $URL/health ..."
+                      curl -fsS --retry 3 --retry-delay 5 "$URL/health"
