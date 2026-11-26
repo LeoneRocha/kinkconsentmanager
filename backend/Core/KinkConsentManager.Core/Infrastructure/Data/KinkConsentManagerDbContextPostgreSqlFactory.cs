@@ -28,9 +28,10 @@ public sealed class KinkConsentManagerDbContextPostgreSqlFactory
             .AddEnvironmentVariables()
             .Build();
 
-        var connectionString = DesignTimeDatabaseBootstrap.ConnectionStringOrFallback(
-            DesignTimeDatabaseBootstrap.GetConnectionString(configuration),
-            DesignTimeFallbackConnectionString);
+        var connectionString = PostgreSqlConnectionStringNormalizer.Normalize(
+            DesignTimeDatabaseBootstrap.ConnectionStringOrFallback(
+                DesignTimeDatabaseBootstrap.GetConnectionString(configuration),
+                DesignTimeFallbackConnectionString));
 
         var builder = new DbContextOptionsBuilder<KinkConsentManagerDbContextPostgreSql>();
         builder.UseNpgsql(connectionString, options =>

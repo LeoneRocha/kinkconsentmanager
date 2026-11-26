@@ -35,7 +35,8 @@ public static class DatabaseExtensions
         ArgumentNullException.ThrowIfNull(services);
         ArgumentNullException.ThrowIfNull(configuration);
 
-        var connectionString = configuration.GetConnectionString("DefaultConnection");
+        var connectionString = PostgreSqlConnectionStringNormalizer.Normalize(
+            configuration.GetConnectionString("DefaultConnection"));
         var provider = configuration.GetValue("DatabaseProvider", DatabaseProviderNameHelper.PostgreSql);
         var normalizedProvider = DatabaseProviderNameHelper.Normalize(provider);
 

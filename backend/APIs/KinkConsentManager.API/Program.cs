@@ -27,6 +27,11 @@ public partial class Program
     /// <returns>Tarefa que representa a execução assíncrona.</returns>
     internal static async Task ExecuteAsync(string[] args, CancellationToken cancellationToken = default)
     {
+        Log.Logger = new LoggerConfiguration()
+            .MinimumLevel.Information()
+            .WriteTo.Console()
+            .CreateBootstrapLogger();
+
         Log.Information("KinkConsentManager API Loading at: {Time}", DateTime.UtcNow);
         LogAppHelper.PrintLogInformationVersionProduct(new SerilogAdapter(Log.Logger));
 
@@ -39,6 +44,7 @@ public partial class Program
         catch (Exception ex) when (ex.GetType().Name != "HostAbortedException")
         {
             Log.Fatal(ex, "KinkConsentManager API terminated due to fatal error");
+            Environment.ExitCode = 1;
         }
         finally
         {
