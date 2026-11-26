@@ -138,33 +138,36 @@ kinkconsentmanager/
 
 ---
 
-## 3. Backend (Arquitetura SmartCoreHub + Supabase EF Core — V2)
+## 3. Backend (Arquitetura `SmartCoreHub\backend` + `SmartCoreHub.Core.SDK` + Supabase EF Core — V2)
 
-> **Status Atual:** **Fase 1 em Especificação e Implantação** — Aprovada a adoção da arquitetura corporativa do **SmartCoreHub** (`C:\git\SmartCoreHub\backend`) com banco de dados PostgreSQL no **Supabase** via **Entity Framework Core** (`Npgsql.EntityFrameworkCore.PostgreSQL`).
+> **Status Atual:** **Fase 1 em Especificação e Planejamento** — Aprovada a adoção fiel da arquitetura de `C:\git\SmartCoreHub\backend` com consumo direto do NuGet [`SmartCoreHub.Core.SDK`](https://www.nuget.org/packages/SmartCoreHub.Core.SDK), runtime **.NET 10 (`net10.0`)** e persistência PostgreSQL no **Supabase** via **Entity Framework Core 9** (`Npgsql.EntityFrameworkCore.PostgreSQL` `9.0.4`, compatível com o SDK).
 > 
 > Documentação técnica detalhada disponível em [`docs/Backend/`](./Backend/):
 > - [Documento Funcional de Autenticação e Sync](./Backend/DOCUMENTO_FUNCIONAL_AUTENTICACAO_E_SYNC.md)
 > - [Documento Técnico de Implementação do Backend](./Backend/DOCUMENTO_IMPLEMENTACAO_BACKEND.md)
 > - [Documento de Progresso e Checklist](./Backend/DOCUMENTO_PROGRESSO_BACKEND.md)
 
-### 3.1 Princípios Arquiteturais e Padrão SmartCoreHub
+### 3.1 Princípios Arquiteturais e Reaproveitamento do `SmartCoreHub.Core.SDK`
 
-- **Clean Architecture em 4 Camadas:**
-  - `KinkConsentManager.Domain`: Entidades (`User`, `UserRefreshToken`, `UserReport`), DTOs, Contratos e FluentValidation.
-  - `KinkConsentManager.Infrastructure`: `KinkConsentManagerDbContext`, mapeamentos Fluent API, migrations PostgreSQL, Hasher BCrypt e repositórios.
-  - `KinkConsentManager.Service`: Orquestração de negócio, geração de JWT e serviços de autenticação.
-  - `KinkConsentManager.API`: ASP.NET Core Web API, controllers RESTful, Swagger/OpenAPI, Middlewares e Health Checks.
+- **Estrutura de Pastas Espelho (`backend/`):** `APIs/` (`KinkConsentManager.API` + `*.Tests`) e `Implementations/` (`KinkConsentManager.Domain`, `KinkConsentManager.Infrastructure`, `KinkConsentManager.Service` + respectivos `*.Tests`), governados por `global.json`, `Directory.Build.props`, `Directory.Packages.props` (Central Package Management) e `build/TestAssertions.props` (`NUnit 4` + `Moq` + `AwesomeAssertions`).
+- **Consumo Obrigatório do `SmartCoreHub.Core.SDK` (Zero Duplicação):**
+  - Entidades herdam `LongEntityBase` (`long Id`, `CreatedAt`, `UpdatedAt`, `IsActive`) e utilizam o Value Object `Email` do SDK;
+  - Contratos e respostas utilizam `ServiceResponse<T>`, `ErrorResponse`, `LoginDto`, `RefreshTokenDto` e `PasswordVerificationInput` do SDK;
+  - Infraestrutura de dados utiliza `GenericRepository<T, TContext>`, `IEfDbContextScope<T>`, `EfTransactionExecutor`, `AddConfiguredDbContext<,>` e `EfMigrationsHistoryHelper`;
+  - CQRS via `IApplicationDispatcher` + `AddSmartCoreHubMediatRAdapter` (pipeline `UnhandledException → Logging → Performance → FluentValidationBehavior → TransactionBehavior → Handler`);
+  - Hosting, Swagger/OpenAPI/Scalar, CORS, `ApiPerformanceExtensions`, middlewares (`CorrelationId`, `SecurityHeaders`, `LocalizationHeaderCulture`), `BaseApiController` e health checks (`/health`, `/ready`) vêm das extensions `SmartCoreHub.Core.SDK.Service.API.DI.*`.
 - **Segurança Criptográfica Padrão SmartCoreHub:**
-  - Hashing de senhas com **BCrypt** (`workFactor: 11/12`) com salt embutido e verificação *timing-safe*. Proibido salvar senhas em texto puro.
-  - Validação rigorosa de senha via FluentValidation (mínimo 8 caracteres, maiúscula, minúscula, dígito, caractere especial).
-  - Autenticação por **JWT Bearer** com tokens de curta duração (60 minutos) e **Refresh Tokens** persistidos e rotacionáveis (7 dias).
+  - Hashing de senhas com `PasswordHasherFactory.GetHasher(PasswordAlgorithm.Bcrypt)` (`BcryptPasswordHasher` com salt embutido e verificação *timing-safe*);
+  - **Validadores Desacoplados e Multi-Idioma (Obrigatório para TODOS os validadores):** `PasswordValidator` e todos os demais validadores `FluentValidation` devem injetar `IValidationMessageService` (Domain), usar avaliação dinâmica por requisição (`.WithMessage(_ => ...)`), `.WithErrorCode(...)` e `.WithMessageKey(...)`, com resolução centralizada em `ValidationMessageService` (`Service`) sobre os arquivos `.resx` da `Infrastructure` + `IFunctionalMessageProvider` / `LocalizationHeaderCultureMiddleware` do `SmartCoreHub.Core.SDK`;
+  - Validação rigorosa de senha (8–100 caracteres, maiúscula, minúscula, dígito, caractere especial, sem espaços);
+  - Autenticação JWT Bearer via `IJwtAccessTokenService` / `JwtTokenAdapter` (**assinatura `HS512`** lendo a seção `TokenConfigurations`, exigindo `Secret` ≥ 64 bytes) e **Refresh Tokens** persistidos apenas em hash SHA-256 com *Rotation* e *Reuse Detection*.
 
-### 3.2 Integração com Supabase (PostgreSQL) e EF Core
+### 3.2 Integração com Supabase (PostgreSQL 16) e EF Core 9
 
-- **Provedor:** Pacote oficial `Npgsql.EntityFrameworkCore.PostgreSQL`.
-- **Isolamento Mandatório de Schema:** Todas as tabelas da aplicação residem no schema dedicado `kink_consent` (`modelBuilder.HasDefaultSchema("kink_consent")`), blindando os schemas nativos do Supabase (`auth`, `storage`, `realtime`, `public`).
-- **Migrations e Direct Connection:** Para executar `dotnet ef database update`, utilizar sempre a conexão direta (porta `5432` / Session Mode). O Transaction Pooler não suporta DDL locks exigidos pelo EF Core.
-- **Persistência do Report (Respostas):** Coluna nativa PostgreSQL `jsonb` na tabela `UserReport` para o rascunho de preenchimento, garantindo atomicidade, alta performance e zero chamadas extras de rede S3.
+- **Provedor:** `Npgsql.EntityFrameworkCore.PostgreSQL` (`9.0.4`, alinhado ao EF Core `9.0.23` referenciado pelo `SmartCoreHub.Core.SDK`).
+- **Isolamento Mandatório de Schema:** Todas as tabelas **e** a tabela de histórico de migrations residem exclusivamente no schema `kink_consent` (`modelBuilder.HasDefaultSchema("kink_consent")` + `MigrationsHistoryTable(EfMigrationsHistoryHelper.PostgreSqlTable, "kink_consent")`), blindando `auth`, `storage`, `realtime` e `public`.
+- **Migrations e Direct Connection:** Para executar `dotnet ef database update`, utilizar sempre **Direct Connection (`5432`)** ou Session Mode; o Transaction Pooler (`6543`) não suporta DDL locks do EF Core (usar `Database:SkipInitialization = true` se rodando atrás de pooler transacional).
+- **Persistência do Report (Respostas — Etapa 2):** Coluna nativa PostgreSQL `jsonb` na tabela `kink_consent.UserReports` (com índice GIN e token de concorrência em `Version`), preservando atomicidade e alinhamento direto com `ChecklistDraft`.
 
 ### 3.3 Alinhamento com os Contratos já Preparados no Frontend
 

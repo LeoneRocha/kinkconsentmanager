@@ -149,17 +149,18 @@ As versões vivas constam em [frontend/package.json](../frontend/package.json), 
 
 ## Backend & Persistência em Nuvem (V2)
 
-> **Status Atual:** **Fase 1 em Especificação e Implantação** — Arquitetura baseada no `SmartCoreHub.backend`, persistência PostgreSQL no Supabase com EF Core Code First & Migrations, isolamento no schema `kink_consent`, segurança BCrypt e emissão de JWT.
+> **Status Atual:** **Fase 1 Especificada e Planejada** — Arquitetura espelhada em `C:\git\SmartCoreHub\backend` (`APIs/` + `Implementations/` + CPM) com reaproveitamento direto do NuGet [`SmartCoreHub.Core.SDK`](https://www.nuget.org/packages/SmartCoreHub.Core.SDK), **.NET 10**, **EF Core 9 (`Npgsql.EntityFrameworkCore.PostgreSQL` `9.0.4`)** no **Supabase**, isolamento total no schema `kink_consent`, segurança BCrypt (`PasswordHasherFactory`) e JWT `HS512` (`TokenConfigurations`).
 
 O ecossistema do backend divide-se em 3 fases:
-1. **Fase 1 (Atual):** API de Cadastro e Login do Usuário, senhas fortes com BCrypt, JWT Bearer e Refresh Token.
-2. **Fase 2 (Próxima):** Persistência do Report (respostas do checklist) em coluna nativa `jsonb` no PostgreSQL.
-3. **Fase 3:** Interface frontend (modais de autenticação e chave de autosave na nuvem no preenchimento).
+1. **Fase 1 (Escopo Imediato):** API de Cadastro e Login do Usuário (`LongEntityBase`, `Email` VO, `ServiceResponse<T>` e `JwtAccessTokenService` via `SmartCoreHub.Core.SDK`), senhas fortes com BCrypt, JWT `HS512` e Refresh Token com rotação + detecção de reúso.
+2. **Fase 2 (Próxima):** Persistência do Report (`ChecklistDraft`) em coluna nativa `jsonb` no PostgreSQL (`kink_consent.UserReports`).
+3. **Fase 3:** Interface frontend Angular 22 (modais de autenticação, interceptor JWT e chave opt-in de Cloud Autosave na tela de preenchimento).
 
 Consulte os guias completos em [`docs/Backend/`](./Backend/):
 - [Documento Funcional](./Backend/DOCUMENTO_FUNCIONAL_AUTENTICACAO_E_SYNC.md)
 - [Documento de Implementação do Backend](./Backend/DOCUMENTO_IMPLEMENTACAO_BACKEND.md)
 - [Documento de Progresso](./Backend/DOCUMENTO_PROGRESSO_BACKEND.md)
+- [Especificação da Feature](./Features/BACKEND_AUTENTICACAO_E_RESPOSTAS.md)
 
 ---
 

@@ -2,40 +2,41 @@
 
 **Projeto:** KinkConsentManager  
 **Área:** Backend & Persistência em Nuvem  
+**Arquitetura Espelho:** `C:\git\SmartCoreHub\backend` (`APIs/` + `Implementations/` + `build/` + CPM)  
+**SDK Central:** [`SmartCoreHub.Core.SDK`](https://www.nuget.org/packages/SmartCoreHub.Core.SDK)  
 **Documentos Oficiais Vinculados:**  
 1. [Documento Funcional: Autenticação e Sincronização](../Backend/DOCUMENTO_FUNCIONAL_AUTENTICACAO_E_SYNC.md)  
-2. [Documento de Implementação Técnica (Arquitetura SmartCoreHub + Supabase EF Core)](../Backend/DOCUMENTO_IMPLEMENTACAO_BACKEND.md)  
+2. [Documento de Implementação Técnica (`SmartCoreHub` + `Core.SDK` + Supabase EF Core)](../Backend/DOCUMENTO_IMPLEMENTACAO_BACKEND.md)  
 3. [Documento de Progresso e Checklist de Implantação](../Backend/DOCUMENTO_PROGRESSO_BACKEND.md)  
 
 ---
 
 ## 1. Contexto e Motivação
 
-Até a Versão 1 (V1), o **KinkConsentManager** operava exclusivamente no cliente (*client-side*), com persistência em `localStorage` cifrada com AES-GCM 256-bit.
+Até a Versão 1 (V1), o **KinkConsentManager** operava exclusivamente no cliente (*client-side*), com persistência em `localStorage` cifrada com Web Crypto AES-GCM 256-bit.
 
-Para a **V2**, iniciamos a implantação do ecossistema de **Backend**, projetado para permitir que usuários se cadastrem, realizem login e optem por sincronizar suas respostas de checklist na nuvem, acessando seus relatórios a partir de qualquer dispositivo com total segurança e conveniência.
+Para a **V2**, iniciamos a implantação do ecossistema de **Backend** em **.NET 10 (`net10.0`)** utilizando o pacote NuGet **`SmartCoreHub.Core.SDK`** e **Supabase (PostgreSQL 16 + EF Core 9)**, permitindo que usuários criem contas, realizem login e optem (*opt-in*) por sincronizar suas respostas na nuvem para acesso multi-dispositivo, mantendo o modo anônimo local 100% funcional.
 
-### Delimitação da Etapa Atual (Foco Imediato)
-Nesta primeira etapa, o escopo de implementação concentra-se **estritamente na API de Autenticação e Cadastro de Usuários**:
-- Cadastro simples com nome, login, email e confirmação de senha;
-- Política de senhas de alta entropia com validações declarativas via FluentValidation;
-- Criptografia com algoritmo **BCrypt** de alto fator de custo (Work Factor 11/12) com salt embutido e verificação *timing-safe*, espelhando a implementação do projeto de referência **SmartCoreHub**;
-- Autenticação e emissão de tokens **JWT Bearer** com Refresh Tokens rotacionáveis;
-- Banco de dados PostgreSQL no **Supabase** via **Entity Framework Core (EF Core Code First & Migrations)** com provedor `Npgsql.EntityFrameworkCore.PostgreSQL`;
-- Isolamento obrigatório de schema relacional (`kink_consent`) para não conflitar com schemas internos do Supabase (`auth`, `storage`, etc.);
-- Planejamento arquitetural já estruturado para a Etapa 2 (persistência do Report de respostas em coluna nativa `jsonb` no PostgreSQL, com toggle opt-in na tela de preenchimento).
+### Delimitação da Etapa Atual (Fase 1 — Foco Imediato)
+Nesta primeira etapa, o escopo concentra-se **estritamente na fundação do backend e na API de Autenticação e Cadastro de Usuários**:
+- Estrutura física idêntica a `C:\git\SmartCoreHub\backend` (`APIs/`, `Implementations/`, `build/TestAssertions.props`, `Directory.Packages.props` CPM, `global.json`);
+- Reaproveitamento integral de **`SmartCoreHub.Core.SDK`**: `LongEntityBase` (`long Id`), Value Object `Email`, `ServiceResponse<T>`, `LoginDto`, `RefreshTokenDto`, `PasswordHasherFactory` (`BcryptPasswordHasher`), `IJwtAccessTokenService` / `JwtAccessTokenService`, `TokenConfigurationServiceCollectionExtensions`, `GenericRepository<T, TCtx>`, `IEfDbContextScope<T>`, `EfTransactionExecutor`, `IApplicationDispatcher` (CQRS), `BaseApiController`, `OpenApiDocumentationOptions`, `ApiPerformanceExtensions`, middlewares de segurança/correlação/cultura e endpoints `/health` e `/ready`;
+- Cadastro simples com nome, login, email e confirmação de senha forte (`FluentValidation`);
+- Autenticação JWT assinada com **`HS512`** (`TokenConfigurations:Secret` ≥ 64 bytes) e **Refresh Token Rotation** + **Reuse Detection** (persistência em hash SHA-256);
+- Banco de dados PostgreSQL no **Supabase** via **EF Core 9 (`Npgsql.EntityFrameworkCore.PostgreSQL` `9.0.4`)**, com isolamento obrigatório de schema em `kink_consent` (`HasDefaultSchema("kink_consent")` + `MigrationsHistoryTable(..., "kink_consent")`) e migrations aplicadas via **Direct Connection (porta `5432`)**;
+- Arquitetura já preparada para a **Fase 2** (persistência do Report `ChecklistDraft` em coluna nativa `jsonb` em `kink_consent.UserReports`) e **Fase 3** (toggle *Cloud Autosave* na tela `/checklist/fill`).
 
 ---
 
 ## 2. Mapa dos Documentos Detalhados
 
-Consulte a documentação completa nos arquivos canônicos da pasta `docs/Backend/`:
+Consulte a documentação completa nos arquivos canônicos da pasta [`docs/Backend/`](../Backend/):
 
 * 📄 **[DOCUMENTO_FUNCIONAL_AUTENTICACAO_E_SYNC.md](../Backend/DOCUMENTO_FUNCIONAL_AUTENTICACAO_E_SYNC.md):**  
-  Especifica a visão funcional, os atores (Visitante vs. Usuário Autenticado), os requisitos de cadastro (RF-01), login (RF-02), refresh token (RF-03), endpoint do usuário corrente (RF-04), autosave opt-in em nuvem (RF-05), carregamento de respostas (RF-06), critérios de aceite e diagramas de sequência Mermaid.
+  Especifica os atores, ciclo de vida de sessão, requisitos `RF-01` a `RF-09` (cadastro, login anti-enumeração, refresh rotation, logout, `/me`, toggle de cloud autosave e resolução de conflitos Local vs. Nuvem), catálogo de `MessageKey` e códigos HTTP, requisitos não-funcionais/LGPD, diagramas Mermaid e critérios de aceite *Given/When/Then*.
 
 * 🛠️ **[DOCUMENTO_IMPLEMENTACAO_BACKEND.md](../Backend/DOCUMENTO_IMPLEMENTACAO_BACKEND.md):**  
-  Especificação técnica aprofundada baseada na Clean Architecture do `SmartCoreHub.backend` (`Domain`, `Infrastructure`, `Service`, `API`, `Tests`), integração com Supabase, diretrizes de portas e pooler (Direct Connection porta 5432 para migrations), isolamento do schema `kink_consent`, análise comparativa entre Supabase Storage vs. coluna `jsonb`, código do Hasher BCrypt, entidades C#, configurações Fluent API, contratos de DTOs e guia de execução via CLI `.NET`.
+  Guia técnico detalhado espelhando `C:\git\SmartCoreHub\backend` com matriz de reaproveitamento do `SmartCoreHub.Core.SDK`, `Directory.Packages.props` alinhado (EF Core 9 + .NET 10), entidades `LongEntityBase`, configuração `HS512` (`TokenConfigurations`), `KinkConsentManagerDbContextPostgreSql` isolado em `kink_consent`, comparativo `jsonb` vs. Supabase Storage, composição DI e playbook CLI passo a passo.
 
 * 📋 **[DOCUMENTO_PROGRESSO_BACKEND.md](../Backend/DOCUMENTO_PROGRESSO_BACKEND.md):**  
-  Checklist granular com matriz de tarefas para a **Fase 1 (API de Login e Cadastro)**, visão de futuro para a **Fase 2 (Report jsonb)** e **Fase 3 (Integração Frontend)**, critérios de Definition of Done (DoD) e painel executivo de progresso.
+  Orquestração em Ondas (0 a 3) da Fase 1 (`B1.1` a `B1.13`), planejamento da Fase 2 (`B2.1` a `B2.7`) e Fase 3 (`B3.1` a `B3.8`), matriz de riscos técnicos e critérios de *Definition of Done (DoD)*.
