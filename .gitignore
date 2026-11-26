@@ -97,3 +97,4 @@ sensitivedata.txt
 artifacts/**
 backend/APIs/KinkConsentManager.API/appsettings.Development.json.example
 backend/APIs/KinkConsentManager.API/appsettings.Development.json.example
+/backend/APIs/KinkConsentManager.API/Properties/launchSettings.json
