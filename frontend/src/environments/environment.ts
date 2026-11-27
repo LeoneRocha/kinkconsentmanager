@@ -32,7 +32,7 @@ export interface AppEnvironment {
 export const environment: AppEnvironment = {
   production: false,
   appName: 'Kink Consent Manager',
-  apiBaseUrl: 'http://localhost:64590',
+  apiBaseUrl: 'https://localhost:64589',
   version: BUILD_INFO.version,
   buildDate: BUILD_INFO.buildDate,
   buildId: BUILD_INFO.buildId,
