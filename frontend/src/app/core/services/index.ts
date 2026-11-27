@@ -1,4 +1,5 @@
 export * from './base-state.service';
+export * from './auth.service';
 export * from './base-data.service';
 export * from './base-crud.service';
 export * from './crypto.service';

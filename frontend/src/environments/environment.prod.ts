@@ -11,6 +11,7 @@ export interface AppWorkerLoadingConfig {
 export const environment = {
   production: true,
   appName: 'Kink Consent Manager',
+  apiBaseUrl: 'https://kinkconsentmanagerappapi-b7eaezc7cbhxftfb.brazilsouth-01.azurewebsites.net',
   version: BUILD_INFO.version,
   buildDate: BUILD_INFO.buildDate,
   buildId: BUILD_INFO.buildId,

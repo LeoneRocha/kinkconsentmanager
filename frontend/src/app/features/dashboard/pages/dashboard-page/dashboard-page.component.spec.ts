@@ -1,10 +1,16 @@
+import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { provideTranslateService, TranslateService } from '@ngx-translate/core';
 import { Observable, of } from 'rxjs';
-import { ChecklistSchema } from '../../../../core/models';
+import { AuthUser, ChecklistSchema, LoginResponse } from '../../../../core/models';
 import { SCHEMA_REPOSITORY_TOKEN } from '../../../../core/repositories';
-import { ChecklistStateService } from '../../../../core/services';
+import {
+  API_BASE_URL,
+  ChecklistStateService,
+  UiFeedbackHostService,
+} from '../../../../core/services';
 import { DashboardPageComponent } from './dashboard-page.component';
 
 const MOCK_SCHEMA: ChecklistSchema = {
@@ -26,10 +32,22 @@ const MOCK_SCHEMA: ChecklistSchema = {
   ],
 };
 
+const MOCK_AUTH_USER: AuthUser = {
+  id: 2,
+  name: 'user.kink',
+  login: 'user.kink',
+  email: 'user.kink@kinkconsentmanager.local',
+  isActive: true,
+  createdAt: '2026-01-01T00:00:00Z',
+  lastLoginAt: null,
+};
+
 describe('DashboardPageComponent', () => {
   let fixture: ComponentFixture<DashboardPageComponent>;
   let checklistState: ChecklistStateService;
   let router: Router;
+  let httpMock: HttpTestingController;
+  let feedbackMock: jest.Mocked<Pick<UiFeedbackHostService, 'success' | 'error'>>;
   let getChecklistSchemaMock: jest.Mock<Observable<ChecklistSchema>, [version?: string]>;
 
   beforeEach(async () => {
@@ -37,15 +55,26 @@ describe('DashboardPageComponent', () => {
     sessionStorage.clear();
 
     getChecklistSchemaMock = jest.fn(() => of(MOCK_SCHEMA));
+    feedbackMock = {
+      success: jest.fn(),
+      error: jest.fn(),
+    };
 
     await TestBed.configureTestingModule({
       imports: [DashboardPageComponent],
       providers: [
         provideRouter([]),
+        provideHttpClient(),
+        provideHttpClientTesting(),
         provideTranslateService({ lang: 'pt-BR', fallbackLang: 'en-US' }),
+        { provide: API_BASE_URL, useValue: 'https://api.example.test' },
         {
           provide: SCHEMA_REPOSITORY_TOKEN,
           useValue: { getChecklistSchema: getChecklistSchemaMock },
+        },
+        {
+          provide: UiFeedbackHostService,
+          useValue: feedbackMock,
         },
       ],
     }).compileComponents();
@@ -61,17 +90,66 @@ describe('DashboardPageComponent', () => {
         dashboardChecklistDesc: 'Descrição do checklist.',
         dashboardChecklistCtaStart: 'Abrir Checklist',
         dashboardChecklistCtaContinue: 'Continuar Checklist',
+        authCloudBadge: 'Recursos em Nuvem',
+        authCloudTitle: 'Faça login para desbloquear recursos na nuvem',
+        authCloudSubtitle: 'Sincronize seus dados.',
+        authBenefitCloudSave: 'Salvar na nuvem',
+        authBenefitShare: 'Compartilhar com parceiros',
+        authBenefitMoreCloud: 'Mais recursos em nuvem',
+        authComingSoonBadge: 'Em breve',
+        authCloudAdvanceCta: 'Avançar para login',
+        authCloudSignedInTitle: 'Conta conectada à nuvem',
+        authCloudSignedInDesc: 'Sessão ativa.',
+        authLogoutButton: 'Sair da conta',
+        authLoginTitle: 'Entrar na sua conta',
+        authLoginSubtitle: 'Informe seus dados.',
+        authBackToBenefits: 'Voltar',
+        authLoginIdentifierLabel: 'Login ou E-mail',
+        authLoginIdentifierPlaceholder: 'seu.login',
+        authPasswordLabel: 'Senha',
+        authPasswordPlaceholder: 'Digite sua senha',
+        authShowPassword: 'Mostrar senha',
+        authHidePassword: 'Ocultar senha',
+        authLoginSubmit: 'Entrar',
+        authLoginSubmitting: 'Entrando...',
+        authNoAccountPrompt: 'Não tem cadastro?',
+        authNoAccountCta: 'Clique aqui',
+        authRegisterTitle: 'Criar nova conta',
+        authRegisterSubtitle: 'Cadastre seus dados.',
+        authRegisterLoginLabel: 'Login',
+        authRegisterLoginPlaceholder: 'seu.login',
+        authRegisterEmailLabel: 'E-mail',
+        authRegisterEmailPlaceholder: 'voce@exemplo.com',
+        authConfirmPasswordLabel: 'Confirmar senha',
+        authConfirmPasswordPlaceholder: 'Repita sua senha',
+        authPasswordHint: '8+ caracteres.',
+        authRegisterSubmit: 'Criar conta',
+        authRegisterSubmitting: 'Cadastrando...',
+        authHaveAccountPrompt: 'Já tem cadastro?',
+        authHaveAccountCta: 'Fazer login',
+        authValidationRequired: 'Campo obrigatório.',
+        authValidationLoginFormat: 'Login inválido.',
+        authValidationEmailInvalid: 'E-mail inválido.',
+        authValidationPasswordPolicy: 'Senha fraca.',
+        authValidationPasswordMismatch: 'As senhas não conferem.',
+        authLoginSuccess: 'Login realizado com sucesso!',
+        authRegisterSuccess: 'Cadastro concluído!',
+        authLogoutSuccess: 'Sessão encerrada.',
+        authErrorLoginFailed: 'Erro no login.',
+        authErrorRegisterFailed: 'Erro no cadastro.',
       },
     });
     translate.use('pt-BR');
 
     checklistState = TestBed.inject(ChecklistStateService);
     router = TestBed.inject(Router);
+    httpMock = TestBed.inject(HttpTestingController);
     fixture = TestBed.createComponent(DashboardPageComponent);
     await fixture.whenStable();
   });
 
   afterEach(() => {
+    httpMock.verify();
     localStorage.clear();
     sessionStorage.clear();
     jest.restoreAllMocks();
@@ -103,5 +181,83 @@ describe('DashboardPageComponent', () => {
     hostEl.querySelector<HTMLButtonElement>('button[data-feature-id="checklist"]')?.click();
 
     expect(navigateSpy).toHaveBeenCalledWith(['/checklist']);
+  });
+
+  // Cenário: Fluxo completo na área de nuvem do Dashboard (Promo -> Login -> Cadastro -> Login -> Conectado -> Logout).
+  // Objetivo: Garantir alternância entre os 3 componentes desacoplados e integração HTTP completa com AuthService.
+  it('should transition between cloud promo, register, login, connected state, and logout', async () => {
+    // Arrange
+    const hostEl = fixture.nativeElement as HTMLElement;
+
+    // 1. Promo -> Login
+    hostEl.querySelector<HTMLButtonElement>('[data-testid="cloud-advance-login-btn"]')!.click();
+    await fixture.whenStable();
+    expect(hostEl.querySelector('app-auth-login-form')).not.toBeNull();
+
+    // 2. Login -> Cadastro ("Não tem cadastro? Clique aqui")
+    hostEl.querySelector<HTMLButtonElement>('[data-testid="auth-switch-to-register-btn"]')!.click();
+    await fixture.whenStable();
+    expect(hostEl.querySelector('app-auth-register-form')).not.toBeNull();
+
+    // 3. Preencher e enviar cadastro
+    const regLogin = hostEl.querySelector<HTMLInputElement>('#kcm-register-login')!;
+    const regEmail = hostEl.querySelector<HTMLInputElement>('#kcm-register-email')!;
+    const regPass = hostEl.querySelector<HTMLInputElement>('#kcm-register-password')!;
+    const regConfirm = hostEl.querySelector<HTMLInputElement>('#kcm-register-confirm-password')!;
+
+    regLogin.value = 'user.kink';
+    regLogin.dispatchEvent(new Event('input'));
+    regEmail.value = 'user.kink@kinkconsentmanager.local';
+    regEmail.dispatchEvent(new Event('input'));
+    regPass.value = 'Strong@123';
+    regPass.dispatchEvent(new Event('input'));
+    regConfirm.value = 'Strong@123';
+    regConfirm.dispatchEvent(new Event('input'));
+    await fixture.whenStable();
+
+    hostEl.querySelector('app-auth-register-form form')!.dispatchEvent(new Event('submit'));
+    const registerReq = httpMock.expectOne('https://api.example.test/api/v1/auth/register');
+    registerReq.flush({ isSuccess: true, statusCode: 201, data: MOCK_AUTH_USER });
+    await fixture.whenStable();
+
+    // Deve voltar ao login com login pré-preenchido e toast de sucesso
+    expect(feedbackMock.success).toHaveBeenCalledWith('Cadastro concluído!');
+    expect(hostEl.querySelector('app-auth-login-form')).not.toBeNull();
+    const loginIdentifier = hostEl.querySelector<HTMLInputElement>('#kcm-login-identifier')!;
+    expect(loginIdentifier.value).toBe('user.kink');
+
+    // 4. Fazer login
+    const loginPassword = hostEl.querySelector<HTMLInputElement>('#kcm-login-password')!;
+    loginPassword.value = 'Strong@123';
+    loginPassword.dispatchEvent(new Event('input'));
+    await fixture.whenStable();
+
+    const futureExpiry = new Date(Date.now() + 3600_000).toISOString();
+    const loginPayload: LoginResponse = {
+      accessToken: 'jwt-token-xyz',
+      refreshToken: 'refresh-xyz',
+      expiresAtUtc: futureExpiry,
+      refreshTokenExpiresAtUtc: futureExpiry,
+      user: MOCK_AUTH_USER,
+    };
+
+    hostEl.querySelector('app-auth-login-form form')!.dispatchEvent(new Event('submit'));
+    const loginReq = httpMock.expectOne('https://api.example.test/api/v1/auth/login');
+    loginReq.flush({ isSuccess: true, statusCode: 200, data: loginPayload });
+    await fixture.whenStable();
+
+    // Deve exibir o banner conectado com dados do usuário
+    expect(feedbackMock.success).toHaveBeenCalledWith('Login realizado com sucesso!');
+    expect(hostEl.querySelector('app-cloud-benefits-banner')).not.toBeNull();
+    expect(hostEl.textContent).toContain('@user.kink');
+
+    // 5. Logout
+    hostEl.querySelector<HTMLButtonElement>('.cloud-banner__ghost-btn')!.click();
+    const logoutReq = httpMock.expectOne('https://api.example.test/api/v1/auth/logout');
+    logoutReq.flush({ isSuccess: true, statusCode: 200, data: true });
+    await fixture.whenStable();
+
+    expect(feedbackMock.success).toHaveBeenCalledWith('Sessão encerrada.');
+    expect(hostEl.querySelector('[data-testid="cloud-advance-login-btn"]')).not.toBeNull();
   });
 });

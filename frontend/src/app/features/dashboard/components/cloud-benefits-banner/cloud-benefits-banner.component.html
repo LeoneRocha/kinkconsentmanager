@@ -1,0 +1,162 @@
+@if (user(); as currentUser) {
+  <article
+    class="cloud-banner cloud-banner--connected"
+    [attr.aria-label]="'authCloudSignedInTitle' | schemaTranslate: 'ui'"
+  >
+    <div class="cloud-banner__connected-main">
+      <div class="cloud-banner__avatar" [attr.title]="currentUser.name || currentUser.login">
+        {{ userInitial() }}
+      </div>
+
+      <div class="cloud-banner__connected-copy">
+        <div class="cloud-banner__badge-row">
+          <span
+            class="cloud-banner__pill cloud-banner__pill--active"
+            [attr.title]="'authCloudSignedInTitle' | schemaTranslate: 'ui'"
+          >
+            <i
+              class="fa-solid fa-cloud-check"
+              [attr.title]="'authCloudSignedInTitle' | schemaTranslate: 'ui'"
+              aria-hidden="true"
+            ></i>
+            <span>{{ 'authCloudSignedInTitle' | schemaTranslate: 'ui' }}</span>
+          </span>
+        </div>
+
+        <h2 class="cloud-banner__title" [attr.title]="currentUser.name || currentUser.login">
+          {{ currentUser.name || currentUser.login }}
+          <span class="cloud-banner__handle">&#64;{{ currentUser.login }}</span>
+        </h2>
+
+        <p class="cloud-banner__subtitle" [attr.title]="currentUser.email">
+          {{ currentUser.email }}
+        </p>
+
+        <p
+          class="cloud-banner__desc"
+          [attr.title]="'authCloudSignedInDesc' | schemaTranslate: 'ui'"
+        >
+          {{ 'authCloudSignedInDesc' | schemaTranslate: 'ui' }}
+        </p>
+      </div>
+    </div>
+
+    <div class="cloud-banner__actions">
+      <button
+        type="button"
+        class="cloud-banner__ghost-btn"
+        [disabled]="isLoggingOut()"
+        [attr.aria-label]="'authLogoutButton' | schemaTranslate: 'ui'"
+        [attr.title]="'authLogoutButton' | schemaTranslate: 'ui'"
+        (click)="onLogoutClick()"
+      >
+        <i
+          class="fa-solid fa-right-from-bracket"
+          [attr.title]="'authLogoutButton' | schemaTranslate: 'ui'"
+          aria-hidden="true"
+        ></i>
+        <span>{{ 'authLogoutButton' | schemaTranslate: 'ui' }}</span>
+      </button>
+    </div>
+  </article>
+} @else {
+  <article
+    class="cloud-banner cloud-banner--promo"
+    [attr.aria-label]="'authCloudTitle' | schemaTranslate: 'ui'"
+  >
+    <div class="cloud-banner__promo-body">
+      <div class="cloud-banner__header">
+        <span class="cloud-banner__icon" aria-hidden="true">
+          <i
+            class="fa-solid fa-cloud-arrow-up"
+            [attr.title]="'authCloudBadge' | schemaTranslate: 'ui'"
+          ></i>
+        </span>
+
+        <div class="cloud-banner__titles">
+          <h2 class="cloud-banner__title" [attr.title]="'authCloudTitle' | schemaTranslate: 'ui'">
+            {{ 'authCloudTitle' | schemaTranslate: 'ui' }}
+          </h2>
+        </div>
+      </div>
+
+      <p class="cloud-banner__subtitle" [attr.title]="'authCloudSubtitle' | schemaTranslate: 'ui'">
+        {{ 'authCloudSubtitle' | schemaTranslate: 'ui' }}
+      </p>
+
+      <ul
+        class="cloud-banner__benefits"
+        [attr.aria-label]="'authCloudBadge' | schemaTranslate: 'ui'"
+      >
+        <li class="cloud-banner__benefit">
+          <i
+            class="fa-solid fa-cloud"
+            [attr.title]="'authBenefitCloudSave' | schemaTranslate: 'ui'"
+            aria-hidden="true"
+          ></i>
+          <span [attr.title]="'authBenefitCloudSave' | schemaTranslate: 'ui'">
+            {{ 'authBenefitCloudSave' | schemaTranslate: 'ui' }}
+          </span>
+          <span
+            class="cloud-banner__soon-tag"
+            [attr.title]="'authComingSoonBadge' | schemaTranslate: 'ui'"
+          >
+            {{ 'authComingSoonBadge' | schemaTranslate: 'ui' }}
+          </span>
+        </li>
+
+        <li class="cloud-banner__benefit">
+          <i
+            class="fa-solid fa-share-nodes"
+            [attr.title]="'authBenefitShare' | schemaTranslate: 'ui'"
+            aria-hidden="true"
+          ></i>
+          <span [attr.title]="'authBenefitShare' | schemaTranslate: 'ui'">
+            {{ 'authBenefitShare' | schemaTranslate: 'ui' }}
+          </span>
+          <span
+            class="cloud-banner__soon-tag"
+            [attr.title]="'authComingSoonBadge' | schemaTranslate: 'ui'"
+          >
+            {{ 'authComingSoonBadge' | schemaTranslate: 'ui' }}
+          </span>
+        </li>
+
+        <li class="cloud-banner__benefit">
+          <i
+            class="fa-solid fa-shield-halved"
+            [attr.title]="'authBenefitMoreCloud' | schemaTranslate: 'ui'"
+            aria-hidden="true"
+          ></i>
+          <span [attr.title]="'authBenefitMoreCloud' | schemaTranslate: 'ui'">
+            {{ 'authBenefitMoreCloud' | schemaTranslate: 'ui' }}
+          </span>
+          <span
+            class="cloud-banner__soon-tag"
+            [attr.title]="'authComingSoonBadge' | schemaTranslate: 'ui'"
+          >
+            {{ 'authComingSoonBadge' | schemaTranslate: 'ui' }}
+          </span>
+        </li>
+      </ul>
+    </div>
+
+    <div class="cloud-banner__actions">
+      <button
+        type="button"
+        class="cloud-banner__advance-btn"
+        data-testid="cloud-advance-login-btn"
+        [attr.aria-label]="'authCloudAdvanceCta' | schemaTranslate: 'ui'"
+        [attr.title]="'authCloudAdvanceCta' | schemaTranslate: 'ui'"
+        (click)="onAdvanceClick()"
+      >
+        <span>{{ 'authCloudAdvanceCta' | schemaTranslate: 'ui' }}</span>
+        <i
+          class="fa-solid fa-arrow-right"
+          [attr.title]="'authCloudAdvanceCta' | schemaTranslate: 'ui'"
+          aria-hidden="true"
+        ></i>
+      </button>
+    </div>
+  </article>
+}

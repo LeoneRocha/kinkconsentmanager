@@ -1,0 +1,288 @@
+@use 'variables' as v;
+@use 'mixins' as m;
+
+.auth-card {
+  @include m.card-surface;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 1.5rem;
+  background-color: v.$surface-card;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 3px;
+    background: v.$accent-gradient;
+  }
+
+  &__header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  &__title-group {
+    display: flex;
+    align-items: center;
+    gap: 0.875rem;
+  }
+
+  &__icon {
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: v.$radius-md;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    background-color: v.$accent-soft;
+    color: v.$accent-text;
+    border: 1px solid v.$border-color;
+    font-size: 1.125rem;
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: v.$text-primary;
+  }
+
+  &__subtitle {
+    margin: 0.2rem 0 0;
+    font-size: 0.875rem;
+    color: v.$text-secondary;
+  }
+
+  &__back-btn {
+    @include m.touch-target;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.45rem 0.95rem;
+    border-radius: 9999px;
+    background-color: transparent;
+    color: v.$text-primary;
+    border: 1px solid v.$border-strong;
+    font-family: inherit;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+
+    &:hover {
+      background-color: v.$accent-soft;
+      border-color: v.$accent-primary;
+      color: v.$accent-text;
+    }
+
+    &:focus-visible {
+      @include m.focus-ring;
+    }
+  }
+
+  &__alert {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.75rem 1rem;
+    border-radius: v.$radius-sm;
+    background-color: rgba(211, 47, 47, 0.12);
+    border: 1px solid rgba(211, 47, 47, 0.45);
+    color: v.$text-primary;
+    font-size: 0.875rem;
+    font-weight: 600;
+
+    i {
+      color: #ef4444;
+    }
+  }
+
+  &__form {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+
+    @include m.respond-md {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  &__label {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: v.$text-primary;
+  }
+
+  &__password-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
+  &__input {
+    width: 100%;
+    min-height: v.$min-touch-target;
+    padding: 0.625rem 0.875rem;
+    border-radius: v.$radius-sm;
+    border: 1px solid v.$border-strong;
+    background-color: v.$surface-subtle;
+    color: v.$text-primary;
+    font-family: inherit;
+    font-size: 0.925rem;
+    box-sizing: border-box;
+
+    &::placeholder {
+      color: v.$text-muted;
+    }
+
+    &:focus-visible {
+      @include m.focus-ring;
+      border-color: v.$accent-primary;
+    }
+
+    &--with-toggle {
+      padding-right: 3rem;
+    }
+  }
+
+  &__toggle-btn {
+    position: absolute;
+    right: 0.35rem;
+    width: 2.35rem;
+    height: 2.35rem;
+    border: none;
+    border-radius: v.$radius-sm;
+    background: transparent;
+    color: v.$text-secondary;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+
+    &:hover {
+      color: v.$accent-text;
+      background-color: v.$accent-soft;
+    }
+
+    &:focus-visible {
+      @include m.focus-ring;
+    }
+  }
+
+  &__hint {
+    font-size: 0.76rem;
+    color: v.$text-muted;
+  }
+
+  &__error {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #ef4444;
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+
+    @include m.respond-md {
+      grid-column: 1 / -1;
+    }
+  }
+
+  &__submit-btn {
+    @include m.touch-target;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.65rem 1.5rem;
+    border-radius: 9999px;
+    border: 1px solid v.$btn-enabled-border;
+    background-color: v.$btn-enabled-bg;
+    color: v.$btn-enabled-fg;
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition:
+      background-color 0.16s ease,
+      transform 0.16s ease;
+
+    &:hover:not(:disabled) {
+      background-color: v.$btn-enabled-hover;
+      transform: translateY(-1px);
+    }
+
+    &:disabled {
+      background-color: v.$btn-disabled-bg;
+      color: v.$btn-disabled-fg;
+      border-color: v.$btn-disabled-border;
+      cursor: not-allowed;
+    }
+
+    &:focus-visible {
+      @include m.focus-ring;
+    }
+  }
+
+  &__footer {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid v.$border-color;
+  }
+
+  &__footer-text {
+    font-size: 0.875rem;
+    color: v.$text-secondary;
+  }
+
+  &__switch-btn {
+    border: none;
+    background: transparent;
+    padding: 0.25rem 0.5rem;
+    border-radius: v.$radius-sm;
+    color: v.$accent-text;
+    font-family: inherit;
+    font-size: 0.875rem;
+    font-weight: 800;
+    text-decoration: underline;
+    cursor: pointer;
+
+    &:hover {
+      background-color: v.$accent-soft;
+    }
+
+    &:focus-visible {
+      @include m.focus-ring;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+
+    &__submit-btn {
+      transition: none;
+
+      &:hover:not(:disabled) {
+        transform: none;
+      }
+    }
+  }
+}

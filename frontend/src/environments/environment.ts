@@ -17,6 +17,7 @@ export interface AppWorkerLoadingConfig {
 export interface AppEnvironment {
   readonly production: boolean;
   readonly appName: string;
+  readonly apiBaseUrl: string;
   readonly version: string;
   readonly buildDate: string;
   readonly buildId: string;
@@ -31,6 +32,7 @@ export interface AppEnvironment {
 export const environment: AppEnvironment = {
   production: false,
   appName: 'Kink Consent Manager',
+  apiBaseUrl: 'http://localhost:64590',
   version: BUILD_INFO.version,
   buildDate: BUILD_INFO.buildDate,
   buildId: BUILD_INFO.buildId,

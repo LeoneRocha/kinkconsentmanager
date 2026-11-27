@@ -5,18 +5,27 @@ import {
   DestroyRef,
   inject,
   OnInit,
+  signal,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
 import { take } from 'rxjs';
+import { AuthPanelView, LoginRequest, RegisterRequest } from '../../../../core/models';
 import { SCHEMA_REPOSITORY_TOKEN } from '../../../../core/repositories';
 import { APP_ROUTE_COMMANDS } from '../../../../core/routes';
 import {
+  AuthService,
   ChecklistAutosaveService,
   ChecklistStateService,
   I18nService,
   TelemetryService,
+  UiFeedbackHostService,
 } from '../../../../core/services';
+import {
+  AuthLoginFormComponent,
+  AuthRegisterFormComponent,
+  CloudBenefitsBannerComponent,
+} from '../../components';
 
 export interface DashboardFeatureCard {
   readonly id: string;
@@ -30,10 +39,11 @@ export interface DashboardFeatureCard {
 }
 
 /**
- * Página inicial (Dashboard) exibindo os cartões de funcionalidades disponíveis do aplicativo.
+ * Página inicial (Dashboard) exibindo o painel de benefícios/autenticação em nuvem e as ferramentas disponíveis.
  */
 @Component({
   selector: 'app-dashboard-page',
+  imports: [CloudBenefitsBannerComponent, AuthLoginFormComponent, AuthRegisterFormComponent],
   templateUrl: './dashboard-page.component.html',
   styleUrl: './dashboard-page.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -42,6 +52,8 @@ export class DashboardPageComponent implements OnInit {
   private readonly checklistState = inject(ChecklistStateService);
   private readonly autosave = inject(ChecklistAutosaveService);
   private readonly schemaRepository = inject(SCHEMA_REPOSITORY_TOKEN);
+  private readonly authService = inject(AuthService);
+  private readonly feedback = inject(UiFeedbackHostService);
   private readonly i18n = inject(I18nService);
   private readonly telemetry = inject(TelemetryService);
   private readonly router = inject(Router);
@@ -50,6 +62,12 @@ export class DashboardPageComponent implements OnInit {
   protected readonly answeredCount = this.checklistState.answeredItemsCount;
   protected readonly totalCount = this.checklistState.totalItemsCount;
   protected readonly progressPercentage = this.checklistState.progressPercentage;
+
+  protected readonly currentUser = this.authService.user;
+  protected readonly isAuthLoading = this.authService.isLoading;
+  protected readonly authError = this.authService.errorMessage;
+  protected readonly authView = signal<AuthPanelView>('promo');
+  protected readonly prefillLogin = signal<string>('');
 
   protected readonly pageTitle = computed<string>(() => {
     this.i18n.currentLang();
@@ -67,6 +85,11 @@ export class DashboardPageComponent implements OnInit {
   protected readonly sectionTitle = computed<string>(() => {
     this.i18n.currentLang();
     return this.translateWithFallback('dashboardSectionTitle', 'Ferramentas');
+  });
+
+  protected readonly cloudSectionTitle = computed<string>(() => {
+    this.i18n.currentLang();
+    return this.translateWithFallback('authCloudBadge', 'Salvar On-line');
   });
 
   protected readonly featureCards = computed<readonly DashboardFeatureCard[]>(() => {
@@ -116,6 +139,60 @@ export class DashboardPageComponent implements OnInit {
   protected openFeature(card: DashboardFeatureCard): void {
     this.telemetry.trackEvent('dashboard_feature_opened', { feature: card.id });
     void this.router.navigate(card.route);
+  }
+
+  protected openLoginForm(): void {
+    this.authService.clearError();
+    this.authView.set('login');
+  }
+
+  protected openRegisterForm(): void {
+    this.authService.clearError();
+    this.authView.set('register');
+  }
+
+  protected backToPromo(): void {
+    this.authService.clearError();
+    this.authView.set('promo');
+  }
+
+  protected handleLogin(payload: LoginRequest): void {
+    this.authService
+      .login(payload)
+      .pipe(take(1), takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.feedback.success(this.i18n.translateUi('authLoginSuccess'));
+          this.authView.set('promo');
+        },
+        error: () => undefined,
+      });
+  }
+
+  protected handleRegister(payload: RegisterRequest): void {
+    this.authService
+      .register(payload)
+      .pipe(take(1), takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (createdUser) => {
+          this.prefillLogin.set(createdUser.login);
+          this.feedback.success(this.i18n.translateUi('authRegisterSuccess'));
+          this.authView.set('login');
+        },
+        error: () => undefined,
+      });
+  }
+
+  protected handleLogout(): void {
+    this.authService
+      .logout()
+      .pipe(take(1), takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.feedback.success(this.i18n.translateUi('authLogoutSuccess'));
+          this.authView.set('promo');
+        },
+      });
   }
 
   private translateWithFallback(key: string, fallback: string): string {

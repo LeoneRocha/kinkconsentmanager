@@ -6,6 +6,44 @@
     </div>
   </header>
 
+  <section class="dashboard__section" [attr.aria-label]="cloudSectionTitle()">
+    <h2 class="dashboard__section-title" [attr.title]="cloudSectionTitle()">
+      {{ cloudSectionTitle() }}
+    </h2>
+
+    <div class="dashboard__auth-slot">
+      @switch (authView()) {
+        @case ('login') {
+          <app-auth-login-form
+            [isLoading]="isAuthLoading()"
+            [errorMessage]="authError()"
+            [initialIdentifier]="prefillLogin()"
+            (submitted)="handleLogin($event)"
+            (switchToRegister)="openRegisterForm()"
+            (backRequested)="backToPromo()"
+          />
+        }
+        @case ('register') {
+          <app-auth-register-form
+            [isLoading]="isAuthLoading()"
+            [errorMessage]="authError()"
+            (submitted)="handleRegister($event)"
+            (switchToLogin)="openLoginForm()"
+            (backRequested)="backToPromo()"
+          />
+        }
+        @default {
+          <app-cloud-benefits-banner
+            [user]="currentUser()"
+            [isLoggingOut]="isAuthLoading()"
+            (advanceRequested)="openLoginForm()"
+            (logoutRequested)="handleLogout()"
+          />
+        }
+      }
+    </div>
+  </section>
+
   <section class="dashboard__section" [attr.aria-label]="sectionTitle()">
     <h2 class="dashboard__section-title" [attr.title]="sectionTitle()">{{ sectionTitle() }}</h2>
 

@@ -1,0 +1,169 @@
+<section class="auth-card" [attr.aria-label]="'authLoginTitle' | schemaTranslate: 'ui'">
+  <header class="auth-card__header">
+    <div class="auth-card__title-group">
+      <span class="auth-card__icon" aria-hidden="true">
+        <i
+          class="fa-solid fa-right-to-bracket"
+          [attr.title]="'authLoginTitle' | schemaTranslate: 'ui'"
+        ></i>
+      </span>
+      <div>
+        <h2 class="auth-card__title" [attr.title]="'authLoginTitle' | schemaTranslate: 'ui'">
+          {{ 'authLoginTitle' | schemaTranslate: 'ui' }}
+        </h2>
+        <p class="auth-card__subtitle" [attr.title]="'authLoginSubtitle' | schemaTranslate: 'ui'">
+          {{ 'authLoginSubtitle' | schemaTranslate: 'ui' }}
+        </p>
+      </div>
+    </div>
+
+    <button
+      type="button"
+      class="auth-card__back-btn"
+      data-testid="auth-login-back-btn"
+      [attr.aria-label]="'authBackToBenefits' | schemaTranslate: 'ui'"
+      [attr.title]="'authBackToBenefits' | schemaTranslate: 'ui'"
+      (click)="onBack()"
+    >
+      <i
+        class="fa-solid fa-arrow-left"
+        [attr.title]="'authBackToBenefits' | schemaTranslate: 'ui'"
+        aria-hidden="true"
+      ></i>
+      <span>{{ 'authBackToBenefits' | schemaTranslate: 'ui' }}</span>
+    </button>
+  </header>
+
+  @if (errorMessage(); as errorText) {
+    <div class="auth-card__alert" role="alert" [attr.title]="errorText">
+      <i class="fa-solid fa-circle-exclamation" [attr.title]="errorText" aria-hidden="true"></i>
+      <span>{{ errorText }}</span>
+    </div>
+  }
+
+  <form class="auth-card__form" [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+    <div class="auth-card__field">
+      <label
+        class="auth-card__label"
+        for="kcm-login-identifier"
+        [attr.title]="'authLoginIdentifierLabel' | schemaTranslate: 'ui'"
+      >
+        {{ 'authLoginIdentifierLabel' | schemaTranslate: 'ui' }}
+      </label>
+      <input
+        id="kcm-login-identifier"
+        type="text"
+        class="auth-card__input"
+        autocomplete="username"
+        formControlName="loginOrEmail"
+        [placeholder]="'authLoginIdentifierPlaceholder' | schemaTranslate: 'ui'"
+        [attr.title]="'authLoginIdentifierLabel' | schemaTranslate: 'ui'"
+        [attr.aria-invalid]="
+          form.controls.loginOrEmail.invalid && form.controls.loginOrEmail.touched
+        "
+      />
+      @if (form.controls.loginOrEmail.invalid && form.controls.loginOrEmail.touched) {
+        <span
+          class="auth-card__error"
+          [attr.title]="'authValidationRequired' | schemaTranslate: 'ui'"
+        >
+          {{ 'authValidationRequired' | schemaTranslate: 'ui' }}
+        </span>
+      }
+    </div>
+
+    <div class="auth-card__field">
+      <label
+        class="auth-card__label"
+        for="kcm-login-password"
+        [attr.title]="'authPasswordLabel' | schemaTranslate: 'ui'"
+      >
+        {{ 'authPasswordLabel' | schemaTranslate: 'ui' }}
+      </label>
+      <div class="auth-card__password-wrap">
+        <input
+          id="kcm-login-password"
+          [type]="showPassword() ? 'text' : 'password'"
+          class="auth-card__input auth-card__input--with-toggle"
+          autocomplete="current-password"
+          formControlName="password"
+          [placeholder]="'authPasswordPlaceholder' | schemaTranslate: 'ui'"
+          [attr.title]="'authPasswordLabel' | schemaTranslate: 'ui'"
+          [attr.aria-invalid]="form.controls.password.invalid && form.controls.password.touched"
+        />
+        <button
+          type="button"
+          class="auth-card__toggle-btn"
+          [attr.aria-label]="
+            (showPassword() ? 'authHidePassword' : 'authShowPassword') | schemaTranslate: 'ui'
+          "
+          [attr.title]="
+            (showPassword() ? 'authHidePassword' : 'authShowPassword') | schemaTranslate: 'ui'
+          "
+          (click)="togglePasswordVisibility()"
+        >
+          <i
+            [class]="showPassword() ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye'"
+            [attr.title]="
+              (showPassword() ? 'authHidePassword' : 'authShowPassword') | schemaTranslate: 'ui'
+            "
+            aria-hidden="true"
+          ></i>
+        </button>
+      </div>
+      @if (form.controls.password.invalid && form.controls.password.touched) {
+        <span
+          class="auth-card__error"
+          [attr.title]="'authValidationRequired' | schemaTranslate: 'ui'"
+        >
+          {{ 'authValidationRequired' | schemaTranslate: 'ui' }}
+        </span>
+      }
+    </div>
+
+    <div class="auth-card__actions">
+      <button
+        type="submit"
+        class="auth-card__submit-btn"
+        data-testid="auth-login-submit-btn"
+        [disabled]="form.invalid || isLoading()"
+        [attr.aria-label]="
+          (isLoading() ? 'authLoginSubmitting' : 'authLoginSubmit') | schemaTranslate: 'ui'
+        "
+        [attr.title]="
+          (isLoading() ? 'authLoginSubmitting' : 'authLoginSubmit') | schemaTranslate: 'ui'
+        "
+      >
+        @if (isLoading()) {
+          <i
+            class="fa-solid fa-spinner fa-spin"
+            [attr.title]="'authLoginSubmitting' | schemaTranslate: 'ui'"
+            aria-hidden="true"
+          ></i>
+          <span>{{ 'authLoginSubmitting' | schemaTranslate: 'ui' }}</span>
+        } @else {
+          <span>{{ 'authLoginSubmit' | schemaTranslate: 'ui' }}</span>
+        }
+      </button>
+    </div>
+  </form>
+
+  <footer class="auth-card__footer">
+    <span
+      class="auth-card__footer-text"
+      [attr.title]="'authNoAccountPrompt' | schemaTranslate: 'ui'"
+    >
+      {{ 'authNoAccountPrompt' | schemaTranslate: 'ui' }}
+    </span>
+    <button
+      type="button"
+      class="auth-card__switch-btn"
+      data-testid="auth-switch-to-register-btn"
+      [attr.aria-label]="'authNoAccountCta' | schemaTranslate: 'ui'"
+      [attr.title]="'authNoAccountCta' | schemaTranslate: 'ui'"
+      (click)="onSwitchToRegister()"
+    >
+      {{ 'authNoAccountCta' | schemaTranslate: 'ui' }}
+    </button>
+  </footer>
+</section>

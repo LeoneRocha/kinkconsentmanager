@@ -6,6 +6,7 @@ using KinkConsentManager.Core.Domain.Interfaces.Localization;
 using KinkConsentManager.Core.Domain.Interfaces.Repositories;
 using KinkConsentManager.Core.Domain.Interfaces.Services;
 using KinkConsentManager.Core.Domain.Localization.MessageKeys;
+using KinkConsentManager.Core.Domain.Validators.Authentication;
 using KinkConsentManager.Core.Service.Security;
 using SmartCoreHub.Core.SDK.Application.Transactions;
 using SmartCoreHub.Core.SDK.Domain.DTOs.Common;
@@ -97,25 +98,15 @@ public sealed class AuthenticationService : IAuthenticationService
         var validationResult = await _registerValidator.ValidateAsync(request, cancellationToken);
         if (!validationResult.IsValid)
         {
+            if (AreAllFailuresUniquenessConflicts(validationResult.Errors))
+            {
+                return await BuildConflictResponseAsync<UserKinkDto>(validationResult.Errors, cancellationToken);
+            }
+
             return await BuildValidationErrorResponseAsync<UserKinkDto>(validationResult.Errors, cancellationToken);
         }
 
-        if (await _userKinkRepository.LoginExistsAsync(request.Login, cancellationToken))
-        {
-            return BuildLocalizedFailResponse<UserKinkDto>(
-                AuthenticationMessageKeys.LoginAlreadyExists,
-                "Login is already in use.",
-                409);
-        }
-
         var email = new Email(request.Email.Trim());
-        if (await _userKinkRepository.EmailExistsAsync(email, cancellationToken))
-        {
-            return BuildLocalizedFailResponse<UserKinkDto>(
-                AuthenticationMessageKeys.EmailAlreadyExists,
-                "Email is already in use.",
-                409);
-        }
 
         var passwordHash = PasswordHasherFactory.GetHasher(PasswordAlgorithm.Bcrypt).HashPassword(request.Password);
         var user = new UserKink
@@ -423,6 +414,41 @@ public sealed class AuthenticationService : IAuthenticationService
             ExpiresAtUtc: accessExpiresAtUtc,
             RefreshTokenExpiresAtUtc: refreshExpiresAtUtc,
             User: userDto);
+    }
+
+    private static bool AreAllFailuresUniquenessConflicts(
+        IReadOnlyCollection<FluentValidation.Results.ValidationFailure> failures)
+    {
+        return failures.Count > 0 && failures.All(failure =>
+            failure.ErrorCode == RegisterUserKinkRequestValidator.LoginAlreadyExistsErrorCode ||
+            failure.ErrorCode == RegisterUserKinkRequestValidator.EmailAlreadyExistsErrorCode);
+    }
+
+    private async Task<ServiceResponse<T>> BuildConflictResponseAsync<T>(
+        IReadOnlyCollection<FluentValidation.Results.ValidationFailure> failures,
+        CancellationToken cancellationToken)
+    {
+        var errors = await FluentValidationErrorMappingHelper.MapAsync(
+            failures,
+            _errorLocalizationService,
+            "Conflict",
+            cancellationToken);
+
+        var hasLoginConflict = failures.Any(f =>
+            f.ErrorCode == RegisterUserKinkRequestValidator.LoginAlreadyExistsErrorCode);
+
+        var primaryKey = hasLoginConflict
+            ? AuthenticationMessageKeys.LoginAlreadyExists
+            : AuthenticationMessageKeys.EmailAlreadyExists;
+
+        var fallbackMessage = hasLoginConflict
+            ? "Login is already in use."
+            : "Email is already in use.";
+
+        var localized = _validationMessages.GetMessage(primaryKey, fallbackMessage);
+        var response = ServiceResponse<T>.Error(errors, localized, 409);
+        response.MessageKey = primaryKey;
+        return response;
     }
 
     private async Task<ServiceResponse<T>> BuildValidationErrorResponseAsync<T>(

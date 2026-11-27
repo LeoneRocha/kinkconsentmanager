@@ -54,6 +54,10 @@ public sealed class AuthenticationServiceTests
             DaysToExpiry = 7
         };
 
+        _userRepositoryMock = new Mock<IUserKinkRepository>();
+        _refreshTokenRepositoryMock = new Mock<IUserKinkRefreshTokenRepository>();
+        _transactionExecutorMock = new Mock<ITransactionExecutor>();
+
         var services = new ServiceCollection();
         services.AddLogging();
         services.AddSmartCoreHubFunctionalMessages(
@@ -72,6 +76,7 @@ public sealed class AuthenticationServiceTests
         services.AddScoped<IValidationMessageService, ValidationMessageService>();
         services.AddScoped<IErrorGetLocalizationService>(sp =>
             (ValidationMessageService)sp.GetRequiredService<IValidationMessageService>());
+        services.AddSingleton(_userRepositoryMock.Object);
         services.AddValidatorsFromAssemblyContaining<RegisterUserKinkRequestValidator>();
 
         _serviceProvider = services.BuildServiceProvider();
@@ -86,10 +91,6 @@ public sealed class AuthenticationServiceTests
 
         var securityFactory = new SecurityTokenAdapterFactory(new ConfigurationBuilder().Build(), tokenConfig);
         _jwtTokenService = new JwtTokenService(new JwtAccessTokenService(securityFactory));
-
-        _userRepositoryMock = new Mock<IUserKinkRepository>();
-        _refreshTokenRepositoryMock = new Mock<IUserKinkRefreshTokenRepository>();
-        _transactionExecutorMock = new Mock<ITransactionExecutor>();
 
         _sut = new AuthenticationService(
             _userRepositoryMock.Object,
@@ -220,6 +221,31 @@ public sealed class AuthenticationServiceTests
         response.Success.Should().BeFalse();
         response.StatusCode.Should().Be(409);
         response.MessageKey.Should().Be(AuthenticationMessageKeys.EmailAlreadyExists);
+        _userRepositoryMock.Verify(r => r.AddAsync(It.IsAny<UserKink>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Test]
+    public async Task RegisterAsync_WhenBothLoginAndEmailAlreadyExist_ShouldReturn409WithBothErrors()
+    {
+        // Cenário: Cadastro com login e e-mail simultaneamente já cadastrados na base.
+        // Objetivo: Garantir retorno HTTP 409 reportando ambos os erros de unicidade de forma independente.
+        _userRepositoryMock.Setup(r => r.LoginExistsAsync("Alex_Silva", It.IsAny<CancellationToken>())).ReturnsAsync(true);
+        _userRepositoryMock.Setup(r => r.EmailExistsAsync(new Email("alex@example.com"), It.IsAny<CancellationToken>())).ReturnsAsync(true);
+
+        var request = new RegisterUserKinkRequestDto(
+            Name: "Alex Silva",
+            Login: "Alex_Silva",
+            Email: "alex@example.com",
+            Password: "Strong@Password1",
+            ConfirmPassword: "Strong@Password1");
+
+        var response = await _sut.RegisterAsync(request);
+
+        response.Success.Should().BeFalse();
+        response.StatusCode.Should().Be(409);
+        response.Errors.Should().HaveCount(2);
+        response.Errors.Select(e => e.MessageKey).Should().Contain(AuthenticationMessageKeys.LoginAlreadyExists);
+        response.Errors.Select(e => e.MessageKey).Should().Contain(AuthenticationMessageKeys.EmailAlreadyExists);
         _userRepositoryMock.Verify(r => r.AddAsync(It.IsAny<UserKink>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 

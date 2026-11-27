@@ -10,11 +10,7 @@ namespace KinkConsentManager.Core.Service.Cqrs.Authentication.Commands;
 /// </summary>
 /// <param name="Request">Dados de entrada para cadastro do usuário.</param>
 public sealed record RegisterUserKinkCommand(RegisterUserKinkRequestDto Request)
-    : ICommand<UserKinkDto>, IHasValidationPayload<RegisterUserKinkRequestDto>
-{
-    /// <inheritdoc />
-    public RegisterUserKinkRequestDto Payload => Request;
-}
+    : ICommand<UserKinkDto>;
 
 /// <summary>
 /// Handler responsável por executar <see cref="RegisterUserKinkCommand"/> via <see cref="IAuthenticationService"/>.

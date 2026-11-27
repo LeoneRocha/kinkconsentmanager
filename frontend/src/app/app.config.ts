@@ -22,12 +22,14 @@ import {
   UserPreferencesRepository,
 } from './core/repositories';
 import {
+  API_BASE_URL,
   CompositeTranslateLoader,
   I18nService,
   TelemetryErrorHandler,
   TelemetryService,
   ThemeService,
 } from './core/services';
+import { environment } from '../environments/environment';
 import { routes } from './app.routes';
 
 export const appConfig: ApplicationConfig = {
@@ -41,6 +43,7 @@ export const appConfig: ApplicationConfig = {
     { provide: ErrorHandler, useClass: TelemetryErrorHandler },
     provideRouter(routes),
     provideHttpClient(),
+    { provide: API_BASE_URL, useValue: environment.apiBaseUrl },
     importProvidersFrom(MatDialogModule, MatSnackBarModule),
     provideTranslateService({
       fallbackLang: 'en-US',
