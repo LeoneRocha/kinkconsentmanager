@@ -16,7 +16,7 @@ import { AppHeaderComponent } from './app-header.component';
 @Component({
   template: '',
 })
-class DummyRouteComponent {}
+class DummyRouteComponent { }
 
 describe('AppHeaderComponent', () => {
   const clearRootClasses = (): void => {
@@ -289,9 +289,7 @@ describe('AppHeaderComponent', () => {
       JSON.stringify({
         user: {
           id: 42,
-          name: 'Ana Silva',
           login: 'ana.silva',
-          email: 'ana@exemplo.com',
           isActive: true,
           createdAt: '2026-11-26T00:00:00Z',
         },
@@ -312,11 +310,11 @@ describe('AppHeaderComponent', () => {
     const userBtn = el.querySelector<HTMLButtonElement>('[data-testid="header-user-btn"]');
     expect(userBtn).not.toBeNull();
     expect(userBtn?.classList.contains('app-shell__icon-btn--user')).toBe(true);
-    expect(userBtn?.getAttribute('title')).toContain('Ana Silva');
+    expect(userBtn?.getAttribute('title')).toContain('ana.silva');
 
     const userIcon = userBtn?.querySelector<HTMLElement>('i.fa-user.app-shell__user-icon');
     expect(userIcon).not.toBeNull();
-    expect(userIcon?.getAttribute('title')).toContain('Ana Silva');
+    expect(userIcon?.getAttribute('title')).toContain('ana.silva');
 
     for (const mode of ['sober', 'light', 'dark'] as const) {
       themeService.setTheme(mode);
@@ -332,9 +330,8 @@ describe('AppHeaderComponent', () => {
 
     const menu = el.querySelector('.app-shell__popover--user-menu');
     expect(menu).not.toBeNull();
-    expect(menu?.textContent).toContain('Ana Silva');
     expect(menu?.textContent).toContain('@ana.silva');
-    expect(menu?.textContent).toContain('ana@exemplo.com');
+    expect(menu?.textContent).not.toContain('ana@exemplo.com');
 
     const logoutBtn = el.querySelector<HTMLButtonElement>('[data-testid="header-user-logout"]');
     expect(logoutBtn).not.toBeNull();

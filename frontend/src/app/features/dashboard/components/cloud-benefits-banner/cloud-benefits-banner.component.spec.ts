@@ -5,9 +5,7 @@ import { CloudBenefitsBannerComponent } from './cloud-benefits-banner.component'
 
 const MOCK_USER: AuthUser = {
   id: 7,
-  name: 'Alex Silva',
   login: 'alex.silva',
-  email: 'alex@example.com',
   isActive: true,
   createdAt: '2026-01-01T00:00:00Z',
   lastLoginAt: null,
@@ -88,9 +86,7 @@ describe('CloudBenefitsBannerComponent', () => {
 
     // Assert
     expect(hostEl.querySelector('.cloud-banner__pill')).toBeNull();
-    expect(hostEl.textContent).toContain('Alex Silva');
     expect(hostEl.textContent).toContain('@alex.silva');
-    expect(hostEl.textContent).toContain('alex@example.com');
     expect(logoutSpy).toHaveBeenCalledTimes(1);
   });
 });

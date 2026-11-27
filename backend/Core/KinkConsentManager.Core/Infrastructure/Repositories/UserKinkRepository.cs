@@ -1,5 +1,6 @@
 using KinkConsentManager.Core.Domain.Entities;
 using KinkConsentManager.Core.Domain.Interfaces.Repositories;
+using KinkConsentManager.Core.Domain.Security;
 using KinkConsentManager.Core.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using SmartCoreHub.Core.SDK.Domain.Interfaces.Common;
@@ -40,7 +41,8 @@ public sealed class UserKinkRepository
     public Task<UserKink?> GetByEmailAsync(Email email, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(email);
-        return _dbSet.FirstOrDefaultAsync(u => u.Email == email, cancellationToken);
+        var emailHash = EmailHashHelper.ComputeHash(email);
+        return _dbSet.FirstOrDefaultAsync(u => u.EmailHash == emailHash, cancellationToken);
     }
 
     /// <inheritdoc />
@@ -84,7 +86,8 @@ public sealed class UserKinkRepository
     public Task<bool> EmailExistsAsync(Email email, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(email);
-        return _dbSet.AnyAsync(u => u.Email == email, cancellationToken);
+        var emailHash = EmailHashHelper.ComputeHash(email);
+        return _dbSet.AnyAsync(u => u.EmailHash == emailHash, cancellationToken);
     }
 
     private static bool TryCreateEmail(string candidate, out Email? email)

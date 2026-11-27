@@ -7,15 +7,15 @@
       [class.app-shell__icon-btn--active]="isOpen()"
       aria-haspopup="menu"
       [attr.aria-expanded]="isOpen()"
-      [attr.aria-label]="('authUserMenuLabel' | schemaTranslate: 'ui') + ' — ' + currentUser.name"
-      [attr.title]="('authUserMenuLabel' | schemaTranslate: 'ui') + ' — ' + currentUser.name"
-      [matTooltip]="currentUser.name"
+      [attr.aria-label]="('authUserMenuLabel' | schemaTranslate: 'ui') + ' — ' + currentUser.login"
+      [attr.title]="('authUserMenuLabel' | schemaTranslate: 'ui') + ' — ' + currentUser.login"
+      [matTooltip]="currentUser.login"
       matTooltipPosition="below"
       (click)="toggleRequested.emit()"
     >
       <i
         class="fa-solid fa-user app-shell__user-icon"
-        [attr.title]="('authUserMenuLabel' | schemaTranslate: 'ui') + ' — ' + currentUser.name"
+        [attr.title]="('authUserMenuLabel' | schemaTranslate: 'ui') + ' — ' + currentUser.login"
         aria-hidden="true"
       ></i>
     </button>
@@ -27,17 +27,9 @@
         [attr.aria-label]="'authUserMenuLabel' | schemaTranslate: 'ui'"
       >
         <div class="app-shell__user-summary">
-          <span class="app-shell__user-name" [attr.title]="currentUser.name">{{
-            currentUser.name
-          }}</span>
-          <span class="app-shell__user-meta" [attr.title]="'@' + currentUser.login"
+          <span class="app-shell__user-name" [attr.title]="'@' + currentUser.login"
             >&#64;{{ currentUser.login }}</span
           >
-          @if (currentUser.email) {
-            <span class="app-shell__user-email" [attr.title]="currentUser.email">{{
-              currentUser.email
-            }}</span>
-          }
         </div>
         <button
           type="button"

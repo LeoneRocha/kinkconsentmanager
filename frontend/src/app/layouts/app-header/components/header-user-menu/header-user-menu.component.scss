@@ -41,15 +41,6 @@
   white-space: nowrap;
 }
 
-.app-shell__user-meta,
-.app-shell__user-email {
-  font-size: 0.75rem;
-  color: v.$text-muted;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 .app-shell__user-logout {
   color: v.$accent-text;
   font-weight: 600;

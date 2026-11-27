@@ -1,16 +1,21 @@
 using KinkConsentManager.Core.Domain.Entities;
-using SmartCoreHub.Core.SDK.Domain.ValueObjects;
 
 namespace KinkConsentManager.Core.Infrastructure.DataSeed;
 
 /// <summary>
 /// Fornece usuários de exemplo e credenciais determinísticas para ambientes que aplicam o seed.
-/// O código contém somente o hash BCrypt previamente calculado; não recupera nem expõe senhas em texto puro.
+/// O código contém somente hashes criptográficos previamente calculados; não recupera nem expõe e-mails ou senhas em texto puro (LGPD).
 /// </summary>
 public static class UserKinkMockData
 {
     /// <summary>Instante UTC fixo usado nos campos de auditoria do seed.</summary>
     public static readonly DateTime SeedTimestamp = new(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+
+    /// <summary>Hash SHA-256 fixo do e-mail de administrador.</summary>
+    public const string SeedAdminEmailHash = "FFDD3421B537E0C70CB8D8931772925F40CD76561DDC566B6CDD017E420A2810";
+
+    /// <summary>Hash SHA-256 fixo do e-mail do usuário de exemplo.</summary>
+    public const string SeedUserKinkEmailHash = "5BA24FBC3AC450EC1740200753BC7C607D869AB010935DFBB1121D3315553A15";
 
 #pragma warning disable S2068
     // SonarQube: disable S8215
@@ -40,14 +45,13 @@ public static class UserKinkMockData
     {
         return new List<UserKink>
         {
-            // 1. Administrador da Plataforma (admin / admin1234)
+            // 1. Administrador da Plataforma
             new UserKink
             {
                 Id = UserIds.Admin,
-                Name = "Admin Kink",
                 Login = "admin",
                 NormalizedLogin = "admin",
-                Email = new Email("admin@kinkconsentmanager.local"),
+                EmailHash = SeedAdminEmailHash,
                 PasswordHash = SeedAdminPasswordHash,
                 LastLoginAt = null,
                 CreatedAt = SeedTimestamp,
@@ -55,14 +59,13 @@ public static class UserKinkMockData
                 IsActive = true
             },
 
-            // 2. Usuário de exemplo para UserKink (user.kink / user.kink2026)
+            // 2. Usuário de exemplo para UserKink
             new UserKink
             {
                 Id = UserIds.DemoUserKink,
-                Name = "Demo User Kink",
                 Login = "user.kink",
                 NormalizedLogin = "user.kink",
-                Email = new Email("user.kink@kinkconsentmanager.local"),
+                EmailHash = SeedUserKinkEmailHash,
                 PasswordHash = SeedUserKinkPasswordHash,
                 LastLoginAt = null,
                 CreatedAt = SeedTimestamp,

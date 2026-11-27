@@ -1,3 +1,4 @@
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
@@ -14,7 +15,7 @@ namespace KinkConsentManager.Core.Service.Security;
 public interface IJwtTokenService
 {
     /// <summary>
-    /// Gera um Access Token JWT assinado com HS512 contendo as claims padrão do usuário e a claim <c>login</c>.
+    /// Gera um Access Token JWT assinado com HS512 contendo as claims padrão sem exposição de e-mail (LGPD) e a claim <c>login</c>.
     /// </summary>
     /// <param name="user">Entidade do usuário autenticado.</param>
     /// <returns>Token JWT serializado.</returns>
@@ -68,11 +69,13 @@ public sealed class JwtTokenService : IJwtTokenService
     {
         ArgumentNullException.ThrowIfNull(user);
 
-        var claims = new List<Claim>(
-            JwtAccessTokenService.BuildStandardAccessClaims(user.Id, user.Name, user.Email.Value))
-        {
-            new("login", user.Login)
-        };
+        var claims = JwtAccessTokenService
+            .BuildStandardAccessClaims(user.Id, user.Login, string.Empty)
+            .Where(c =>
+                !string.Equals(c.Type, JwtRegisteredClaimNames.Email, StringComparison.OrdinalIgnoreCase) &&
+                !string.Equals(c.Type, ClaimTypes.Email, StringComparison.OrdinalIgnoreCase))
+            .ToList();
+        claims.Add(new Claim("login", user.Login));
 
         return _accessTokens.GenerateAccessToken(claims);
     }

@@ -57,7 +57,6 @@ public sealed class AuthApiIntegrationTests
         const string password = "Str0ng!Password1";
 
         var registerRequest = new RegisterUserKinkRequestDto(
-            "Test User",
             login,
             email,
             password,
@@ -73,9 +72,13 @@ public sealed class AuthApiIntegrationTests
             var dataElement = doc.RootElement.GetProperty("data");
             dataElement.TryGetProperty("password", out _).Should().BeFalse();
             dataElement.TryGetProperty("passwordHash", out _).Should().BeFalse();
+            dataElement.TryGetProperty("email", out _).Should().BeFalse();
+            dataElement.TryGetProperty("emailHash", out _).Should().BeFalse();
+            dataElement.TryGetProperty("name", out _).Should().BeFalse();
         }
 
         rawJson.Should().NotContain(password);
+        rawJson.Should().NotContain(email);
 
         var envelope = JsonSerializer.Deserialize<ServiceResponse<UserKinkDto>>(rawJson, JsonOptions);
         envelope.Should().NotBeNull();
@@ -83,11 +86,9 @@ public sealed class AuthApiIntegrationTests
         envelope.Data.Should().NotBeNull();
         envelope.Data!.Id.Should().BeGreaterThan(0);
         envelope.Data.Login.Should().Be(login);
-        envelope.Data.Email.Should().Be(email);
         envelope.Data.IsActive.Should().BeTrue();
 
         var duplicateLoginRequest = new RegisterUserKinkRequestDto(
-            "Another User",
             login,
             $"other_{suffix}@example.com",
             password,
@@ -100,7 +101,6 @@ public sealed class AuthApiIntegrationTests
         duplicateLoginBody!.MessageKey.Should().Be(AuthenticationMessageKeys.LoginAlreadyExists);
 
         var duplicateEmailRequest = new RegisterUserKinkRequestDto(
-            "Third User",
             $"other_{suffix}",
             email,
             password,
@@ -119,7 +119,6 @@ public sealed class AuthApiIntegrationTests
         // Cenário: Envio de payload inválido (e-mail inválido e senha fraca) com Accept-Language pt-BR e depois en-US.
         // Objetivo: Comprovar negociação multi-idioma dinâmica em errors[].description mantendo messageKey idêntica.
         var invalidPayload = new RegisterUserKinkRequestDto(
-            "Valid Name",
             "valid_login",
             "email-invalido",
             "weak",
@@ -174,7 +173,6 @@ public sealed class AuthApiIntegrationTests
         // Objetivo: Comprovar autenticação dual (login e e-mail) case-insensitive retornando 200 OK e JWT Bearer.
         const string password = "Str0ng!Password1";
         var registerRequest = new RegisterUserKinkRequestDto(
-            "Alex Silva",
             "Alex_Silva",
             "alex@example.com",
             password,
@@ -198,7 +196,6 @@ public sealed class AuthApiIntegrationTests
         loginByUpperLoginBody.Data.AccessToken.Should().NotBeNullOrWhiteSpace();
         loginByUpperLoginBody.Data.RefreshToken.Should().NotBeNullOrWhiteSpace();
         loginByUpperLoginBody.Data.User.Login.Should().Be("Alex_Silva");
-        loginByUpperLoginBody.Data.User.Email.Should().Be("alex@example.com");
 
         var loginByUpperEmail = await _client.PostAsJsonAsync("/api/v1/auth/login", new LoginDto
         {
@@ -225,7 +222,7 @@ public sealed class AuthApiIntegrationTests
         var email = $"anti_{suffix}@example.com";
         const string password = "Str0ng!Password1";
 
-        await RegisterUserAsync("Anti Enum", login, email, password);
+        await RegisterUserAsync(login, email, password);
 
         var wrongPasswordResponse = await _client.PostAsJsonAsync("/api/v1/auth/login", new LoginDto
         {
@@ -263,7 +260,7 @@ public sealed class AuthApiIntegrationTests
         var email = $"me_{suffix}@example.com";
         const string password = "Str0ng!Password1";
 
-        await RegisterUserAsync("Profile User", login, email, password);
+        await RegisterUserAsync(login, email, password);
         var tokens = await LoginAsync(login, password);
 
         using var request = new HttpRequestMessage(HttpMethod.Get, "/api/v1/auth/me");
@@ -277,8 +274,6 @@ public sealed class AuthApiIntegrationTests
         body!.Success.Should().BeTrue();
         body.Data.Should().NotBeNull();
         body.Data!.Login.Should().Be(login);
-        body.Data.Email.Should().Be(email);
-        body.Data.Name.Should().Be("Profile User");
     }
 
     [Test]
@@ -291,7 +286,7 @@ public sealed class AuthApiIntegrationTests
         var email = $"refresh_{suffix}@example.com";
         const string password = "Str0ng!Password1";
 
-        await RegisterUserAsync("Refresh User", login, email, password);
+        await RegisterUserAsync(login, email, password);
         var initialTokens = await LoginAsync(login, password);
 
         var rotateResponse = await _client.PostAsJsonAsync(
@@ -333,7 +328,7 @@ public sealed class AuthApiIntegrationTests
         var email = $"logout_{suffix}@example.com";
         const string password = "Str0ng!Password1";
 
-        await RegisterUserAsync("Logout User", login, email, password);
+        await RegisterUserAsync(login, email, password);
         var tokens = await LoginAsync(login, password);
 
         using var logoutRequest = new HttpRequestMessage(HttpMethod.Post, "/api/v1/auth/logout")
@@ -366,11 +361,11 @@ public sealed class AuthApiIntegrationTests
         return await _client.SendAsync(request);
     }
 
-    private async Task RegisterUserAsync(string name, string login, string email, string password)
+    private async Task RegisterUserAsync(string login, string email, string password)
     {
         var response = await _client.PostAsJsonAsync(
             "/api/v1/auth/register",
-            new RegisterUserKinkRequestDto(name, login, email, password, password));
+            new RegisterUserKinkRequestDto(login, email, password, password));
 
         response.StatusCode.Should().Be(HttpStatusCode.Created);
     }

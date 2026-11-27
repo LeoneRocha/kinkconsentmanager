@@ -36,11 +36,11 @@ public sealed class JwtTokenServiceTests
     }
 
     [Test]
-    public void GenerateAccessToken_ShouldIssueHs512JwtWithExpectedStandardAndLoginClaims()
+    public void GenerateAccessToken_ShouldIssueHs512JwtWithExpectedStandardAndLoginClaimsWithoutEmail()
     {
         // Cenário: Emissão de Access Token JWT para um UserKink autenticado.
-        // Objetivo: Verificar algoritmo HS512 no cabeçalho e presença das claims jti, nameid, name, email e login.
-        var user = CreateUser(id: 77, name: "Alex Silva", login: "Alex_Silva", email: "alex@example.com");
+        // Objetivo: Verificar algoritmo HS512 no cabeçalho, presença das claims jti, nameid, unique_name e login, e ausência de e-mail ou EmailHash (LGPD).
+        var user = CreateUser(id: 77, login: "Alex_Silva", email: "alex@example.com");
 
         var token = _jwtTokenService.GenerateAccessToken(user);
 
@@ -52,9 +52,10 @@ public sealed class JwtTokenServiceTests
         jwt.Claims.Should().Contain(c => c.Type == JwtRegisteredClaimNames.NameId && c.Value == "77");
         jwt.Claims.Should().Contain(c =>
             (c.Type == JwtRegisteredClaimNames.UniqueName || c.Type == JwtRegisteredClaimNames.Name || c.Type == "name") &&
-            c.Value == "Alex Silva");
-        jwt.Claims.Should().Contain(c => c.Type == JwtRegisteredClaimNames.Email && c.Value == "alex@example.com");
+            c.Value == "Alex_Silva");
         jwt.Claims.Should().Contain(c => c.Type == "login" && c.Value == "Alex_Silva");
+        jwt.Claims.Should().NotContain(c => c.Type == JwtRegisteredClaimNames.Email || c.Value.Contains("alex@example.com", StringComparison.OrdinalIgnoreCase));
+        jwt.Claims.Should().NotContain(c => c.Value == user.EmailHash);
     }
 
     [Test]
@@ -62,7 +63,7 @@ public sealed class JwtTokenServiceTests
     {
         // Cenário: Validação de um Access Token recém-emitido pelo próprio JwtTokenService.
         // Objetivo: Garantir que ValidateToken retorne true e extraia corretamente o identificador numérico do usuário.
-        var user = CreateUser(id: 901, name: "Jordan", login: "jordan_k", email: "jordan@example.com");
+        var user = CreateUser(id: 901, login: "jordan_k", email: "jordan@example.com");
         var token = _jwtTokenService.GenerateAccessToken(user);
 
         var isValid = _jwtTokenService.ValidateToken(token, out var userId);
@@ -119,17 +120,16 @@ public sealed class JwtTokenServiceTests
         otherHash.Should().NotBe(hash1);
     }
 
-    private static UserKink CreateUser(long id, string name, string login, string email)
+    private static UserKink CreateUser(long id, string login, string email)
     {
         var user = new UserKink
         {
             Id = id,
-            Name = name,
-            Email = new Email(email),
             PasswordHash = "$2a$11$hash",
             IsActive = true
         };
         user.SetLogin(login);
+        user.SetEmail(email);
         return user;
     }
 }

@@ -22,6 +22,8 @@ describe('AuthRegisterFormComponent', () => {
         authRegisterLoginPlaceholder: 'seu.login',
         authRegisterEmailLabel: 'E-mail',
         authRegisterEmailPlaceholder: 'voce@exemplo.com',
+        authRegisterPrivacyTitle: 'Sua privacidade vem em primeiro lugar',
+        authRegisterPrivacyNotice: 'Não salvamos seu e-mail no banco pela LGPD.',
         authPasswordLabel: 'Senha',
         authPasswordPlaceholder: 'Digite sua senha',
         authConfirmPasswordLabel: 'Confirmar senha',
@@ -82,8 +84,10 @@ describe('AuthRegisterFormComponent', () => {
     await fixture.whenStable();
 
     // Assert
+    expect(
+      hostEl.querySelector('[data-testid="auth-register-privacy-notice"]')?.textContent,
+    ).toContain('LGPD');
     expect(submitSpy).toHaveBeenCalledWith({
-      name: 'new.user',
       login: 'new.user',
       email: 'new.user@example.com',
       password: 'Strong@123',

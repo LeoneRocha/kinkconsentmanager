@@ -34,10 +34,10 @@ namespace KinkConsentManager.Core.Infrastructure.Migrations.PostgreSql
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("Email")
+                    b.Property<string>("EmailHash")
                         .IsRequired()
-                        .HasMaxLength(191)
-                        .HasColumnType("character varying(191)");
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
 
                     b.Property<bool>("IsActive")
                         .ValueGeneratedOnAdd()
@@ -51,11 +51,6 @@ namespace KinkConsentManager.Core.Infrastructure.Migrations.PostgreSql
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
 
                     b.Property<string>("NormalizedLogin")
                         .IsRequired()
@@ -72,9 +67,9 @@ namespace KinkConsentManager.Core.Infrastructure.Migrations.PostgreSql
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Email")
+                    b.HasIndex("EmailHash")
                         .IsUnique()
-                        .HasDatabaseName("IX_UserKinks_Email");
+                        .HasDatabaseName("IX_UserKinks_EmailHash");
 
                     b.HasIndex("IsActive")
                         .HasDatabaseName("IX_UserKinks_IsActive");
@@ -94,10 +89,9 @@ namespace KinkConsentManager.Core.Infrastructure.Migrations.PostgreSql
                         {
                             Id = 1L,
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Email = "admin@kinkconsentmanager.local",
+                            EmailHash = "FFDD3421B537E0C70CB8D8931772925F40CD76561DDC566B6CDD017E420A2810",
                             IsActive = true,
                             Login = "admin",
-                            Name = "Admin Kink",
                             NormalizedLogin = "admin",
                             PasswordHash = "$2a$11$Avil9NTw2WW2CiU1ey5q8OSOaidQnX7lKEhhPqyq4gkAkXHEpOorC",
                             UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
@@ -106,10 +100,9 @@ namespace KinkConsentManager.Core.Infrastructure.Migrations.PostgreSql
                         {
                             Id = 2L,
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Email = "user.kink@kinkconsentmanager.local",
+                            EmailHash = "5BA24FBC3AC450EC1740200753BC7C607D869AB010935DFBB1121D3315553A15",
                             IsActive = true,
                             Login = "user.kink",
-                            Name = "Demo User Kink",
                             NormalizedLogin = "user.kink",
                             PasswordHash = "$2a$11$DfVa0L0kLOnn3fD31R1BcOV5ByNv3OOG/cyO7mXP4DXJSA7q3nCZO",
                             UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)

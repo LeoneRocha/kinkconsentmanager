@@ -45,9 +45,7 @@ describe('HeaderUserMenuComponent', () => {
       JSON.stringify({
         user: {
           id: 7,
-          name: 'Carlos Mendes',
           login: 'carlos.m',
-          email: 'carlos@exemplo.com',
           isActive: true,
           createdAt: '2026-11-26T00:00:00Z',
         },
@@ -82,9 +80,8 @@ describe('HeaderUserMenuComponent', () => {
     await fixture.whenStable();
 
     const menu = el.querySelector('.app-shell__popover--user-menu');
-    expect(menu?.textContent).toContain('Carlos Mendes');
     expect(menu?.textContent).toContain('@carlos.m');
-    expect(menu?.textContent).toContain('carlos@exemplo.com');
+    expect(menu?.textContent).not.toContain('carlos@exemplo.com');
 
     el.querySelector<HTMLButtonElement>('[data-testid="header-user-logout"]')?.click();
     expect(closedCount).toBe(1);

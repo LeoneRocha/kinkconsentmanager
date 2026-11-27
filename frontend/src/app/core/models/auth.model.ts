@@ -1,8 +1,6 @@
 export interface AuthUser {
   readonly id: number;
-  readonly name: string;
   readonly login: string;
-  readonly email: string;
   readonly isActive: boolean;
   readonly createdAt: string;
   readonly lastLoginAt?: string | null;
@@ -14,7 +12,6 @@ export interface LoginRequest {
 }
 
 export interface RegisterRequest {
-  readonly name: string;
   readonly login: string;
   readonly email: string;
   readonly password: string;

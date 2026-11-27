@@ -111,12 +111,11 @@ public sealed class AuthenticationService : IAuthenticationService
         var passwordHash = PasswordHasherFactory.GetHasher(PasswordAlgorithm.Bcrypt).HashPassword(request.Password);
         var user = new UserKink
         {
-            Name = request.Name.Trim(),
-            Email = email,
             PasswordHash = passwordHash,
             IsActive = true
         };
         user.SetLogin(request.Login);
+        user.SetEmail(email);
 
         var persisted = await _userKinkRepository.AddAsync(user, cancellationToken);
         var dto = _mapper.Map<UserKinkDto>(persisted);

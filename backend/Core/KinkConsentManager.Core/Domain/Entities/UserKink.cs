@@ -1,3 +1,4 @@
+using KinkConsentManager.Core.Domain.Security;
 using SmartCoreHub.Core.SDK.Domain.Entities.Common;
 using SmartCoreHub.Core.SDK.Domain.ValueObjects;
 
@@ -8,17 +9,14 @@ namespace KinkConsentManager.Core.Domain.Entities;
 /// </summary>
 public class UserKink : LongEntityBase
 {
-    /// <summary>Nome ou pseudônimo de exibição do usuário.</summary>
-    public string Name { get; set; } = string.Empty;
-
     /// <summary>Identificador único de login (preserva grafia original de exibição).</summary>
     public string Login { get; set; } = string.Empty;
 
     /// <summary>Login normalizado em minúsculas para unicidade e busca indexada case-insensitive no PostgreSQL.</summary>
     public string NormalizedLogin { get; set; } = string.Empty;
 
-    /// <summary>Value Object de e-mail validado e normalizado em minúsculas pelo SmartCoreHub.Core.SDK.</summary>
-    public Email Email { get; set; } = null!;
+    /// <summary>Hash criptográfico SHA-256 do e-mail normalizado do usuário (LGPD — e-mail em texto plano nunca é persistido).</summary>
+    public string EmailHash { get; set; } = string.Empty;
 
     /// <summary>Hash criptográfico BCrypt da senha do usuário (com salt embutido).</summary>
     public string PasswordHash { get; set; } = string.Empty;
@@ -38,5 +36,19 @@ public class UserKink : LongEntityBase
     {
         Login = (login ?? string.Empty).Trim();
         NormalizedLogin = Login.ToLowerInvariant();
+    }
+
+    /// <summary>Calcula e armazena apenas o hash irreversível do Value Object <see cref="Email"/> (LGPD).</summary>
+    /// <param name="email">Value Object de e-mail validado e normalizado.</param>
+    public void SetEmail(Email email)
+    {
+        EmailHash = EmailHashHelper.ComputeHash(email);
+    }
+
+    /// <summary>Valida, normaliza e armazena apenas o hash irreversível do e-mail informado (LGPD).</summary>
+    /// <param name="rawEmail">Endereço de e-mail em texto plano.</param>
+    public void SetEmail(string rawEmail)
+    {
+        EmailHash = EmailHashHelper.ComputeHash(rawEmail);
     }
 }

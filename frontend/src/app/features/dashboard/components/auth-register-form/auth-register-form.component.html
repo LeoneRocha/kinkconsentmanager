@@ -115,6 +115,33 @@
       }
     </div>
 
+    <aside
+      class="auth-card__privacy"
+      data-testid="auth-register-privacy-notice"
+      role="note"
+      [attr.aria-label]="'authRegisterPrivacyTitle' | schemaTranslate: 'ui'"
+    >
+      <i
+        class="fa-solid fa-shield-halved auth-card__privacy-icon"
+        [attr.title]="'authRegisterPrivacyTitle' | schemaTranslate: 'ui'"
+        aria-hidden="true"
+      ></i>
+      <div class="auth-card__privacy-copy">
+        <strong
+          class="auth-card__privacy-title"
+          [attr.title]="'authRegisterPrivacyTitle' | schemaTranslate: 'ui'"
+        >
+          {{ 'authRegisterPrivacyTitle' | schemaTranslate: 'ui' }}
+        </strong>
+        <p
+          class="auth-card__privacy-text"
+          [attr.title]="'authRegisterPrivacyNotice' | schemaTranslate: 'ui'"
+        >
+          {{ 'authRegisterPrivacyNotice' | schemaTranslate: 'ui' }}
+        </p>
+      </div>
+    </aside>
+
     <div class="auth-card__field">
       <label
         class="auth-card__label"

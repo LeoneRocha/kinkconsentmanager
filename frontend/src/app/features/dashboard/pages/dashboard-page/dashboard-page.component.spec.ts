@@ -34,9 +34,7 @@ const MOCK_SCHEMA: ChecklistSchema = {
 
 const MOCK_AUTH_USER: AuthUser = {
   id: 2,
-  name: 'user.kink',
   login: 'user.kink',
-  email: 'user.kink@kinkconsentmanager.local',
   isActive: true,
   createdAt: '2026-01-01T00:00:00Z',
   lastLoginAt: null,
@@ -120,6 +118,8 @@ describe('DashboardPageComponent', () => {
         authRegisterLoginPlaceholder: 'seu.login',
         authRegisterEmailLabel: 'E-mail',
         authRegisterEmailPlaceholder: 'voce@exemplo.com',
+        authRegisterPrivacyTitle: 'Sua privacidade vem em primeiro lugar',
+        authRegisterPrivacyNotice: 'Não salvamos seu e-mail no banco pela LGPD.',
         authConfirmPasswordLabel: 'Confirmar senha',
         authConfirmPasswordPlaceholder: 'Repita sua senha',
         authPasswordHint: '8+ caracteres.',

@@ -1,4 +1,5 @@
 using KinkConsentManager.Core.Domain.Entities;
+using KinkConsentManager.Core.Domain.Security;
 using KinkConsentManager.Core.Infrastructure.Data;
 using KinkConsentManager.Core.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -28,12 +29,11 @@ public sealed class UserKinkRepositoryTests
 
         var user = new UserKink
         {
-            Name = "Alex Silva",
-            Email = new Email("Alex.Silva@Example.com"),
             PasswordHash = "$2a$11$hashedpasswordvalue",
             IsActive = true
         };
         user.SetLogin("Alex_Silva");
+        user.SetEmail("Alex.Silva@Example.com");
 
         _dbContext.UserKinks.Add(user);
         await _dbContext.SaveChangesAsync();
@@ -74,11 +74,11 @@ public sealed class UserKinkRepositoryTests
     public async Task GetByEmailAsync_WhenEmailVariesInCase_ShouldReturnUser(string candidateEmail)
     {
         // Cenário: Consulta por Value Object Email construído com diferentes capitalizações.
-        // Objetivo: Garantir busca case-insensitive sobre a coluna convertida de Email.
+        // Objetivo: Garantir busca case-insensitive sobre EmailHash sem armazenar e-mail em texto plano.
         var found = await _repository.GetByEmailAsync(new Email(candidateEmail));
 
         found.Should().NotBeNull();
-        found!.Email.Value.Should().Be("alex.silva@example.com");
+        found!.EmailHash.Should().Be(EmailHashHelper.ComputeHash("alex.silva@example.com"));
     }
 
     [TestCase("Alex_Silva")]
@@ -89,12 +89,12 @@ public sealed class UserKinkRepositoryTests
     public async Task GetByLoginOrEmailAsync_WhenValidLoginOrEmailWithDifferentCasing_ShouldReturnUser(string loginOrEmail)
     {
         // Cenário: Autenticação dual informando ora login ora e-mail com variações de caixa.
-        // Objetivo: Validar que GetByLoginOrEmailAsync resolva corretamente ambos os identificadores.
+        // Objetivo: Validar que GetByLoginOrEmailAsync resolva corretamente ambos os identificadores via hash LGPD.
         var found = await _repository.GetByLoginOrEmailAsync(loginOrEmail);
 
         found.Should().NotBeNull();
         found!.Login.Should().Be("Alex_Silva");
-        found.Email.Value.Should().Be("alex.silva@example.com");
+        found.EmailHash.Should().Be(EmailHashHelper.ComputeHash("alex.silva@example.com"));
     }
 
     [TestCase("foo@invalido")]

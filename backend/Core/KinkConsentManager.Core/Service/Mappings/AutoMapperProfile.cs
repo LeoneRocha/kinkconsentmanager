@@ -14,8 +14,6 @@ public sealed class AutoMapperProfile : Profile
     /// </summary>
     public AutoMapperProfile()
     {
-        CreateMap<UserKink, UserKinkDto>()
-            .ForCtorParam("Email", opt => opt.MapFrom(src => src.Email.Value))
-            .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.Email.Value));
+        CreateMap<UserKink, UserKinkDto>();
     }
 }

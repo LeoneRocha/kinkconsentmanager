@@ -24,7 +24,7 @@ export class CloudBenefitsBannerComponent {
     if (!current) {
       return '';
     }
-    const source = (current.name || current.login).trim();
+    const source = current.login.trim();
     return source ? source.charAt(0).toUpperCase() : '?';
   });
 

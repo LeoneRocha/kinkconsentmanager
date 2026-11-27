@@ -63,48 +63,6 @@ public sealed class RegisterUserKinkRequestValidatorTests
     }
 
     [Test]
-    public async Task ValidateAsync_WhenNameIsEmpty_ShouldFailWithNameRequired()
-    {
-        // Cenário: Nome vazio informado na requisição de cadastro.
-        // Objetivo: Validar obrigatoriedade de Name com ErrorCode e MessageKey RequiredField.
-        var request = CreateValidRequest() with { Name = string.Empty };
-
-        var result = await _validator.ValidateAsync(request);
-
-        AssertFailure(result, nameof(RegisterUserKinkRequestDto.Name),
-            "KinkConsentManager.Domain.RegisterUserKinkValidator.NameRequired",
-            ValidationMessageKeys.RequiredField);
-    }
-
-    [Test]
-    public async Task ValidateAsync_WhenNameIsTooShort_ShouldFailWithNameMin()
-    {
-        // Cenário: Nome com menos de 3 caracteres ("Al").
-        // Objetivo: Validar comprimento mínimo de Name com MessageKey MinimumLength.
-        var request = CreateValidRequest() with { Name = "Al" };
-
-        var result = await _validator.ValidateAsync(request);
-
-        AssertFailure(result, nameof(RegisterUserKinkRequestDto.Name),
-            "KinkConsentManager.Domain.RegisterUserKinkValidator.NameMin",
-            ValidationMessageKeys.MinimumLength);
-    }
-
-    [Test]
-    public async Task ValidateAsync_WhenNameExceeds100Chars_ShouldFailWithNameMax()
-    {
-        // Cenário: Nome com 101 caracteres.
-        // Objetivo: Validar limite máximo de Name com MessageKey MaximumLength.
-        var request = CreateValidRequest() with { Name = new string('A', 101) };
-
-        var result = await _validator.ValidateAsync(request);
-
-        AssertFailure(result, nameof(RegisterUserKinkRequestDto.Name),
-            "KinkConsentManager.Domain.RegisterUserKinkValidator.NameMax",
-            ValidationMessageKeys.MaximumLength);
-    }
-
-    [Test]
     public async Task ValidateAsync_WhenLoginIsEmpty_ShouldFailWithLoginRequired()
     {
         // Cenário: Login vazio informado na requisição de cadastro.
@@ -353,7 +311,6 @@ public sealed class RegisterUserKinkRequestValidatorTests
         const string password = "Strong@Password1";
         var login = $"user_{_faker.Random.AlphaNumeric(8)}";
         return new RegisterUserKinkRequestDto(
-            Name: _faker.Name.FullName(),
             Login: login,
             Email: _faker.Internet.Email(),
             Password: password,

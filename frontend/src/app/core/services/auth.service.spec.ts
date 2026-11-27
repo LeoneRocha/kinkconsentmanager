@@ -8,9 +8,7 @@ import { API_BASE_URL } from './base-data.service';
 
 const MOCK_USER: AuthUser = {
   id: 1,
-  name: 'Demo User Kink',
   login: 'user.kink',
-  email: 'user.kink@kinkconsentmanager.local',
   isActive: true,
   createdAt: '2026-01-01T00:00:00Z',
   lastLoginAt: null,
@@ -129,7 +127,6 @@ describe('AuthService', () => {
     // Act — Sucesso
     service
       .register({
-        name: 'user.kink',
         login: 'user.kink',
         email: 'user.kink@example.com',
         password: 'Strong@123',
@@ -147,7 +144,6 @@ describe('AuthService', () => {
     // Act — Erro de validação do backend
     service
       .register({
-        name: 'user.kink',
         login: 'user.kink',
         email: 'user.kink@example.com',
         password: 'Strong@123',

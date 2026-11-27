@@ -35,20 +35,6 @@ public sealed class RegisterUserKinkRequestValidator : AbstractValidator<Registe
         ArgumentNullException.ThrowIfNull(messages);
         ArgumentNullException.ThrowIfNull(userKinkRepository);
 
-        RuleFor(x => x.Name)
-            .NotEmpty()
-                .WithMessage(_ => messages.GetMessage(ValidationMessageKeys.RequiredField, "{PropertyName} is required.", "Name"))
-                .WithErrorCode("KinkConsentManager.Domain.RegisterUserKinkValidator.NameRequired")
-                .WithMessageKey(ValidationMessageKeys.RequiredField)
-            .MinimumLength(3)
-                .WithMessage(_ => messages.GetMessage(ValidationMessageKeys.MinimumLength, "{PropertyName} must be at least {MinLength} characters.", "Name", 3))
-                .WithErrorCode("KinkConsentManager.Domain.RegisterUserKinkValidator.NameMin")
-                .WithMessageKey(ValidationMessageKeys.MinimumLength)
-            .MaximumLength(100)
-                .WithMessage(_ => messages.GetMessage(ValidationMessageKeys.MaximumLength, "{PropertyName} must not exceed {MaxLength} characters.", "Name", 100))
-                .WithErrorCode("KinkConsentManager.Domain.RegisterUserKinkValidator.NameMax")
-                .WithMessageKey(ValidationMessageKeys.MaximumLength);
-
         RuleFor(x => x.Login)
             .NotEmpty()
                 .WithMessage(_ => messages.GetMessage(ValidationMessageKeys.RequiredField, "{PropertyName} is required.", "Login"))

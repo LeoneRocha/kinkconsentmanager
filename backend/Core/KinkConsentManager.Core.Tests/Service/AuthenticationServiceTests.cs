@@ -6,6 +6,7 @@ using KinkConsentManager.Core.Domain.Entities;
 using KinkConsentManager.Core.Domain.Interfaces.Localization;
 using KinkConsentManager.Core.Domain.Interfaces.Repositories;
 using KinkConsentManager.Core.Domain.Localization.MessageKeys;
+using KinkConsentManager.Core.Domain.Security;
 using KinkConsentManager.Core.Domain.Validators.Authentication;
 using KinkConsentManager.Core.Infrastructure.Data;
 using KinkConsentManager.Core.Service.Localization;
@@ -132,7 +133,6 @@ public sealed class AuthenticationServiceTests
             .ReturnsAsync((UserKink u, CancellationToken _) => u);
 
         var request = new RegisterUserKinkRequestDto(
-            Name: "  Alex Silva  ",
             Login: "Alex_Silva",
             Email: "Alex.Silva@Example.com",
             Password: "Strong@Password1",
@@ -145,12 +145,13 @@ public sealed class AuthenticationServiceTests
         response.MessageKey.Should().Be(AuthenticationMessageKeys.UserRegistered);
         response.Data.Should().NotBeNull();
         response.Data!.Id.Should().Be(101);
-        response.Data.Name.Should().Be("Alex Silva");
         response.Data.Login.Should().Be("Alex_Silva");
-        response.Data.Email.Should().Be("alex.silva@example.com");
 
         persistedEntity.Should().NotBeNull();
         persistedEntity!.NormalizedLogin.Should().Be("alex_silva");
+        persistedEntity.EmailHash.Should().NotBe("alex.silva@example.com");
+        persistedEntity.EmailHash.Should().Be(EmailHashHelper.ComputeHash("alex.silva@example.com"));
+        EmailHashHelper.VerifyEmail("Alex.Silva@Example.com", persistedEntity.EmailHash).Should().BeTrue();
         persistedEntity.PasswordHash.Should().NotBe("Strong@Password1");
         PasswordHasherFactory.GetHasher(PasswordAlgorithm.Bcrypt)
             .VerifyPassword("Strong@Password1", persistedEntity.PasswordHash)
@@ -163,7 +164,6 @@ public sealed class AuthenticationServiceTests
         // Cenário: Requisição de cadastro com senha fraca e confirmação divergente.
         // Objetivo: Garantir retorno HTTP 400 com erros mapeados e nenhuma chamada aos repositórios.
         var request = new RegisterUserKinkRequestDto(
-            Name: "Al",
             Login: "invalid login",
             Email: "not-an-email",
             Password: "weak",
@@ -187,7 +187,6 @@ public sealed class AuthenticationServiceTests
         _userRepositoryMock.Setup(r => r.LoginExistsAsync("Alex_Silva", It.IsAny<CancellationToken>())).ReturnsAsync(true);
 
         var request = new RegisterUserKinkRequestDto(
-            Name: "Alex Silva",
             Login: "Alex_Silva",
             Email: "alex@example.com",
             Password: "Strong@Password1",
@@ -210,7 +209,6 @@ public sealed class AuthenticationServiceTests
         _userRepositoryMock.Setup(r => r.EmailExistsAsync(new Email("alex@example.com"), It.IsAny<CancellationToken>())).ReturnsAsync(true);
 
         var request = new RegisterUserKinkRequestDto(
-            Name: "Alex Silva",
             Login: "Alex_Silva",
             Email: "alex@example.com",
             Password: "Strong@Password1",
@@ -233,7 +231,6 @@ public sealed class AuthenticationServiceTests
         _userRepositoryMock.Setup(r => r.EmailExistsAsync(new Email("alex@example.com"), It.IsAny<CancellationToken>())).ReturnsAsync(true);
 
         var request = new RegisterUserKinkRequestDto(
-            Name: "Alex Silva",
             Login: "Alex_Silva",
             Email: "alex@example.com",
             Password: "Strong@Password1",
@@ -618,7 +615,6 @@ public sealed class AuthenticationServiceTests
         response.Data.Should().NotBeNull();
         response.Data!.Id.Should().Be(55);
         response.Data.Login.Should().Be("Alex_Silva");
-        response.Data.Email.Should().Be("alex@example.com");
     }
 
     [Test]
@@ -652,12 +648,11 @@ public sealed class AuthenticationServiceTests
         var user = new UserKink
         {
             Id = id,
-            Name = "Alex Silva",
-            Email = new Email(email),
             PasswordHash = hash,
             IsActive = true
         };
         user.SetLogin(login);
+        user.SetEmail(email);
         return user;
     }
 }

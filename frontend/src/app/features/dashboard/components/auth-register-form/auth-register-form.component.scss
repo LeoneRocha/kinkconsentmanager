@@ -192,6 +192,44 @@
     color: #ef4444;
   }
 
+  &__privacy {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.7rem;
+    padding: 0.75rem 0.9rem;
+    border-radius: v.$radius-sm;
+    background-color: v.$surface-subtle;
+    border: 1px solid v.$border-color;
+  }
+
+  &__privacy-icon {
+    margin-top: 0.12rem;
+    color: v.$accent-text;
+    font-size: 1rem;
+    flex-shrink: 0;
+  }
+
+  &__privacy-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    min-width: 0;
+  }
+
+  &__privacy-title {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: v.$text-primary;
+    line-height: 1.3;
+  }
+
+  &__privacy-text {
+    margin: 0;
+    font-size: 0.78rem;
+    line-height: 1.45;
+    color: v.$text-secondary;
+  }
+
   &__actions {
     display: flex;
     align-items: center;

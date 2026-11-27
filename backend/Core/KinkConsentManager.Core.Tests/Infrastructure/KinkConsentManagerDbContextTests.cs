@@ -53,14 +53,16 @@ public sealed class KinkConsentManagerDbContextTests
     public void Model_ShouldConfigureAllRequiredUniqueIndexes()
     {
         // Cenário: Inspeção dos índices configurados nas entidades UserKink, UserKinkRefreshToken e UserKinkCheclist.
-        // Objetivo: Garantir unicidade para Email, NormalizedLogin, Login, TokenHash e UserKinkId (1:1).
+        // Objetivo: Garantir unicidade para EmailHash (LGPD), NormalizedLogin, Login, TokenHash e UserKinkId (1:1).
         using var context = CreateInMemoryContext();
 
         var userKinkEntity = context.Model.FindEntityType(typeof(UserKink))!;
         var refreshTokenEntity = context.Model.FindEntityType(typeof(UserKinkRefreshToken))!;
         var checklistEntity = context.Model.FindEntityType(typeof(UserKinkCheclist))!;
 
-        HasUniqueIndexOn(userKinkEntity, nameof(UserKink.Email)).Should().BeTrue();
+        userKinkEntity.FindProperty("Email").Should().BeNull();
+        userKinkEntity.FindProperty("Name").Should().BeNull();
+        HasUniqueIndexOn(userKinkEntity, nameof(UserKink.EmailHash)).Should().BeTrue();
         HasUniqueIndexOn(userKinkEntity, nameof(UserKink.NormalizedLogin)).Should().BeTrue();
         HasUniqueIndexOn(userKinkEntity, nameof(UserKink.Login)).Should().BeTrue();
         HasUniqueIndexOn(refreshTokenEntity, nameof(UserKinkRefreshToken.TokenHash)).Should().BeTrue();

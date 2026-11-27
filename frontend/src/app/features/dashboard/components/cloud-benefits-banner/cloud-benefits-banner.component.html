@@ -4,19 +4,14 @@
     [attr.aria-label]="'authCloudSignedInTitle' | schemaTranslate: 'ui'"
   >
     <div class="cloud-banner__connected-main">
-      <div class="cloud-banner__avatar" [attr.title]="currentUser.name || currentUser.login">
+      <div class="cloud-banner__avatar" [attr.title]="'@' + currentUser.login">
         {{ userInitial() }}
       </div>
 
       <div class="cloud-banner__connected-copy">
-        <h2 class="cloud-banner__title" [attr.title]="currentUser.name || currentUser.login">
-          {{ currentUser.name || currentUser.login }}
-          <span class="cloud-banner__handle">&#64;{{ currentUser.login }}</span>
+        <h2 class="cloud-banner__title" [attr.title]="'@' + currentUser.login">
+          &#64;{{ currentUser.login }}
         </h2>
-
-        <p class="cloud-banner__subtitle" [attr.title]="currentUser.email">
-          {{ currentUser.email }}
-        </p>
 
         <p
           class="cloud-banner__desc"

@@ -50,7 +50,6 @@ public sealed class AuthControllerTests
         // Cenário: Requisição válida de cadastro processada pelo dispatcher retornando StatusCode 201.
         // Objetivo: Verificar que AuthController.Register devolve HTTP 201 com o envelope ServiceResponse<UserKinkDto>.
         var request = new RegisterUserKinkRequestDto(
-            "Alex Silva",
             "alex_silva",
             "alex@example.com",
             "Str0ng!Pass",
@@ -58,9 +57,7 @@ public sealed class AuthControllerTests
 
         var expectedDto = new UserKinkDto(
             10,
-            request.Name,
             request.Login,
-            request.Email,
             true,
             DateTime.UtcNow,
             null);
@@ -93,7 +90,6 @@ public sealed class AuthControllerTests
         // Cenário: Tentativa de cadastro cujo login ou e-mail já existe, retornando StatusCode 409 do dispatcher.
         // Objetivo: Verificar que AuthController.Register propaga HTTP 409 com o envelope de falha.
         var request = new RegisterUserKinkRequestDto(
-            "Alex Silva",
             "alex_silva",
             "alex@example.com",
             "Str0ng!Pass",
@@ -133,7 +129,7 @@ public sealed class AuthControllerTests
             Password = "Str0ng!Pass"
         };
 
-        var userDto = new UserKinkDto(1, "Alex Silva", "alex_silva", "alex@example.com", true, DateTime.UtcNow, DateTime.UtcNow);
+        var userDto = new UserKinkDto(1, "alex_silva", true, DateTime.UtcNow, DateTime.UtcNow);
         var loginResponse = new LoginResponseDto(
             "jwt-access-token",
             "opaque-refresh-token",
@@ -204,7 +200,7 @@ public sealed class AuthControllerTests
         _controller.ControllerContext.HttpContext.Connection.RemoteIpAddress = IPAddress.Parse(clientIp);
 
         var refreshDto = new RefreshTokenDto { Token = "valid-refresh-token" };
-        var userDto = new UserKinkDto(1, "Alex Silva", "alex_silva", "alex@example.com", true, DateTime.UtcNow, DateTime.UtcNow);
+        var userDto = new UserKinkDto(1, "alex_silva", true, DateTime.UtcNow, DateTime.UtcNow);
         var loginResponse = new LoginResponseDto(
             "new-access-token",
             "new-refresh-token",
@@ -324,7 +320,7 @@ public sealed class AuthControllerTests
         // Cenário: HttpContext possui ClaimsPrincipal válido com claim nameid = "42".
         // Objetivo: Verificar que AuthController.Me despacha GetCurrentUserKinkQuery e retorna HTTP 200 com o perfil.
         SetAuthenticatedUser(42);
-        var userDto = new UserKinkDto(42, "Alex Silva", "alex_silva", "alex@example.com", true, DateTime.UtcNow, DateTime.UtcNow);
+        var userDto = new UserKinkDto(42, "alex_silva", true, DateTime.UtcNow, DateTime.UtcNow);
         var serviceResponse = ServiceResponse<UserKinkDto>.Ok(
             userDto,
             "Authenticated user retrieved successfully.",

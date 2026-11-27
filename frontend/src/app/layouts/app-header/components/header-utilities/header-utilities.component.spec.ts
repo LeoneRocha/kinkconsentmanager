@@ -69,9 +69,7 @@ describe('HeaderUtilitiesComponent', () => {
       JSON.stringify({
         user: {
           id: 9,
-          name: 'Ana',
           login: 'ana',
-          email: 'ana@exemplo.com',
           isActive: true,
           createdAt: '2026-11-26T00:00:00Z',
         },

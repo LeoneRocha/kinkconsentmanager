@@ -95,10 +95,8 @@ export class AuthRegisterFormComponent {
     }
 
     const raw = this.form.getRawValue();
-    const trimmedLogin = raw.login.trim();
     this.submitted.emit({
-      name: trimmedLogin,
-      login: trimmedLogin,
+      login: raw.login.trim(),
       email: raw.email.trim(),
       password: raw.password,
       confirmPassword: raw.confirmPassword,
