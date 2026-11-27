@@ -1,8 +1,16 @@
+import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { provideTranslateService, TranslateService } from '@ngx-translate/core';
-import { AccessibilityService, I18nService, ThemeService } from '../../core/services';
+import {
+  AccessibilityService,
+  AUTH_SESSION_STORAGE_KEY,
+  AuthService,
+  I18nService,
+  ThemeService,
+} from '../../core/services';
 import { AppHeaderComponent } from './app-header.component';
 
 @Component({
@@ -30,6 +38,8 @@ describe('AppHeaderComponent', () => {
     await TestBed.configureTestingModule({
       imports: [AppHeaderComponent],
       providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
         provideRouter([
           { path: 'dashboard', component: DummyRouteComponent },
           { path: 'checklist', component: DummyRouteComponent },
@@ -79,6 +89,9 @@ describe('AppHeaderComponent', () => {
         a11yStopReading: 'Parar leitura',
         a11yClosePanel: 'Fechar painel',
         a11ySpeechUnsupported: 'Síntese indisponível.',
+        authUserMenuLabel: 'Conta do usuário',
+        authLogoutButton: 'Sair da conta',
+        authLogoutSuccess: 'Sessão encerrada com sucesso.',
       },
     });
   });
@@ -266,5 +279,76 @@ describe('AppHeaderComponent', () => {
     await fixture.whenStable();
 
     expect(a11yService.highContrast()).toBe(false);
+  });
+
+  // Cenário: Usuário autenticado visualizando a barra superior nos três temas (sober, light e dark).
+  // Objetivo: Exibir o botão de usuário com ícone temático e permitir abrir o menu da conta e encerrar a sessão.
+  it('should render themed user icon when authenticated, open account menu, and sign out', async () => {
+    localStorage.setItem(
+      AUTH_SESSION_STORAGE_KEY,
+      JSON.stringify({
+        user: {
+          id: 42,
+          name: 'Ana Silva',
+          login: 'ana.silva',
+          email: 'ana@exemplo.com',
+          isActive: true,
+          createdAt: '2026-11-26T00:00:00Z',
+        },
+        accessToken: 'jwt-access-token',
+        refreshToken: 'jwt-refresh-token',
+        expiresAtUtc: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+      }),
+    );
+
+    const fixture = TestBed.createComponent(AppHeaderComponent);
+    const themeService = TestBed.inject(ThemeService);
+    const authService = TestBed.inject(AuthService);
+    const httpTesting = TestBed.inject(HttpTestingController);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const el = fixture.nativeElement as HTMLElement;
+    const userBtn = el.querySelector<HTMLButtonElement>('[data-testid="header-user-btn"]');
+    expect(userBtn).not.toBeNull();
+    expect(userBtn?.classList.contains('app-shell__icon-btn--user')).toBe(true);
+    expect(userBtn?.getAttribute('title')).toContain('Ana Silva');
+
+    const userIcon = userBtn?.querySelector<HTMLElement>('i.fa-user.app-shell__user-icon');
+    expect(userIcon).not.toBeNull();
+    expect(userIcon?.getAttribute('title')).toContain('Ana Silva');
+
+    for (const mode of ['sober', 'light', 'dark'] as const) {
+      themeService.setTheme(mode);
+      fixture.detectChanges();
+      await fixture.whenStable();
+      expect(document.documentElement.getAttribute('data-theme')).toBe(mode);
+      expect(el.querySelector('[data-testid="header-user-btn"]')).not.toBeNull();
+    }
+
+    userBtn?.click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const menu = el.querySelector('.app-shell__popover--user-menu');
+    expect(menu).not.toBeNull();
+    expect(menu?.textContent).toContain('Ana Silva');
+    expect(menu?.textContent).toContain('@ana.silva');
+    expect(menu?.textContent).toContain('ana@exemplo.com');
+
+    const logoutBtn = el.querySelector<HTMLButtonElement>('[data-testid="header-user-logout"]');
+    expect(logoutBtn).not.toBeNull();
+    logoutBtn?.click();
+
+    const req = httpTesting.expectOne('/api/v1/auth/logout');
+    expect(req.request.method).toBe('POST');
+    req.flush({ isSuccess: true, data: true });
+
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(authService.user()).toBeNull();
+    expect(el.querySelector('[data-testid="header-user-btn"]')).toBeNull();
+    httpTesting.verify();
   });
 });

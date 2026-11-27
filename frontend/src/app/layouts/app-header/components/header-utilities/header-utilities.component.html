@@ -1,0 +1,22 @@
+<div class="app-shell__utilities">
+  <app-header-theme-menu
+    [isOpen]="activePopover() === 'theme'"
+    (toggleRequested)="togglePopover('theme')"
+    (closed)="closePopovers()"
+  />
+  <app-header-language-menu
+    [isOpen]="activePopover() === 'language'"
+    (toggleRequested)="togglePopover('language')"
+    (closed)="closePopovers()"
+  />
+  <app-header-a11y-menu
+    [isOpen]="activePopover() === 'a11y'"
+    (toggleRequested)="togglePopover('a11y')"
+    (closed)="closePopovers()"
+  />
+  <app-header-user-menu
+    [isOpen]="activePopover() === 'user'"
+    (toggleRequested)="togglePopover('user')"
+    (closed)="closePopovers()"
+  />
+</div>

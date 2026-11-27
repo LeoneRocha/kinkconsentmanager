@@ -1,0 +1,101 @@
+@use 'variables' as v;
+
+%col {
+  display: flex;
+  flex-direction: column;
+}
+
+%row-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+%circle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border-radius: 9999px;
+  border: 1px solid v.$border-color;
+  background-color: v.$surface-card;
+  color: v.$text-primary;
+  cursor: pointer;
+}
+
+%panel-btn {
+  min-height: 40px;
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.75rem;
+  border-radius: v.$radius-sm;
+  border: 1px solid v.$border-color;
+  background-color: v.$surface-subtle;
+  color: v.$text-primary;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.app-shell__popover-anchor {
+  position: relative;
+}
+
+.app-shell__icon-btn {
+  @extend %circle;
+  position: relative;
+  width: 42px;
+  height: 42px;
+  box-shadow: v.$shadow-sm;
+
+  &:hover {
+    background-color: v.$surface-subtle;
+    border-color: v.$border-strong;
+  }
+
+  &--active {
+    border-color: v.$accent-primary;
+    background-color: v.$accent-soft;
+    color: v.$accent-text;
+  }
+}
+
+.app-shell__popover {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  z-index: 50;
+  @extend %col;
+  background-color: v.$surface-elevated;
+  border: 1px solid v.$border-strong;
+  border-radius: v.$radius-md;
+  box-shadow: v.$shadow-lg;
+}
+
+.app-shell__menu-item {
+  min-height: 42px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.5rem 0.75rem;
+  border: none;
+  border-radius: v.$radius-sm;
+  background: transparent;
+  color: v.$text-primary;
+  font-size: 0.875rem;
+  cursor: pointer;
+
+  &:hover {
+    background-color: v.$surface-subtle;
+  }
+
+  &--selected {
+    background-color: v.$accent-soft;
+    color: v.$accent-text;
+    font-weight: 600;
+  }
+}

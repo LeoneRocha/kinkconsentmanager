@@ -1,0 +1,75 @@
+<div class="app-shell__popover-anchor">
+  <button
+    type="button"
+    class="app-shell__icon-btn app-shell__icon-btn--theme"
+    [class.app-shell__icon-btn--active]="isOpen() || theme.isDark() || theme.isSober()"
+    aria-haspopup="menu"
+    [attr.aria-expanded]="isOpen()"
+    [attr.aria-label]="'themeMenuLabel' | schemaTranslate: 'ui'"
+    [attr.title]="'themeMenuLabel' | schemaTranslate: 'ui'"
+    [matTooltip]="'themeMenuLabel' | schemaTranslate: 'ui'"
+    matTooltipPosition="below"
+    (click)="toggleRequested.emit()"
+  >
+    <i
+      class="fa-solid"
+      [class.fa-circle-half-stroke]="theme.isSober()"
+      [class.fa-sun]="theme.theme() === 'light'"
+      [class.fa-moon]="theme.isDark()"
+      [attr.title]="'themeMenuLabel' | schemaTranslate: 'ui'"
+      aria-hidden="true"
+    ></i>
+  </button>
+
+  @if (isOpen()) {
+    <div
+      class="app-shell__popover app-shell__popover--theme-menu"
+      role="menu"
+      [attr.aria-label]="'themeMenuLabel' | schemaTranslate: 'ui'"
+    >
+      @for (preset of themePresets; track preset.id) {
+        <button
+          type="button"
+          role="menuitemradio"
+          class="app-shell__menu-item app-shell__theme-item"
+          [attr.data-theme-option]="preset.id"
+          [class.app-shell__menu-item--selected]="theme.theme() === preset.id"
+          [attr.aria-checked]="theme.theme() === preset.id"
+          [attr.title]="
+            (preset.labelKey | schemaTranslate: 'ui') +
+            ' — ' +
+            (preset.descriptionKey | schemaTranslate: 'ui')
+          "
+          (click)="selectTheme(preset.id)"
+        >
+          <span class="app-shell__theme-swatches" aria-hidden="true">
+            @for (swatch of preset.previewSwatches; track $index) {
+              <span class="app-shell__theme-swatch" [style.background]="swatch"></span>
+            }
+          </span>
+          <span class="app-shell__theme-copy">
+            <span
+              class="app-shell__theme-name"
+              [attr.title]="preset.labelKey | schemaTranslate: 'ui'"
+            >
+              {{ preset.labelKey | schemaTranslate: 'ui' }}
+            </span>
+            <span
+              class="app-shell__theme-desc"
+              [attr.title]="preset.descriptionKey | schemaTranslate: 'ui'"
+            >
+              {{ preset.descriptionKey | schemaTranslate: 'ui' }}
+            </span>
+          </span>
+          @if (theme.theme() === preset.id) {
+            <i
+              class="fa-solid fa-check app-shell__menu-check"
+              [attr.title]="preset.labelKey | schemaTranslate: 'ui'"
+              aria-hidden="true"
+            ></i>
+          }
+        </button>
+      }
+    </div>
+  }
+</div>

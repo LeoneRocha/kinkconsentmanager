@@ -1,0 +1,55 @@
+<div class="app-shell__popover-anchor">
+  <button
+    type="button"
+    class="app-shell__icon-btn app-shell__icon-btn--lang"
+    [class.app-shell__icon-btn--active]="isOpen()"
+    aria-haspopup="menu"
+    [attr.aria-expanded]="isOpen()"
+    [attr.aria-label]="'languageMenuLabel' | schemaTranslate: 'ui'"
+    [attr.title]="'languageMenuLabel' | schemaTranslate: 'ui'"
+    [matTooltip]="'languageMenuLabel' | schemaTranslate: 'ui'"
+    matTooltipPosition="below"
+    (click)="toggleRequested.emit()"
+  >
+    <i
+      class="fa-solid fa-globe"
+      [attr.title]="'languageMenuLabel' | schemaTranslate: 'ui'"
+      aria-hidden="true"
+    ></i>
+    <span class="app-shell__lang-pill" [attr.title]="currentLangShort()" aria-hidden="true">{{
+      currentLangShort()
+    }}</span>
+  </button>
+
+  @if (isOpen()) {
+    <div
+      class="app-shell__popover app-shell__popover--menu"
+      role="menu"
+      [attr.aria-label]="'languageMenuLabel' | schemaTranslate: 'ui'"
+    >
+      @for (item of supportedLanguages; track item.code) {
+        <button
+          type="button"
+          role="menuitemradio"
+          class="app-shell__menu-item"
+          [class.app-shell__menu-item--selected]="i18n.currentLang() === item.code"
+          [attr.aria-checked]="i18n.currentLang() === item.code"
+          [attr.title]="item.nativeName + ' (' + item.short + ')'"
+          (click)="selectLanguage(item.code)"
+        >
+          <span class="app-shell__menu-tag" [attr.title]="item.short">{{ item.short }}</span>
+          <span class="app-shell__menu-label" [attr.title]="item.nativeName">{{
+            item.nativeName
+          }}</span>
+          @if (i18n.currentLang() === item.code) {
+            <i
+              class="fa-solid fa-check app-shell__menu-check"
+              [attr.title]="item.nativeName"
+              aria-hidden="true"
+            ></i>
+          }
+        </button>
+      }
+    </div>
+  }
+</div>

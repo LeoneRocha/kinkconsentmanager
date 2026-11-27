@@ -218,7 +218,9 @@ export class AuthService extends BaseStateService<AuthSessionState> {
         if (Array.isArray(errors) && errors.length > 0) {
           const first = errors[0];
           if (first && typeof first === 'object') {
-            const firstMsg = (first as Record<string, unknown>)['message'];
+            const firstRecord = first as Record<string, unknown>;
+            const firstMsg =
+              firstRecord['description'] ?? firstRecord['message'] ?? firstRecord['defaultMessage'];
             if (typeof firstMsg === 'string' && firstMsg.trim().length > 0) {
               return firstMsg.trim();
             }

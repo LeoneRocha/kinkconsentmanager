@@ -224,6 +224,7 @@
     "authCloudSignedInTitle": "Conta conectada para salvar on-line",
     "authCloudSignedInDesc": "Sua sessão está ativa. Os novos recursos de salvamento on-line e compartilhamento serão liberados aqui.",
     "authLogoutButton": "Sair da conta",
+    "authUserMenuLabel": "Conta do usuário",
     "authLoginTitle": "Entrar na sua conta",
     "authLoginSubtitle": "Informe seu login ou e-mail e sua senha para continuar.",
     "authLoginIdentifierLabel": "Login ou E-mail",

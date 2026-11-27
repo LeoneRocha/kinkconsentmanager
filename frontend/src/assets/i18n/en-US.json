@@ -224,6 +224,7 @@
     "authCloudSignedInTitle": "Account connected for online saving",
     "authCloudSignedInDesc": "Your session is active. Upcoming online saving and sharing features will become available right here.",
     "authLogoutButton": "Sign out",
+    "authUserMenuLabel": "User account",
     "authLoginTitle": "Sign in to your account",
     "authLoginSubtitle": "Enter your username or email and password to continue.",
     "authLoginIdentifierLabel": "Username or Email",

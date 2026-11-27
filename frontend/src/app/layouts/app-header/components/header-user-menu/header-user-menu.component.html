@@ -1,0 +1,60 @@
+@if (auth.user(); as currentUser) {
+  <div class="app-shell__popover-anchor">
+    <button
+      type="button"
+      class="app-shell__icon-btn app-shell__icon-btn--user"
+      data-testid="header-user-btn"
+      [class.app-shell__icon-btn--active]="isOpen()"
+      aria-haspopup="menu"
+      [attr.aria-expanded]="isOpen()"
+      [attr.aria-label]="('authUserMenuLabel' | schemaTranslate: 'ui') + ' — ' + currentUser.name"
+      [attr.title]="('authUserMenuLabel' | schemaTranslate: 'ui') + ' — ' + currentUser.name"
+      [matTooltip]="currentUser.name"
+      matTooltipPosition="below"
+      (click)="toggleRequested.emit()"
+    >
+      <i
+        class="fa-solid fa-user app-shell__user-icon"
+        [attr.title]="('authUserMenuLabel' | schemaTranslate: 'ui') + ' — ' + currentUser.name"
+        aria-hidden="true"
+      ></i>
+    </button>
+
+    @if (isOpen()) {
+      <div
+        class="app-shell__popover app-shell__popover--user-menu"
+        role="menu"
+        [attr.aria-label]="'authUserMenuLabel' | schemaTranslate: 'ui'"
+      >
+        <div class="app-shell__user-summary">
+          <span class="app-shell__user-name" [attr.title]="currentUser.name">{{
+            currentUser.name
+          }}</span>
+          <span class="app-shell__user-meta" [attr.title]="'@' + currentUser.login"
+            >&#64;{{ currentUser.login }}</span
+          >
+          @if (currentUser.email) {
+            <span class="app-shell__user-email" [attr.title]="currentUser.email">{{
+              currentUser.email
+            }}</span>
+          }
+        </div>
+        <button
+          type="button"
+          role="menuitem"
+          class="app-shell__menu-item app-shell__user-logout"
+          data-testid="header-user-logout"
+          [attr.title]="'authLogoutButton' | schemaTranslate: 'ui'"
+          (click)="onLogout()"
+        >
+          <i
+            class="fa-solid fa-right-from-bracket"
+            [attr.title]="'authLogoutButton' | schemaTranslate: 'ui'"
+            aria-hidden="true"
+          ></i>
+          <span>{{ 'authLogoutButton' | schemaTranslate: 'ui' }}</span>
+        </button>
+      </div>
+    }
+  </div>
+}
