@@ -87,6 +87,7 @@ describe('CloudBenefitsBannerComponent', () => {
     await fixture.whenStable();
 
     // Assert
+    expect(hostEl.querySelector('.cloud-banner__pill')).toBeNull();
     expect(hostEl.textContent).toContain('Alex Silva');
     expect(hostEl.textContent).toContain('@alex.silva');
     expect(hostEl.textContent).toContain('alex@example.com');

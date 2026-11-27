@@ -9,20 +9,6 @@
       </div>
 
       <div class="cloud-banner__connected-copy">
-        <div class="cloud-banner__badge-row">
-          <span
-            class="cloud-banner__pill cloud-banner__pill--active"
-            [attr.title]="'authCloudSignedInTitle' | schemaTranslate: 'ui'"
-          >
-            <i
-              class="fa-solid fa-cloud-check"
-              [attr.title]="'authCloudSignedInTitle' | schemaTranslate: 'ui'"
-              aria-hidden="true"
-            ></i>
-            <span>{{ 'authCloudSignedInTitle' | schemaTranslate: 'ui' }}</span>
-          </span>
-        </div>
-
         <h2 class="cloud-banner__title" [attr.title]="currentUser.name || currentUser.login">
           {{ currentUser.name || currentUser.login }}
           <span class="cloud-banner__handle">&#64;{{ currentUser.login }}</span>
