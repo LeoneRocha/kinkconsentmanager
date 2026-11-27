@@ -241,7 +241,7 @@
     "authRegisterTitle": "Criar nova conta",
     "authRegisterSubtitle": "Cadastre seu login, e-mail e senha para habilitar o salvar on-line.",
     "authRegisterPrivacyTitle": "Sua privacidade vem em primeiro lugar",
-    "authRegisterPrivacyNotice": "Respeitamos a LGPD (Brasil) e leis de proteção de dados de outros países. Por segurança e respeito à sua privacidade, não salvamos o seu e-mail no banco de dados — guardamos apenas um código criptografado irreversível para validar seu acesso, garantindo que seu e-mail nunca possa ser lido ou vazado.",
+    "authRegisterPrivacyNotice": "Respeitamos a LGPD (Brasil) e leis de proteção de dados de outros países. Por segurança e respeito, não salvamos seu e-mail na íntegra — guardamos apenas um valor irreversível, evitando qualquer vazamento. Por isso, guarde-o bem: se precisar recuperar sua senha, será necessário informar o mesmo e-mail.",
     "authRegisterLoginLabel": "Login",
     "authRegisterLoginPlaceholder": "ex.: seu.login",
     "authRegisterEmailLabel": "E-mail",

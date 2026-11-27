@@ -241,7 +241,7 @@
     "authRegisterTitle": "Create a new account",
     "authRegisterSubtitle": "Register your username, email, and password to unlock online saving.",
     "authRegisterPrivacyTitle": "Your privacy comes first",
-    "authRegisterPrivacyNotice": "We respect Brazil's LGPD and international data protection laws. Out of security and respect for your privacy, we never store your email address in our database — we only keep an irreversible encrypted code to verify your sign-in, ensuring your email can never be read or leaked.",
+    "authRegisterPrivacyNotice": "We respect Brazil's LGPD and international data protection laws. Out of security and respect, we do not store your email in full — we only keep an irreversible value, preventing any leaks. Please keep it safe: if you ever need to recover your password, you will need to enter the same email.",
     "authRegisterLoginLabel": "Username",
     "authRegisterLoginPlaceholder": "e.g. your.login",
     "authRegisterEmailLabel": "Email",
