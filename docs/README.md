@@ -84,6 +84,14 @@ As versões vivas constam em [frontend/package.json](../frontend/package.json), 
 | Matriz de Progresso e Checklist de Implantação | [DOCUMENTO_PROGRESSO_BACKEND.md](./Backend/DOCUMENTO_PROGRESSO_BACKEND.md) |
 | Visão Geral da Feature no Catálogo de Features | [BACKEND_AUTENTICACAO_E_RESPOSTAS.md](./Features/BACKEND_AUTENTICACAO_E_RESPOSTAS.md) |
 
+### Próxima Feature Planejada — Salvamento Automático On-line (`UserKinkCheclists`)
+
+| Tema | Documento |
+| ---- | --------- |
+| Levantamento Funcional e Técnico (Salvamento On-line 1:1 + UX Unificada) | [LEVANTAMENTO_FUNCIONAL_TECNICO.md](./Features/SalvamentoOnline/LEVANTAMENTO_FUNCIONAL_TECNICO.md) |
+| Plano de Implementação Full-Stack (.NET 10 + Angular 22) | [PLANO_IMPLEMENTACAO.md](./Features/SalvamentoOnline/PLANO_IMPLEMENTACAO.md) |
+| Checklist de Implementação e Progresso (Ondas 0 a 3) | [CHECKLIST_IMPLEMENTACAO_PROGRESSO.md](./Features/SalvamentoOnline/CHECKLIST_IMPLEMENTACAO_PROGRESSO.md) |
+
 ### Frontend — Testes, Cobertura e Code Smells (`docs/Frontend/COVERAGE AND TEST/`)
 
 | Tema | Documento |
