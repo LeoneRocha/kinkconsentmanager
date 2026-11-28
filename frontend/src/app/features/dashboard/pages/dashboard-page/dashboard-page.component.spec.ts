@@ -97,6 +97,7 @@ describe('DashboardPageComponent', () => {
         authComingSoonBadge: 'Em breve',
         authCloudAdvanceCta: 'Avançar para login',
         authCloudSignedInTitle: 'Conta conectada à nuvem',
+        authWelcomeBack: 'Bem-vindo de volta',
         authCloudSignedInDesc: 'Sessão ativa.',
         authLogoutButton: 'Sair da conta',
         authLoginTitle: 'Entrar na sua conta',
@@ -270,7 +271,7 @@ describe('DashboardPageComponent', () => {
     // Deve exibir o banner conectado com dados do usuário e atualizar o card para Continuar Checklist
     expect(feedbackMock.success).toHaveBeenCalledWith('Login realizado com sucesso!');
     expect(hostEl.querySelector('app-cloud-benefits-banner')).not.toBeNull();
-    expect(hostEl.textContent).toContain('@user.kink');
+    expect(hostEl.textContent).toContain('Bem-vindo de volta');
     expect(hostEl.querySelector('button[data-feature-id="checklist"]')?.textContent).toContain(
       'Continuar Checklist',
     );

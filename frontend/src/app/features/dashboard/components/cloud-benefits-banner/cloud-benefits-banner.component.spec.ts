@@ -33,6 +33,7 @@ describe('CloudBenefitsBannerComponent', () => {
         authComingSoonBadge: 'Em breve',
         authCloudAdvanceCta: 'Avançar para login',
         authCloudSignedInTitle: 'Conta conectada à nuvem',
+        authWelcomeBack: 'Bem-vindo de volta',
         authCloudSignedInDesc: 'Sessão ativa.',
         authLogoutButton: 'Sair da conta',
       },
@@ -86,7 +87,7 @@ describe('CloudBenefitsBannerComponent', () => {
 
     // Assert
     expect(hostEl.querySelector('.cloud-banner__pill')).toBeNull();
-    expect(hostEl.textContent).toContain('@alex.silva');
+    expect(hostEl.textContent).toContain('Bem-vindo de volta');
     expect(logoutSpy).toHaveBeenCalledTimes(1);
   });
 });

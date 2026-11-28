@@ -9,8 +9,8 @@
       </div>
 
       <div class="cloud-banner__connected-copy">
-        <h2 class="cloud-banner__title" [attr.title]="'@' + currentUser.login">
-          &#64;{{ currentUser.login }}
+        <h2 class="cloud-banner__title" [attr.title]="'authWelcomeBack' | schemaTranslate: 'ui'">
+          {{ 'authWelcomeBack' | schemaTranslate: 'ui' }}
         </h2>
 
         <p
