@@ -82,6 +82,7 @@ As versões vivas constam em [frontend/package.json](../frontend/package.json), 
 | Especificação Funcional (Auth & Sincronização em Nuvem) | [DOCUMENTO_FUNCIONAL_AUTENTICACAO_E_SYNC.md](./Backend/DOCUMENTO_FUNCIONAL_AUTENTICACAO_E_SYNC.md) |
 | Especificação Técnica de Implementação (SmartCoreHub + Supabase EF Core) | [DOCUMENTO_IMPLEMENTACAO_BACKEND.md](./Backend/DOCUMENTO_IMPLEMENTACAO_BACKEND.md) |
 | Matriz de Progresso e Checklist de Implantação | [DOCUMENTO_PROGRESSO_BACKEND.md](./Backend/DOCUMENTO_PROGRESSO_BACKEND.md) |
+| Guia de Variáveis de Ambiente — Azure App Service | [GUIA_VARIAVEIS_APP_SERVICE.md](./Backend/GUIA_VARIAVEIS_APP_SERVICE.md) |
 | Visão Geral da Feature no Catálogo de Features | [BACKEND_AUTENTICACAO_E_RESPOSTAS.md](./Features/BACKEND_AUTENTICACAO_E_RESPOSTAS.md) |
 
 ### Feature Concluída — Salvamento Automático On-line (`UserKinkCheclists`)
