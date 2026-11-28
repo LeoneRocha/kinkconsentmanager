@@ -5,6 +5,9 @@ using System.Text.Json;
 using KinkConsentManager.Core.Domain.DTOs.Authentication;
 using KinkConsentManager.Core.Domain.DTOs.Checklists;
 using KinkConsentManager.Core.Domain.Localization.MessageKeys;
+using KinkConsentManager.Core.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using NUnit.Framework;
 using SmartCoreHub.Core.SDK.Domain.DTOs.Common;
 
@@ -83,6 +86,17 @@ public sealed class ChecklistsApiIntegrationTests
         put1Body.MessageKey.Should().Be(ChecklistMessageKeys.ChecklistSaved);
         put1Body.Data!.Version.Should().Be(1);
         put1Body.Data.AnswersJson.Should().Contain("item_rope");
+
+        // 2b. Verifica privacidade em repouso no banco: AnswersJson gravado como envelope AES-GCM + Zstd (sem texto claro)
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<KinkConsentManagerDbContext>();
+            var stored = await db.UserKinkCheclists.AsNoTracking().SingleAsync(c => c.Id == put1Body.Data.Id);
+            stored.AnswersJson.Should().Contain("\"__kcmProtected\":true");
+            stored.AnswersJson.Should().Contain("\"alg\":\"AesGcm\"");
+            stored.AnswersJson.Should().Contain("\"cmp\":\"Zstd\"");
+            stored.AnswersJson.Should().NotContain("item_rope");
+        }
 
         // 3. GET -> 200
         var getAfterPut1 = await SendAuthorizedAsync(HttpMethod.Get, "/api/v1/checklists/current", tokens.AccessToken);

@@ -10,6 +10,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using NUnit.Framework;
 using SmartCoreHub.Core.SDK.Application.Cqrs.Abstractions;
+using SmartCoreHub.Core.SDK.Domain.Helpers.Security;
+using SmartCoreHub.Core.SDK.Domain.Interfaces.Compression;
+using SmartCoreHub.Core.SDK.Domain.Interfaces.Security;
 
 namespace KinkConsentManager.Core.Tests.Service;
 
@@ -33,6 +36,11 @@ public sealed class DependencyInjectionGraphTests
                 ["TokenConfigurations:Audience"] = "KinkConsentManager.Client",
                 ["TokenConfigurations:Minutes"] = "60",
                 ["TokenConfigurations:DaysToExpiry"] = "7",
+                ["SecuritySettings:CryptoType"] = "AesGcm",
+                ["SecuritySettings:AesGcmSettings:Key"] = AesKeyGeneratorHelper.GenerateKey(),
+                ["ChecklistProtection:Enabled"] = "true",
+                ["ChecklistProtection:CryptoAlgorithm"] = "AesGcm",
+                ["ChecklistProtection:CompressionAlgorithm"] = "Zstd",
                 ["Cors:AllowedOrigins:0"] = "http://localhost:4200",
                 ["DataProtection:KeysPath"] = tempKeysPath,
                 ["DataProtection:ApplicationName"] = "KinkConsentManager.Tests"
@@ -47,6 +55,9 @@ public sealed class DependencyInjectionGraphTests
             sp.GetRequiredService<IAuthenticationService>().Should().NotBeNull();
             sp.GetRequiredService<IUserKinkChecklistRepository>().Should().NotBeNull();
             sp.GetRequiredService<IUserKinkChecklistService>().Should().NotBeNull();
+            sp.GetRequiredService<ICryptoService>().Should().NotBeNull();
+            sp.GetRequiredService<ICompressionService>().Should().NotBeNull();
+            sp.GetRequiredService<IChecklistPayloadProtector>().Should().NotBeNull();
             sp.GetRequiredService<IApplicationDispatcher>().Should().NotBeNull();
             sp.GetRequiredService<IValidationMessageService>().Should().NotBeNull();
             sp.GetRequiredService<IValidator<RegisterUserKinkRequestDto>>().Should().NotBeNull();
@@ -78,6 +89,8 @@ public sealed class DependencyInjectionGraphTests
                 ["TokenConfigurations:Audience"] = "KinkConsentManager.Client",
                 ["TokenConfigurations:Minutes"] = "60",
                 ["TokenConfigurations:DaysToExpiry"] = "7",
+                ["SecuritySettings:CryptoType"] = "AesGcm",
+                ["SecuritySettings:AesGcmSettings:Key"] = AesKeyGeneratorHelper.GenerateKey(),
                 ["Cors:AllowedOrigins:0"] = "http://localhost:4200",
                 ["DataProtection:KeysPath"] = tempKeysPath
             });

@@ -25,6 +25,7 @@ public sealed class UserKinkChecklistService : IUserKinkChecklistService
     private readonly IValidator<UpsertUserKinkChecklistRequestDto> _validator;
     private readonly IValidationMessageService _validationMessages;
     private readonly IErrorGetLocalizationService _errorLocalizationService;
+    private readonly IChecklistPayloadProtector _payloadProtector;
 
     /// <summary>
     /// Inicializa uma nova instância de <see cref="UserKinkChecklistService"/>.
@@ -35,13 +36,15 @@ public sealed class UserKinkChecklistService : IUserKinkChecklistService
     /// <param name="validator">Validador FluentValidation do payload de upsert.</param>
     /// <param name="validationMessages">Serviço de localização de mensagens funcionais.</param>
     /// <param name="errorLocalizationService">Serviço de localização de erros de validação do SDK.</param>
+    /// <param name="payloadProtector">Serviço de compressão (Zstd) e criptografia (AES-GCM) do <c>AnswersJson</c>.</param>
     public UserKinkChecklistService(
         IUserKinkChecklistRepository checklistRepository,
         ISmartCoreHubMapper mapper,
         IAppLogger logger,
         IValidator<UpsertUserKinkChecklistRequestDto> validator,
         IValidationMessageService validationMessages,
-        IErrorGetLocalizationService errorLocalizationService)
+        IErrorGetLocalizationService errorLocalizationService,
+        IChecklistPayloadProtector payloadProtector)
     {
         _checklistRepository = checklistRepository ?? throw new ArgumentNullException(nameof(checklistRepository));
         _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
@@ -49,6 +52,7 @@ public sealed class UserKinkChecklistService : IUserKinkChecklistService
         _validator = validator ?? throw new ArgumentNullException(nameof(validator));
         _validationMessages = validationMessages ?? throw new ArgumentNullException(nameof(validationMessages));
         _errorLocalizationService = errorLocalizationService ?? throw new ArgumentNullException(nameof(errorLocalizationService));
+        _payloadProtector = payloadProtector ?? throw new ArgumentNullException(nameof(payloadProtector));
     }
 
     /// <inheritdoc />
@@ -65,7 +69,7 @@ public sealed class UserKinkChecklistService : IUserKinkChecklistService
                 404);
         }
 
-        var dto = _mapper.Map<UserKinkChecklistDto>(existing);
+        var dto = MapWithDecryptedAnswers(existing);
 
         return ServiceResponse<UserKinkChecklistDto>.Ok(
             dto,
@@ -92,6 +96,7 @@ public sealed class UserKinkChecklistService : IUserKinkChecklistService
         var normalizedClientUpdatedAtUtc = NormalizeUtc(request.ClientUpdatedAtUtc);
         var normalizedSchemaVersion = request.SchemaVersion.Trim();
         var normalizedLanguage = request.Language.Trim();
+        var protectedAnswersJson = _payloadProtector.Protect(request.AnswersJson);
         var existing = await _checklistRepository.GetByUserKinkIdAsync(userKinkId, cancellationToken);
 
         if (existing is null)
@@ -101,7 +106,7 @@ public sealed class UserKinkChecklistService : IUserKinkChecklistService
                 UserKinkId = userKinkId,
                 SchemaVersion = normalizedSchemaVersion,
                 Language = normalizedLanguage,
-                AnswersJson = request.AnswersJson,
+                AnswersJson = protectedAnswersJson,
                 ClientUpdatedAtUtc = normalizedClientUpdatedAtUtc,
                 Version = 1,
                 IsActive = true
@@ -115,7 +120,7 @@ public sealed class UserKinkChecklistService : IUserKinkChecklistService
                 created.SchemaVersion);
 
             return ServiceResponse<UserKinkChecklistDto>.Ok(
-                _mapper.Map<UserKinkChecklistDto>(created),
+                MapWithPlainAnswers(created, request.AnswersJson),
                 _validationMessages.GetMessage(ChecklistMessageKeys.ChecklistSaved, "Checklist saved online successfully."),
                 ChecklistMessageKeys.ChecklistSaved);
         }
@@ -136,7 +141,7 @@ public sealed class UserKinkChecklistService : IUserKinkChecklistService
 
         existing.SchemaVersion = normalizedSchemaVersion;
         existing.Language = normalizedLanguage;
-        existing.AnswersJson = request.AnswersJson;
+        existing.AnswersJson = protectedAnswersJson;
         existing.ClientUpdatedAtUtc = normalizedClientUpdatedAtUtc;
         existing.Version += 1;
         existing.IsActive = true;
@@ -152,7 +157,7 @@ public sealed class UserKinkChecklistService : IUserKinkChecklistService
                 updated.SchemaVersion);
 
             return ServiceResponse<UserKinkChecklistDto>.Ok(
-                _mapper.Map<UserKinkChecklistDto>(updated),
+                MapWithPlainAnswers(updated, request.AnswersJson),
                 _validationMessages.GetMessage(ChecklistMessageKeys.ChecklistSaved, "Checklist saved online successfully."),
                 ChecklistMessageKeys.ChecklistSaved);
         }
@@ -184,6 +189,18 @@ public sealed class UserKinkChecklistService : IUserKinkChecklistService
             true,
             _validationMessages.GetMessage(ChecklistMessageKeys.ChecklistDeleted, "Saved checklist removed successfully."),
             ChecklistMessageKeys.ChecklistDeleted);
+    }
+
+    private UserKinkChecklistDto MapWithDecryptedAnswers(UserKinkCheclist entity)
+    {
+        var dto = _mapper.Map<UserKinkChecklistDto>(entity);
+        return dto with { AnswersJson = _payloadProtector.Unprotect(entity.AnswersJson) };
+    }
+
+    private UserKinkChecklistDto MapWithPlainAnswers(UserKinkCheclist entity, string plainAnswersJson)
+    {
+        var dto = _mapper.Map<UserKinkChecklistDto>(entity);
+        return dto with { AnswersJson = plainAnswersJson };
     }
 
     private static DateTime NormalizeUtc(DateTime value) =>

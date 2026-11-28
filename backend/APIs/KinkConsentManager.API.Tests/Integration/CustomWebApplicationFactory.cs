@@ -14,6 +14,7 @@ public sealed class CustomWebApplicationFactory : WebApplicationFactory<Program>
 {
     private readonly string _databaseName = $"InMemoryTestDb-{Guid.NewGuid()}";
     private readonly string _jwtSecret = Convert.ToHexString(RandomNumberGenerator.GetBytes(40));
+    private readonly string _aesGcmKey = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
     private readonly Dictionary<string, string?> _previousEnvironmentValues = new();
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
@@ -30,6 +31,11 @@ public sealed class CustomWebApplicationFactory : WebApplicationFactory<Program>
             ["TokenConfigurations:Audience"] = "KinkConsentManager.Client.Tests",
             ["TokenConfigurations:Minutes"] = "60",
             ["TokenConfigurations:DaysToExpiry"] = "7",
+            ["SecuritySettings:CryptoType"] = "AesGcm",
+            ["SecuritySettings:AesGcmSettings:Key"] = _aesGcmKey,
+            ["ChecklistProtection:Enabled"] = "true",
+            ["ChecklistProtection:CryptoAlgorithm"] = "AesGcm",
+            ["ChecklistProtection:CompressionAlgorithm"] = "Zstd",
             ["Localization:FunctionalMessages:DefaultCulture"] = "en-US",
             ["Localization:FunctionalMessages:AllowQueryCulture"] = "true"
         };

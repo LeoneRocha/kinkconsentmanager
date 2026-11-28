@@ -4,16 +4,20 @@ using KinkConsentManager.Core.Domain.DTOs.Checklists;
 using KinkConsentManager.Core.Domain.Entities;
 using KinkConsentManager.Core.Domain.Interfaces.Localization;
 using KinkConsentManager.Core.Domain.Interfaces.Repositories;
+using KinkConsentManager.Core.Domain.Interfaces.Services;
 using KinkConsentManager.Core.Domain.Localization.MessageKeys;
 using KinkConsentManager.Core.Domain.Validators.Checklists;
 using KinkConsentManager.Core.Infrastructure.Data;
+using KinkConsentManager.Core.Service.API.DI;
 using KinkConsentManager.Core.Service.Localization;
 using KinkConsentManager.Core.Service.Mappings;
 using KinkConsentManager.Core.Service.Services;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using NUnit.Framework;
+using SmartCoreHub.Core.SDK.Domain.Helpers.Security;
 using SmartCoreHub.Core.SDK.Domain.Interfaces;
 using SmartCoreHub.Core.SDK.Domain.Interfaces.Common;
 using SmartCoreHub.Core.SDK.Infrastructure.DependencyInjection;
@@ -35,8 +39,21 @@ public sealed class UserKinkChecklistServiceTests
         _repositoryMock = new Mock<IUserKinkChecklistRepository>();
         _loggerMock = new Mock<IAppLogger>();
 
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["SecuritySettings:CryptoType"] = "AesGcm",
+                ["SecuritySettings:AesGcmSettings:Key"] = AesKeyGeneratorHelper.GenerateKey(),
+                ["ChecklistProtection:Enabled"] = "true",
+                ["ChecklistProtection:CryptoAlgorithm"] = "AesGcm",
+                ["ChecklistProtection:CompressionAlgorithm"] = "Zstd"
+            })
+            .Build();
+
         var services = new ServiceCollection();
+        services.AddSingleton<IConfiguration>(configuration);
         services.AddLogging();
+        services.AddChecklistPayloadProtection(configuration);
         services.AddSmartCoreHubFunctionalMessages(
             options =>
             {
@@ -63,7 +80,8 @@ public sealed class UserKinkChecklistServiceTests
             _loggerMock.Object,
             _serviceProvider.GetRequiredService<IValidator<UpsertUserKinkChecklistRequestDto>>(),
             _serviceProvider.GetRequiredService<IValidationMessageService>(),
-            _serviceProvider.GetRequiredService<IErrorGetLocalizationService>());
+            _serviceProvider.GetRequiredService<IErrorGetLocalizationService>(),
+            _serviceProvider.GetRequiredService<IChecklistPayloadProtector>());
     }
 
     [TearDown]

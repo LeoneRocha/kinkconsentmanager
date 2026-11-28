@@ -73,6 +73,7 @@ public static class WebApplicationBuilderServicesConfigure
         builder.Services.AddScoped<IUserKinkChecklistRepository, UserKinkChecklistRepository>();
         builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
         builder.Services.AddScoped<IUserKinkChecklistService, UserKinkChecklistService>();
+        builder.Services.AddChecklistPayloadProtection(builder.Configuration);
         builder.Services.AddJwtAuthentication(builder.Configuration);
 
         // Registra o filtro do Core.SDK para traduzir envelopes ServiceResponse/ErrorResponse na resposta HTTP
