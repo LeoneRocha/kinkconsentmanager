@@ -13,6 +13,7 @@ describe('ChecklistProgressBarComponent', () => {
     isAutosaving?: boolean;
     hasUnsavedChanges?: boolean;
     autosaveEnabled?: boolean;
+    isOnlineAutosave?: boolean;
   }): Promise<void> => {
     fixture.componentRef.setInput('answeredCount', overrides?.answeredCount ?? 0);
     fixture.componentRef.setInput('totalCount', overrides?.totalCount ?? 10);
@@ -28,6 +29,9 @@ describe('ChecklistProgressBarComponent', () => {
     }
     if (overrides?.autosaveEnabled !== undefined) {
       fixture.componentRef.setInput('autosaveEnabled', overrides.autosaveEnabled);
+    }
+    if (overrides?.isOnlineAutosave !== undefined) {
+      fixture.componentRef.setInput('isOnlineAutosave', overrides.isOnlineAutosave);
     }
     await fixture.whenStable();
   };
@@ -185,5 +189,31 @@ describe('ChecklistProgressBarComponent', () => {
     expect(sectionEl.classList.contains('checklist-progress-bar--compact')).toBe(false);
     expect(railContainer.hidden).toBe(false);
     expect(legendContainer.hidden).toBe(false);
+  });
+
+  // Cenário: Modo on-line mantém apenas 1 switch e 1 botão Salvar, trocando apenas ícone e legenda.
+  // Objetivo: Garantir que não exista um segundo switch na barra e que fa-cloud substitua fa-lock quando online.
+  it('should keep exactly one toggle switch and one Save button and show fa-cloud icon in online autosave mode', async () => {
+    await setBaseInputs({
+      isOnlineAutosave: true,
+      autosaveText: 'Salvo on-line às 20:15',
+    });
+    fixture.componentRef.setInput('labels', {
+      progressLabel: 'Progresso',
+      saveButton: 'Salvar',
+      saveNowTooltip: 'Salvar agora (on-line)',
+      exportButton: 'Exportar',
+      autosaveToggleLabel: 'Salvamento automático (on-line)',
+    });
+    await fixture.whenStable();
+
+    const hostEl = fixture.nativeElement as HTMLElement;
+    expect(hostEl.querySelectorAll('mat-slide-toggle').length).toBe(1);
+    expect(hostEl.querySelectorAll('.checklist-progress-bar__save-btn').length).toBe(1);
+    expect(hostEl.querySelector('.checklist-progress-bar__autosave-toggle')?.textContent).toContain(
+      'Salvamento automático (on-line)',
+    );
+    expect(hostEl.querySelector('.checklist-progress-bar__save-meta i.fa-cloud')).not.toBeNull();
+    expect(hostEl.querySelector('.checklist-progress-bar__save-meta i.fa-lock')).toBeNull();
   });
 });

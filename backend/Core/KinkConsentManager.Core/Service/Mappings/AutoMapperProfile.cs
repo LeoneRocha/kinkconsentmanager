@@ -1,5 +1,6 @@
 using AutoMapper;
 using KinkConsentManager.Core.Domain.DTOs.Authentication;
+using KinkConsentManager.Core.Domain.DTOs.Checklists;
 using KinkConsentManager.Core.Domain.Entities;
 
 namespace KinkConsentManager.Core.Service.Mappings;
@@ -15,5 +16,6 @@ public sealed class AutoMapperProfile : Profile
     public AutoMapperProfile()
     {
         CreateMap<UserKink, UserKinkDto>();
+        CreateMap<UserKinkCheclist, UserKinkChecklistDto>();
     }
 }

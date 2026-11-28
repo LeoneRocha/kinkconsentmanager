@@ -176,15 +176,17 @@ export class ChecklistPageComponent implements OnInit {
 
   protected readonly progressBarLabels = computed<ChecklistProgressBarLabels>(() => {
     this.i18n.currentLang();
+    const isOnline = this.autosave.isOnlineMode();
     return {
       progressLabel: this.i18n.translateUi('progressLabel'),
       saveButton: this.translateWithFallback('saveButton', 'Salvar'),
-      saveNowTooltip: this.translateWithFallback('autosaveSaveNow', 'Salvar agora (criptografado)'),
+      saveNowTooltip: isOnline
+        ? this.translateWithFallback('autosaveOnlineSaveNow', 'Salvar agora (on-line)')
+        : this.translateWithFallback('autosaveSaveNow', 'Salvar agora (criptografado)'),
       exportButton: this.i18n.translateUi('navExport'),
-      autosaveToggleLabel: this.translateWithFallback(
-        'autosaveToggleLabel',
-        'Salvamento automático',
-      ),
+      autosaveToggleLabel: isOnline
+        ? this.translateWithFallback('autosaveOnlineToggleLabel', 'Salvamento automático (on-line)')
+        : this.translateWithFallback('autosaveToggleLabel', 'Salvamento automático'),
       compactEnableLabel: this.translateWithFallback(
         'progressCompactEnable',
         'Modo compacto (ocultar passos e legenda)',
@@ -330,35 +332,43 @@ export class ChecklistPageComponent implements OnInit {
 
   protected readonly autosaveStatusText = computed<string>(() => {
     const lang = this.i18n.currentLang();
+    const isOnline = this.autosave.isOnlineMode();
+
     if (this.autosave.isSaving()) {
+      return isOnline
+        ? this.translateWithFallback('autosaveOnlineSaving', 'Salvando preenchimento on-line...')
+        : this.translateWithFallback('autosaveSaving', 'Salvando preenchimento criptografado...');
+    }
+
+    if (isOnline && this.autosave.syncError()) {
       return this.translateWithFallback(
-        'autosaveSaving',
-        'Salvando preenchimento criptografado...',
+        'autosaveOnlineError',
+        'Não foi possível salvar on-line. Tente novamente.',
       );
     }
 
     const savedAt = this.autosave.lastAutosavedAt();
     if (!this.autosave.isEnabled()) {
-      const disabledLabel = this.translateWithFallback(
-        'autosaveDisabled',
-        'Salvamento automático desativado',
-      );
+      const disabledLabel = isOnline
+        ? this.translateWithFallback(
+            'autosaveOnlineDisabled',
+            'Salvamento automático (on-line) desativado',
+          )
+        : this.translateWithFallback('autosaveDisabled', 'Salvamento automático desativado');
       return savedAt ? `${disabledLabel} • ${this.formatSavedTime(savedAt, lang)}` : disabledLabel;
     }
 
     if (savedAt) {
       const formattedTime = this.formatSavedTime(savedAt, lang);
-      const prefix = this.translateWithFallback(
-        'autosaveSavedAt',
-        'Salvo automaticamente (criptografado) às',
-      );
+      const prefix = isOnline
+        ? this.translateWithFallback('autosaveOnlineSavedAt', 'Salvo on-line às')
+        : this.translateWithFallback('autosaveSavedAt', 'Salvo automaticamente (criptografado) às');
       return `${prefix} ${formattedTime}`;
     }
 
-    return this.translateWithFallback(
-      'autosaveActive',
-      'Autosave criptografado ativo (a cada 1 min)',
-    );
+    return isOnline
+      ? this.translateWithFallback('autosaveOnlineActive', 'Salvamento on-line ativo')
+      : this.translateWithFallback('autosaveActive', 'Autosave criptografado ativo (a cada 1 min)');
   });
 
   constructor() {
@@ -428,12 +438,25 @@ export class ChecklistPageComponent implements OnInit {
   }
 
   protected async onSaveNow(): Promise<void> {
+    const isOnline = this.autosave.isOnlineMode();
     const saved = await this.autosave.saveNow();
     if (saved) {
       this.accessibility.announce(
+        isOnline
+          ? this.translateWithFallback(
+              'autosaveOnlineSavedNow',
+              'Preenchimento salvo on-line na sua conta.',
+            )
+          : this.translateWithFallback(
+              'autosaveSavedNow',
+              'Preenchimento salvo com criptografia no navegador.',
+            ),
+      );
+    } else if (isOnline && this.autosave.syncError()) {
+      this.accessibility.announce(
         this.translateWithFallback(
-          'autosaveSavedNow',
-          'Preenchimento salvo com criptografia no navegador.',
+          'autosaveOnlineError',
+          'Não foi possível salvar on-line. Tente novamente.',
         ),
       );
     }

@@ -129,6 +129,27 @@ public sealed class KinkConsentManagerDbContextTests
         ptKeys.Values.Should().OnlyContain(v => !string.IsNullOrWhiteSpace(v));
     }
 
+    [Test]
+    public void LocalizationResources_ChecklistMessages_ShouldHaveFullParityWithChecklistMessageKeys()
+    {
+        // Cenário: Comparação entre ChecklistMessageKeys e os recursos ChecklistMessages.resx / ChecklistMessages.pt-BR.resx.
+        // Objetivo: Garantir paridade de 100% entre os dois arquivos .resx e cobertura total de todas as chaves do checklist on-line.
+        var manager = new ResourceManager(
+            "KinkConsentManager.Core.Infrastructure.Localization.Resources.ChecklistMessages",
+            typeof(KinkConsentManagerDbContext).Assembly);
+
+        var enKeys = ReadResourceDictionary(manager, CultureInfo.InvariantCulture, tryParents: false);
+        var ptKeys = ReadResourceDictionary(manager, CultureInfo.GetCultureInfo("pt-BR"), tryParents: false);
+
+        var expectedChecklistKeys = GetPublicConstantValues(typeof(ChecklistMessageKeys));
+
+        enKeys.Keys.Should().BeEquivalentTo(ptKeys.Keys);
+        enKeys.Keys.Should().BeEquivalentTo(expectedChecklistKeys);
+        ptKeys.Keys.Should().BeEquivalentTo(expectedChecklistKeys);
+        enKeys.Values.Should().OnlyContain(v => !string.IsNullOrWhiteSpace(v));
+        ptKeys.Values.Should().OnlyContain(v => !string.IsNullOrWhiteSpace(v));
+    }
+
     private static bool HasUniqueIndexOn(Microsoft.EntityFrameworkCore.Metadata.IEntityType entityType, string propertyName)
     {
         return entityType.GetIndexes()

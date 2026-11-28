@@ -1,6 +1,8 @@
 using FluentValidation;
 using KinkConsentManager.Core.Domain.DTOs.Authentication;
+using KinkConsentManager.Core.Domain.DTOs.Checklists;
 using KinkConsentManager.Core.Domain.Interfaces.Localization;
+using KinkConsentManager.Core.Domain.Interfaces.Repositories;
 using KinkConsentManager.Core.Domain.Interfaces.Services;
 using KinkConsentManager.Core.Service.API.DI;
 using Microsoft.AspNetCore.Builder;
@@ -43,9 +45,12 @@ public sealed class DependencyInjectionGraphTests
             var sp = scope.ServiceProvider;
 
             sp.GetRequiredService<IAuthenticationService>().Should().NotBeNull();
+            sp.GetRequiredService<IUserKinkChecklistRepository>().Should().NotBeNull();
+            sp.GetRequiredService<IUserKinkChecklistService>().Should().NotBeNull();
             sp.GetRequiredService<IApplicationDispatcher>().Should().NotBeNull();
             sp.GetRequiredService<IValidationMessageService>().Should().NotBeNull();
             sp.GetRequiredService<IValidator<RegisterUserKinkRequestDto>>().Should().NotBeNull();
+            sp.GetRequiredService<IValidator<UpsertUserKinkChecklistRequestDto>>().Should().NotBeNull();
         }
         finally
         {

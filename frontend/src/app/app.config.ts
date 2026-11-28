@@ -1,4 +1,4 @@
-import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import {
   ApplicationConfig,
   ErrorHandler,
@@ -21,6 +21,7 @@ import {
   USER_PREFERENCES_REPOSITORY_TOKEN,
   UserPreferencesRepository,
 } from './core/repositories';
+import { authInterceptor } from './core/interceptors';
 import {
   API_BASE_URL,
   CompositeTranslateLoader,
@@ -42,7 +43,7 @@ export const appConfig: ApplicationConfig = {
     }),
     { provide: ErrorHandler, useClass: TelemetryErrorHandler },
     provideRouter(routes),
-    provideHttpClient(),
+    provideHttpClient(withInterceptors([authInterceptor])),
     { provide: API_BASE_URL, useValue: environment.apiBaseUrl },
     importProvidersFrom(MatDialogModule, MatSnackBarModule),
     provideTranslateService({

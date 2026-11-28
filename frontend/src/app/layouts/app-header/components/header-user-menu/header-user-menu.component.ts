@@ -9,7 +9,12 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { take } from 'rxjs';
-import { AuthService, I18nService, UiFeedbackHostService } from '../../../../core/services';
+import {
+  AuthService,
+  ChecklistAutosaveService,
+  I18nService,
+  UiFeedbackHostService,
+} from '../../../../core/services';
 import { SchemaTranslatePipe } from '../../../../shared/pipes';
 
 /**
@@ -25,6 +30,7 @@ import { SchemaTranslatePipe } from '../../../../shared/pipes';
 export class HeaderUserMenuComponent {
   private readonly destroyRef = inject(DestroyRef);
   protected readonly auth = inject(AuthService);
+  private readonly autosave = inject(ChecklistAutosaveService);
   private readonly i18n = inject(I18nService);
   private readonly feedback = inject(UiFeedbackHostService);
 
@@ -39,6 +45,7 @@ export class HeaderUserMenuComponent {
       .pipe(take(1), takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
+          this.autosave.handleLogoutCleanup();
           this.feedback.info(this.i18n.translateUi('authLogoutSuccess'));
         },
       });

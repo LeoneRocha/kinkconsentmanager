@@ -89,6 +89,7 @@
           [isAutosaving]="autosave.isSaving()"
           [hasUnsavedChanges]="autosave.hasUnsavedChanges()"
           [autosaveEnabled]="autosave.isEnabled()"
+          [isOnlineAutosave]="autosave.isOnlineMode()"
           [labels]="progressBarLabels()"
           (saveNow)="onSaveNow()"
           (goToExport)="onFinishChecklist()"

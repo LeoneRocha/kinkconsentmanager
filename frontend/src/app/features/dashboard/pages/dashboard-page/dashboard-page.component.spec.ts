@@ -246,10 +246,34 @@ describe('DashboardPageComponent', () => {
     loginReq.flush({ isSuccess: true, statusCode: 200, data: loginPayload });
     await fixture.whenStable();
 
-    // Deve exibir o banner conectado com dados do usuário
+    // Após o login, Dashboard dispara sincronização on-line da nuvem
+    const cloudSyncReq = httpMock.expectOne('https://api.example.test/api/v1/checklists/current');
+    expect(cloudSyncReq.request.method).toBe('GET');
+    cloudSyncReq.flush({
+      isSuccess: true,
+      statusCode: 200,
+      data: {
+        id: 1,
+        schemaVersion: '1.0.0',
+        language: 'pt-BR',
+        answersJson: '{"item_rope":{"primaryScale":"enjoy"}}',
+        clientUpdatedAtUtc: '2026-11-27T16:00:00.000Z',
+        version: 1,
+        createdAt: '2026-11-27T16:00:00.000Z',
+        updatedAt: '2026-11-27T16:00:00.000Z',
+      },
+    });
+    await Promise.resolve();
+    await Promise.resolve();
+    await fixture.whenStable();
+
+    // Deve exibir o banner conectado com dados do usuário e atualizar o card para Continuar Checklist
     expect(feedbackMock.success).toHaveBeenCalledWith('Login realizado com sucesso!');
     expect(hostEl.querySelector('app-cloud-benefits-banner')).not.toBeNull();
     expect(hostEl.textContent).toContain('@user.kink');
+    expect(hostEl.querySelector('button[data-feature-id="checklist"]')?.textContent).toContain(
+      'Continuar Checklist',
+    );
 
     // 5. Logout
     hostEl.querySelector<HTMLButtonElement>('.cloud-banner__ghost-btn')!.click();
@@ -259,5 +283,9 @@ describe('DashboardPageComponent', () => {
 
     expect(feedbackMock.success).toHaveBeenCalledWith('Sessão encerrada.');
     expect(hostEl.querySelector('[data-testid="cloud-advance-login-btn"]')).not.toBeNull();
+    expect(checklistState.answers()).toEqual({});
+    expect(hostEl.querySelector('button[data-feature-id="checklist"]')?.textContent).toContain(
+      'Abrir Checklist',
+    );
   });
 });

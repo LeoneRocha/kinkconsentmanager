@@ -109,6 +109,14 @@ public sealed class ValidationMessageServiceTests
     [TestCase(ValidationMessageKeys.PasswordSpecialCharRequired, "Password must contain at least one special character.", "A senha deve conter pelo menos um caractere especial.")]
     [TestCase(AuthenticationMessageKeys.InvalidCredentials, "Invalid login credentials.", "Credenciais de acesso inválidas.")]
     [TestCase(AuthenticationMessageKeys.RefreshTokenReused, "Refresh token reuse detected. All active sessions have been revoked.", "Reutilização de refresh token detectada. Todas as sessões ativas foram revogadas.")]
+    [TestCase(ChecklistMessageKeys.ChecklistRetrieved, "Checklist retrieved successfully.", "Checklist recuperado com sucesso.")]
+    [TestCase(ChecklistMessageKeys.ChecklistSaved, "Checklist saved online successfully.", "Checklist salvo on-line com sucesso.")]
+    [TestCase(ChecklistMessageKeys.ChecklistDeleted, "Saved checklist removed successfully.", "Preenchimento salvo removido com sucesso.")]
+    [TestCase(ChecklistMessageKeys.ChecklistNotFound, "No saved online checklist was found for this user.", "Nenhum checklist salvo on-line foi encontrado para este usuário.")]
+    [TestCase(ChecklistMessageKeys.ChecklistVersionConflict, "A newer version of this checklist already exists online. Reload before saving.", "Já existe uma versão mais recente deste checklist salva on-line. Recarregue antes de salvar.")]
+    [TestCase(ValidationMessageKeys.ChecklistInvalidJson, "AnswersJson must be a valid JSON object.", "As respostas devem estar em um objeto JSON válido.")]
+    [TestCase(ValidationMessageKeys.ChecklistInvalidLanguage, "Supported languages are pt-BR and en-US.", "Os idiomas suportados são pt-BR e en-US.")]
+    [TestCase(ValidationMessageKeys.ChecklistPayloadTooLarge, "Checklist payload exceeds the maximum allowed size.", "O tamanho das respostas do checklist excede o limite permitido.")]
     public void GetMessage_WhenUsingProductKeys_ShouldResolveExactResxMessagesForBothCultures(
         string key,
         string expectedEn,

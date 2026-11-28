@@ -164,6 +164,7 @@ export class DashboardPageComponent implements OnInit {
         next: () => {
           this.feedback.success(this.i18n.translateUi('authLoginSuccess'));
           this.authView.set('promo');
+          void this.autosave.syncOnSessionStarted();
         },
         error: () => undefined,
       });
@@ -189,6 +190,7 @@ export class DashboardPageComponent implements OnInit {
       .pipe(take(1), takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
+          this.autosave.handleLogoutCleanup();
           this.feedback.success(this.i18n.translateUi('authLogoutSuccess'));
           this.authView.set('promo');
         },

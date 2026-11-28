@@ -262,7 +262,20 @@
     "authRegisterSuccess": "Account created! You can now sign in.",
     "authLogoutSuccess": "Signed out successfully.",
     "authErrorLoginFailed": "Could not sign in. Check your credentials and try again.",
-    "authErrorRegisterFailed": "Could not complete registration. Check the provided information."
+    "authErrorRegisterFailed": "Could not complete registration. Check the provided information.",
+    "autosaveOnlineToggleLabel": "Automatic save (online)",
+    "autosaveOnlineSaveNow": "Save now (online)",
+    "autosaveOnlineActive": "Online autosave active",
+    "autosaveOnlineSaving": "Saving responses online...",
+    "autosaveOnlineSavedAt": "Saved online at",
+    "autosaveOnlineSavedNow": "Responses saved online to your account.",
+    "autosaveOnlineDisabled": "Automatic save (online) disabled",
+    "autosaveOnlineError": "Could not save online. Please try again.",
+    "modePickerExistingOnlineProgress": "Saved online progress found",
+    "cloudSyncConflictTitle": "Local and online responses found",
+    "cloudSyncConflictMessage": "You already have saved responses on your account as well as local answers in this browser. Would you like to load the online version (replacing the local draft)?",
+    "cloudSyncConflictUseOnline": "Use online version",
+    "cloudSyncConflictUseLocal": "Keep local version and upload"
   },
   "roles": {
     "giving_receiving": {

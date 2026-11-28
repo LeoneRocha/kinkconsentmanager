@@ -262,7 +262,20 @@
     "authRegisterSuccess": "Cadastro concluído! Agora faça login com sua conta.",
     "authLogoutSuccess": "Sessão encerrada com sucesso.",
     "authErrorLoginFailed": "Não foi possível entrar. Verifique suas credenciais e tente novamente.",
-    "authErrorRegisterFailed": "Não foi possível concluir o cadastro. Verifique os dados informados."
+    "authErrorRegisterFailed": "Não foi possível concluir o cadastro. Verifique os dados informados.",
+    "autosaveOnlineToggleLabel": "Salvamento automático (on-line)",
+    "autosaveOnlineSaveNow": "Salvar agora (on-line)",
+    "autosaveOnlineActive": "Salvamento on-line ativo",
+    "autosaveOnlineSaving": "Salvando preenchimento on-line...",
+    "autosaveOnlineSavedAt": "Salvo on-line às",
+    "autosaveOnlineSavedNow": "Preenchimento salvo on-line na sua conta.",
+    "autosaveOnlineDisabled": "Salvamento automático (on-line) desativado",
+    "autosaveOnlineError": "Não foi possível salvar on-line. Tente novamente.",
+    "modePickerExistingOnlineProgress": "Progresso on-line encontrado",
+    "cloudSyncConflictTitle": "Encontramos respostas locais e on-line",
+    "cloudSyncConflictMessage": "Você já possui um preenchimento salvo na sua conta e também tem respostas locais neste navegador. Deseja carregar a versão salva on-line (substituindo o rascunho local)?",
+    "cloudSyncConflictUseOnline": "Usar versão on-line",
+    "cloudSyncConflictUseLocal": "Manter versão local e enviar on-line"
   },
   "roles": {
     "giving_receiving": {

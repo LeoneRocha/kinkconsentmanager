@@ -1,10 +1,14 @@
+import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { provideTranslateService, TranslateService } from '@ngx-translate/core';
 import { Observable, of, throwError } from 'rxjs';
 import { ChecklistSchema } from '../../../../core/models';
-import { SCHEMA_REPOSITORY_TOKEN } from '../../../../core/repositories';
+import { ISchemaRepository, SCHEMA_REPOSITORY_TOKEN } from '../../../../core/repositories';
 import {
+  API_BASE_URL,
+  AUTH_SESSION_STORAGE_KEY,
   ChecklistAutosaveService,
   ChecklistStateService,
   UiFeedbackHostService,
@@ -33,23 +37,45 @@ describe('ChecklistStartPageComponent', () => {
   let autosaveService: ChecklistAutosaveService;
   let feedbackHost: UiFeedbackHostService;
   let router: Router;
+  let httpMock: HttpTestingController;
   let getChecklistSchemaMock: jest.Mock<Observable<ChecklistSchema>, [version?: string]>;
 
   const setup = async (
     schemaFactory: () => Observable<ChecklistSchema> = () => of(MOCK_SCHEMA),
+    options?: { authenticated?: boolean },
   ): Promise<void> => {
     localStorage.clear();
     sessionStorage.clear();
+    if (options?.authenticated) {
+      localStorage.setItem(
+        AUTH_SESSION_STORAGE_KEY,
+        JSON.stringify({
+          user: {
+            id: 2,
+            login: 'user.kink',
+            isActive: true,
+            createdAt: '2026-01-01T00:00:00Z',
+            lastLoginAt: null,
+          },
+          accessToken: 'jwt-start-token',
+          refreshToken: 'refresh-start-token',
+          expiresAtUtc: new Date(Date.now() + 3600_000).toISOString(),
+        }),
+      );
+    }
     getChecklistSchemaMock = jest.fn(schemaFactory);
 
     await TestBed.configureTestingModule({
       imports: [ChecklistStartPageComponent],
       providers: [
         provideRouter([]),
+        provideHttpClient(),
+        provideHttpClientTesting(),
         provideTranslateService({ lang: 'pt-BR', fallbackLang: 'en-US' }),
+        { provide: API_BASE_URL, useValue: 'https://api.example.test' },
         {
           provide: SCHEMA_REPOSITORY_TOKEN,
-          useValue: { getChecklistSchema: getChecklistSchemaMock },
+          useValue: { getChecklistSchema: getChecklistSchemaMock } as ISchemaRepository,
         },
       ],
     }).compileComponents();
@@ -68,6 +94,9 @@ describe('ChecklistStartPageComponent', () => {
         importErrorInvalidJson: 'Arquivo inválido.',
         importErrorIncompatibleVersion: 'Versão do schema incompatível.',
         notificationOkAction: 'OK',
+        modePickerExistingProgress: 'Progresso local encontrado',
+        modePickerExistingOnlineProgress: 'Progresso on-line encontrado',
+        modePickerContinueButton: 'Continuar neste modo',
       },
     });
     translate.use('pt-BR');
@@ -76,6 +105,7 @@ describe('ChecklistStartPageComponent', () => {
     autosaveService = TestBed.inject(ChecklistAutosaveService);
     feedbackHost = TestBed.inject(UiFeedbackHostService);
     router = TestBed.inject(Router);
+    httpMock = TestBed.inject(HttpTestingController);
     fixture = TestBed.createComponent(ChecklistStartPageComponent);
     await fixture.whenStable();
   };
@@ -83,6 +113,7 @@ describe('ChecklistStartPageComponent', () => {
   afterEach(() => {
     feedbackHost?.dismissAll();
     autosaveService?.stop();
+    httpMock?.verify();
     fixture?.destroy();
     TestBed.resetTestingModule();
     localStorage.clear();
@@ -180,5 +211,46 @@ describe('ChecklistStartPageComponent', () => {
     expect(checklistState.hasConfirmedStartMode()).toBe(true);
     expect(successSpy).toHaveBeenCalled();
     expect(navigateSpy).toHaveBeenCalledWith(['/checklist', 'fill']);
+  });
+
+  // Cenário: Usuário autenticado acessa /checklist ("Como você prefere preencher o checklist?") com dados salvos em UserKinkCheclists.
+  // Objetivo: Hidratar respostas on-line, exibir "Progresso on-line encontrado" e todos os 4 botões com "Continuar neste modo".
+  it('should hydrate online checklist on /checklist when authenticated and display online progress banner and Continue buttons', async () => {
+    await setup(() => of(MOCK_SCHEMA), { authenticated: true });
+
+    const restorePromise = autosaveService.restoreFromAutosave();
+    const getReq = httpMock.expectOne('https://api.example.test/api/v1/checklists/current');
+    expect(getReq.request.method).toBe('GET');
+    getReq.flush({
+      isSuccess: true,
+      statusCode: 200,
+      data: {
+        id: 1,
+        schemaVersion: '1.0.0',
+        language: 'pt-BR',
+        answersJson: '{"item_safeword":{"selectedOption":"opt_traffic"}}',
+        clientUpdatedAtUtc: '2026-11-27T15:00:00.000Z',
+        version: 2,
+        createdAt: '2026-11-27T14:00:00.000Z',
+        updatedAt: '2026-11-27T15:00:00.000Z',
+      },
+    });
+    const restored = await restorePromise;
+    expect(restored).toBe(true);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(checklistState.answeredItemsCount()).toBe(1);
+
+    const hostEl = fixture.nativeElement as HTMLElement;
+    const banner = hostEl.querySelector('.mode-selector__saved-banner');
+    expect(banner?.textContent).toContain('Progresso on-line encontrado');
+    expect(banner?.textContent).toContain('1 / 1 (100%)');
+
+    const ctaEls = hostEl.querySelectorAll('.mode-selector__cta');
+    expect(ctaEls.length).toBe(4);
+    ctaEls.forEach((cta) => {
+      expect(cta.textContent).toContain('Continuar neste modo');
+    });
   });
 });

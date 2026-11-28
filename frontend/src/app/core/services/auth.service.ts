@@ -1,6 +1,6 @@
 import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
 import { computed, inject, Injectable } from '@angular/core';
-import { catchError, finalize, map, Observable, of, tap, throwError } from 'rxjs';
+import { catchError, finalize, map, Observable, of, shareReplay, tap, throwError } from 'rxjs';
 import {
   ApiServiceResponse,
   AuthSessionState,
@@ -43,11 +43,14 @@ export class AuthService extends BaseStateService<AuthSessionState> {
   private readonly i18n = inject(I18nService);
 
   readonly user = this.select('user');
+  readonly accessToken = this.select('accessToken');
   readonly isLoading = this.select('isLoading');
   readonly errorMessage = this.select('errorMessage');
   readonly isAuthenticated = computed(
     () => this.stateSignal().user !== null && this.stateSignal().accessToken !== null,
   );
+
+  private refreshInFlight$: Observable<string> | null = null;
 
   constructor() {
     super(INITIAL_AUTH_STATE);
@@ -67,20 +70,7 @@ export class AuthService extends BaseStateService<AuthSessionState> {
       .pipe(
         map((response) => this.unwrapLoginResponse(response)),
         tap((loginData) => {
-          const session: PersistedAuthSession = {
-            user: loginData.user,
-            accessToken: loginData.accessToken,
-            refreshToken: loginData.refreshToken,
-            expiresAtUtc: loginData.expiresAtUtc,
-          };
-          this.storage.setLocal(AUTH_SESSION_STORAGE_KEY, session);
-          this.setState({
-            user: loginData.user,
-            accessToken: loginData.accessToken,
-            refreshToken: loginData.refreshToken,
-            expiresAtUtc: loginData.expiresAtUtc,
-            errorMessage: null,
-          });
+          this.persistSessionState(loginData);
         }),
         map((loginData) => loginData.user),
         catchError((error: unknown) => {
@@ -143,10 +133,80 @@ export class AuthService extends BaseStateService<AuthSessionState> {
   }
 
   /**
+   * Retorna o refresh token atual em memória quando disponível.
+   */
+  getRefreshToken(): string | null {
+    return this.stateSignal().refreshToken;
+  }
+
+  /**
+   * Renova o access token utilizando o refresh token atual de forma deduplicada entre requisições concorrentes.
+   */
+  refreshAccessToken(): Observable<string> {
+    if (this.refreshInFlight$) {
+      return this.refreshInFlight$;
+    }
+
+    const refreshToken = this.stateSignal().refreshToken;
+    if (!refreshToken) {
+      this.clearLocalSession();
+      return throwError(() => new Error('No refresh token available.'));
+    }
+
+    this.refreshInFlight$ = this.http
+      .post<ApiServiceResponse<LoginResponse>>(
+        this.buildAuthUrl('refresh'),
+        { token: refreshToken },
+        { headers: this.buildLocaleHeaders() },
+      )
+      .pipe(
+        map((response) => this.unwrapLoginResponse(response)),
+        tap((loginData) => {
+          this.persistSessionState(loginData);
+        }),
+        map((loginData) => loginData.accessToken),
+        catchError((error: unknown) => {
+          this.clearLocalSession();
+          return throwError(() => error);
+        }),
+        finalize(() => {
+          this.refreshInFlight$ = null;
+        }),
+        shareReplay(1),
+      );
+
+    return this.refreshInFlight$;
+  }
+
+  /**
+   * Limpa imediatamente a sessão autenticada local sem chamar o servidor.
+   */
+  clearSession(): void {
+    this.clearLocalSession();
+  }
+
+  /**
    * Limpa a mensagem de erro atual antes de trocar de formulário ou tentar novamente.
    */
   clearError(): void {
     this.setState({ errorMessage: null });
+  }
+
+  private persistSessionState(loginData: LoginResponse): void {
+    const session: PersistedAuthSession = {
+      user: loginData.user,
+      accessToken: loginData.accessToken,
+      refreshToken: loginData.refreshToken,
+      expiresAtUtc: loginData.expiresAtUtc,
+    };
+    this.storage.setLocal(AUTH_SESSION_STORAGE_KEY, session);
+    this.setState({
+      user: loginData.user,
+      accessToken: loginData.accessToken,
+      refreshToken: loginData.refreshToken,
+      expiresAtUtc: loginData.expiresAtUtc,
+      errorMessage: null,
+    });
   }
 
   private restoreSession(): void {
@@ -175,7 +235,7 @@ export class AuthService extends BaseStateService<AuthSessionState> {
     this.resetState(INITIAL_AUTH_STATE);
   }
 
-  private buildAuthUrl(action: 'login' | 'register' | 'logout'): string {
+  private buildAuthUrl(action: 'login' | 'register' | 'logout' | 'refresh'): string {
     const base = this.apiBaseUrl.trim().replace(/\/+$/, '');
     const path = `api/v1/auth/${action}`;
     return base ? `${base}/${path}` : `/${path}`;

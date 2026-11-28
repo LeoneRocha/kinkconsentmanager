@@ -50,4 +50,13 @@ public static class ValidationMessageKeys
 
     /// <summary>Payload JSON do checklist inválido.</summary>
     public const string ReportInvalidJson = "Validation.Report.InvalidJson";
+
+    /// <summary>Payload AnswersJson deve ser um objeto JSON válido.</summary>
+    public const string ChecklistInvalidJson = "Validation.Checklist.InvalidJson";
+
+    /// <summary>Idioma do checklist não suportado.</summary>
+    public const string ChecklistInvalidLanguage = "Validation.Checklist.InvalidLanguage";
+
+    /// <summary>Tamanho do payload do checklist excede o limite permitido.</summary>
+    public const string ChecklistPayloadTooLarge = "Validation.Checklist.PayloadTooLarge";
 }

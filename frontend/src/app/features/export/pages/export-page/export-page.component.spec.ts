@@ -1,3 +1,5 @@
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { provideTranslateService, TranslateService } from '@ngx-translate/core';
@@ -163,6 +165,8 @@ describe('ExportPageComponent', () => {
       imports: [ExportPageComponent],
       providers: [
         provideRouter([]),
+        provideHttpClient(),
+        provideHttpClientTesting(),
         provideTranslateService({ lang: 'pt-BR', fallbackLang: 'pt-BR' }),
         { provide: SCHEMA_REPOSITORY_TOKEN, useValue: schemaRepoMock },
         { provide: FileDownloadService, useValue: fileDownloadMock },

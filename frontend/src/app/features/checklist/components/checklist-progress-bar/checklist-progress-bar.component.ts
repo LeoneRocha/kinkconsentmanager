@@ -43,6 +43,7 @@ export class ChecklistProgressBarComponent {
   readonly isAutosaving = input<boolean>(false);
   readonly hasUnsavedChanges = input<boolean>(false);
   readonly autosaveEnabled = input<boolean>(true);
+  readonly isOnlineAutosave = input<boolean>(false);
   readonly labels = input<ChecklistProgressBarLabels>(DEFAULT_CHECKLIST_PROGRESS_BAR_LABELS);
 
   readonly saveNow = output<void>();

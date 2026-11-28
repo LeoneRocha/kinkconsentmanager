@@ -1,3 +1,5 @@
+import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { provideTranslateService, TranslateService } from '@ngx-translate/core';
@@ -5,6 +7,8 @@ import { Observable, Subject, of, throwError } from 'rxjs';
 import { ChecklistSchema, ChecklistViewMode } from '../../../../core/models';
 import { ISchemaRepository, SCHEMA_REPOSITORY_TOKEN } from '../../../../core/repositories';
 import {
+  API_BASE_URL,
+  AUTH_SESSION_STORAGE_KEY,
   ChecklistAutosaveService,
   ChecklistStateService,
   I18nService,
@@ -99,6 +103,14 @@ const PT_BR_TRANSLATIONS = {
     importSuccess: 'Rascunho JSON importado e restaurado com sucesso.',
     importErrorInvalidJson: 'Arquivo inválido.',
     importErrorIncompatibleVersion: 'Versão do schema incompatível.',
+    autosaveOnlineToggleLabel: 'Salvamento automático (on-line)',
+    autosaveOnlineSaveNow: 'Salvar agora (on-line)',
+    autosaveOnlineActive: 'Salvamento on-line ativo',
+    autosaveOnlineSaving: 'Salvando preenchimento on-line...',
+    autosaveOnlineSavedAt: 'Salvo on-line às',
+    autosaveOnlineSavedNow: 'Preenchimento salvo on-line na sua conta.',
+    autosaveOnlineDisabled: 'Salvamento automático (on-line) desativado',
+    autosaveOnlineError: 'Não foi possível salvar on-line. Tente novamente.',
   },
   scales: {
     hard_limit: 'Limite Rígido',
@@ -200,6 +212,7 @@ describe('ChecklistPageComponent', () => {
   let i18nService: I18nService;
   let feedbackHost: UiFeedbackHostService;
   let router: Router;
+  let httpMock: HttpTestingController;
   let getChecklistSchemaMock: jest.Mock<Observable<ChecklistSchema>, [version?: string]>;
 
   const startInMode = async (mode: ChecklistViewMode = 'stepper'): Promise<HTMLElement> => {
@@ -210,9 +223,27 @@ describe('ChecklistPageComponent', () => {
 
   const createTestModule = async (
     schemaFactory: () => Observable<ChecklistSchema>,
+    options?: { authenticated?: boolean },
   ): Promise<void> => {
     localStorage.clear();
     sessionStorage.clear();
+    if (options?.authenticated) {
+      localStorage.setItem(
+        AUTH_SESSION_STORAGE_KEY,
+        JSON.stringify({
+          user: {
+            id: 2,
+            login: 'user.kink',
+            isActive: true,
+            createdAt: '2026-01-01T00:00:00Z',
+            lastLoginAt: null,
+          },
+          accessToken: 'jwt-page-token',
+          refreshToken: 'refresh-page-token',
+          expiresAtUtc: new Date(Date.now() + 3600_000).toISOString(),
+        }),
+      );
+    }
     getChecklistSchemaMock = jest.fn(schemaFactory);
     const repoMock: ISchemaRepository = {
       getChecklistSchema: getChecklistSchemaMock,
@@ -222,7 +253,10 @@ describe('ChecklistPageComponent', () => {
       imports: [ChecklistPageComponent],
       providers: [
         provideRouter([]),
+        provideHttpClient(),
+        provideHttpClientTesting(),
         provideTranslateService({ lang: 'pt-BR', fallbackLang: 'en-US' }),
+        { provide: API_BASE_URL, useValue: 'https://api.example.test' },
         { provide: SCHEMA_REPOSITORY_TOKEN, useValue: repoMock },
       ],
     }).compileComponents();
@@ -236,12 +270,14 @@ describe('ChecklistPageComponent', () => {
     i18nService = TestBed.inject(I18nService);
     feedbackHost = TestBed.inject(UiFeedbackHostService);
     router = TestBed.inject(Router);
+    httpMock = TestBed.inject(HttpTestingController);
     fixture = TestBed.createComponent(ChecklistPageComponent);
   };
 
   afterEach(() => {
     feedbackHost?.dismissAll();
     autosaveService?.stop();
+    httpMock?.verify();
     fixture?.destroy();
     TestBed.resetTestingModule();
     localStorage.clear();
@@ -569,10 +605,15 @@ describe('ChecklistPageComponent', () => {
     expect(hostEl.querySelector('app-completion-banner')).toBeNull();
 
     // Completing both roles finishes all QuickFill steps and displays the banner inside the QuickFill body
-    checklistState.setItemAnswer('item_rope', { primaryScale: 'enjoy', secondaryScale: 'favorite' });
+    checklistState.setItemAnswer('item_rope', {
+      primaryScale: 'enjoy',
+      secondaryScale: 'favorite',
+    });
     await fixture.whenStable();
 
-    const banner = hostEl.querySelector('.checklist-page__content app-completion-banner .completion-banner');
+    const banner = hostEl.querySelector(
+      '.checklist-page__content app-completion-banner .completion-banner',
+    );
     expect(banner).not.toBeNull();
     expect(hostEl.querySelector('.quick-fill--completed app-completion-banner')).not.toBeNull();
     expect(hostEl.querySelectorAll('app-completion-banner').length).toBe(1);
@@ -616,5 +657,62 @@ describe('ChecklistPageComponent', () => {
       .click();
     await fixture.whenStable();
     expect(navigateSpy).toHaveBeenCalledWith(['/checklist', 'export']);
+  });
+
+  // Cenário: Sessão autenticada em /checklist/fill exibindo switch único on-line, botão Salvar e exclusão remota.
+  // Objetivo: Garantir que apenas 1 switch ("Salvamento automático (on-line)") exista, que Salvar envie PUT e Limpar tudo envie DELETE.
+  it('should show single online autosave switch, save via PUT on Salvar click, and delete remotely on clearAll when authenticated', async () => {
+    await createTestModule(() => of(MOCK_SCHEMA), { authenticated: true });
+    const hostEl = await startInMode('stepper');
+
+    const getReq = httpMock.expectOne('https://api.example.test/api/v1/checklists/current');
+    expect(getReq.request.method).toBe('GET');
+    getReq.flush({ isSuccess: false, statusCode: 404 }, { status: 404, statusText: 'Not Found' });
+    await fixture.whenStable();
+
+    expect(hostEl.querySelectorAll('app-checklist-progress-bar mat-slide-toggle').length).toBe(1);
+    expect(hostEl.querySelector('.checklist-progress-bar__autosave-toggle')?.textContent).toContain(
+      'Salvamento automático (on-line)',
+    );
+    expect(hostEl.querySelector('.checklist-progress-bar__save-meta i.fa-cloud')).not.toBeNull();
+
+    checklistState.setItemAnswer('item_safeword', { selectedOption: 'opt_traffic' });
+    await fixture.whenStable();
+
+    const saveBtn = hostEl.querySelector<HTMLButtonElement>('.checklist-progress-bar__save-btn')!;
+    expect(saveBtn.textContent).toContain('Salvar');
+    saveBtn.click();
+
+    const putReq = httpMock.expectOne('https://api.example.test/api/v1/checklists/current');
+    expect(putReq.request.method).toBe('PUT');
+    putReq.flush({
+      isSuccess: true,
+      statusCode: 200,
+      data: {
+        id: 1,
+        schemaVersion: '1.0.0',
+        language: 'pt-BR',
+        answersJson: putReq.request.body.answersJson,
+        clientUpdatedAtUtc: '2026-11-27T14:00:00.000Z',
+        version: 1,
+        createdAt: '2026-11-27T14:00:00.000Z',
+        updatedAt: '2026-11-27T14:00:00.000Z',
+      },
+    });
+    await fixture.whenStable();
+
+    expect(hostEl.querySelector('.checklist-progress-bar__save-meta')?.textContent).toContain(
+      'Salvo on-line às',
+    );
+
+    jest.spyOn(feedbackHost, 'confirm').mockReturnValueOnce(of(true));
+    hostEl.querySelector<HTMLButtonElement>('.checklist-header__clear-btn')!.click();
+
+    const deleteReq = httpMock.expectOne('https://api.example.test/api/v1/checklists/current');
+    expect(deleteReq.request.method).toBe('DELETE');
+    deleteReq.flush({ isSuccess: true, statusCode: 200, data: true });
+    await fixture.whenStable();
+
+    expect(checklistState.answers()).toEqual({});
   });
 });

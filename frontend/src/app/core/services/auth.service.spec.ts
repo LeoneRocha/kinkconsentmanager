@@ -201,4 +201,59 @@ describe('AuthService', () => {
     expect(service.user()).toBeNull();
     expect(localStorage.getItem(AUTH_SESSION_STORAGE_KEY)).toBeNull();
   });
+
+  // Cenário: Renovação de access token com deduplicação de chamadas concorrentes e limpeza em falha.
+  // Objetivo: Garantir que chamadas paralelas a refreshAccessToken() disparem apenas 1 POST /api/v1/auth/refresh.
+  it('should deduplicate concurrent refreshAccessToken() calls and clear session on failure', () => {
+    localStorage.setItem(
+      AUTH_SESSION_STORAGE_KEY,
+      JSON.stringify({
+        user: MOCK_USER,
+        accessToken: 'old-access-token',
+        refreshToken: 'old-refresh-token',
+        expiresAtUtc: FUTURE_EXPIRY,
+      }),
+    );
+
+    setupTestBed();
+
+    let tokenA: string | undefined;
+    let tokenB: string | undefined;
+
+    service.refreshAccessToken().subscribe((t) => (tokenA = t));
+    service.refreshAccessToken().subscribe((t) => (tokenB = t));
+
+    const refreshReq = httpMock.expectOne('https://api.example.test/api/v1/auth/refresh');
+    expect(refreshReq.request.method).toBe('POST');
+    expect(refreshReq.request.body).toEqual({ token: 'old-refresh-token' });
+    refreshReq.flush({
+      isSuccess: true,
+      statusCode: 200,
+      data: {
+        accessToken: 'new-access-token',
+        refreshToken: 'new-refresh-token',
+        expiresAtUtc: FUTURE_EXPIRY,
+        refreshTokenExpiresAtUtc: FUTURE_EXPIRY,
+        user: MOCK_USER,
+      },
+    });
+
+    expect(tokenA).toBe('new-access-token');
+    expect(tokenB).toBe('new-access-token');
+    expect(service.getRefreshToken()).toBe('new-refresh-token');
+
+    let refreshFailed = false;
+    service.refreshAccessToken().subscribe({
+      error: () => {
+        refreshFailed = true;
+      },
+    });
+
+    const failReq = httpMock.expectOne('https://api.example.test/api/v1/auth/refresh');
+    failReq.flush({}, { status: 401, statusText: 'Unauthorized' });
+
+    expect(refreshFailed).toBe(true);
+    expect(service.isAuthenticated()).toBe(false);
+    expect(localStorage.getItem(AUTH_SESSION_STORAGE_KEY)).toBeNull();
+  });
 });

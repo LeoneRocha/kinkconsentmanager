@@ -82,4 +82,13 @@
   <data name="Validation.Report.InvalidJson" xml:space="preserve">
     <value>O conteúdo do relatório deve ser um JSON válido.</value>
   </data>
+  <data name="Validation.Checklist.InvalidJson" xml:space="preserve">
+    <value>As respostas devem estar em um objeto JSON válido.</value>
+  </data>
+  <data name="Validation.Checklist.InvalidLanguage" xml:space="preserve">
+    <value>Os idiomas suportados são pt-BR e en-US.</value>
+  </data>
+  <data name="Validation.Checklist.PayloadTooLarge" xml:space="preserve">
+    <value>O tamanho das respostas do checklist excede o limite permitido.</value>
+  </data>
 </root>

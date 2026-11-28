@@ -46,6 +46,7 @@
         [class.checklist-progress-bar__save-btn--dirty]="hasUnsavedChanges()"
         [disabled]="isAutosaving() || !hasUnsavedChanges()"
         [attr.title]="labels().saveNowTooltip"
+        [attr.aria-label]="labels().saveNowTooltip"
         [matTooltip]="labels().saveNowTooltip"
         matTooltipPosition="below"
         (click)="saveNow.emit()"
@@ -85,6 +86,7 @@
         class="checklist-progress-bar__autosave-toggle"
         [checked]="autosaveEnabled()"
         [attr.title]="labels().autosaveToggleLabel"
+        [attr.aria-label]="labels().autosaveToggleLabel"
         (change)="onAutosaveEnabledModelChange($event.checked)"
       >
         <span [attr.title]="labels().autosaveToggleLabel">{{ labels().autosaveToggleLabel }}</span>
@@ -98,7 +100,13 @@
         aria-live="polite"
         [attr.title]="autosaveText()"
       >
-        <i class="fa-solid fa-lock" [attr.title]="autosaveText()" aria-hidden="true"></i>
+        <i
+          class="fa-solid"
+          [class.fa-cloud]="isOnlineAutosave()"
+          [class.fa-lock]="!isOnlineAutosave()"
+          [attr.title]="autosaveText()"
+          aria-hidden="true"
+        ></i>
         <span>{{ autosaveText() }}</span>
       </span>
     </div>

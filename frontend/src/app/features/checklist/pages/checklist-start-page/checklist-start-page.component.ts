@@ -92,10 +92,12 @@ export class ChecklistStartPageComponent implements OnInit {
         'modePickerContinueButton',
         'Continuar neste modo',
       ),
-      existingProgressLabel: this.translateWithFallback(
-        'modePickerExistingProgress',
-        'Progresso local encontrado',
-      ),
+      existingProgressLabel: this.autosave.isOnlineMode()
+        ? this.translateWithFallback(
+            'modePickerExistingOnlineProgress',
+            'Progresso on-line encontrado',
+          )
+        : this.translateWithFallback('modePickerExistingProgress', 'Progresso local encontrado'),
       stepperTitle: this.translateWithFallback('stepperMode', 'Guiado (Passos)'),
       stepperBadge: this.translateWithFallback('modePickerStepperBadge', 'Por etapas'),
       stepperDesc: this.translateWithFallback(
@@ -150,6 +152,9 @@ export class ChecklistStartPageComponent implements OnInit {
 
   ngOnInit(): void {
     this.autosave.start(this.destroyRef);
+    if (this.autosave.isOnlineMode() && Object.keys(this.checklistState.answers()).length === 0) {
+      void this.autosave.restoreFromAutosave();
+    }
     if (this.checklistState.schema() !== null) {
       this.isLoading.set(false);
       this.loadError.set(false);
@@ -232,15 +237,16 @@ export class ChecklistStartPageComponent implements OnInit {
         processed_in_worker: String(outcome.processedInWorker),
       });
       this.feedbackHost.error(
-        `${importTitle} — ${isIncompatibleVersion
-          ? this.translateWithFallback(
-            'importErrorIncompatibleVersion',
-            'Versão do schema incompatível com este checklist.',
-          )
-          : this.translateWithFallback(
-            'importErrorInvalidJson',
-            'Arquivo inválido: não foi possível ler um rascunho JSON válido.',
-          )
+        `${importTitle} — ${
+          isIncompatibleVersion
+            ? this.translateWithFallback(
+                'importErrorIncompatibleVersion',
+                'Versão do schema incompatível com este checklist.',
+              )
+            : this.translateWithFallback(
+                'importErrorInvalidJson',
+                'Arquivo inválido: não foi possível ler um rascunho JSON válido.',
+              )
         }`,
         {
           actionLabel: this.translateWithFallback('notificationOkAction', 'OK'),

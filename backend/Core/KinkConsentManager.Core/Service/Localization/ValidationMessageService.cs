@@ -15,6 +15,7 @@ public sealed class ValidationMessageService : IValidationMessageService, IError
 {
     private const string SdkPrefix = "SmartCoreHub.Core.SDK.";
     private const string AuthPrefix = "Auth.";
+    private const string ChecklistPrefix = "Checklist.";
 
     private static readonly ResourceManager ValidationResourceManager = new(
         "KinkConsentManager.Core.Infrastructure.Localization.Resources.ValidationMessages",
@@ -22,6 +23,10 @@ public sealed class ValidationMessageService : IValidationMessageService, IError
 
     private static readonly ResourceManager AuthResourceManager = new(
         "KinkConsentManager.Core.Infrastructure.Localization.Resources.AuthMessages",
+        typeof(ValidationMessageService).Assembly);
+
+    private static readonly ResourceManager ChecklistResourceManager = new(
+        "KinkConsentManager.Core.Infrastructure.Localization.Resources.ChecklistMessages",
         typeof(ValidationMessageService).Assembly);
 
     private readonly IFunctionalMessageProvider _sdkMessageProvider;
@@ -59,7 +64,9 @@ public sealed class ValidationMessageService : IValidationMessageService, IError
             {
                 var manager = messageKey.StartsWith(AuthPrefix, StringComparison.Ordinal)
                     ? AuthResourceManager
-                    : ValidationResourceManager;
+                    : messageKey.StartsWith(ChecklistPrefix, StringComparison.Ordinal)
+                        ? ChecklistResourceManager
+                        : ValidationResourceManager;
 
                 var rawFromResx = TryGetResourceString(manager, messageKey, targetCulture);
                 if (!string.IsNullOrWhiteSpace(rawFromResx))
