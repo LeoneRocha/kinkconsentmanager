@@ -50,10 +50,10 @@ public sealed class ChecklistPayloadProtectorTests
     }
 
     [Test]
-    public void ProtectAndUnprotect_WithAesGcmAndZstd_ShouldRoundTripAndHidePlaintextInValidJsonbEnvelope()
+    public void ProtectAndUnprotect_WithAesGcmAndZstd_ShouldRoundTripAndStoreOnlyBase64PayloadString()
     {
         // Cenário: Proteção padrão com compressão Zstandard + criptografia autenticada AES-GCM sobre respostas com acentuação UTF-8.
-        // Objetivo: Garantir envelope JSON válido (compatível com jsonb), ocultação total das respostas em repouso e recuperação exata.
+        // Objetivo: Garantir que apenas o payload Base64 (string JSON escalar compatível com jsonb, sem envelope de metadados) seja gravado e recuperado fielmente.
         var protector = CreateProtector();
         const string plainJson = "{\"item_bondage\":{\"primaryScale\":\"enjoy\",\"notes\":\"Ação segura e consensual\"}}";
 
@@ -61,10 +61,13 @@ public sealed class ChecklistPayloadProtectorTests
         var restoredJson = protector.Unprotect(protectedJson);
 
         using var parsed = JsonDocument.Parse(protectedJson);
-        parsed.RootElement.GetProperty("__kcmProtected").GetBoolean().Should().BeTrue();
-        parsed.RootElement.GetProperty("v").GetInt32().Should().Be(1);
-        parsed.RootElement.GetProperty("alg").GetString().Should().Be("AesGcm");
-        parsed.RootElement.GetProperty("cmp").GetString().Should().Be("Zstd");
+        parsed.RootElement.ValueKind.Should().Be(JsonValueKind.String);
+        var rawBase64 = parsed.RootElement.GetString();
+        rawBase64.Should().NotBeNullOrWhiteSpace();
+        Convert.FromBase64String(rawBase64!).Length.Should().BeGreaterThan(28);
+        protectedJson.Should().NotContain("__kcmProtected");
+        protectedJson.Should().NotContain("AesGcm");
+        protectedJson.Should().NotContain("Zstd");
         protectedJson.Should().NotContain("item_bondage");
         protectedJson.Should().NotContain("Ação segura");
         restoredJson.Should().Be(plainJson);
@@ -105,22 +108,14 @@ public sealed class ChecklistPayloadProtectorTests
     [Test]
     public void Unprotect_WhenCiphertextIsTampered_ShouldThrowCryptographicException()
     {
-        // Cenário: Envelope AES-GCM adulterado em repouso no banco de dados.
+        // Cenário: Payload Base64 AES-GCM adulterado em repouso no banco de dados.
         // Objetivo: Garantir detecção de adulteração pela tag AEAD do AES-GCM.
         var protector = CreateProtector();
         var protectedJson = protector.Protect("{\"item_1\":{\"primaryScale\":\"limit\"}}");
 
-        using var doc = JsonDocument.Parse(protectedJson);
-        var rawPayload = Convert.FromBase64String(doc.RootElement.GetProperty("payload").GetString()!);
+        var rawPayload = Convert.FromBase64String(JsonSerializer.Deserialize<string>(protectedJson)!);
         rawPayload[^1] ^= 0xFF;
-        var tamperedJson = JsonSerializer.Serialize(new
-        {
-            __kcmProtected = true,
-            v = 1,
-            alg = "AesGcm",
-            cmp = "Zstd",
-            payload = Convert.ToBase64String(rawPayload)
-        });
+        var tamperedJson = JsonSerializer.Serialize(Convert.ToBase64String(rawPayload));
 
         var act = () => protector.Unprotect(tamperedJson);
 
@@ -141,11 +136,59 @@ public sealed class ChecklistPayloadProtectorTests
     }
 
     [Test]
-    public void Protect_WhenDisabledInOptions_ShouldReturnPlaintextUnchanged()
+    public void ProtectAndUnprotect_WhenOnlyCompressEnabled_ShouldCompressWithoutEncrypting()
     {
-        // Cenário: ChecklistProtection:Enabled configurado como false.
-        // Objetivo: Respeitar a configuração do appsettings mantendo pass-through sem erro.
-        var protector = CreateProtector(new ChecklistPayloadProtectionOptions { Enabled = false });
+        // Cenário: Apenas EnableCompress=true e EnableCryptography=false.
+        // Objetivo: Permitir compressão Zstd isolada sem exigir ou aplicar criptografia.
+        var protector = CreateProtector(new ChecklistPayloadProtectionOptions
+        {
+            EnableCompress = true,
+            EnableCryptography = false,
+            CompressionAlgorithm = ECompressionType.Zstd,
+            CompressionLevel = CompressionLevel.Optimal
+        });
+        const string plainJson = "{\"item_1\":{\"primaryScale\":\"enjoy\"}}";
+
+        var protectedJson = protector.Protect(plainJson);
+        var restoredJson = protector.Unprotect(protectedJson);
+
+        using var parsed = JsonDocument.Parse(protectedJson);
+        parsed.RootElement.ValueKind.Should().Be(JsonValueKind.String);
+        restoredJson.Should().Be(plainJson);
+    }
+
+    [Test]
+    public void ProtectAndUnprotect_WhenOnlyCryptographyEnabled_ShouldEncryptWithoutCompressing()
+    {
+        // Cenário: Apenas EnableCryptography=true e EnableCompress=false.
+        // Objetivo: Permitir criptografia AES-GCM isolada sem compressão Zstd.
+        var protector = CreateProtector(new ChecklistPayloadProtectionOptions
+        {
+            EnableCompress = false,
+            EnableCryptography = true,
+            CryptoAlgorithm = ECryptoServiceType.AesGcm
+        });
+        const string plainJson = "{\"item_1\":{\"primaryScale\":\"enjoy\"}}";
+
+        var protectedJson = protector.Protect(plainJson);
+        var restoredJson = protector.Unprotect(protectedJson);
+
+        using var parsed = JsonDocument.Parse(protectedJson);
+        parsed.RootElement.ValueKind.Should().Be(JsonValueKind.String);
+        protectedJson.Should().NotContain("item_1");
+        restoredJson.Should().Be(plainJson);
+    }
+
+    [Test]
+    public void Protect_WhenBothDisabledInOptions_ShouldReturnPlaintextUnchanged()
+    {
+        // Cenário: EnableCompress=false e EnableCryptography=false.
+        // Objetivo: Respeitar a configuração modular mantendo pass-through sem erro.
+        var protector = CreateProtector(new ChecklistPayloadProtectionOptions
+        {
+            EnableCompress = false,
+            EnableCryptography = false
+        });
         const string plainJson = "{\"item_1\":{\"primaryScale\":\"enjoy\"}}";
 
         var result = protector.Protect(plainJson);
@@ -160,7 +203,8 @@ public sealed class ChecklistPayloadProtectorTests
             _serviceProvider.GetRequiredService<ICompressionService>(),
             Options.Create(options ?? new ChecklistPayloadProtectionOptions
             {
-                Enabled = true,
+                EnableCompress = true,
+                EnableCryptography = true,
                 CryptoAlgorithm = ECryptoServiceType.AesGcm,
                 CompressionAlgorithm = ECompressionType.Zstd,
                 CompressionLevel = CompressionLevel.Optimal

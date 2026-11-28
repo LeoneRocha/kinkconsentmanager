@@ -87,14 +87,15 @@ public sealed class ChecklistsApiIntegrationTests
         put1Body.Data!.Version.Should().Be(1);
         put1Body.Data.AnswersJson.Should().Contain("item_rope");
 
-        // 2b. Verifica privacidade em repouso no banco: AnswersJson gravado como envelope AES-GCM + Zstd (sem texto claro)
+        // 2b. Verifica privacidade em repouso no banco: AnswersJson gravado apenas como payload Base64 (sem objeto envelope nem texto claro)
         using (var scope = _factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<KinkConsentManagerDbContext>();
             var stored = await db.UserKinkCheclists.AsNoTracking().SingleAsync(c => c.Id == put1Body.Data.Id);
-            stored.AnswersJson.Should().Contain("\"__kcmProtected\":true");
-            stored.AnswersJson.Should().Contain("\"alg\":\"AesGcm\"");
-            stored.AnswersJson.Should().Contain("\"cmp\":\"Zstd\"");
+            using var storedDoc = JsonDocument.Parse(stored.AnswersJson);
+            storedDoc.RootElement.ValueKind.Should().Be(JsonValueKind.String);
+            stored.AnswersJson.Should().NotContain("__kcmProtected");
+            stored.AnswersJson.Should().NotContain("AesGcm");
             stored.AnswersJson.Should().NotContain("item_rope");
         }
 

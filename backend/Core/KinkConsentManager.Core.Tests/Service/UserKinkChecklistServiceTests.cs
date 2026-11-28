@@ -44,7 +44,8 @@ public sealed class UserKinkChecklistServiceTests
             {
                 ["SecuritySettings:CryptoType"] = "AesGcm",
                 ["SecuritySettings:AesGcmSettings:Key"] = AesKeyGeneratorHelper.GenerateKey(),
-                ["ChecklistProtection:Enabled"] = "true",
+                ["ChecklistProtection:EnableCompress"] = "true",
+                ["ChecklistProtection:EnableCryptography"] = "true",
                 ["ChecklistProtection:CryptoAlgorithm"] = "AesGcm",
                 ["ChecklistProtection:CompressionAlgorithm"] = "Zstd"
             })

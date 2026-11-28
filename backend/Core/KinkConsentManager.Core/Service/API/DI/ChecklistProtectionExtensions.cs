@@ -36,13 +36,13 @@ public static class ChecklistProtectionExtensions
         services.Configure<ChecklistPayloadProtectionOptions>(section);
 
         var options = section.Get<ChecklistPayloadProtectionOptions>() ?? new ChecklistPayloadProtectionOptions();
-        if (options.Enabled && options.CryptoAlgorithm != ECryptoServiceType.None)
+        if (options.EnableCryptography && options.CryptoAlgorithm != ECryptoServiceType.None)
         {
             var configuredKey = ChecklistPayloadProtector.ResolveConfiguredKey(configuration);
             if (string.IsNullOrWhiteSpace(configuredKey))
             {
                 throw new InvalidOperationException(
-                    "SecuritySettings:AesGcmSettings:Key is missing or empty. Set the App Setting / environment variable SecuritySettings__AesGcmSettings__Key when ChecklistProtection is enabled.");
+                    "SecuritySettings:AesGcmSettings:Key is missing or empty. Set the App Setting / environment variable SecuritySettings__AesGcmSettings__Key when ChecklistProtection:EnableCryptography is true.");
             }
         }
 
