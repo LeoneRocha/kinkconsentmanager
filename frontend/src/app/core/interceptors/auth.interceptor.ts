@@ -36,12 +36,13 @@ function isPublicAuthEndpoint(url: string): boolean {
  * e executa renovação transparente deduplicada em `401 Unauthorized` via `AuthService.refreshAccessToken()`.
  */
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
-  const authService = inject(AuthService);
   const apiBaseUrl = inject(API_BASE_URL);
 
   if (!isTargetApiUrl(req.url, apiBaseUrl) || isPublicAuthEndpoint(req.url)) {
     return next(req);
   }
+
+  const authService = inject(AuthService);
 
   const currentToken = authService.accessToken();
   const outgoingReq =

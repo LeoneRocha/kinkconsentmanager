@@ -6,9 +6,24 @@ import {
 } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
-import { provideTranslateService } from '@ngx-translate/core';
+import { provideTranslateLoader, provideTranslateService } from '@ngx-translate/core';
+import { firstValueFrom } from 'rxjs';
 import { AuthUser, LoginResponse } from '../models';
-import { API_BASE_URL, AUTH_SESSION_STORAGE_KEY, AuthService } from '../services';
+import {
+  BROWSER_STORAGE_REPOSITORY_TOKEN,
+  BrowserStorageRepository,
+  QUESTION_TRANSLATIONS_REPOSITORY_TOKEN,
+  StaticJsonQuestionTranslationsRepository,
+  USER_PREFERENCES_REPOSITORY_TOKEN,
+  UserPreferencesRepository,
+} from '../repositories';
+import {
+  API_BASE_URL,
+  AUTH_SESSION_STORAGE_KEY,
+  AuthService,
+  CompositeTranslateLoader,
+  I18nService,
+} from '../services';
 import { authInterceptor } from './auth.interceptor';
 
 const MOCK_USER: AuthUser = {
@@ -150,5 +165,78 @@ describe('authInterceptor', () => {
     expect(receivedStatus).toBe(401);
     expect(authService.isAuthenticated()).toBe(false);
     expect(localStorage.getItem(AUTH_SESSION_STORAGE_KEY)).toBeNull();
+  });
+});
+
+describe('authInterceptor bootstrap integration', () => {
+  afterEach(() => {
+    localStorage.clear();
+    sessionStorage.clear();
+    jest.restoreAllMocks();
+  });
+
+  // Cenário: Inicialização real do app com CompositeTranslateLoader + I18nService + authInterceptor + AuthService.
+  // Objetivo: Garantir ausência de dependência circular NG0200 para AuthService durante o carregamento de ./assets/i18n/*.json.
+  it('should initialize I18nService with CompositeTranslateLoader and resolve AuthService without NG0200 circular dependency', async () => {
+    // Arrange
+    TestBed.configureTestingModule({
+      providers: [
+        provideHttpClient(withInterceptors([authInterceptor])),
+        provideHttpClientTesting(),
+        provideTranslateService({
+          fallbackLang: 'en-US',
+          langs: ['pt-BR', 'en-US'],
+          loader: provideTranslateLoader(CompositeTranslateLoader),
+        }),
+        {
+          provide: QUESTION_TRANSLATIONS_REPOSITORY_TOKEN,
+          useClass: StaticJsonQuestionTranslationsRepository,
+        },
+        { provide: BROWSER_STORAGE_REPOSITORY_TOKEN, useClass: BrowserStorageRepository },
+        { provide: USER_PREFERENCES_REPOSITORY_TOKEN, useClass: UserPreferencesRepository },
+        { provide: API_BASE_URL, useValue: 'https://api.example.test' },
+      ],
+    });
+
+    const httpMock = TestBed.inject(HttpTestingController);
+    const i18n = TestBed.inject(I18nService);
+
+    // Act
+    const initPromise = firstValueFrom(i18n.initialize());
+    const i18nRequests = httpMock.match((req) => req.url.startsWith('./assets/i18n/'));
+    expect(i18nRequests.length).toBeGreaterThan(0);
+
+    for (const pending of i18nRequests) {
+      expect(pending.request.headers.has('Authorization')).toBe(false);
+      if (pending.request.url.includes('/groups/')) {
+        pending.flush({ groups: {} });
+      } else if (pending.request.url.includes('/questions/')) {
+        pending.flush({ items: {}, options: {} });
+      } else {
+        pending.flush({ ui: { appTitle: 'Kink Consent Manager' } });
+      }
+    }
+
+    // Caso o fallback também dispare requisições subsequentes após a primeira rodada, atendê-las também.
+    const secondaryRequests = httpMock.match((req) => req.url.startsWith('./assets/i18n/'));
+    for (const pending of secondaryRequests) {
+      expect(pending.request.headers.has('Authorization')).toBe(false);
+      if (pending.request.url.includes('/groups/')) {
+        pending.flush({ groups: {} });
+      } else if (pending.request.url.includes('/questions/')) {
+        pending.flush({ items: {}, options: {} });
+      } else {
+        pending.flush({ ui: { appTitle: 'Kink Consent Manager' } });
+      }
+    }
+
+    await initPromise;
+    const authService = TestBed.inject(AuthService);
+
+    // Assert
+    expect(authService).toBeDefined();
+    expect(authService.isAuthenticated()).toBe(false);
+    expect(i18n.translateUi('appTitle')).toBe('Kink Consent Manager');
+    httpMock.verify();
   });
 });

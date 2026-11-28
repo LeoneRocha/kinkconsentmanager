@@ -1,4 +1,4 @@
-import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
+import { HttpBackend, HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
 import { computed, inject, Injectable } from '@angular/core';
 import { catchError, finalize, map, Observable, of, shareReplay, tap, throwError } from 'rxjs';
 import {
@@ -37,7 +37,7 @@ const INITIAL_AUTH_STATE: AuthSessionState = {
  */
 @Injectable({ providedIn: 'root' })
 export class AuthService extends BaseStateService<AuthSessionState> {
-  private readonly http = inject(HttpClient);
+  private readonly http = new HttpClient(inject(HttpBackend));
   private readonly apiBaseUrl = inject(API_BASE_URL);
   private readonly storage = inject(StorageService);
   private readonly i18n = inject(I18nService);
